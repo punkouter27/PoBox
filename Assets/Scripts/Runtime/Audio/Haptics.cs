@@ -101,7 +101,9 @@ namespace PoBox.Audio
             if (_vibrator == null)
             {
                 // Half a second each, which is too long for a punch.
-                if (always) Handheld.Vibrate();
+#if UNITY_ANDROID || UNITY_IOS
+                if (always) Handheld.Vibrate();   // Handheld exists only on the phone targets (WebGL build)
+#endif
                 return;
             }
             _oneShot[0].j = (long)ms;

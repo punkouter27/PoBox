@@ -92,3 +92,6 @@ Tools/MuJoCo/*.err
 /training/.mj350/
 # CMU motion-capture BVH files fetched by training/tools/retarget_clips.py; the retargeted clips/walk_turn.npz is versioned.
 /training/clips/cmu/
+
+# WebGL build: Burst output Unity writes beside the project
+/Data/
