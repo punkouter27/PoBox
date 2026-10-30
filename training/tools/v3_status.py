@@ -147,6 +147,10 @@ def timeline(times, now):
             eta = max(now, start + per)
         elif state == "waiting":
             eta += per
+    # reruns queued after the eight (v3u2_NAME ... exam_v3m2_NAME): the last four steps, about 0.77 of a boxer
+    with open(os.path.join(LOGS, "queue.json"), encoding="utf-8") as f:
+        redo = [e["run"] for e in json.load(f) if e["run"].startswith("exam_v3m2_")]
+    eta += sum((per * 0.77 for r in redo if not os.path.exists(os.path.join(LOGS, f"{r}.done"))), timedelta())
     return rows, per, eta
 
 
@@ -259,11 +263,12 @@ walking and boxing lessons it sits an exam in the same physics the game uses. No
 
 <h2>How it compares</h2>
 <ul>
-<li><b>Walking: better than expected.</b> Matt and Sokol learned to stand and walk on the new body within the half hour, about 0.1 falls a minute, and Matt's footwork exam passed every line.</li>
+<li><b>Walking: better than expected.</b> Matt and Sokol learned to stand and walk on the new body within the half hour, about 0.1 falls a minute, and both passed every line of the walking exam.</li>
+<li><b>Getting up, with the fix (Sokol): healthy.</b> The chart's line looks flat at about 65%, but practice gives a helping hand that is taken away as the boxer improves: Sokol's fell from 60% to 38% while his success held, so he is doing more of it himself. The exam (no help) will tell.</li>
 <li><b>Boxing: slightly worse than the old Matt.</b> His old brain landed 0.65 punches a second; the new one 0.44, just under the 0.5 mark, and none to the head (the old one also struggled with the head). Its chart dips from 0.47 to 0.27 and was climbing back when the 45 minutes ran out.</li>
 <li><b>Getting up: got worse while training.</b> Matt's success climbed to about 70% in the first 25 rounds, then fell back to about 50% and stayed there (the exam wants 80%). Cause found: a bug set its "try something new" noise to zero for the whole lesson (train_getup.py read the queue's
 "--reset-std 0", meaning keep the noise, as "make it zero"), so it couldn't explore and its updates went wild (KL 1.3, normally under 0.05).
-Fixed at 19:15, before Sokol's get-up lesson; the other seven get the fix. Matt's get-up lesson needs a rerun.</li>
+Fixed at 19:15, before Sokol's get-up lesson; the other seven get the fix. Matt's get-up and boxing lessons are queued again at the end (v3u2_matt, v3m2_matt).</li>
 <li><b>Getting up couldn't be examined:</b> nobody knocked Matt down in 60 exam bouts (his opponents still run their old brains on the new bodies), so that line shows 0 of 0. The exam counts it as a fail, but it is an empty test.</li>
 </ul>
 <p class="dim">Charts are TensorBoard's numbers (logs/RUN.csv, smoothing 0.6, faint line = raw). Exams: logs/exam_v3f_NAME.json, logs/exam_v3m_NAME.log.</p>
