@@ -137,8 +137,10 @@ def main() -> None:
                 env.set_speed_share(float(extra["speed_share"]))
         else:
             cfg.lr = args.lr
-            with torch.no_grad():
-                ppo.model.log_std.fill_(float(np.log(args.reset_std)))
+            # 0 keeps the checkpoint's own noise, as in train_box.py (2026-10-30: log(0) zeroed it for v3u_matt)
+            if args.reset_std > 0.0:
+                with torch.no_grad():
+                    ppo.model.log_std.fill_(float(np.log(args.reset_std)))
         learners.append(ppo)
         print(f"{n}: from {resume[n]} ({extra.get('mode', 'unknown stage')}, iteration {extra.get('iter', 0)}, by {extra.get('trainer', 'gpu')})"
               + (", frozen" if frozen[k] else ""), flush=True)

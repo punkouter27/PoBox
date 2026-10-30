@@ -1513,3 +1513,16 @@ solver is not bit-repeatable even old against old).
   extension 110 degrees (60 typical) and adduction past the side.
 - Nothing of this reaches the game until v3 is trained: `training/queues/queue_v3_staged.json` (99 jobs, ~16 h) reads
   models/v3 as it runs, so it trains these bodies unchanged. Not run yet.
+
+## 2026-10-30 19:15, v3 queue: Matt's results, a get-up bug fixed mid-queue
+- Queue started 15:32; Matt's six v3 jobs took 2.2 h (16:29-18:41), so the last boxer ends about 10:00 on 10-31.
+- `v3f_matt` (644 it, 0.5 h): footwork exam passes every line (stand 100%, walk error 0.008, 0 falls, turn 100%).
+- `v3u_matt` (600 it): up rate peaked 0.70 at it ~25, then 0.50-0.55 to the end. **Bug:** `train_getup.py` set
+  `log_std = log(--reset-std)` when resuming from a non-get-up checkpoint, and the queue passes `--reset-std 0` (meaning
+  "keep", as in `train_box.py`): noise was exactly 0 for the whole run, KL 9,000 at it 1 and 0.4-0.9 after, lr pinned at
+  1e-5. Fixed (0 now keeps the checkpoint's noise, 0.45 from `onnx_to_pt`, clamped by `--max-std 0.4`) before
+  `v3u_sokol` started; the seven other get-up jobs use the fix. Matt's get-up (and its hand-over bank, match, exam)
+  needs a rerun.
+- `v3m_matt` (336 it, 0.75 h cap): hits 0.47 -> 0.27 -> 0.40/s. Exam FAIL: attack 0.44/s (mark 0.5; m11 was 0.65),
+  0% head; getting up 0 of 0 (nobody knocked him down in 60 trials), carrying on 0 of 0; footing, guard 61%, chin pass.
+- Status page: `training/tools/v3_status.py` -> `DOCS/reports/v3_training_status.html` (3 charts, timeline, rerun hourly).
