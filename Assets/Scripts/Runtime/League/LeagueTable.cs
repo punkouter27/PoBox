@@ -27,6 +27,8 @@ namespace PoBox.League
             /// <summary>The CPU's rating, which this one started from (0 when the CPU has not rated this boxer).</summary>
             public float cpuElo;
             public string lastOpponent;
+            /// <summary>Bouts in a row: wins counted up, losses down; a draw ends either run.</summary>
+            public int streak;
             public int Bouts => wins + losses + draws;
         }
 
@@ -112,15 +114,26 @@ namespace PoBox.League
         /// <summary>A boxer's rating as the ladder last saved it, read without the arena's table (the first screen has none); the start rating if it has none.</summary>
         public static float SavedElo(string name, float fallback = 1000f)
         {
-            try
-            {
-                Save save = JsonUtility.FromJson<Save>(PlayerPrefs.GetString(Key, ""));
-                if (save != null && (save.cpuWhen ?? "") == (CpuRatings.when ?? "")) foreach (Row r in save.rows) if (r.name == name) return r.elo;
-            }
-            catch (Exception) { }
+            Row row = SavedRow(name);
+            if (row != null) return row.elo;
             float cpu = CpuElo(name);
             return cpu > 0f ? cpu : fallback;
         }
+
+        /// <summary>A boxer's row as the ladder last saved it (rating, record, streak), read without the arena's table; null if it has none yet.</summary>
+        public static Row SavedRow(string name)
+        {
+            try
+            {
+                Save save = JsonUtility.FromJson<Save>(PlayerPrefs.GetString(Key, ""));
+                if (save != null && (save.cpuWhen ?? "") == (CpuRatings.when ?? "")) foreach (Row r in save.rows) if (r.name == name) return r;
+            }
+            catch (Exception) { }
+            return null;
+        }
+
+        /// <summary>The streak as a card shows it: "W3" or "L2" for two or more in a row, else empty.</summary>
+        public static string StreakText(int streak) => streak >= 2 ? "W" + streak : streak <= -2 ? "L" + -streak : "";
 
         public void ResetAll()
         {
@@ -204,14 +217,20 @@ namespace PoBox.League
             ra.elo += delta;
             rb.elo -= delta;
 
-            if (scoreA > 0.75f) { ra.wins++; rb.losses++; if (knockout) ra.knockouts++; }
-            else if (scoreA < 0.25f) { rb.wins++; ra.losses++; if (knockout) rb.knockouts++; }
-            else { ra.draws++; rb.draws++; }
+            if (scoreA > 0.75f) { ra.wins++; rb.losses++; if (knockout) ra.knockouts++; Streak(ra, rb); }
+            else if (scoreA < 0.25f) { rb.wins++; ra.losses++; if (knockout) rb.knockouts++; Streak(rb, ra); }
+            else { ra.draws++; rb.draws++; ra.streak = rb.streak = 0; }
 
             ra.lastOpponent = b;
             rb.lastOpponent = a;
             Store();
             return delta;
+        }
+
+        public static void Streak(Row winner, Row loser)
+        {
+            winner.streak = winner.streak > 0 ? winner.streak + 1 : 1;
+            loser.streak = loser.streak < 0 ? loser.streak - 1 : -1;
         }
     }
 }

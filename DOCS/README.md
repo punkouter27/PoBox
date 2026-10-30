@@ -69,6 +69,27 @@ Earlier in the day (Phase B):
   scene left behind (raw object names); on their own they pass (11 of 11). Run ours with the assembly filter
   `PoBox.Tests`.
 
+## Broadcast features, ratings online, realism flags (2026-10-30, afternoon)
+
+- **In the fight** (settings VIEW, all off by default): INTENT (`Fx/IntentArrows.cs`, one a corner in `Arena.unity`, added by
+  `PoBox/Scene/Add Intent Arrows To Arena`): an arrow on the canvas where each boxer is heading and a line from the loading
+  shoulder to the other's head; MAP (`UI/RingMap.cs`): the ring from above with who has held the centre this round.
+- **Win line** (`UI/WinLine.cs`): the bout's win probability, sampled twice a second by HudView, on the break and result
+  cards and with STATS as a strip beside DEBUG. Two fingers tapped together toggle STATS (TAB's twin). A punch 1.6x harder
+  than usual shows its glove speed even without STATS (`HudView.radarOverUsual`).
+- **Ratings**: the menu's cards carry each boxer's ladder Elo and a W/L streak (`LeagueTable.Row.streak`, `SavedRow`).
+  **Online leaderboard** (`Online/Leaderboard.cs`): with the settings' BOARD set (MORE tab: an Azure Table URL with an
+  add-only SAS token; never in the repo) every logged bout is posted as one row. `Assets/WebGLTemplates/Po/leaderboard.html`
+  (served beside the WebGL build) and `training/tools/leaderboard.py` give every fighter an Elo pooled from all devices,
+  the same Bradley-Terry fit as `tools/elo.py` (the page and the tool agree to 0.1 point). The table needs CORS for the
+  site. Not tried against a real table: none exists yet.
+- **Training realism** (all flags off by default, identical numbers when off): `--escape-w`, `--obs-delay`,
+  `--action-filter`, `--flail-w`, `--cmd-fwd-max`, `--slope-deg`; `MjBoxer` mirrors filter and delay from a brain's
+  `rules_*` in config.json. 35 runs staged in `training/queues/queue_realism_staged.json`. See `rl_optimization_log.md`.
+- Tests: `FeatureTests` 3/3, `OneScreenTests` all but one (a WIN % label 2 px too narrow at 1080x2340 for "22%", not
+  touched here) once the editor runs unthrottled, `MjParityTests` 3/3, `MjGateTests` 24/24, `StateFlowTests` 2/2.
+  Report: `SCREENSHOTS/2026-10-30-features/report.html`.
+
 ## Clean pass (2026-10-30)
 
 - 95 old report PNGs in `SCREENSHOTS/` and `DOCS/` re-encoded as lossless WebP (pixel-identical, 76.7 -> 42.2 MB),

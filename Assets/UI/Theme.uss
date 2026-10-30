@@ -677,6 +677,19 @@ Label { margin: 0; padding: 0; }
 
 /* Both fighters' numbers, with each one's hit map beside its column. */
 .res-mid { flex-direction: row; align-items: center; margin-top: var(--gap-3); }
+/* The settings' MAP (RingMap.cs): the ring from above, bottom-right, over the caption; the brain cam is bottom-left. */
+.ringmap {
+    position: absolute;
+    right: var(--gap-4);
+    bottom: var(--over-caption);
+    width: 200px;
+    height: 200px;
+    background-color: var(--overlay);
+    border-radius: var(--radius-xs);
+}
+/* The bout's win probability (WinLine.cs): on the break and result cards, and with STATS a strip beside DEBUG. */
+.winline { height: 72px; margin-top: var(--gap-3); background-color: var(--row); border-radius: var(--radius-xs); flex-shrink: 0; }
+.winline--strip { width: 240px; height: 56px; margin-top: 0; margin-left: var(--gap-2); background-color: var(--overlay); }
 .res-mid .tape { flex: 1 1 0; margin-top: 0; }
 
 /* Tabs: a row of segments over pages that are all the same height, so the sheet does not jump between them.
@@ -707,6 +720,8 @@ Label { margin: 0; padding: 0; }
 /* A line to type in (the Twitch channel), its key in front of it. */
 .field-row { flex-direction: row; align-items: center; height: var(--touch); margin-top: var(--gap-2); }
 .field-key { width: 150px; font-size: var(--t-small); -unity-font-style: bold; color: var(--ink-dim); }
+/* The second key on a row of two fields. */
+.field-key--next { margin-left: var(--gap-4); }
 .field { flex: 1 1 0; height: var(--touch); margin: 0; font-size: var(--t-body); }
 .field .unity-base-text-field__input {
     background-color: var(--surface-2);
@@ -827,6 +842,18 @@ Label { margin: 0; padding: 0; }
 }
 .pick--red .pick-tag { display: flex; background-color: var(--red); }
 .pick--blue .pick-tag { display: flex; background-color: var(--blue); }
+/* The ladder's rating on a card, top-right, opposite the corner tag. */
+.pick-elo {
+    position: absolute;
+    top: var(--gap-2);
+    right: var(--gap-2);
+    padding: 2px 8px;
+    font-size: var(--t-micro);
+    -unity-font-style: bold;
+    color: var(--ink);
+    background-color: var(--overlay);
+    border-radius: var(--radius-xs);
+}
 
 /* The thumb row, at the bottom where a thumb is: CUP, FIGHT (the pairing written under the word) and ALL. */
 .thumb {

@@ -165,6 +165,14 @@ namespace PoBox.League
 
         static float Round2(float v) => Mathf.Round(v * 100f) / 100f;
 
+        static Online.Leaderboard.Row BoardRow(Record r) => new Online.Leaderboard.Row
+        {
+            red = r.red.name, blue = r.blue.name, winner = r.winner, method = r.method, knockout = r.knockout,
+            redBrain = r.red.brain, blueBrain = r.blue.brain, rounds = r.rounds, seconds = r.seconds,
+            redLanded = r.red.landed, blueLanded = r.blue.landed, redThrown = r.red.thrown, blueThrown = r.blue.thrown,
+            redKnockdowns = r.red.knockdowns, blueKnockdowns = r.blue.knockdowns,
+        };
+
         void OnPhase(BoutPhase from, BoutPhase to)
         {
             if (to != BoutPhase.Results || _rec == null || bout == null || bout.BoutNumber != _bout) return;
@@ -194,6 +202,8 @@ namespace PoBox.League
             }
             try { File.AppendAllText(FilePath, JsonUtility.ToJson(_rec) + "\n"); }
             catch (Exception ex) { Debug.LogWarning($"fight log: {ex.Message}"); }
+            // The same bout to the shared table, when the settings' BOARD has one (Online/Leaderboard.cs).
+            if (!string.IsNullOrEmpty(Online.Leaderboard.Url)) StartCoroutine(Online.Leaderboard.Post(BoardRow(_rec)));
             _rec = null;
         }
     }

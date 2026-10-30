@@ -10,6 +10,8 @@
         top-centre    the frame rate (tap: the debug panel opens or closes)
         bottom-left   DEBUG
 
+    and with STATS beside DEBUG a strip: the bout's win probability so far (also on the break and result cards).
+
     Between them, top to bottom: the scoreboard and the picture.
 
     The scoreboard is three rows. The names sit on the health bars with the clock between them (a hit
@@ -168,7 +170,12 @@
                         <ui:Label name="break-centre-blue" class="stat-val stat-val--r" text="50%" picking-mode="Ignore" />
                     </ui:VisualElement>
                 </ui:VisualElement>
+                <!-- The win probability so far, red's up, blue's down (WinLine.cs). -->
+                <PoBox.UI.WinLine name="break-winline" class="winline" />
             </ui:VisualElement>
+
+            <!-- The settings' MAP: the ring from above, bottom-right over the caption (RingMap.cs). -->
+            <PoBox.UI.RingMap name="ringmap" class="ringmap hidden" />
 
             <!-- During a count: the boxer left standing, while the main picture is on the one on the canvas. -->
             <ui:VisualElement name="pip" class="pip hidden" picking-mode="Ignore" />
@@ -194,6 +201,7 @@
                 <ui:VisualElement class="res-mid" picking-mode="Ignore">
                     <ui:VisualElement name="res-tape" class="tape tape--card" picking-mode="Ignore" />
                 </ui:VisualElement>
+                <PoBox.UI.WinLine name="res-winline" class="winline" />
                 <ui:VisualElement class="grid res-actions" picking-mode="Ignore">
                     <ui:Button name="res-replay" class="btn btn--tool grid-4" tooltip="Replay the last knockdown">
                         <ui:VisualElement class="icon icon--movie" picking-mode="Ignore" />
@@ -266,6 +274,8 @@
                     <ui:VisualElement name="debug-dot" class="dot" picking-mode="Ignore" />
                     <ui:Label name="debug-text" class="frame-debug-text" text="DEBUG" picking-mode="Ignore" />
                 </ui:Button>
+                <!-- With STATS: the bout's win probability as a strip beside DEBUG. -->
+                <PoBox.UI.WinLine name="strip-winline" class="winline winline--strip stats-only" />
                 <ui:VisualElement class="spacer" picking-mode="Ignore" />
                 <ui:Label name="version" class="chip frame-version" text="000000" picking-mode="Ignore" />
             </ui:VisualElement>

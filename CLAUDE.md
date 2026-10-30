@@ -38,6 +38,10 @@ No ML-Agents.
   before MuJoCo compiles), `Melee.unity` (free-for-all, menu ALL: `FreeForAll` replaces `Bout` + `MatchSetup`,
   gives the eight boxers prefixes `a_`..`h_` before compile; `MjRing` handles more than two), `Testbed.unity`
   (one boxer, shoves, a pool of 8 cubes). Eight boxers: Matt, Zombie, Nick, Trump, Grandma, Grandpa, Kim, Sokol.
+- **Naming new assets** (from 2026-10-30; existing names stay, a rename breaks scene and trainer references): PascalCase
+  with a type prefix: `PF_` prefab, `M_` material, `SM_` static mesh, `SK_` skinned mesh, `T_` texture, `A_` audio clip,
+  `VP_` volume profile. Scripts are plain PascalCase, one class a file. Top-level `Assets/` folders stay as they are: the
+  trainer, `MjRetrofit` and the build settings find `Assets/Boxers` and `Assets/Scenes` by path.
 - **Plugin quirks**: `Packages/org.mujoco` and `Packages/bin.mujoco` are embedded with local changes marked
   `PoBox:`. The plugin copies each `MjActuator.Control` over `mjData.ctrl` after every step, so targets are
   rewritten before each step; `mj_step` leaves body positions one step behind `qpos`, so `mj_kinematics` runs

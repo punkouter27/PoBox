@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<!--
+    PoBox's online leaderboard: every fighter's Elo from the bouts people watched, pooled across devices.
+
+    Reads, in order:
+      leaderboard.html#table=<the Azure Table's URL with a SAS token that may read (sp=r)>   rated here, live
+      leaderboard.json beside this page (training/tools/leaderboard.py --out)               rated by the tool
+    The game posts each bout to the table (Online/Leaderboard.cs, the settings' BOARD). The rating is the one
+    tools/leaderboard.py and tools/elo.py use: a Bradley-Terry fit on the Elo scale, mean 1000, a draw half a win.
+    The token sits after the #, so it is never sent to this site's server. The table needs CORS for this site's origin.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PoBox leaderboard</title>
+<link rel="icon" href="data:,">
+<style>
+  :root { --bg:#0f1115; --card:#171a21; --line:#262a33; --text:#e8eaef; --dim:#8b91a0; --gold:#f2c14e; --red:#ff5a5f; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width:520px; margin:0 auto; padding:20px 16px 40px; }
+  h1 { font-size:22px; letter-spacing:.08em; margin:0 0 4px; }
+  .sub { color:var(--dim); font-size:13px; margin-bottom:16px; }
+  table { width:100%; border-collapse:collapse; background:var(--card); border-radius:10px; overflow:hidden; }
+  th, td { padding:10px 8px; text-align:left; border-bottom:1px solid var(--line); }
+  th { color:var(--dim); font-size:11px; letter-spacing:.1em; font-weight:600; }
+  td.num, th.num { text-align:right; font-variant-numeric:tabular-nums; }
+  tr:last-child td { border-bottom:0; }
+  tr.top td:first-child { color:var(--gold); font-weight:700; }
+  .name { font-weight:700; letter-spacing:.04em; }
+  .err { color:var(--red); }
+  footer { color:var(--dim); font-size:12px; margin-top:12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>POBOX LEADERBOARD</h1>
+  <div class="sub" id="sub">Loading…</div>
+  <table>
+    <thead><tr><th>#</th><th>FIGHTER</th><th class="num">ELO</th><th class="num">W-L-D</th><th class="num">KO</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+  <footer>Elo from every watched bout: 400 points means 10 to 1 odds; the average fighter is 1000.</footer>
+</main>
+<script>
+"use strict";
+
+// Every fighter's strength by the minorise-maximise fit (Hunter 2004), as training/tools/leaderboard.py does it:
+// half a draw against a 1000 ghost each, so an unbeaten fighter stays finite; Elo scale, mean 1000.
+function bradleyTerry(names, bouts, iters = 2000) {
+  const k = new Map(names.map((n, i) => [n, i])), n = names.length;
+  const wins = new Array(n).fill(0.5), games = names.map(() => new Array(n).fill(0));
+  for (const b of bouts) {
+    const a = k.get(b.red), c = k.get(b.blue);
+    const s = b.winner === b.red ? 1 : b.winner === b.blue ? 0 : 0.5;
+    wins[a] += s; wins[c] += 1 - s; games[a][c]++; games[c][a]++;
+  }
+  let p = new Array(n).fill(1);
+  for (let it = 0; it < iters; it++) {
+    p = p.map((pi, i) => wins[i] / (games[i].reduce((sum, g, j) => sum + g / (pi + p[j]), 0) + 1 / (pi + 1)));
+    const g = Math.exp(p.reduce((s, x) => s + Math.log(x), 0) / n);
+    p = p.map(x => x / g);
+  }
+  const elo = p.map(x => 400 * Math.log10(x)), mean = elo.reduce((s, x) => s + x, 0) / n;
+  return new Map(names.map((nm, i) => [nm, 1000 + elo[i] - mean]));
+}
+
+function rate(bouts) {
+  const names = [...new Set(bouts.flatMap(b => [b.red, b.blue]))].sort();
+  const elo = bradleyTerry(names, bouts);
+  const rows = new Map(names.map(n => [n, { name: n, elo: elo.get(n), wins: 0, losses: 0, draws: 0, knockouts: 0 }]));
+  for (const b of bouts) {
+    for (const [me, other] of [[b.red, b.blue], [b.blue, b.red]]) {
+      const r = rows.get(me);
+      if (b.winner === me) { r.wins++; if (b.knockout) r.knockouts++; }
+      else if (b.winner === other) r.losses++;
+      else r.draws++;
+    }
+  }
+  return [...rows.values()].sort((a, b) => b.elo - a.elo);
+}
+
+async function fromTable(url) {
+  const bouts = [];
+  let extra = "";
+  for (;;) {
+    const res = await fetch(url + extra, { headers: { "Accept": "application/json;odata=nometadata", "x-ms-version": "2019-02-02" } });
+    if (!res.ok) throw new Error(`the table answered ${res.status}`);
+    const data = await res.json();
+    for (const r of data.value || []) bouts.push({ red: r.Red, blue: r.Blue, winner: r.Winner || "", knockout: !!r.Knockout });
+    const np = res.headers.get("x-ms-continuation-NextPartitionKey");
+    if (!np) return bouts;
+    extra = `&NextPartitionKey=${encodeURIComponent(np)}&NextRowKey=${encodeURIComponent(res.headers.get("x-ms-continuation-NextRowKey") || "")}`;
+  }
+}
+
+function show(rows, line) {
+  document.getElementById("sub").textContent = line;
+  const body = document.getElementById("rows");
+  body.replaceChildren(...rows.map((r, i) => {
+    const tr = document.createElement("tr");
+    if (i === 0) tr.className = "top";
+    const cells = [i + 1, r.name, Math.round(r.elo), `${r.wins}-${r.losses}-${r.draws}`, r.knockouts];
+    cells.forEach((v, c) => {
+      const td = document.createElement("td");
+      td.textContent = v;
+      if (c === 1) td.className = "name";
+      if (c >= 2) td.className = "num";
+      tr.appendChild(td);
+    });
+    return tr;
+  }));
+}
+
+(async () => {
+  try {
+    const table = new URLSearchParams(location.hash.slice(1)).get("table");
+    if (table) {
+      const bouts = await fromTable(table);
+      show(rate(bouts), `${bouts.length} bouts, live from the table`);
+    } else {
+      const res = await fetch("leaderboard.json", { cache: "no-store" });
+      if (!res.ok) throw new Error("no leaderboard.json beside this page, and no #table= address");
+      const data = await res.json();
+      show(data.rows, `${data.bouts} bouts`);
+    }
+  } catch (e) {
+    const sub = document.getElementById("sub");
+    sub.textContent = String(e.message || e);
+    sub.className = "sub err";
+  }
+})();
+</script>
+</body>
+</html>

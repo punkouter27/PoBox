@@ -5,7 +5,7 @@
     sheet, nothing scrolls. The defaults are the plain broadcast: everything a viewer does not need is off.
 
         SOUND     the sound, the commentator's voice, the buzz of a hit, bullet time
-        VIEW      the picture's quality, the frame rate, STATS (the numbers: the hit maps, the balance gauges, the
+        VIEW      the picture's quality, the frame rate, INTENT (arrows in the ring) and MAP (the ring from above), STATS (the numbers: the hit maps, the balance gauges, the
                   punch card, the glove speed on a hard punch, the frame rate and the version) and BETS (the
                   coin pick before the first bell); both off unless chosen
         MORE      the collision shapes (where there are boxers), the brain cam (arena only), the readings, throwing
@@ -70,6 +70,18 @@
                 <ui:VisualElement class="sw-dot" picking-mode="Ignore" />
             </ui:Button>
         </ui:VisualElement>
+        <ui:VisualElement class="grid" picking-mode="Ignore">
+            <ui:Button name="s-intent" class="btn btn--tool grid-2" tooltip="Arrows in the ring: where each boxer is heading and the punch it is loading">
+                <PoBox.UI.Glyph kind="Bolt" class="glyph--btn" />
+                <ui:Label class="btn-word" text="INTENT" picking-mode="Ignore" />
+                <ui:VisualElement class="sw-dot" picking-mode="Ignore" />
+            </ui:Button>
+            <ui:Button name="s-map" class="btn btn--tool grid-2" tooltip="The ring from above: where both are, and who holds the centre">
+                <PoBox.UI.Glyph kind="Ring" class="glyph--btn" />
+                <ui:Label class="btn-word" text="MAP" picking-mode="Ignore" />
+                <ui:VisualElement class="sw-dot" picking-mode="Ignore" />
+            </ui:Button>
+        </ui:VisualElement>
     </ui:VisualElement>
 
     <ui:VisualElement name="s-page-more" class="s-page hidden" picking-mode="Ignore">
@@ -92,15 +104,19 @@
                 <ui:Label name="s-reset-word" class="btn-word" text="RESET" picking-mode="Ignore" />
             </ui:Button>
         </ui:VisualElement>
-        <!-- Chat plays: the channel whose chat votes and throws cubes. Empty is off; it takes effect at the next fight. -->
+        <!-- Two fields to a row: three rows of fields were taller than the page. Chat plays: the channel whose chat votes
+             and throws cubes, empty is off and it takes effect at the next fight. The cornerman proxy (server/corner_proxy.py):
+             Claude's corner advice and the winner's word, empty is off (the rule-based tips). -->
         <ui:VisualElement class="field-row" picking-mode="Ignore">
             <ui:Label class="field-key" text="TWITCH" picking-mode="Ignore" />
             <ui:TextField name="s-twitch" class="field" max-length="25" is-delayed="true" />
-        </ui:VisualElement>
-        <!-- The cornerman proxy (server/corner_proxy.py): Claude's corner advice and the winner's word. Empty is off (the rule-based tips). -->
-        <ui:VisualElement class="field-row" picking-mode="Ignore">
-            <ui:Label class="field-key" text="CORNER" picking-mode="Ignore" />
+            <ui:Label class="field-key field-key--next" text="CORNER" picking-mode="Ignore" />
             <ui:TextField name="s-corner" class="field" max-length="120" is-delayed="true" />
+        </ui:VisualElement>
+        <!-- The online leaderboard (Online/Leaderboard.cs): an Azure Table address with an add-only SAS token. Empty is off. -->
+        <ui:VisualElement class="field-row" picking-mode="Ignore">
+            <ui:Label class="field-key" text="BOARD" picking-mode="Ignore" />
+            <ui:TextField name="s-board" class="field" max-length="400" is-delayed="true" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

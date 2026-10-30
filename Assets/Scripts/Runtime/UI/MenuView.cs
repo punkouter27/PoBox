@@ -215,10 +215,23 @@ namespace PoBox.UI
                 tag.AddToClassList("pick-tag");
                 card.Add(tag);
 
+                // Top-right: the ladder's rating, and a run of two or more wins or losses (League/LeagueTable.cs).
+                var elo = new Label(EloBadge(b.displayName)) { name = "pick-elo-" + b.name, pickingMode = PickingMode.Ignore };
+                elo.AddToClassList("pick-elo");
+                card.Add(elo);
+
                 _picker.Add(card);
                 _cards[i] = card;
                 _tags[i] = tag;
             }
+        }
+
+        static string EloBadge(string name)
+        {
+            League.LeagueTable.Row row = League.LeagueTable.SavedRow(name);
+            float elo = row != null ? row.elo : League.LeagueTable.SavedElo(name);
+            string streak = row != null ? League.LeagueTable.StreakText(row.streak) : "";
+            return streak.Length > 0 ? $"{elo:0} · {streak}" : $"{elo:0}";
         }
 
         void RefreshDebug()

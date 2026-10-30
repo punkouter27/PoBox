@@ -95,6 +95,8 @@ namespace PoBox.UI
         readonly FighterStats[] _roundStart = new FighterStats[2];
         [Tooltip("A clean punch this many times harder than these two usually land has its glove speed written where it landed.")]
         public float flashOverUsual = 1.25f;
+        [Tooltip("Without STATS the glove speed is still written for a punch this many times harder than usual: the radar gun for everyone.")]
+        public float radarOverUsual = 1.6f;
         const float FlashSeconds = 0.9f;
         Vector3 _flashPoint;
         float _flashAt = -99f, _dragX;
@@ -140,6 +142,14 @@ namespace PoBox.UI
         TwitchChat _twitch;
         /// <summary>The brain cam's groups of the 21 joints, in the order drawn.</summary>
         static readonly string[] BrainGroups = { "LEGS", "TORSO", "L ARM", "R ARM" };
+
+        // the bout's win probability, for the three graphs (WinLine.cs)
+        readonly WinLine.Record _winRecord = new WinLine.Record();
+        WinLine _breakWin, _resWin, _stripWin;
+        float _nextWinSample;
+        RingMap _ringMap;
+        int _winRound;
+        const float WinSampleSeconds = 0.5f;
 
         float _nextFast, _nextSlow;
         int _lastBout = -1;
@@ -227,6 +237,10 @@ namespace PoBox.UI
             _pip = _root.Q<VisualElement>("pip");
             _flash = _root.Q<Label>("flash");
             _picture = _root.Q<VisualElement>("picture");
+            _breakWin = _root.Q<WinLine>("break-winline");
+            _resWin = _root.Q<WinLine>("res-winline");
+            _stripWin = _root.Q<WinLine>("strip-winline");
+            _ringMap = _root.Q<RingMap>("ringmap");
             if (_pip != null && director != null && director.pipCam != null && director.pipCam.targetTexture != null)
                 _pip.style.backgroundImage = Background.FromRenderTexture(director.pipCam.targetTexture);
 
@@ -648,6 +662,48 @@ namespace PoBox.UI
             if (MjReplay.Instance != null) MjReplay.Instance.Clear();
             Prediction.Reset();
             _twitch?.ClearVotes();
+            _winRecord.Clear();
+            _winRound = 0;
+            _lastMapRound = 0;
+            _ringMap?.Clear();
+        }
+
+        /// <summary>
+        /// The settings' MAP: up while there is a fight to watch (not under the pick before the bell, the result or anything
+        /// open), fed every frame; a new round starts its hold on the centre again.
+        /// </summary>
+        void RefreshMap(float now)
+        {
+            if (_ringMap == null) return;
+            BoutPhase phase = bout.Phase;
+            bool show = SettingsPage.Map && bout.red != null && bout.blue != null && !MenuOpen && !DebugOpen
+                && (phase == BoutPhase.Fight || phase == BoutPhase.Count || phase == BoutPhase.Intro || phase == BoutPhase.RoundBreak)
+                && (_predict == null || _predict.ClassListContains("hidden"));
+            _ringMap.EnableInClassList("hidden", !show);
+            if (phase == BoutPhase.Intro && _lastMapRound != bout.Round) { _lastMapRound = bout.Round; _ringMap.Clear(); }
+            if (!show) return;
+            Fighter red = bout.red, blue = bout.blue;
+            Vector3 r = red.CenterOfMass, b = blue.CenterOfMass;
+            float dt = phase == BoutPhase.Fight ? Time.deltaTime : 0f;
+            _ringMap.Set(new Vector2(r.x, r.z), red.IsDown, new Vector2(b.x, b.z), blue.IsDown,
+                new Vector2(red.ringCentre.x, red.ringCentre.z), red.ringHalf > 0f ? red.ringHalf : 3.05f, dt, now);
+        }
+
+        int _lastMapRound;
+
+        /// <summary>The win probability twice a second while the fight is on, and where each round began.</summary>
+        void SampleWin(float now)
+        {
+            if (bout.Phase != BoutPhase.Fight || now < _nextWinSample) return;
+            _nextWinSample = now + WinSampleSeconds;
+            if (bout.Round != _winRound)
+            {
+                _winRound = bout.Round;
+                _winRecord.roundStarts.Add(_winRecord.share.Count);
+            }
+            _winRecord.share.Add(Excitement.RedShare);
+            _winRecord.excitement.Add(Excitement.Value);
+            if (SettingsPage.Stats) _stripWin?.Show(_winRecord);
         }
 
         /// <summary>At the result, once: the pick paid out, and a cup bout (League/Career.cs) counted, in a line on the card.</summary>
@@ -836,10 +892,35 @@ namespace PoBox.UI
         void OnHit(HitEvent e)
         {
             Excitement ex = Excitement.Instance;
-            if (!SettingsPage.Stats || !e.clean || ex == null || e.impulse < ex.UsualImpulse * flashOverUsual || _flash == null) return;
+            // The radar gun: with STATS every hard clean punch; without, only the rare one far over the usual.
+            float over = SettingsPage.Stats ? flashOverUsual : radarOverUsual;
+            if (!e.clean || ex == null || e.impulse < ex.UsualImpulse * over || _flash == null) return;
             _flashPoint = e.point;
             _flashAt = Time.unscaledTime;
             _flash.text = $"{e.gloveSpeed * 3.6f:0} km/h";
+        }
+
+        int _tapMost;
+        float _tapAt;
+        bool _tapMoved;
+
+        /// <summary>
+        /// Two fingers down together and lifted quickly without sliding: STATS on or off, TAB's twin on a phone. Three
+        /// fingers are the debug panel's (DebugPanel.Hook), so a touch that ever had three is not this.
+        /// </summary>
+        bool TwoFingerTap(float now)
+        {
+            int n = Input.touchCount;
+            if (n > 0)
+            {
+                if (_tapMost == 0) { _tapAt = now; _tapMoved = false; }
+                _tapMost = Mathf.Max(_tapMost, n);
+                for (int i = 0; i < n; i++) if (Input.GetTouch(i).deltaPosition.sqrMagnitude > 400f) _tapMoved = true;
+                return false;
+            }
+            bool tap = _tapMost == 2 && !_tapMoved && now - _tapAt < 0.35f;
+            _tapMost = 0;
+            return tap;
         }
 
         void Update()
@@ -850,6 +931,7 @@ namespace PoBox.UI
             if (Input.GetKeyDown(KeyCode.Escape)) Back();
             if (Input.GetKeyDown(KeyCode.Tab)) SettingsPage.ToggleStats();
             float now = Time.unscaledTime;
+            if (TwoFingerTap(now)) SettingsPage.ToggleStats();
             if (_leaving)
             {
                 string dots = BusyDots[(int)(now * 3f) % BusyDots.Length];
@@ -869,6 +951,8 @@ namespace PoBox.UI
 
             RefreshBars();
             RefreshOverlays(now);
+            SampleWin(now);
+            RefreshMap(now);
             // The replay over: the card back. One still playing as the result runs out is stopped first, so the
             // next bout is placed on the live state and not under the replay's.
             if (_replaying && !MjReplay.Playing) { _replaying = false; ShowResults(); }
@@ -1091,6 +1175,7 @@ namespace PoBox.UI
             float centre = bout.judges.LastCentreShare;
             Set(_breakCentre[0], $"{centre * 100f:0}%");
             Set(_breakCentre[1], $"{(1f - centre) * 100f:0}%");
+            _breakWin?.Show(_winRecord);
         }
 
         /// <summary>The impulse that is drawn fully hot: the most that has landed on any one part of either fighter, and never less than a few punches' worth.</summary>
@@ -1241,6 +1326,7 @@ namespace PoBox.UI
                 _judgeCards[j].EnableInClassList("judge--blue", b > r);
             }
 
+            _resWin?.Show(_winRecord);
             RefreshNext();
         }
 

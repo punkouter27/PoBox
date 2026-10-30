@@ -11,7 +11,7 @@ namespace PoBox.UI
     /// <summary>
     /// The settings (Assets/UI/Settings.uxml), the same on the HUD's menu, the first screen and the free-for-all: three
     /// tabs on one sheet, every option of the game. SOUND: sound, the commentator's voice, the buzz of a hit, bullet
-    /// time. VIEW: quality, the frame rate, STATS (the numbers over the picture) and BETS (the coin pick before the
+    /// time. VIEW: quality, the frame rate, INTENT and MAP (off by default), STATS (the numbers over the picture) and BETS (the coin pick before the
     /// bell), both off by default. MORE: the collision shapes, the brain cam, the readings, throwing the ladder away,
     /// the Twitch channel for chat plays and the cornerman's proxy. Every choice is kept on the device. RESET is only
     /// offered where there is a ladder, BRAIN only where there is a brain cam (the arena), X-RAY only where there are
@@ -27,13 +27,15 @@ namespace PoBox.UI
         public static bool Stats;
         /// <summary>The coin pick before the first bell (League/Prediction.cs).</summary>
         public static bool Bets;
+        /// <summary>The ring from above over the picture (UI/RingMap.cs; HudView shows it). Arrows in the ring are Fx.IntentArrows.On.</summary>
+        public static bool Map;
 
         readonly Button[] _tabs = new Button[3];
         readonly VisualElement[] _pages = new VisualElement[3];
-        readonly Button _sound, _quality, _voice, _buzz, _bullet, _fps, _stats, _bets, _xray, _brain, _reset;
+        readonly Button _sound, _quality, _voice, _buzz, _bullet, _fps, _stats, _bets, _intent, _map, _xray, _brain, _reset;
         readonly Label _qualityBadge, _resetWord;
         readonly Glyph _resetGlyph;
-        readonly TextField _twitch, _corner;
+        readonly TextField _twitch, _corner, _board;
         readonly LeagueTable _league;
         float _armedUntil;
 
@@ -62,11 +64,14 @@ namespace PoBox.UI
             _fps = root.Q<Button>("s-fps");
             _stats = root.Q<Button>("s-stats");
             _bets = root.Q<Button>("s-bets");
+            _intent = root.Q<Button>("s-intent");
+            _map = root.Q<Button>("s-map");
             _xray = root.Q<Button>("s-xray");
             _brain = root.Q<Button>("s-brain");
             _reset = root.Q<Button>("s-reset"); _resetWord = root.Q<Label>("s-reset-word"); _resetGlyph = root.Q<Glyph>("s-reset-glyph");
             _twitch = root.Q<TextField>("s-twitch");
             _corner = root.Q<TextField>("s-corner");
+            _board = root.Q<TextField>("s-board");
             _reset?.EnableInClassList("hidden", league == null);
             _brain?.EnableInClassList("hidden", !brain);
             _xray?.EnableInClassList("hidden", !xray);
@@ -80,6 +85,8 @@ namespace PoBox.UI
             Hook(_brain, () => BrainCam = !BrainCam);
             Hook(_stats, () => Stats = !Stats);
             Hook(_bets, () => Bets = !Bets);
+            Hook(_intent, () => IntentArrows.On = !IntentArrows.On);
+            Hook(_map, () => Map = !Map);
             Hook(_quality, () =>
             {
                 int n = QualitySettings.names.Length;
@@ -111,6 +118,15 @@ namespace PoBox.UI
                 _corner.RegisterValueChangedCallback(e =>
                 {
                     PlayerPrefs.SetString(CornerAI.PrefKey, (e.newValue ?? "").Trim());
+                    PlayerPrefs.Save();
+                });
+            }
+            if (_board != null)
+            {
+                _board.value = Leaderboard.Url;
+                _board.RegisterValueChangedCallback(e =>
+                {
+                    PlayerPrefs.SetString(Leaderboard.PrefKey, (e.newValue ?? "").Trim());
                     PlayerPrefs.Save();
                 });
             }
@@ -163,6 +179,8 @@ namespace PoBox.UI
             BrainCam = PlayerPrefs.GetInt("pobox.brain", 0) == 1;
             Stats = PlayerPrefs.GetInt("pobox.stats", 0) == 1;
             Bets = PlayerPrefs.GetInt("pobox.bets", 0) == 1;
+            IntentArrows.On = PlayerPrefs.GetInt("pobox.intent", 0) == 1;
+            Map = PlayerPrefs.GetInt("pobox.map", 0) == 1;
             int quality = PlayerPrefs.GetInt("pobox.quality", -1);
             // Only in play: in the editor the documents are built out of play too, and the project's level is the project's.
             if (Application.isPlaying && quality >= 0 && quality < QualitySettings.names.Length && quality != QualitySettings.GetQualityLevel()) QualitySettings.SetQualityLevel(quality, true);
@@ -180,6 +198,8 @@ namespace PoBox.UI
             PlayerPrefs.SetInt("pobox.brain", BrainCam ? 1 : 0);
             PlayerPrefs.SetInt("pobox.stats", Stats ? 1 : 0);
             PlayerPrefs.SetInt("pobox.bets", Bets ? 1 : 0);
+            PlayerPrefs.SetInt("pobox.intent", IntentArrows.On ? 1 : 0);
+            PlayerPrefs.SetInt("pobox.map", Map ? 1 : 0);
             PlayerPrefs.SetInt("pobox.quality", QualitySettings.GetQualityLevel());
             if (PerfTelemetry.Instance != null) PlayerPrefs.SetInt("pobox.fps", PerfTelemetry.Instance.targetFps);
             PlayerPrefs.Save();
@@ -195,6 +215,8 @@ namespace PoBox.UI
             Toggle(_brain, "Brain cam", BrainCam);
             Toggle(_stats, "Stats", Stats);
             Toggle(_bets, "Bets", Bets);
+            Toggle(_intent, "Intent arrows", IntentArrows.On);
+            Toggle(_map, "Ring map", Map);
             if (_qualityBadge != null)
             {
                 string[] names = QualitySettings.names;
