@@ -1105,7 +1105,7 @@ get-up identical to a baseline recorded before the change (fixed seed, 4 worlds 
   `tools/rescale_actions.py` moves a brain to it (last layer, noise and the last-action inputs' statistics times
   old/new): targets agree within 1.3e-4 rad wherever the old action was inside its clip; 10% of joint-samples pressed on
   the clip and now reach up to 0.45 rad further, which is the point.
-- **models/v3** (`tools/archive/build_v3.py`; `rigs/v2` rebuilds `models/v2` byte for byte, checked under 3.5.0 and 3.11, so v3
+- **models/v3** (`tools/build_v3.py`; `rigs/v2` rebuilds `models/v2` byte for byte, checked under 3.5.0 and 3.11, so v3
   differs by exactly these): human force each way (`rig_to_mjcf.HUMAN_FORCE`: ankle dorsiflexion 0.2, knee flexion 0.5,
   hip rotation 0.3; Matt's ankle_y -46/+232 N m); per-joint action scale; head spheres at 95% of the measured half-width
   (were 100-137%); damping for zeta 0.85 measured standing (`tools/pd_sweep.py --loaded`: a balance hand on the pelvis,
@@ -1499,3 +1499,17 @@ solver is not bit-repeatable even old against old).
   (delay 3, filter 0.3, flail 1e-4); match gauntlets from the game's Matt against the game's roster: `rz_ctl_matt` (control), `rz_esc_matt`
   (escape 0.15 + rope 0.05, ropes-start 0.3), `rz_flail_matt` (2e-4), `rz_d3_matt` / `rz_d5_matt` (60 / 100 ms), `rz_af_matt` (filter 0.3);
   each followed by its exam through tools/exam_rules.py. Copy entries into logs/queue.json to run them.
+
+## 2026-10-30 evening: models/v3 gets the trunk the right way round and de Leva's segment masses (owner: "yes")
+
+- `rig_to_mjcf.py` takes two more optional rig fields, `ranges_deg` and `segment_mass_frac`; a rig without them builds
+  as before (rigs/v2 rebuilds models/v2 byte for byte: matt and grandma solo and bag compared).
+- `tools/build_v3.py` (back from tools/archive: v3 is the next body, K12) now also sets `abdomen_y` to (-30, 60): 60 degrees
+  forward and 30 back, where v2 has 30 forward and 60 back; and de Leva's (1996) men's or women's shares (Grandma) in
+  place of Winter/Dempster's, scaled to sum to 1 so each body weighs what it did. Every boxer passed the self-contact
+  check in 25 poses; `pd_sweep --loaded` re-measured the damping. Log: `logs/build_v3_261030.log`.
+- After (`tools/mass_audit_v3.md`, `tools/rom_audit_v3.md`): every segment within 1% of de Leva (thigh 9.9% -> 14.1%,
+  pelvis 14.1% -> 11.1% for the men); trunk 60 forward / 30 back. Still past a person's range, not changed: shoulder
+  extension 110 degrees (60 typical) and adduction past the side.
+- Nothing of this reaches the game until v3 is trained: `training/queues/queue_v3_staged.json` (99 jobs, ~16 h) reads
+  models/v3 as it runs, so it trains these bodies unchanged. Not run yet.

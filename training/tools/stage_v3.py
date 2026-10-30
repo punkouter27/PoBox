@@ -7,7 +7,7 @@ queue_flags_staged.json, on v2 (the game's bodies), about 2 GPU hours: the bench
 topped up with the self-contact charge, and rc2_matt: the punch's variety (repeat decay, combinations), hurt starts with the
 clinch's pay, the hand-over share up (H8), the self-contact charge and ringcraft on m9_matt, stopping early on --done-when.
 
-queue_v3_staged.json, on models/v3 (tools/archive/build_v3.py), about 2 h a boxer: every boxer's three shipped brains rebuilt from
+queue_v3_staged.json, on models/v3 (tools/build_v3.py), about 2 h a boxer: every boxer's three shipped brains rebuilt from
 Assets/Boxers/NAME/*.onnx and rescaled to v3's per-joint action scale; the punch rules into the v3 configs; then a boxer at a
 time: footwork topped up (+ exam), get-up topped up against a frozen partner, its hand-over bank, a match round against the
 others' newest v3 brains (+ exam on v3). v3's force each way and its action scale fail the shipped footwork brains

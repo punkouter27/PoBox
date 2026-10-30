@@ -247,7 +247,7 @@ number). The details and measurements are in `rl_optimization_log.md`; the plan 
 
 - New, off by default: a self-contact charge, punch variety (repeat decay, combinations), hurt starts, `--done-when`,
   fatigue as a torque ceiling, per-joint action scale; the last two also in the C MuJoCo exam and in `MjBoxer.Drive`.
-- `training/models/v3` and `rigs/v3` beside v2 (`tools/archive/build_v3.py`): human force each way, per-joint action scale, heads
+- `training/models/v3` and `rigs/v3` beside v2 (`tools/build_v3.py`): human force each way, per-joint action scale, heads
   inside the skull, damping measured standing. The game still runs v2. v3 fails the shipped brains until they are topped
   up (`tools/archive/ablate_v3.py`), so it is staged as a full retrain: `training/queues/queue_v3_staged.json` (~16 h). The trainer-only
   part on v2 is `training/queues/queue_flags_staged.json` (~2 h).

@@ -9,7 +9,7 @@
     "mass from the mesh's volume: 92 litres is a body-mass index of 27.4",
     "trunk slimmed to torso 0.106, pelvis 0.100: its own arms touched it",
     "trunk slimmed to torso 0.100, pelvis 0.094: its own arms touched it",
-    "v3 (tools/build_v3.py): human force each way, per-joint action scale, head 0.098 m (95% of its half-width), joint_kv standing",
+    "v3 (tools/build_v3.py): human force each way, per-joint action scale, head 0.098 m (95% of its half-width), joint_kv standing, trunk bend 60 fwd / 30 back, de Leva segment masses",
     "joint_kv from tools/pd_sweep.py --loaded (target zeta 0.85)"
   ],
   "bones": [
@@ -325,17 +325,34 @@
   "says": "",
   "human_force": true,
   "per_joint_action": true,
+  "ranges_deg": {
+    "abdomen_y": [
+      -30,
+      60
+    ]
+  },
+  "segment_mass_frac": {
+    "pelvis": 0.1117,
+    "torso": 0.3229,
+    "head": 0.0694,
+    "upper_arm": 0.0271,
+    "forearm": 0.0162,
+    "hand": 0.0061,
+    "thigh": 0.1416,
+    "shin": 0.0433,
+    "foot": 0.0137
+  },
   "joint_kv": {
     "abdomen_z": 14.69,
-    "abdomen_y": 22.722,
+    "abdomen_y": 21.659,
     "abdomen_x": 21.659,
     "shoulder_x": 3.222,
     "shoulder_z": 6.017,
-    "elbow": 4.209,
-    "hip_x": 62.763,
+    "elbow": 3.525,
+    "hip_x": 63.553,
     "hip_z": 12.084,
-    "hip_y": 63.31,
-    "knee": 22.862,
+    "hip_y": 64.274,
+    "knee": 12.084,
     "ankle_y": 12.084,
     "ankle_x": 1.611
   }

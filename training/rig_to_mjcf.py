@@ -122,6 +122,10 @@ class Fighter:
         # (tools/pd_sweep.py --loaded --rig), and the head's sphere; all optional, a rig without them builds as before.
         self.human_force = bool(rig.get("human_force", False))
         self.joint_kv = {k: float(v) for k, v in rig.get("joint_kv", {}).items()}
+        # models/v3 too, also optional: joint ranges and segment mass shares that replace the defaults by name
+        # ("ranges_deg": the trunk's bend the right way round; "segment_mass_frac": de Leva's shares, tools/build_v3.py).
+        self.ranges = dict(RANGES_DEG, **{k: tuple(v) for k, v in rig.get("ranges_deg", {}).items()})
+        self.mass_frac = dict(SEGMENT_MASS_FRAC, **{k: float(v) for k, v in rig.get("segment_mass_frac", {}).items()})
         self.joints: List[Dict] = []
         self.actuators: List[str] = []
         self.lines: List[str] = []
@@ -136,7 +140,7 @@ class Fighter:
         return b2m(self.bones[self.map[key]]["tail"])
 
     def mass(self, segment: str, share: float = 1.0, extra: float = 0.0) -> str:
-        return f'mass="{self.mass_kg * SEGMENT_MASS_FRAC[segment] * share + extra:.4f}" '
+        return f'mass="{self.mass_kg * self.mass_frac[segment] * share + extra:.4f}" '
 
     @staticmethod
     def capsule_volume(a: np.ndarray, b: np.ndarray, radius: float) -> float:
@@ -147,7 +151,7 @@ class Fighter:
                 f'size="{radius:.4f}" {mass}{extra}/>')
 
     def joint(self, name: str, axis: str, group: str, side: str = "") -> str:
-        lo, hi = RANGES_DEG[name]
+        lo, hi = self.ranges[name]
         default = GUARD_DEG[name]
         if name == "hip_y":
             default += self.lean

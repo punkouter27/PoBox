@@ -7,7 +7,7 @@
     "bone names were not recognisable; limbs were identified from the skeleton's shape. Check the list below",
     "made symmetric: left and right differed by up to 3.2 cm",
     "arms straightened to a T-pose: they rested -8 degrees below the shoulder line",
-    "v3 (tools/build_v3.py): human force each way, per-joint action scale, head 0.086 m (95% of its half-width), joint_kv standing",
+    "v3 (tools/build_v3.py): human force each way, per-joint action scale, head 0.086 m (95% of its half-width), joint_kv standing, trunk bend 60 fwd / 30 back, de Leva segment masses",
     "joint_kv from tools/pd_sweep.py --loaded (target zeta 0.85)"
   ],
   "bones": [
@@ -321,16 +321,33 @@
   "says": "fast and agile: quick light combinations from the end of her reach, then gone; circles off the ropes",
   "human_force": true,
   "per_joint_action": true,
+  "ranges_deg": {
+    "abdomen_y": [
+      -30,
+      60
+    ]
+  },
+  "segment_mass_frac": {
+    "pelvis": 0.1117,
+    "torso": 0.3229,
+    "head": 0.0694,
+    "upper_arm": 0.0271,
+    "forearm": 0.0162,
+    "hand": 0.0061,
+    "thigh": 0.1416,
+    "shin": 0.0433,
+    "foot": 0.0137
+  },
   "joint_kv": {
-    "abdomen_z": 13.217,
-    "abdomen_y": 15.886,
-    "abdomen_x": 17.425,
+    "abdomen_z": 12.622,
+    "abdomen_y": 17.425,
+    "abdomen_x": 20.056,
     "shoulder_x": 2.259,
     "shoulder_z": 3.268,
     "elbow": 1.872,
-    "hip_x": 26.896,
+    "hip_x": 27.091,
     "hip_z": 8.472,
-    "hip_y": 27.045,
+    "hip_y": 27.296,
     "knee": 8.472,
     "ankle_y": 8.472,
     "ankle_x": 1.13

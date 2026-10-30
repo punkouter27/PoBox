@@ -7,7 +7,7 @@
     "made symmetric: left and right differed by up to 16.2 cm",
     "arms straightened to a T-pose: they rested 10 degrees below the shoulder line",
     "mass from the mesh's volume: 58 litres is a body-mass index of 21.1",
-    "v3 (tools/build_v3.py): human force each way, per-joint action scale, head 0.074 m (95% of its half-width), joint_kv standing",
+    "v3 (tools/build_v3.py): human force each way, per-joint action scale, head 0.074 m (95% of its half-width), joint_kv standing, trunk bend 60 fwd / 30 back, de Leva segment masses",
     "joint_kv from tools/pd_sweep.py --loaded (target zeta 0.85)"
   ],
   "bones": [
@@ -332,16 +332,33 @@
   "says": "always closing, many light fast punches",
   "human_force": true,
   "per_joint_action": true,
+  "ranges_deg": {
+    "abdomen_y": [
+      -30,
+      60
+    ]
+  },
+  "segment_mass_frac": {
+    "pelvis": 0.1117,
+    "torso": 0.3229,
+    "head": 0.0694,
+    "upper_arm": 0.0271,
+    "forearm": 0.0162,
+    "hand": 0.0061,
+    "thigh": 0.1416,
+    "shin": 0.0433,
+    "foot": 0.0137
+  },
   "joint_kv": {
-    "abdomen_z": 8.392,
-    "abdomen_y": 18.754,
+    "abdomen_z": 7.492,
+    "abdomen_y": 20.647,
     "abdomen_x": 22.744,
     "shoulder_x": 2.659,
     "shoulder_z": 4.953,
     "elbow": 2.244,
-    "hip_x": 36.217,
+    "hip_x": 37.058,
     "hip_z": 9.972,
-    "hip_y": 36.402,
+    "hip_y": 37.311,
     "knee": 9.972,
     "ankle_y": 9.972,
     "ankle_x": 1.33

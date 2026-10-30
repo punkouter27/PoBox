@@ -10,7 +10,11 @@ Each rig is rigs/v2's, which rebuilds models/v2 byte for byte (checked 2026-10-1
     clipped action is the end of the joint's range and an elbow can straighten;
   * the head's sphere at 95% of the head's half-width measured from the mesh (DOCS/reports/2026-10-16-collision-fit.html;
     v2's were 100-137%, the head colliding outside the skull);
-  * "joint_kv": each drive's damping for a ratio of 0.85, measured standing on the v3 body (tools/pd_sweep.py --loaded).
+  * "joint_kv": each drive's damping for a ratio of 0.85, measured standing on the v3 body (tools/pd_sweep.py --loaded);
+  * "ranges_deg": the trunk's bend the right way round, 60 degrees forward and 30 back (v2 has it 30 forward, 60 back:
+    tools/rom_audit.md, 2026-10-30);
+  * "segment_mass_frac": de Leva's (1996) segment masses, men's or women's, instead of Winter/Dempster's, which left every
+    thigh about 30% light and the pelvis 26% heavy (tools/mass_audit.md, 2026-10-30). The body's total is unchanged.
 The configs carry v2's rules (speed limit, fatigue, punch rules) and "fatigue_ceiling": true. Every boxer is checked for
 self-contact in the T-pose, the guard and a swing (tools/check_self_collision.py) before its pairs are built.
 """
@@ -33,6 +37,24 @@ NAMES = ("grandma", "grandpa", "kim", "matt", "nick", "sokol", "trump", "zombie"
 HEAD_HALF = {"grandma": 0.118, "grandpa": 0.091, "kim": 0.091, "matt": 0.086, "nick": 0.078, "sokol": 0.094,
              "trump": 0.120, "zombie": 0.103}
 HEAD_FILL = 0.95
+# abdomen_y: positive bends the trunk forward (tools/rom_audit.py reads the direction from the body).
+TRUNK_RANGE = {"abdomen_y": [-30, 60]}
+# de Leva (1996) table 4, % of body mass, as the model's bodies: pelvis the lower trunk, torso the middle and upper trunk.
+DE_LEVA = {
+    "M": {"pelvis": 11.17, "torso": 32.29, "head": 6.94, "upper_arm": 2.71, "forearm": 1.62, "hand": 0.61,
+          "thigh": 14.16, "shin": 4.33, "foot": 1.37},
+    "F": {"pelvis": 12.47, "torso": 30.10, "head": 6.68, "upper_arm": 2.55, "forearm": 1.38, "hand": 0.56,
+          "thigh": 14.78, "shin": 4.81, "foot": 1.29},
+}
+FEMALE = {"grandma"}
+
+
+def mass_frac(name: str) -> dict:
+    """The shares as fractions, scaled to sum to exactly 1 so the body weighs what v2's does."""
+    t = DE_LEVA["F" if name in FEMALE else "M"]
+    whole = t["pelvis"] + t["torso"] + t["head"] + 2 * sum(t[k] for k in ("upper_arm", "forearm", "hand", "thigh", "shin", "foot"))
+    return {k: round(v / whole, 5) for k, v in t.items()}
+
 RULES = ("speed_limit", "fatigue_j", "fatigue_rec_s", "fatigue_weak", "hit_push", "stagger_v", "hurt_full", "body_drain", "obs_state")
 
 
@@ -56,8 +78,11 @@ def build(name: str, v2_models: str, rigs: str, models: str) -> tuple:
     rig["per_joint_action"] = True
     rig["radii"]["head"] = round(HEAD_FILL * HEAD_HALF[name], 4)
     rig.pop("joint_kv", None)
+    rig["ranges_deg"] = TRUNK_RANGE
+    rig["segment_mass_frac"] = mass_frac(name)
     rig.setdefault("notes", []).append(f"v3 (tools/build_v3.py): human force each way, per-joint action scale, head "
-                                       f"{rig['radii']['head']:.3f} m ({HEAD_FILL:.0%} of its half-width), joint_kv standing")
+                                       f"{rig['radii']['head']:.3f} m ({HEAD_FILL:.0%} of its half-width), joint_kv standing, trunk bend 60 fwd / 30 back, "
+                                       f"de Leva segment masses")
     rig_path = os.path.join(rigs, f"{name}.json")
     save(rig_path, rig)
     cubes = int(v2.get("cubes", 0))
