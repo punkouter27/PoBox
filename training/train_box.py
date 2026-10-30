@@ -125,9 +125,26 @@ def main() -> None:
     ap.add_argument("--assist", type=float, default=0.6,
                     help="getup: the helping hand the stage starts with, as a share of body weight; it comes down by itself")
     ap.add_argument("--speed-limit", action="store_true",
-                    help="a drive's torque falls to nothing as its joint nears its speed limit (envs/boxing.py)")
+                    help="every fighter: a drive's torque falls to nothing as its joint nears its speed limit (envs/boxing.py). "
+                         "Without it each fighter's config says; a config that does not say gets it (see --legacy-rules)")
     ap.add_argument("--fatigue-j", type=float, default=0.0,
-                    help="a bout: joules a full-strength boxer's drives can put out before they tire; 0 = no fatigue. Try 30000")
+                    help="a bout: joules a full-strength boxer's drives can put out before they tire, for every fighter; 0 = each "
+                         "config's own, and 20000 for a config that does not say (see --legacy-rules)")
+    ap.add_argument("--legacy-rules", action="store_true",
+                    help="a fighter whose config does not say trains with neither the speed limit nor fatigue (before 2026-10-30). "
+                         "Default: it trains with both (AGENTS.md section 3); write them into its config before the game plays it")
+    ap.add_argument("--action-filter", type=float, default=0.0,
+                    help="the drives get f x the last action + (1 - f) x the policy's (envs/boxing.py); 0 = off. Try 0.3-0.5. "
+                         "The game's MjBoxer does the same from the boxer config's rules_<brain>.action_filter")
+    ap.add_argument("--obs-delay", type=int, default=0,
+                    help="the observation is at least this many control steps (20 ms) late, every episode (reaction delay); 0 = off. "
+                         "Try 3. The game's MjBoxer mirrors it from rules_<brain>.obs_delay")
+    ap.add_argument("--flail-w", type=float, default=0.0,
+                    help="footwork and spar: charge per (rad/s)^2 of an idle hand's shoulder and elbow speed (envs/boxing.py); 0 = off. Try 1e-4")
+    ap.add_argument("--escape-w", type=float, default=0.0,
+                    help="spar: pay per m/s of coming out of the ropes' last metre, charged as much going in (envs/boxing.py); 0 = off. Try 0.1")
+    ap.add_argument("--cmd-fwd-max", type=float, default=1.0, help="footwork: the fastest forward walk asked for, m/s; a jog is 2-2.5")
+    ap.add_argument("--slope-deg", type=float, default=0.0, help="footwork: each world's floor slopes up to this many degrees, any way; 0 = flat")
     ap.add_argument("--start-spread", type=float, default=1.0,
                     help="how far from the guard an episode may begin, as a multiple of the usual 0.06 rad and 0.15 m/s")
     ap.add_argument("--effort-free-iters", type=int, default=0,
@@ -172,7 +189,8 @@ def main() -> None:
         env = GetUpEnv(args.xml, args.num_envs, device=device, seed=args.seed, action_scale=args.action_scale,
                        cuda_graph=not args.no_cuda_graph, obs_noise=args.obs_noise,
                        slack_hi=args.slack_hi, shove=args.shove, assist=args.assist,
-                       speed_limit=args.speed_limit, action_rate_w=args.action_rate_w, obs_delay_max=args.obs_delay_max)
+                       speed_limit=args.speed_limit, action_rate_w=args.action_rate_w, obs_delay_max=args.obs_delay_max,
+                       action_filter=args.action_filter, obs_delay=args.obs_delay, default_rules=not args.legacy_rules)
     elif args.stage == "footwork":
         env = FootworkEnv(args.xml, args.num_envs, device=device, seed=args.seed, action_scale=args.action_scale,
                           episode_len_s=args.episode_s, cuda_graph=not args.no_cuda_graph, obs_noise=args.obs_noise,
@@ -180,7 +198,8 @@ def main() -> None:
                           disturb=args.disturb, randomise=args.randomise, rsi=args.rsi,
                           shove_hi=args.shove_max, start_spread=args.start_spread,
                           speed_limit=args.speed_limit, action_rate_w=args.action_rate_w, obs_delay_max=args.obs_delay_max,
-                          selfcontact_w=args.selfcontact_w)
+                          selfcontact_w=args.selfcontact_w, cmd_fwd_max=args.cmd_fwd_max, slope_deg=args.slope_deg,
+                          action_filter=args.action_filter, obs_delay=args.obs_delay, default_rules=not args.legacy_rules, flail_w=args.flail_w)
     else:
         env = (MatchEnv if args.stage == "v2" else BoxingEnv)(args.xml, args.num_envs, device=device, seed=args.seed, action_scale=args.action_scale,
                         episode_len_s=args.episode_s, cuda_graph=not args.no_cuda_graph, obs_noise=args.obs_noise,
@@ -191,7 +210,8 @@ def main() -> None:
                         speed_limit=args.speed_limit, fatigue_j=args.fatigue_j, start_spread=args.start_spread,
                         action_rate_w=args.action_rate_w, obs_delay_max=args.obs_delay_max, seek_w=args.seek_w,
                         ropes_start=args.ropes_start, selfcontact_w=args.selfcontact_w, repeat_decay=args.repeat_decay,
-                        combo_w=args.combo_w, hurt_start=args.hurt_start, fatigue_ceiling=args.fatigue_ceiling)
+                        combo_w=args.combo_w, hurt_start=args.hurt_start, fatigue_ceiling=args.fatigue_ceiling,
+                        escape_w=args.escape_w, action_filter=args.action_filter, obs_delay=args.obs_delay, default_rules=not args.legacy_rules, flail_w=args.flail_w)
     N, K, A, D = env.N, env.K, env.A, env.obs_dim
     # One learner per distinct fighter. Two copies of the same fighter share one, and it learns from both.
     names = env.names if env.hetero else [env.names[0]]
@@ -254,6 +274,9 @@ def main() -> None:
 
     ck_dir = os.path.join(HERE, "checkpoints", run_name)
     os.makedirs(ck_dir, exist_ok=True)
+    from tools.run_record import brain_rules, write_run_config
+    write_run_config(ck_dir, args, env, {"run_name": run_name, "mode": env.mode, "learners": names,
+                                         "resume_from_iteration": start_iter})
     csv_path = os.path.join(HERE, "logs", f"{run_name}.csv")
     new_csv = not os.path.exists(csv_path) or os.path.getsize(csv_path) == 0
     csv_f = open(csv_path, "a", newline="", encoding="utf-8")
@@ -381,7 +404,8 @@ def main() -> None:
                               # What the viewer needs to show the policy in the world it was trained in.
                               "env": {"daze": args.daze, "daze_tau": args.daze_tau, "daze_lo": args.daze_lo,
                                       "daze_hi": args.daze_hi, "daze_weak": args.daze_weak, "block_w": args.block_w,
-                                      "speed_limit": env.speed_limit, "fatigue_j": args.fatigue_j}})
+                                      "speed_limit": env.speed_limit, "fatigue_j": args.fatigue_j,
+                                      "rules": brain_rules(env, k if env.hetero else 0)}})
                 if frozen[k]:
                     # Kept beside its opponent's so the viewer shows the pair that trained; there is no
                     # latest_* for it, so nothing takes it for a newly trained policy.
@@ -392,7 +416,8 @@ def main() -> None:
                 except Exception as e:   # an export problem must never cost the run
                     print(f"[onnx] export failed: {e}", flush=True)
                 manifest = dict(env.cfgs[k if env.hetero else 0])
-                manifest.update({"action_scale": env.action_scale, "observation_size": D, "speed_limit": env.speed_limit, "fatigue_j": args.fatigue_j,
+                # The rules this brain was trained under, as the game reads them (speed_limit, fatigue_j, rules_<brain>).
+                manifest.update({"action_scale": env.action_scale, "observation_size": D, **brain_rules(env, k if env.hetero else 0),
                                  "trained_by": {"run": run_name, "mode": env.mode, "against": env.names, "iterations": it + 1}})
                 with open(os.path.join(ck_dir, f"latest{tag(name)}_policy_config.json"), "w", encoding="utf-8") as fh:
                     json.dump(manifest, fh, indent=2)

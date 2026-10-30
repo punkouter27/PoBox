@@ -1,0 +1,5 @@
+{
+ "matt": {
+  "match": "checkpoints/rz_af_matt/latest_matt.pt"
+ }
+}

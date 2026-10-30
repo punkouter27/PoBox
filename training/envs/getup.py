@@ -69,8 +69,8 @@ class GetUpEnv(BoxingEnv):
         if self.speed_ramp:
             m_nv = self.m.nv
             extra = np.zeros(m_nv)
-            for p, c in zip(("a_", "b_"), self.cfgs):
-                if kw.get("speed_limit", False) or c.get("speed_limit", False):
+            for p, c, on in zip(("a_", "b_"), self.cfgs, self.limited):
+                if on:                        # envs/boxing.py's resolution: the argument, the config, or default_rules
                     for n, fl, vl in zip(c["joint_order"], c["force_limit"], c["velocity_limit"]):
                         extra[self.m.jnt_dofadr[mujoco.mj_name2id(self.m, mujoco.mjtObj.mjOBJ_JOINT, p + n)]] += fl / vl
             # self.m.dof_damping already holds the extra; each world's (randomised) damping is that times its own factor.
@@ -193,9 +193,7 @@ class GetUpEnv(BoxingEnv):
     # ---- step ----------------------------------------------------------------------------------
     def step(self, action: torch.Tensor):
         N, K, A = self.N, self.K, self.A
-        action = action.clamp(-self.action_clip, self.action_clip).reshape(N, K, A)
-        self.prev_action = self.last_action
-        self.last_action = action
+        action = self._take(action)
         self._drive(action)
         lift = self.assist.view(1, K) * self.weight.view(1, K) * self.aided * (self.slack <= 0.0).float()
         for k in range(K):

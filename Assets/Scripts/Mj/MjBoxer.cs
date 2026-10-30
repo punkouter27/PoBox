@@ -25,6 +25,22 @@ namespace PoBox.Mj
         public bool fatigue_ceiling;
         public double stand_height, total_mass_kg, action_scale = 0.5, action_clip = 3.0, ring_half = 3.05, strength = 1.0, speed = 1.0;
         public int control_decimation = 4, physics_hz = 200;
+        /// <summary>2026-10-30: the rules each of the three brains was trained under (envs/boxing.py's rules_&lt;brain&gt;); a
+        /// config without them, every brain shipped before, has none: no filter, no delay.</summary>
+        public BrainRules rules_footwork = new BrainRules(), rules_match = new BrainRules(), rules_getup = new BrainRules();
+    }
+
+    /// <summary>
+    /// Two rules of one brain, as envs/boxing.py trains it. action_filter f: the drives get f x the last action + (1 - f) x the
+    /// policy's, and the observation's last action is that one (0 = off). obs_delay .. obs_delay_max: the observation is that
+    /// many control steps late, drawn once each time the brain takes the body or the body is reset (the last action never is).
+    /// </summary>
+    [Serializable]
+    public class BrainRules
+    {
+        public double action_filter;
+        public int obs_delay, obs_delay_max;
+        public int LagMax => Math.Max(obs_delay, obs_delay_max);
     }
 
     /// <summary>
@@ -125,7 +141,15 @@ namespace PoBox.Mj
         /// <summary>Another policy from here on. None is the zero action. Each policy's worker is made once and kept.</summary>
         public void SetPolicy(ModelAsset asset)
         {
+            // A brain taking the body begins an episode of its own, as in training: its delayed observation starts afresh.
+            bool change = asset != policy;
+            if (change) _fresh = true;
             policy = asset;
+            Rules = RulesFor(asset);
+            // A brain trained with a filter began every episode from the zero action (its last action, shown and smoothed
+            // from); so does it here. A brain without one sees the last brain's action, as every brain shipped before did.
+            if (change && Rules.action_filter > 0.0)
+                for (int i = 0; i < Joints; i++) Action[i] = _applied[i] = 0.0;
             _worker = null;
             if (asset == null) return;
             if (!_workers.TryGetValue(asset, out _worker))
@@ -142,6 +166,54 @@ namespace PoBox.Mj
 
         /// <summary>The policy the boxer now runs.</summary>
         public ModelAsset Running => policy;
+
+        /// <summary>The running brain's rules (action filter, observation delay): its config's rules_getup, rules_match or rules_footwork.</summary>
+        public BrainRules Rules { get; private set; } = new BrainRules();
+
+        BrainRules RulesFor(ModelAsset asset)
+        {
+            if (Config == null) return new BrainRules();
+            if (asset != null && asset == getUpPolicy) return Config.rules_getup ?? new BrainRules();
+            if (asset != null && asset == matchPolicy) return Config.rules_match ?? new BrainRules();
+            return Config.rules_footwork ?? new BrainRules();
+        }
+
+        // The observation delay: the last LagMax + 1 observations, newest at _histAt, and this episode's lag.
+        double[][] _hist;
+        int _histAt, _lag;
+        bool _fresh = true;
+        readonly System.Random _lagRng = new System.Random();
+        /// <summary>How many control steps late the running brain's observation is this episode (0 without a delay).</summary>
+        public int Lag => Rules.LagMax > 0 ? _lag : 0;
+
+        /// <summary>envs/boxing.py's _delayed, for one boxer: Obs becomes the observation of Lag steps ago, but its last
+        /// action stays this step's. An episode's first observation fills the history, and its lag is drawn then.</summary>
+        void Delay()
+        {
+            int hi = Rules.LagMax, len = hi + 1;
+            if (_hist == null || _hist.Length != len)
+            {
+                _hist = new double[len][];
+                for (int s = 0; s < len; s++) _hist[s] = new double[WideObservationSize];
+                _fresh = true;
+            }
+            if (_fresh)
+            {
+                for (int s = 0; s < len; s++) Array.Copy(Obs, _hist[s], WideObservationSize);
+                _histAt = 0;
+                int lo = Math.Min(Rules.obs_delay, hi);
+                _lag = lo + _lagRng.Next(hi - lo + 1);
+                _fresh = false;
+            }
+            else
+            {
+                _histAt = (_histAt + 1) % len;
+                Array.Copy(Obs, _hist[_histAt], WideObservationSize);
+            }
+            Array.Copy(_hist[(_histAt - _lag + len) % len], Obs, WideObservationSize);
+            int a0 = 9 + 2 * Joints;
+            for (int i = 0; i < Joints; i++) Obs[a0 + i] = Clamp(Action[i], -100.0, 100.0);
+        }
 
         void OnDestroy()
         {
@@ -214,8 +286,9 @@ namespace PoBox.Mj
                 _d->qpos[_jq[i]] = Config.default_joint_pos[i];
                 _d->qvel[_jv[i]] = 0;
                 _d->ctrl[_act[i]] = _held[i] = Config.default_joint_pos[i];
-                Action[i] = 0;
+                Action[i] = _applied[i] = 0;
             }
+            _fresh = true;
             MujocoLib.mj_forward(_m, _d);
         }
 
@@ -229,8 +302,9 @@ namespace PoBox.Mj
                 _d->qpos[_jq[i]] = jointPos[i];
                 _d->qvel[_jv[i]] = 0;
                 _d->ctrl[_act[i]] = _held[i] = jointPos[i];
-                Action[i] = 0;
+                Action[i] = _applied[i] = 0;
             }
+            _fresh = true;
             MujocoLib.mj_forward(_m, _d);
         }
 
@@ -349,6 +423,7 @@ namespace PoBox.Mj
             o[at++] = state ? Reserve : Cmd[0]; o[at++] = state ? DazeShare : Cmd[1]; o[at++] = state ? OpponentDazeShare : Cmd[2];
             for (int i = 0; i < ObservationSize; i++) o[i] = Clamp(o[i], -100.0, 100.0);
             Bodies(pos, yaw, o, ObservationSize);
+            if (Rules.LagMax > 0) Delay();
         }
 
         /// <summary>The bodies' three numbers (see <see cref="BodyInputs"/>): zeros with nobody down within 3 m.</summary>
@@ -402,12 +477,17 @@ namespace PoBox.Mj
             output.AsReadOnlySpan().CopyTo(actionsOut);
         }
 
-        /// <summary>Joint targets from <see cref="Action"/>, into mjData.ctrl: the guard plus the action, held inside the joints' ranges.</summary>
+        /// <summary>Joint targets from <see cref="Action"/>, into mjData.ctrl: the guard plus the action, held inside the joints' ranges.
+        /// A brain trained with an action filter (envs/boxing.py's _take) gets f x the last action + (1 - f) x its own, and
+        /// that is the Action the next observation shows.</summary>
         public void Drive()
         {
+            double f = Rules.action_filter;
             for (int i = 0; i < Joints; i++)
             {
                 Action[i] = Clamp(Action[i], -Config.action_clip, Config.action_clip);
+                if (f > 0.0) Action[i] = f * _applied[i] + (1.0 - f) * Action[i];
+                _applied[i] = Action[i];
                 double perUnit = Config.action_scale_j != null && Config.action_scale_j.Length > i ? Config.action_scale_j[i] : Config.action_scale;
                 double want = Clamp(Config.default_joint_pos[i] + Action[i] * perUnit, Config.lower[i], Config.upper[i]);
                 double q = _d->qpos[_jq[i]];
@@ -427,6 +507,8 @@ namespace PoBox.Mj
         }
 
         readonly double[] _held = new double[64];
+        /// <summary>The action the drives got last control step: what the action filter starts from.</summary>
+        readonly double[] _applied = new double[64];
         readonly double[] _speedExtra = new double[64];
         double _speedShare = 1.0;
 

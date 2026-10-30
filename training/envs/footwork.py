@@ -46,8 +46,13 @@ class FootworkEnv(BoxingEnv):
 
     def __init__(self, xml_path: str, num_envs: int, walk_share: float = 0.5, turn_share: float = 0.25,
                  disturb: float = 1.0, randomise: float = 0.15, shove_every_s: float = 3.0, cube_every_s: float = 3.0,
-                 rsi: float = 0.0, shove_hi: float = 30.0, **kw):
+                 rsi: float = 0.0, shove_hi: float = 30.0, cmd_fwd_max: float = 1.0, slope_deg: float = 0.0, **kw):
         self.walk_share, self.turn_share = walk_share, turn_share
+        # Two more rungs (2026-10-30, both off unless asked for). cmd_fwd_max: the fastest forward walk a command asks for,
+        # m/s (1.0 is the ladder's walk; 2.0-2.5 is a jog). slope_deg: each world's floor slopes up to this many degrees,
+        # any way: the gravity is tilted a world, which is the same physics as a sloping floor seen from the floor, and the
+        # observation's "which way is down" is that true gravity, as a body on a slope feels it. Heights stay above the floor.
+        self.cmd_fwd_max, self.slope_deg = cmd_fwd_max, slope_deg
         # The share of walks that begin at a moment of a walking clip (style.py), legs and trunk as the clip has
         # them and the arms in the guard, with the clip's own velocity as the command: a boxer that has only ever
         # stood does not find walking by trying things at random, but one put in mid-stride learns to carry on.
@@ -110,10 +115,11 @@ class FootworkEnv(BoxingEnv):
             self.clip_v = torch.tensor(np.stack([v for _, v in states]), device=dev, dtype=torch.float32)
             f = torch.tensor(feats, device=dev)
             leg = float(self.leg_len[0])
-            self.clip_cmd = torch.stack([(f[:, 31] * leg).clamp(-0.4, 1.0), (f[:, 32] * leg).clamp(-0.4, 0.4), f[:, 36].clamp(-1.0, 1.0)], -1)
+            self.clip_cmd = torch.stack([(f[:, 31] * leg).clamp(-0.4, max(1.0, self.cmd_fwd_max)), (f[:, 32] * leg).clamp(-0.4, 0.4), f[:, 36].clamp(-1.0, 1.0)], -1)
         else:
             self.rsi = 0.0
         self._randomise()
+        self._slope()
 
         self._f = {k: torch.zeros((), device=dev) for k in
                    ("steps", "done_n", "ret_sum", "len_sum", "fell_sum", "up_sum", "power_sum", "walk_n", "track_err",
@@ -147,10 +153,22 @@ class FootworkEnv(BoxingEnv):
         spread("actuator_gainprm", gain)
         spread("actuator_biasprm", bias)
 
+    def _slope(self) -> None:
+        """slope_deg: a tilted gravity a world (MuJoCo Warp batches opt.gravity by world), and the observation's down with it."""
+        if self.slope_deg <= 0.0:
+            return
+        N = self.N
+        tilt = torch.deg2rad(self._u(N, lo=0.0, hi=self.slope_deg))
+        way = self._u(N, lo=-math.pi, hi=math.pi)
+        down = torch.stack([torch.sin(tilt) * torch.cos(way), torch.sin(tilt) * torch.sin(way), -torch.cos(tilt)], -1)   # (N, 3)
+        g = float(np.linalg.norm(self.m.opt.gravity))
+        self.mw.opt.gravity = wp.array((down * g).cpu().numpy().astype(np.float32), dtype=wp.vec3, device=self.mw.opt.gravity.device)
+        self.gravity_world = down[:, None, :]                                    # (N, 1, 3): _base expands it to (N, K, 3)
+
     # ---- reset ---------------------------------------------------------------------------------
     def _draw_cmd(self, shape) -> torch.Tensor:
-        """A walk's command: up to 1 m/s forward, 0.4 back or sideways, 1 rad/s of turn; one in five is 'stand'."""
-        c = torch.stack([self._u(*shape, lo=-0.4, hi=1.0), self._u(*shape, lo=-0.4, hi=0.4), self._u(*shape, lo=-1.0, hi=1.0)], -1)
+        """A walk's command: up to cmd_fwd_max (1 m/s) forward, 0.4 back or sideways, 1 rad/s of turn; one in five is 'stand'."""
+        c = torch.stack([self._u(*shape, lo=-0.4, hi=self.cmd_fwd_max), self._u(*shape, lo=-0.4, hi=0.4), self._u(*shape, lo=-1.0, hi=1.0)], -1)
         return c * (self._u(*shape) > 0.2).float()[..., None] * self.quick.view(1, self.K, 1)
 
     def _reset_states(self):
@@ -318,9 +336,7 @@ class FootworkEnv(BoxingEnv):
     # ---- step ----------------------------------------------------------------------------------
     def step(self, action: torch.Tensor):
         N, K, A = self.N, self.K, self.A
-        action = action.clamp(-self.action_clip, self.action_clip).reshape(N, K, A)
-        self.prev_action = self.last_action
-        self.last_action = action
+        action = self._take(action)
         self._drive(action)
         self._shove()
         self._cubes()
@@ -395,6 +411,9 @@ class FootworkEnv(BoxingEnv):
         if self.selfcontact_w:
             # The guard pressed into its own body (envs/boxing.py): a charge per centimetre of overlap; logged as rt_self.
             r["self"] = -self.selfcontact_w * 100.0 * self._selfcontact()
+        if self.flail_w:
+            # No punching here: every hand is idle, and its shoulder and elbow speed is charged (envs/boxing.py).
+            r["flail"] = -self.flail_w * self._flail(jv, torch.ones(N, K, 2, dtype=torch.bool, device=self.device))
 
         fell = (pos[..., 2] < self.stand_height * 0.6) | (upright < 0.4) | ~torch.isfinite(pos).all(-1)
         timeout = self.step_count >= self.max_steps

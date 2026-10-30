@@ -1444,3 +1444,58 @@ Running status: `training/logs/night_status.md` (Day section). Nothing under Ass
 - **Not run** (owner: "finish within 20 minutes"): m14b_grandpa and the eight mel1 rounds, staged in `logs/queue_day.json`. Next for head
   shots: the aim term reaches the head (reward/aim 0.022 -> 0.035 a step for Matt) but landings stay ~3% against guarding opponents; teach the
   punch's height earlier (footwork/bag stage) rather than price it in the match. Report: `SCREENSHOTS/2026-10-19-day/report.html`.
+
+## 2026-10-30 realism pass (owner items 8, 41-50): flags, audits, staged runs; nothing trained
+
+Python env now `../PoHillKing/training/.venv` (3.11, MuJoCo 3.15, Warp 1.18, torch 2.9); `training/.mj350` restored with
+`uv pip install mujoco==3.5.0 --target training/.mj350`. Every new term is off unless asked for, and with all of them off the envs are
+bit-identical to the committed ones (`tools/smoke_realism.py --old <copy of the old envs> --cpu`: Footwork, Match with daze/obs_state,
+Match with obs_delay_max/rope/self-contact, GetUpMatch, 60 steps each, max difference 0 on Warp's CPU device; on the GPU the contact
+solver is not bit-repeatable even old against old).
+
+- **Brain rules, mirrored in the game** (items 44, 45). envs/boxing.py `action_filter` f: the drives get f x last + (1 - f) x policy, and
+  that is the observation's last action (`_take`, used by every stage's step). `obs_delay` L: the observation is at least L control steps
+  late (the last action never is); `obs_delay_max` still adds a per-episode draw on top. Both per fighter: the run's flag for the learner
+  (`--action-filter`, `--obs-delay` in train_box.py / train_gauntlet.py), else the fighter's config `rules_footwork|rules_match|rules_getup`
+  (an opponent plays as it was trained). MjBoxer reads the same `rules_<brain>` from config.json for the brain it is running
+  (`Config.rules_*`, `Rules`): Drive filters, Observe delays through a ring buffer, a new brain, ResetToGuard or SetState starts both
+  afresh. Absent keys = no filter, no delay = every shipped brain unchanged. Checked: the env's numbers against a numpy copy of the C#
+  arithmetic (filter 40 steps, delay 30 steps, exact); PoBox.Mj compiles against the editor's assemblies. The shipped footwork brain
+  run under filter 0.3 + delay 2 in the C exam walks off by 0.67 m/s and falls 18/min (0.02 and 0 without): a brain must be trained under
+  them. `tools/exam_rules.py TOOL ...` runs footwork_c / exam_v2 with each checkpoint's rules mirrored; `tools/set_brain_rules.py
+  --from-run RUN/latest_NAME_policy_config.json` writes them into models/v2 (what Promote copies) once a brain is kept.
+- **Muscle rules on by default** (item 41). Every shipped config already says `speed_limit: true, fatigue_j: 20000`, so nothing changes
+  for them. New: `default_rules` (the trainers pass it unless `--legacy-rules`): a fighter whose config does not say trains with the speed
+  limit and 20000 J (it prints a warning to write them into its config with tools/set_rules.py before the game plays it). The manifest
+  (`latest_*_policy_config.json`) now records the effective per-fighter values (it wrote `fatigue_j: 0` from the flag before, whatever the
+  config said). Footwork still trains without fatigue (the game's footwork brain only walks out of the corner).
+- **Escape the ropes** (item 8): `--escape-w` pays per m/s out of the ropes' last metre (the same `pinned` measure as `--rope-w`), and
+  charges as much going in: a potential, so stepping in and out nets nothing. Logged per fighter as `escape` (m/s a step).
+- **Anti-flail** (item 47): `--flail-w` charges (rad/s)^2 of a hand's shoulder and elbow speed while that hand is not punching (no glove
+  closing faster than 1 m/s within 60 cm in the last 0.4 s); footwork charges all arm speed. Random actions: ~74 (rad/s)^2 a step.
+- **Jog and slopes** (item 48): footwork `--cmd-fwd-max` (1.0 = today's ladder; 2.2 a jog) and `--slope-deg` (each world's gravity
+  tilted up to that many degrees, any way; MuJoCo Warp batches opt.gravity a world; the observation's down is the true gravity).
+- **Run record** (item 49): `checkpoints/RUN/run_config.json` before the first iteration: argv, every argument, git commit + dirty files,
+  versions, every scalar setting of each env and each fighter's effective rules (`tools/run_record.py`).
+- **Masses** (item 42, `tools/mass_audit.py` -> tools/mass_audit.md): rig_to_mjcf.py uses Dempster/Winter fractions. Against de Leva
+  (1996) every boxer's thigh is light (9.9% against 14.2%, x0.70; Grandma 14.8%, x0.67) and the pelvis heavy (14.1% against 11.2%, x1.26);
+  torso + head 44% against 39%. Legs + pelvis 33.9% against 39.5%: a higher centre of mass, lighter legs. Not changed (a body change breaks
+  every brain); a candidate for the next body version (models/v3).
+- **Joint ranges** (item 43, `tools/rom_audit.py` -> tools/rom_audit.md, directions found by forward kinematics): **the trunk's
+  flexion/extension is reversed**: abdomen_y bends forward 30 deg and back 60 (a person 80 / 30; rig_to_mjcf.py's (-60, 30) assumes
+  negative is forward, as it is for the hips, but for the trunk positive is). Also shoulder extension 110 (60), shoulder adduction past
+  the side 80 (45). Everything else within 15 deg of a person. Not changed (parity); worth fixing in the next body version.
+- **Foot contacts** (item 46): already in the observation (numbers 72-73, a sole corner under 5 mm; trainer, C exam and MjBoxer alike).
+  They are geometric flags, not forces. Proposal only: per-foot normal force over body weight as 2 more inputs, widened with zero weights
+  as the Melee's bodies were (`PPO.load(widen=True)`); MjBoxer would need a third input size.
+- **Tired guard** (item 50, `tools/tired_guard.py`, C MuJoCo 3.5.0, the game's brains, reserve held at 1.0/0.5/0.3/0.1, 3 x 30 s each):
+  no consistent drop. Gloves under the head when not punching, R1.0 -> R0.1: Matt 26.5 -> 28.7 cm, Sokol 17.9 -> 13.0 (higher), Nick
+  -5.1 -> -8.1 (higher), Grandma 3.8 -> 5.3 cm with both gloves above the chest 85% -> 35% (the only clear one; drives alone 66%, the brain
+  reading its reserve alone 50%). Why: tiredness shrinks the target towards where the joint is (at most 40% below half the reserve), and a
+  guard needs a few N m of a 100 N m drive. A visible tired guard needs a rule that bites on the arms (e.g. the fatigue ceiling, or the arms'
+  force limit falling with the reserve), trained in.
+- **Staged, not run** (`training/queues/queue_realism_staged.json`, 35 entries, ~5.3 h of training + ~2.4 h of CPU exams; est_h on each):
+  ONNX -> checkpoint conversions; footwork `rz_fw_jog_matt` (2.2 m/s), `rz_fw_slope_matt` (6 deg, from the jog rung), `rz_fw_rules_matt`
+  (delay 3, filter 0.3, flail 1e-4); match gauntlets from the game's Matt against the game's roster: `rz_ctl_matt` (control), `rz_esc_matt`
+  (escape 0.15 + rope 0.05, ropes-start 0.3), `rz_flail_matt` (2e-4), `rz_d3_matt` / `rz_d5_matt` (60 / 100 ms), `rz_af_matt` (filter 0.3);
+  each followed by its exam through tools/exam_rules.py. Copy entries into logs/queue.json to run them.

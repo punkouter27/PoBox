@@ -1,0 +1,5 @@
+{
+ "matt": {
+  "match": "checkpoints/rz_flail_matt/latest_matt.pt"
+ }
+}

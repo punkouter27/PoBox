@@ -38,6 +38,8 @@ import warp as wp
 
 # The mass behind a glove: a punch's impulse is this times its closing speed (the game's Fighter.PunchMass).
 PUNCH_MASS = 2.2
+# The fatigue a new boxer trains under when its config does not say (default_rules): every shipped boxer's config has 20000.
+DEFAULT_FATIGUE_J = 20000.0
 
 
 def quat_rotate_inverse(q: torch.Tensor, v: torch.Tensor) -> torch.Tensor:
@@ -112,13 +114,15 @@ class BoxingEnv:
                  selfcontact_w: float = 0.0, repeat_decay: float = 1.0, combo_w: float = 0.0, combo_s: float = 0.8,
                  hurt_start: float = 0.0, fatigue_ceiling: bool = False, slow_v: float = 0.0,
                  head_mult: float = 1.0, arms_w: float = 0.0, bodies: int = 0, body_mult: float = 1.0, head_aim_w: float = 0.0,
-                 style_over: dict = None):
+                 style_over: dict = None, escape_w: float = 0.0, flail_w: float = 0.0, action_filter: float = 0.0,
+                 obs_delay: int = 0, realism_for: tuple = (), default_rules: bool = False):
         wp.init()
         wp.config.verbose_warnings = verbose
         if device == "cpu":
             # The viewer's case: one world on the CPU, so that watching does not take the GPU from training.
             wp.set_device("cpu")
         self.device = device
+        self.xml_path = os.path.abspath(xml_path)
         self.N = num_envs
         self.decimation = control_decimation
         self.action_scale = action_scale
@@ -162,7 +166,7 @@ class BoxingEnv:
         # Four more, all off unless asked for (2026-10-16, staged). action_rate_w: a charge on the squared change in
         # action between control steps on top of every stage's own small one, for smoother drives. obs_delay_max: the
         # observation is 0 to this many control steps late, drawn per fighter per episode (the last action, which
-        # the boxer knows, is never late); the game's numbers are not delayed, so this only makes a brain robust
+        # the boxer knows, is never late); the game mirrors it only from a config's rules_<brain> (2026-10-30), so this makes a brain robust
         # to lag. seek_w: paid per m/s of closing on the opponent while outside punching range, whatever the boxer's
         # style (Phase F2: the owner's "seek out the closest opponent and move forward to attack"; in a pair the
         # nearest on its feet is the one opponent). ropes_start: the share of episodes that begin as the free-for-
@@ -200,6 +204,16 @@ class BoxingEnv:
         self.head_aim_w = head_aim_w
         if head_aim_w and not self.MODE:
             self.TERMS = self.TERMS + ["aim"]
+        # 2026-10-30 (realism pass), both off unless asked for. escape_w: paid per m/s a boxer comes out of the last metre
+        # before the ropes (the same `pinned` as rope_w's), charged as much for going in: a potential, so walking in and
+        # out again nets nothing and only getting off the ropes pays. flail_w: a charge per (rad/s)^2 of a hand's
+        # shoulder and elbow speed while that hand is not punching (no glove closing on the target within 60 cm in the
+        # last 0.4 s), so arms move fast only to punch.
+        self.escape_w, self.flail_w = escape_w, flail_w
+        if escape_w and not self.MODE:
+            self.TERMS = self.TERMS + ["escape"]
+        if flail_w and self.MODE != "getup":
+            self.TERMS = self.TERMS + ["flail"]
         # The share of the charges for effort (power, action size, action change) in force. The trainer holds it
         # at 0 while a skill is being found and brings it back (--effort-free-iters): charged from the first
         # step, a boxer that cannot punch yet learns that standing still is cheapest (bag_trump2, 2026-10-03).
@@ -254,9 +268,31 @@ class BoxingEnv:
             device=device)
         self.ring_half = float(cfg.get("ring_half", self.cfg.get("ring_half", 3.05)))
 
-        # Fighter by fighter: a boxer trained under the rule can meet one that was not.
-        limited = [speed_limit or bool(c.get("speed_limit", False)) for c in self.cfgs]
+        # Fighter by fighter: a boxer trained under the rule can meet one that was not. default_rules (2026-10-30, AGENTS.md
+        # section 3, the trainers pass it unless --legacy-rules): a fighter whose config does not say is trained with the
+        # speed limit and DEFAULT_FATIGUE_J of fatigue; one whose config says (every shipped boxer: true, 20000) keeps its own.
+        limited = [speed_limit or bool(c.get("speed_limit", default_rules)) for c in self.cfgs]
+        self.limited = limited
         self.speed_limit = any(limited)
+        self.rules_defaulted = [n for n, c in zip(self.names, self.cfgs) if default_rules and not ("speed_limit" in c and "fatigue_j" in c)]
+        if self.rules_defaulted:
+            print(f"[rules] {', '.join(self.rules_defaulted)}: the config does not say, so the speed limit and fatigue are on "
+                  f"(default_rules). Write them into the boxer's models config (tools/set_rules.py) before the game plays this brain.", flush=True)
+        # Two rules of a brain (2026-10-30), each the fighter's own: from the argument for the fighters in realism_for (all
+        # of them when it is empty), else from its config's rules_<brain> (what the game's MjBoxer reads for that brain).
+        # action_filter: the action the drives get is filter x the last one + (1 - filter) x the policy's (0 = off); the
+        # observation's last action is that one. obs_delay: the observation is this many control steps late (the last
+        # action never is), at least; obs_delay_max still draws up to that many per episode on top, for robustness.
+        self.brain = {"footwork": "footwork", "getup": "getup"}.get(self.MODE, "match")
+        mine = lambda n: not realism_for or n in realism_for
+        rules = [c.get(f"rules_{self.brain}", {}) for c in self.cfgs]
+        self.act_filter_k = [float(action_filter) if action_filter and mine(n) else float(r.get("action_filter", 0.0))
+                             for n, r in zip(self.names, rules)]
+        self.delay_lo_k = [int(obs_delay) if obs_delay and mine(n) else int(r.get("obs_delay", 0)) for n, r in zip(self.names, rules)]
+        self.delay_hi_k = [max(lo, int(obs_delay_max), int(r.get("obs_delay_max", 0))) for lo, r in zip(self.delay_lo_k, rules)]
+        assert all(0.0 <= f < 1.0 for f in self.act_filter_k), "action_filter is a share of the last action: 0 <= f < 1"
+        self.filter_on = any(f > 0.0 for f in self.act_filter_k)
+        self.obs_delay_max = max(self.delay_hi_k)
         for p, c, on in zip(("a_", "b_"), self.cfgs, limited):
             if on:
                 for n, fl, vl in zip(order, c["force_limit"], c["velocity_limit"]):
@@ -393,7 +429,8 @@ class BoxingEnv:
         # drives weaken, down to (1 - fatigue_weak) with nothing left.
         # ponytail: the reserve is not in the observation (nor is the daze); a boxer cannot pace itself by it.
         # Give it an input with tools/widen_policy.py when pacing is wanted.
-        self.fatigue_j = F([fatigue_j or float(c.get("fatigue_j", 0.0)) for c in self.cfgs])             * F([float(c.get("strength", 1.0)) for c in self.cfgs])              # (K,) a frail body has less
+        self.fatigue_j_k = [float(fatigue_j or c.get("fatigue_j", DEFAULT_FATIGUE_J if default_rules else 0.0)) for c in self.cfgs]
+        self.fatigue_j = F(self.fatigue_j_k) * F([float(c.get("strength", 1.0)) for c in self.cfgs])              # (K,) a frail body has less
         self.fatigue_on = bool((self.fatigue_j > 0.0).any())
         self.tires = self.fatigue_j > 0.0                                        # (K,) which fighters tire
         self.fatigue_j = torch.where(self.tires, self.fatigue_j, torch.full_like(self.fatigue_j, float("inf")))
@@ -424,6 +461,8 @@ class BoxingEnv:
         leg =[i for i, n in enumerate(order) if n.split("_")[0] in ("hip", "knee", "ankle")]
         self.leg_idx = L(leg)
         self.arm_idx = L([i for i, n in enumerate(order) if n.split("_")[0] in ("shoulder", "elbow")])
+        # Each hand's shoulder and elbow joints, left (the glove order's 0) then right (flail_w).
+        self.hand_arm = L([[i for i, n in enumerate(order) if n.split("_")[0] in ("shoulder", "elbow") and n.endswith(s)] for s in ("_l", "_r")])
 
         N, K, A = self.N, self.K, self.A
         z = lambda *shape: torch.zeros(*shape, device=device)
@@ -454,6 +493,9 @@ class BoxingEnv:
         # The last punch each fighter landed, as hand x 2 + zone (-1 none), and how many in a row were that punch.
         self.last_kind = torch.full((N, K), -1, dtype=torch.long, device=device)
         self.streak = z(N, K)
+        self.prev_pinned = z(N, K)                                               # escape_w: last step's `pinned`
+        self.since_punch = torch.full((N, K, 2), 99.0, device=device)            # flail_w: seconds since each hand punched
+        self.act_filter = torch.tensor(self.act_filter_k, device=device).view(1, K, 1)
         self.gravity_world = torch.tensor([0.0, 0.0, -1.0], device=device)
         self._acc = {k: torch.zeros((), device=device) for k in
                      ("ret_sum", "len_sum", "fell_sum", "done_n", "steps", "upright_sum", "dist_sum",
@@ -462,7 +504,7 @@ class BoxingEnv:
         self._acc.update({f"rt_{t}": torch.zeros((), device=device) for t in self.TERMS})
         # The same counts kept per fighter, for a match between two different ones.
         self._kacc = {k: torch.zeros(self.K, device=device) for k in ("hits", "speed", "fell", "ko", "ret", "blocks", "legs", "head", "rope", "cutoff", "clinch",
-                                                                      "repeats", "combos", "self")}
+                                                                      "repeats", "combos", "self", "escape", "flail")}
         if selfcontact_w:
             # Which fighter each shape belongs to (0 a_, 1 b_, -1 the ring, the floor, a cube or the bag).
             names = [mujoco.mj_id2name(m, mujoco.mjtObj.mjOBJ_BODY, int(b)) or "" for b in m.geom_bodyid]
@@ -484,6 +526,10 @@ class BoxingEnv:
             # _observe still reaches its base class's through super(), undelayed.
             self._obs_hist = None
             self._rows = torch.arange(N * K, device=device)
+            # Each row's (fighter's) least and most lag; rows are (world, fighter), fighter fastest.
+            self._lag_lo = torch.tensor(self.delay_lo_k, device=device, dtype=torch.long).repeat(N)
+            self._lag_span = torch.tensor([h - l + 1 for l, h in zip(self.delay_lo_k, self.delay_hi_k)], device=device, dtype=torch.long).repeat(N)
+            self._lag_plain = all(h - l + 1 == self.obs_delay_max + 1 for l, h in zip(self.delay_lo_k, self.delay_hi_k))   # obs_delay_max's draw alone
             on_time = self._observe
             self._observe = lambda g: self._delayed(on_time(g))
 
@@ -636,6 +682,7 @@ class BoxingEnv:
         self.legs_at = torch.where(m1, self.daze_hi * (1.0 - self.hurt_hi * self._hurt01()), self.legs_at)
         self.last_kind = torch.where(m1, torch.full_like(self.last_kind, -1), self.last_kind)
         self.streak = torch.where(m1, torch.zeros_like(self.streak), self.streak)
+        self.since_punch = torch.where(m3, torch.full_like(self.since_punch, 99.0), self.since_punch)
         if self.hurt_start > 0.0 and self.daze_on:
             # Begun hurt: most of the way to the legs going, so a clinch (or a careful round) is worth something.
             hurt = m1 & (self._u(self.N, self.K) < self.hurt_start)
@@ -674,6 +721,23 @@ class BoxingEnv:
         self.prev_head = torch.where(m3, g["t_head"], self.prev_head)
         self.prev_body = torch.where(m3, g["t_body"], self.prev_body)
         self.prev_foot_xy = torch.where(m4, g["foot_xy"], self.prev_foot_xy)
+        if self.spar:
+            self.prev_pinned = torch.where(mask[:, None], self._pinned(g["pos"][..., :2]), self.prev_pinned)
+
+    def _pinned(self, xy: torch.Tensor) -> torch.Tensor:
+        """How far into the last metre before each rope a pelvis is, summed over the ropes (N, K): 0 a metre or more off,
+        about 0.7 against one (a pelvis gets no nearer), so a corner, two ropes at once, counts twice. The ring's centre is (0, 0)."""
+        return (xy.abs() - (self.ring_half - 1.0)).clamp(0.0, 1.0).sum(-1)
+
+    def _take(self, action: torch.Tensor) -> torch.Tensor:
+        """The policy's action (N*K, A) as the drives get it, (N, K, A): clipped, then smoothed with the fighter's
+        action_filter. It becomes the observation's last action. Every stage's step takes its action through here."""
+        action = action.clamp(-self.action_clip, self.action_clip).reshape(self.N, self.K, self.A)
+        if self.filter_on:
+            action = self.act_filter * self.last_action + (1.0 - self.act_filter) * action
+        self.prev_action = self.last_action
+        self.last_action = action
+        return action
 
     def reset(self) -> torch.Tensor:
         all_envs = torch.ones(self.N, dtype=torch.bool, device=self.device)
@@ -769,6 +833,10 @@ class BoxingEnv:
         hist = torch.cat([obs[None], self._obs_hist[:-1]], 0)
         self._obs_hist = torch.where(fresh[None, :, None], obs[None].expand_as(hist), hist)
         lag = torch.randint(0, H, (obs.shape[0],), generator=self.rng, device=self.device)
+        if not self._lag_plain:
+            # Some fighter has a floor on its lag (obs_delay) or less room than the most: lo + 0..span-1, uniform.
+            u = torch.rand(obs.shape[0], generator=self.rng, device=self.device)
+            lag = self._lag_lo + (u * self._lag_span).long().clamp_max(self._lag_span - 1)
         self._obs_lag = torch.where(fresh, lag, self._obs_lag)
         out = self._obs_hist[self._obs_lag, self._rows].clone()
         a0 = 9 + 2 * self.A                                    # the last action: the boxer's own, known at once
@@ -821,6 +889,11 @@ class BoxingEnv:
         out.index_add_(0, (world.clamp(0, self.N - 1) * self.K + own[:, 0].clamp_min(0)), pen)
         return out.view(self.N, self.K)
 
+    def _flail(self, jv: torch.Tensor, idle: torch.Tensor) -> torch.Tensor:
+        """(rad/s)^2 of the shoulders and elbows of the hands that are idle (N, K, 2), summed: (N, K)."""
+        per_hand = (jv[..., self.hand_arm] ** 2).sum(-1)                         # (N, K, 2)
+        return (per_hand * idle.float()).sum(-1)
+
     def _spend(self, tau: torch.Tensor, jv: torch.Tensor) -> None:
         """Takes the step's joules from the reserve and lets it fill again. Every stage's step calls this: footwork
         and get-up once skipped it, and their reserve stayed where the reset drew it."""
@@ -838,9 +911,7 @@ class BoxingEnv:
 
     def step(self, action: torch.Tensor):
         N, K, A = self.N, self.K, self.A
-        action = action.clamp(-self.action_clip, self.action_clip).reshape(N, K, A)
-        self.prev_action = self.last_action
-        self.last_action = action
+        action = self._take(action)
         self._drive(action)
         if self.push_on:
             # Last step's punches, on the trunks of those who took them, for this whole control step.
@@ -989,12 +1060,13 @@ class BoxingEnv:
 
         # ---- ringcraft: who holds the middle of the ring. Measured always (logged per fighter, so a run with the
         # weights at 0 is the baseline for one with them on); paid only with --rope-w / --cutoff-w.
-        rope_q = cut_q = torch.zeros(N, K, device=self.device)
+        rope_q = cut_q = escape_q = torch.zeros(N, K, device=self.device)
         if self.spar:
             xy = pos[..., :2]                                                  # the ring's centre is (0, 0)
-            # How far into the last metre before each rope: 0 a metre or more off, about 0.7 against it (a pelvis
-            # gets no nearer), so a corner, two ropes at once, counts twice.
-            pinned = (xy.abs() - (self.ring_half - 1.0)).clamp(0.0, 1.0).sum(-1)                     # (N,K)
+            pinned = self._pinned(xy)                                          # (N,K), see _pinned
+            # Getting off the ropes (escape_w): m/s out of the ropes' last metre (negative going in), held to +-1.
+            escape_q = ((self.prev_pinned - pinned) / self.dt).clamp(-1.0, 1.0)
+            self.prev_pinned = pinned
             # Under pressure: the opponent is close and nearer the centre than I am, so it has the middle.
             from_centre = xy.norm(dim=-1)
             pressed = (dist < self.s_range + 0.8).float() * ((from_centre - from_centre.flip(1)) / 0.5).clamp(0.0, 1.0)
@@ -1056,6 +1128,15 @@ class BoxingEnv:
         r["rope"] = -self.rope_w * rope_q if self.rope_w else none
         r["cutoff"] = self.cutoff_w * cut_q if self.cutoff_w else none
         r["clinch"] = self.clinch_w * clinch_q if self.clinch_w else none
+        if self.escape_w:
+            r["escape"] = self.escape_w * escape_q
+        # flail_w: a hand is punching while its glove closes on the target faster than 1 m/s within 60 cm, and for 0.4 s
+        # after (the way back to the guard is part of the punch). Measured always, charged only with --flail-w.
+        punching = (closing.max(-1).values > 1.0) & (nearest < 0.6)                                   # (N,K,2)
+        self.since_punch = torch.where(punching, torch.zeros_like(self.since_punch), self.since_punch + self.dt)
+        flail_q = self._flail(self.qvel[:, self.jv], self.since_punch > 0.4)
+        if self.flail_w:
+            r["flail"] = -self.flail_w * flail_q
         if self.combo_w:
             r["combo"] = self.combo_w * combo_q
         if self.head_aim_w:
@@ -1137,6 +1218,8 @@ class BoxingEnv:
         ka["repeats"] += same.float().sum(0)
         ka["combos"] += combo.float().sum(0)
         ka["self"] += self_q.sum(0)
+        ka["escape"] += escape_q.sum(0)
+        ka["flail"] += flail_q.sum(0)
 
         self.prev_glove, self.prev_head, self.prev_body = glove.clone(), g["t_head"].clone(), g["t_body"].clone()
         self.prev_foot_xy = g["foot_xy"].clone()
@@ -1202,6 +1285,9 @@ class BoxingEnv:
                 out[f"{name}_repeat_share"] = ka["repeats"][i] / max(1.0, ka["hits"][i])
                 out[f"{name}_combos_per_s"] = ka["combos"][i] / seconds
                 out[f"{name}_self_cm"] = ka["self"][i] * 100.0 / (s * self.N)
+                # Getting off the ropes, m/s a step (positive out); idle arms' (rad/s)^2 a step (charged by --flail-w).
+                out[f"{name}_escape"] = ka["escape"][i] / (s * self.N)
+                out[f"{name}_flail"] = ka["flail"][i] / (s * self.N)
         for v in list(self._acc.values()) + list(self._kacc.values()):
             v.zero_()
         return out
