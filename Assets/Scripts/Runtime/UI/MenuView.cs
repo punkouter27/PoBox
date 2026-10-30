@@ -165,6 +165,7 @@ namespace PoBox.UI
             if (!Application.isPlaying) return;
 
             if (Input.GetKeyDown(KeyCode.Escape)) Back();
+            if (Input.GetKeyDown(KeyCode.Tab)) SettingsPage.ToggleStats();
             if (_leaving) Set(_busyWord, _busyBase + BusyDots[(int)(Time.unscaledTime * 3f) % BusyDots.Length]);
             _smoothed = Mathf.Lerp(_smoothed, Time.unscaledDeltaTime, 0.05f);
             if (Time.unscaledTime < _nextText) return;

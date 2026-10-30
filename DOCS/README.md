@@ -301,8 +301,10 @@ shots, the training charts and the Elo table: `SCREENSHOTS/2026-10-16-features/r
 - **AI cornerman** (`Broadcast/CornerAI.cs`, `server/corner_proxy.py`, self-check `server/test_corner_proxy.py`): 6 s before the bell
   the round's numbers go to a proxy that holds the key and asks Claude Opus 5.5 (low effort, refusal fallback "default") for one
   line; it is said in the break if back in time, else the old rule-based tip. After a win the winner gets one line. Settings,
-  DEBUG, CORNER: the proxy's address (editor default `http://127.0.0.1:8787/corner`; `?token=` if the proxy has `--token`).
-  Not tried against the real API: no key on this machine. A phone needs Player Settings' plain-HTTP option or an https proxy.
+  DEBUG, CORNER: the proxy's address (editor default `http://127.0.0.1:8787/corner`). Network binds require a token and a trusted
+  TLS certificate; set `https://PC:8787/corner#token=SECRET`. The token is sent in a header, never in the request URL or access
+  log. Older `?token=` settings are stripped from each request and their token is sent in the header. Press TAB to toggle the
+  detailed broadcast stats without changing the clean default HUD. Not tried against the real API: no key on this machine.
 - **Ringcraft**: commentary calls "trapped on the ropes" (2 s on the ropes under pressure; the HUD's rule, now
   `Fighter.OnTheRopes`) and clinches (pelvises within 0.55 m for 1.5 s). Training: `--clinch-w` and rc1_matt
   (`rl_optimization_log.md`): 37% less time on the ropes, not promoted (fails carrying on, as m9 does).

@@ -34,14 +34,18 @@ os.environ["ANTHROPIC_BASE_URL"] = f"http://127.0.0.1:{fake.server_port}"
 os.environ["ANTHROPIC_API_KEY"] = "test-key"
 import corner_proxy as P  # noqa: E402  (reads the base URL on import)
 
-P.Handler.log_message = lambda *a: None
+logs = []
+P.Handler.log_message = lambda self, message, *args: logs.append(message % args)
 proxy = ThreadingHTTPServer(("127.0.0.1", 0), P.Handler)
 threading.Thread(target=proxy.serve_forever, daemon=True).start()
 url = f"http://127.0.0.1:{proxy.server_port}/corner"
 
 
-def post(obj, raw=None):
-    req = urllib.request.Request(url, data=raw or json.dumps(obj).encode(), method="POST", headers={"content-type": "application/json"})
+def post(obj, raw=None, headers=None, target=None):
+    request_headers = {"content-type": "application/json"}
+    request_headers.update(headers or {})
+    data = raw if raw is not None else json.dumps(obj).encode()
+    req = urllib.request.Request(target or url, data=data, method="POST", headers=request_headers)
     try:
         with urllib.request.urlopen(req, timeout=5) as r:
             return r.status, json.loads(r.read())
@@ -64,8 +68,11 @@ assert post({"kind": "speech"})[0] == 400
 print("corner proxy: all checks pass")
 P.Handler.token = "s3cret"
 time.sleep(P.MIN_GAP_S)
-assert post({"kind": "corner"})[0] == 403
-url += "?token=s3cret"
 answer = {"stop_reason": "end_turn", "content": [{"type": "text", "text": "ok"}]}
-assert post({"kind": "corner"}) == (200, {"text": "ok", "error": ""})
+assert post({"kind": "corner"})[0] == 403
+assert post({"kind": "corner"}, headers={"x-pobox-token": "s3cret"}) == (200, {"text": "ok", "error": ""})
+assert post({"kind": "corner"}, target=url + "?token=s3cret")[0] == 400
+assert P.is_loopback_host("127.0.0.1") and P.is_loopback_host("localhost") and P.is_loopback_host("::1")
+assert not P.is_loopback_host("0.0.0.0")
+assert not any("s3cret" in entry or "?token=" in entry for entry in logs)
 print("corner proxy: token checks pass")

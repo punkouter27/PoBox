@@ -1,3 +1,4 @@
+using System;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -12,9 +13,9 @@ namespace PoBox.Online
     ///
     /// The address is the settings' CORNER field (DEBUG tab), kept in PlayerPrefs; empty (off) until one is typed, in
     /// the editor too: a default that pointed at a proxy nobody had started cost 4 failed posts a bout.
-    /// http://127.0.0.1:8787/corner is the proxy on this PC. A proxy started with --token takes it as ?token=... on the address.
-    /// ponytail: plain HTTP to a LAN proxy; a phone build needs Player Settings' "Allow downloads over HTTP" (or an
-    /// https proxy) before it can reach one.
+    /// http://127.0.0.1:8787/corner is the proxy on this PC. A network proxy must use HTTPS and a token; put the token
+    /// in the address fragment (#token=...) so it is sent in x-pobox-token and never in the HTTP request URL. Legacy
+    /// ?token= settings are stripped from the request URL and sent in the same header.
     /// </summary>
     public static class CornerAI
     {
@@ -28,17 +29,50 @@ namespace PoBox.Online
         /// <summary>Sends the numbers; null when there is no proxy to ask. Poll <see cref="Answer"/> until it is not pending.</summary>
         public static UnityWebRequest Ask(string json)
         {
-            string url = Url;
-            if (string.IsNullOrEmpty(url)) return null;
-            var r = new UnityWebRequest(url, "POST")
+            string configuredUrl = Url;
+            if (string.IsNullOrEmpty(configuredUrl)) return null;
+            if (!Uri.TryCreate(configuredUrl, UriKind.Absolute, out Uri uri))
+            {
+                Debug.LogWarning("CORNER address is not a valid absolute URL.");
+                return null;
+            }
+
+            bool loopbackHttp = uri.Scheme == Uri.UriSchemeHttp && uri.IsLoopback;
+            if (uri.Scheme != Uri.UriSchemeHttps && !loopbackHttp)
+            {
+                Debug.LogWarning("CORNER requires HTTPS for network addresses; plain HTTP is allowed only on loopback.");
+                return null;
+            }
+
+            var endpoint = new UriBuilder(uri);
+            string token = ExtractToken(endpoint.Query) ?? ExtractToken(endpoint.Fragment);
+            endpoint.Query = "";
+            endpoint.Fragment = "";
+            var r = new UnityWebRequest(endpoint.Uri.AbsoluteUri, "POST")
             {
                 uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(json)),
                 downloadHandler = new DownloadHandlerBuffer(),
                 timeout = 10,
             };
             r.SetRequestHeader("content-type", "application/json");
+            if (!string.IsNullOrEmpty(token)) r.SetRequestHeader("x-pobox-token", token);
             r.SendWebRequest();
             return r;
+        }
+
+        static string ExtractToken(string queryOrFragment)
+        {
+            string value = queryOrFragment.TrimStart('?', '#');
+            string found = null;
+            foreach (string pair in value.Split('&'))
+            {
+                int equals = pair.IndexOf('=');
+                string key = Uri.UnescapeDataString(equals < 0 ? pair : pair.Substring(0, equals).Replace("+", "%20"));
+                if (!string.Equals(key, "token", StringComparison.OrdinalIgnoreCase)) continue;
+                if (found != null) return null;
+                found = Uri.UnescapeDataString((equals < 0 ? "" : pair.Substring(equals + 1)).Replace("+", "%20"));
+            }
+            return found;
         }
 
         /// <summary>Whether the request is still out.</summary>

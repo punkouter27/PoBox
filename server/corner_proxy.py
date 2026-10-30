@@ -2,7 +2,8 @@
 
     set ANTHROPIC_API_KEY=sk-ant-...
     python server/corner_proxy.py                        on this PC (the editor)
-    python server/corner_proxy.py --host 0.0.0.0 --token SECRET     for a phone on the same Wi-Fi (CORNER: http://PC:8787/corner?token=SECRET)
+    python server/corner_proxy.py --host 0.0.0.0 --token SECRET --certfile fullchain.pem --keyfile privkey.pem
+                                                                  for a phone on the same Wi-Fi (CORNER: https://PC:8787/corner#token=SECRET)
 
 The game (Broadcast/CornerAI.cs) POSTs one fight's numbers to /corner as JSON:
     {"kind": "corner" | "interview", "boxer": "MATT", "opponent": "ZOMBIE", "round": 2, ...numbers...}
@@ -10,17 +11,21 @@ and gets back {"text": "..."}: one short line, the corner's advice between round
 bell. Every number in it is the game's; the prompt tells the model to use only those. Any failure (no key, the API
 down, a refusal, too slow) is a 502 with an empty text, and the game says its own rule-based tip instead.
 
-Standard library only (this machine's Pythons have no pip), so the Messages API is called over plain HTTP.
+Standard library only (this machine's Pythons have no pip), so the Messages API is called over HTTPS.
 Claude Opus 5.5 at low effort: a one-line answer does not need more, and the round break is short.
 Refusals fall back server-side (fallbacks "default"). A request bigger than 4 KB, a wrong --token, or more than one
 request every 2 seconds is turned away, so a proxy left open on a network cannot be used to spend the key.
+Network binds require TLS and a token. The token is accepted only in the x-pobox-token header; URL query strings are
+rejected, and access logs never include request paths.
 """
 from __future__ import annotations
 
 import argparse
 import hmac
+import ipaddress
 import json
 import os
+import ssl
 import threading
 import time
 import urllib.error
@@ -84,6 +89,9 @@ class Handler(BaseHTTPRequestHandler):
     token = ""
     timeout_s = 8.0
 
+    def log_request(self, code="-", size="-") -> None:
+        self.log_message("%s %s", self.client_address[0], code)
+
     def reply(self, code: int, text: str = "", error: str = "") -> None:
         data = json.dumps({"text": text, "error": error}).encode("utf-8")
         self.send_response(code)
@@ -96,12 +104,19 @@ class Handler(BaseHTTPRequestHandler):
         url = urllib.parse.urlsplit(self.path)
         if url.path != "/corner":
             return self.reply(404, error="not found")
-        given = self.headers.get("x-pobox-token", "") or urllib.parse.parse_qs(url.query).get("token", [""])[0]
-        if self.token and not hmac.compare_digest(given, self.token):
-            return self.reply(403, error="bad token")
-        n = int(self.headers.get("content-length") or 0)
+        try:
+            n = int(self.headers.get("content-length") or 0)
+        except ValueError:
+            return self.reply(400, error="invalid content length")
         if n <= 0 or n > MAX_BODY:
             return self.reply(413, error="body too big or empty")
+        if url.query or url.fragment:
+            self.rfile.read(n)
+            return self.reply(400, error="credentials and query parameters are not accepted in the URL")
+        given = self.headers.get("x-pobox-token", "")
+        if self.token and not hmac.compare_digest(given, self.token):
+            self.rfile.read(n)
+            return self.reply(403, error="bad token")
         try:
             facts = json.loads(self.rfile.read(n).decode("utf-8"))
             kind = facts.get("kind", "corner")
@@ -122,18 +137,41 @@ class Handler(BaseHTTPRequestHandler):
         self.reply(200, text=text)
 
 
+def is_loopback_host(host: str) -> bool:
+    if host.lower() == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host.split("%", 1)[0]).is_loopback
+    except ValueError:
+        return False
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--host", default="127.0.0.1")
     ap.add_argument("--port", type=int, default=8787)
-    ap.add_argument("--token", default="", help="the game must send it: the settings' CORNER address ending ?token=...")
+    ap.add_argument("--token", default="", help="shared token sent by the game in the x-pobox-token header")
+    ap.add_argument("--certfile", help="TLS certificate chain for network access")
+    ap.add_argument("--keyfile", help="TLS private key for network access")
     ap.add_argument("--timeout", type=float, default=8.0)
     args = ap.parse_args()
+    loopback = is_loopback_host(args.host)
+    if bool(args.certfile) != bool(args.keyfile):
+        ap.error("--certfile and --keyfile must be supplied together")
+    if not loopback and not args.token:
+        ap.error("a --token is required when listening on a network interface")
+    if not loopback and not args.certfile:
+        ap.error("TLS is required when listening on a network interface")
+
     Handler.token, Handler.timeout_s = args.token, args.timeout
-    if args.host != "127.0.0.1" and not args.token:
-        print("warning: open on the network with no --token: anyone who can reach it can spend the key")
-    print(f"corner proxy on http://{args.host}:{args.port}/corner ({MODEL}); key {'set' if os.environ.get('ANTHROPIC_API_KEY') else 'NOT SET'}")
-    ThreadingHTTPServer((args.host, args.port), Handler).serve_forever()
+    server = ThreadingHTTPServer((args.host, args.port), Handler)
+    if args.certfile:
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(args.certfile, args.keyfile)
+        server.socket = context.wrap_socket(server.socket, server_side=True)
+    scheme = "https" if args.certfile else "http"
+    print(f"corner proxy on {scheme}://{args.host}:{args.port}/corner ({MODEL}); key {'set' if os.environ.get('ANTHROPIC_API_KEY') else 'NOT SET'}")
+    server.serve_forever()
 
 
 if __name__ == "__main__":

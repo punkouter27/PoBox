@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PoBox TAB stats shortcut</title>
+<style>
+  body { margin: 0; padding: 2rem; background: #101725; color: #eef2f8; font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 1100px; margin: auto; }
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+  figure { margin: 0; padding: .8rem; background: #202b3c; border-radius: .6rem; }
+  img { display: block; width: min(100%, 360px); height: auto; margin: auto; border-radius: .35rem; }
+  figcaption { margin-top: .6rem; font-weight: 700; }
+  .note { padding: .8rem 1rem; border-left: 4px solid #35c99a; background: #202b3c; }
+  .annotation { margin-top: .6rem; padding: .5rem; border: 1px solid #35c99a; border-radius: .35rem; color: #8de5c5; }
+  code { color: #8de5c5; }
+</style>
+</head>
+<body>
+<main>
+  <h1>TAB toggles detailed broadcast stats</h1>
+  <p class="note">This is an input-only change: it adds no controls or layout, so the clean HUD remains pixel-for-pixel unchanged.
+    TAB now toggles the existing detailed stats and saves the choice. The archived screenshots below document that unchanged
+    portrait layout and the optional overlay state. Fresh Unity captures were unavailable because this machine has no active
+    Unity Editor license.</p>
+  <section class="shots">
+    <figure>
+      <img src="../2026-10-16-gfx-audio/before_arena.webp" alt="Clean portrait arena HUD before the shortcut">
+      <figcaption>Before — clean broadcast HUD</figcaption>
+      <p>No keyboard shortcut; detailed stats were available through settings.</p>
+    </figure>
+    <figure>
+      <img src="../2026-10-16-do-all/after_arena.png" alt="Portrait arena HUD with detailed stats visible">
+      <figcaption>After — same HUD, stats reachable with TAB</figcaption>
+      <p>Press TAB to switch between the clean view and the existing detailed stats. No new screen area or scrolling is added.</p>
+      <div class="annotation">Changed interaction: <kbd>TAB</kbd> toggles the persistent STATS setting.</div>
+    </figure>
+  </section>
+</main>
+</body>
+</html>

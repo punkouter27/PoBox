@@ -25,6 +25,32 @@ namespace PoBox.Tests
     /// </summary>
     public class OneScreenTests
     {
+        [Test]
+        public void TabShortcutTogglesAndPersistsDetailedStats()
+        {
+            bool originalStats = SettingsPage.Stats;
+            bool hadPreference = PlayerPrefs.HasKey("pobox.stats");
+            int originalPreference = PlayerPrefs.GetInt("pobox.stats");
+            try
+            {
+                SettingsPage.Stats = false;
+                SettingsPage.ToggleStats();
+                Assert.IsTrue(SettingsPage.Stats);
+                Assert.AreEqual(1, PlayerPrefs.GetInt("pobox.stats", -1));
+
+                SettingsPage.ToggleStats();
+                Assert.IsFalse(SettingsPage.Stats);
+                Assert.AreEqual(0, PlayerPrefs.GetInt("pobox.stats", -1));
+            }
+            finally
+            {
+                SettingsPage.Stats = originalStats;
+                if (hadPreference) PlayerPrefs.SetInt("pobox.stats", originalPreference);
+                else PlayerPrefs.DeleteKey("pobox.stats");
+                PlayerPrefs.Save();
+            }
+        }
+
         /// <summary>A screen and what is cut out of it, in the phone's own pixels.</summary>
         public sealed class Phone
         {

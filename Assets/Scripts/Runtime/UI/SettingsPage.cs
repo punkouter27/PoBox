@@ -144,6 +144,14 @@ namespace PoBox.UI
             Refresh();
         }
 
+        /// <summary>Toggles the detailed broadcast stats, used by the TAB keyboard shortcut.</summary>
+        public static void ToggleStats()
+        {
+            Stats = !Stats;
+            PlayerPrefs.SetInt("pobox.stats", Stats ? 1 : 0);
+            PlayerPrefs.Save();
+        }
+
         /// <summary>What was chosen last time, put back. Run once a scene, before anything makes a sound.</summary>
         public static void Load()
         {
