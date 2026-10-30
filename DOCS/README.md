@@ -69,6 +69,14 @@ Earlier in the day (Phase B):
   scene left behind (raw object names); on their own they pass (11 of 11). Run ours with the assembly filter
   `PoBox.Tests`.
 
+## Clean pass (2026-10-30)
+
+- 95 old report PNGs in `SCREENSHOTS/` and `DOCS/` re-encoded as lossless WebP (pixel-identical, 76.7 -> 42.2 MB),
+  every link in the reports rewritten; `SCREENSHOTS/2026-10-30-*` untouched.
+- Staged queues moved to `training/queues/queue_*_staged.json` (`tools/stage_v3.py` writes there now).
+- One-off scripts moved to `training/tools/archive/`: `m14_job.py`, `m13_compare.py`, `ablate_v3.py`, `build_v3.py`,
+  `smoke_flags.py`. `m13_job.py` and `stage_v3.py` stay: the staged melee and v3 queues call them.
+
 ## The night of 18-19 October: m13, get-ups for four, energy that lasts (2026-10-19, morning)
 
 Owner: "do all" to a ten-hour plan. Report `SCREENSHOTS/2026-10-19-night/report.html`; runs in `rl_optimization_log.md`.
@@ -85,7 +93,7 @@ Owner: "do all" to a ten-hour plan. Report `SCREENSHOTS/2026-10-19-night/report.
   ended most bouts inside 30 s. Now (fight log, 4x): Matt v Zombie a KO, four TKOs in R1-R2 and three decisions Matt
   survived going down 2-4 times; Trump v Nick two KOs (R2, R3), three TKOs in R3, a decision.
 - **Melee prep**: `--bodies N` puts N downed boxers on the canvas as solid obstacles (smoke-tested); eight jobs staged
-  in `training/queue_melee_staged.json`, not run. The bodies are not in the observation yet.
+  in `training/queues/queue_melee_staged.json`, not run. The bodies are not in the observation yet.
 - Tests: MjGate 24/24, MjParity 3/3, MjCollision 2/2, StateFlow 2/2.
 
 ## Review fixes: punches that miss, knockdowns, get-ups that stand (2026-10-18, evening)
@@ -161,7 +169,7 @@ of ten, 45 s rounds kept, Back left as it is, bodies left in the Melee ring, no 
   keys `hit_push`, `stagger_v`, `hurt_full`, `body_drain`, `obs_state`; `set_rules.py` sets them), and a match policy
   can read its reserve, its daze and the opponent's in the command's three numbers (`--obs-state`; the game fills
   them only for a config with `obs_state`). Retraining all eight under them is staged, not run:
-  `training/queue_punch_staged.json` (rules, `m9_NAME` + exam for each, then the shipped brains examined under the
+  `training/queues/queue_punch_staged.json` (rules, `m9_NAME` + exam for each, then the shipped brains examined under the
   same rules as the baseline). See `rl_optimization_log.md`.
 
 ## Clean-up: ten options (2026-10-16, late night)
@@ -218,10 +226,10 @@ number). The details and measurements are in `rl_optimization_log.md`; the plan 
 
 - New, off by default: a self-contact charge, punch variety (repeat decay, combinations), hurt starts, `--done-when`,
   fatigue as a torque ceiling, per-joint action scale; the last two also in the C MuJoCo exam and in `MjBoxer.Drive`.
-- `training/models/v3` and `rigs/v3` beside v2 (`tools/build_v3.py`): human force each way, per-joint action scale, heads
+- `training/models/v3` and `rigs/v3` beside v2 (`tools/archive/build_v3.py`): human force each way, per-joint action scale, heads
   inside the skull, damping measured standing. The game still runs v2. v3 fails the shipped brains until they are topped
-  up (`tools/ablate_v3.py`), so it is staged as a full retrain: `training/queue_v3_staged.json` (~16 h). The trainer-only
-  part on v2 is `training/queue_flags_staged.json` (~2 h).
+  up (`tools/archive/ablate_v3.py`), so it is staged as a full retrain: `training/queues/queue_v3_staged.json` (~16 h). The trainer-only
+  part on v2 is `training/queues/queue_flags_staged.json` (~2 h).
 - v1 models, rigs and five v1-only tools moved to `../PoBox_quarantine_2026-10-16/training/`.
 
 ## Mobile UI: zero-scroll and integrity, ten options (2026-10-16 night)
@@ -552,7 +560,7 @@ report with the TensorBoard charts explained: `DOCS/reports/2026-10-02-training-
 - Known: Grandma v Grandpa is probably a stand-off (it was in training); Trump does not close on an opponent
   who keeps out of his range; the new boxers have no get-up policy and little training under the hurt rule,
   so they go down often in the game. In the first seconds of a bout the new meshes drew as red and blue
-  shells only (`DOCS/reports/img/39_shells_at_intro.png`); not investigated.
+  shells only (`DOCS/reports/img/39_shells_at_intro.webp`); not investigated.
 - A boxer's name on screen is the `display` in its rig file ("LIL MATT"); its portrait is taken with the dev
   command `portraits`, which the five have had.
 

@@ -266,7 +266,7 @@ Details in `DOCS/README.md` and `SCREENSHOTS/2026-10-16-ui-integrity/report.html
 
 ## Phase K: the trainer, ten options (owner, 2026-10-16 night; staged, nothing trained)
 
-Details in `rl_optimization_log.md` (2026-10-16 night). Every new behaviour is off by default (`tools/smoke_flags.py`).
+Details in `rl_optimization_log.md` (2026-10-16 night). Every new behaviour is off by default (`tools/archive/smoke_flags.py`).
 
 - [x] K1 Drive damping measured standing (`tools/pd_sweep.py --loaded`), into the v3 rigs as `joint_kv`.
 - [x] K2 Self-contact charge (`--selfcontact-w`); the shipped footwork brain presses 0.93 cm a step, arms at the clip.
@@ -281,7 +281,7 @@ Details in `rl_optimization_log.md` (2026-10-16 night). Every new behaviour is o
 - [ ] K11 Run `queue_flags_staged.json` (~2 h, v2); examine rc2_matt; promote if it passes.
 - [ ] K12 Run `queue_v3_staged.json` (~16 h); a boxer whose v3 exam passes goes in with all three brains and its v3 prefab
       (MjRetrofit from models/v3, gate and parity tests). v3's force each way and action scale fail the shipped brains
-      (tools/ablate_v3.py): nothing of v3 reaches the game untrained.
+      (tools/archive/ablate_v3.py): nothing of v3 reaches the game untrained.
 
 ## Phase L: clean-up, ten options (owner, 2026-10-16 late night: "do all")
 
@@ -329,6 +329,6 @@ round them); no APK target. Details in `DOCS/README.md` and `SCREENSHOTS/2026-10
 - [x] R9 Garbage per control step (stand-in array).
 - [x] R10 Get-up retrains (`--no-drain`): Grandma d10c, Matt, Zombie, Nick; exams; promote with `MjRetrofit.PromoteBoxing`.
 - [x] R11 (m13_kim: footing passes; attack still under her mark) Kim: match brain empties her reserve in ~5 s and she falls (C MuJoCo too); her footwork and match under the rules.
-- [ ] R12 Melee: train boxers to step round bodies on the canvas: `--bodies N` built and staged (`training/queue_melee_staged.json`); the bodies are not yet in the observation.
+- [ ] R12 Melee: train boxers to step round bodies on the canvas: `--bodies N` built and staged (`training/queues/queue_melee_staged.json`); the bodies are not yet in the observation.
 - [x] R13 (fatigue_j 20000, 2026-10-19) Owner's call: fatigue 8 kJ empties a normal boxer in 7-15 s (trainer and game alike).
 - [ ] R14 Assets (Blender): open hands (only Matt has fingers), Kim's stretching arms, Grandma's pale hair (the menu portraits leave gloves off by design).

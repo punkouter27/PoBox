@@ -57,15 +57,15 @@ so a line near its mark can flip on the opponents alone (Nick's falls are all ag
 <h2>The three charts that matter</h2>
 
 <h3>1. Punches landed a second (env/hits_per_s), the eight m11 runs</h3>
-<img src="tb_hits.png" alt="TensorBoard chart of env/hits_per_s for the eight m11 runs">
+<img src="tb_hits.webp" alt="TensorBoard chart of env/hits_per_s for the eight m11 runs">
 <div class="card levels"><p><b>Toddler</b> Most of them hit a bit less often than when they started, because the other boxers got better at hitting back.</p><p><b>Child</b> Matt went from 0.73 to 0.55 a second and Sokol from 1.04 to 0.74, while Zombie (0.43 → 0.59), Trump (0.47 → 0.64) and Kim (0.23 → 0.38) went up. Grandpa stayed at 0.05: he still nearly never punches.</p><p><b>Adult</b> First 20 against last 20 iterations. The opponents were each one's m10 brain, which land far more than the ones m10 trained against (on Matt at the start 0.68/s against 0.45/s last night), so taking less (Matt 0.68 → 0.24/s) paid more than landing. Repeat decay 0.5 and combinations 0.25 also cut what a landed punch is worth; repeat share still rose for seven of eight and combinations stayed near 0.</p></div>
 
 <h3>2. Speed of the punches that land (env/hit_speed), m/s</h3>
-<img src="tb_speed.png" alt="TensorBoard chart of env/hit_speed for the eight m11 runs">
+<img src="tb_speed.webp" alt="TensorBoard chart of env/hit_speed for the eight m11 runs">
 <div class="card levels"><p><b>Toddler</b> We asked them to punch harder, and the ones we asked mostly did.</p><p><b>Child</b> The new rule pays a slow punch less. In training Zombie went 3.4 → 4.3 m/s, Nick 3.6 → 3.9, Grandpa 1.9 → 2.7 (his mark is 3.0); Kim did not move (3.9 → 3.5).</p><p><b>Adult</b> <code>--slow-v</code> scales a landed punch's worth by (speed / slow_v)<sup>2</sup> below slow_v. The training gains did not carry into the exams: Zombie still lands at 3.4-3.6 m/s there and Nick at 2.9-3.2, against other opponents and without the noise the trainer acts with. The bottom line is Grandpa.</p></div>
 
 <h3>3. Falls an episode (env/fall_rate)</h3>
-<img src="tb_falls.png" alt="TensorBoard chart of env/fall_rate for the eight m11 runs">
+<img src="tb_falls.webp" alt="TensorBoard chart of env/fall_rate for the eight m11 runs">
 <div class="card levels"><p><b>Toddler</b> Most of them fell down much less by the end.</p><p><b>Child</b> Grandpa fell in 37% of episodes at the start and 4% at the end, Grandma 33% → 10%. Kim went the wrong way, 48% → 60%.</p><p><b>Adult</b> Fall penalty 16 and the weights on the opponents who drop them worked for the grandparents (exam footing 2.7 → 0.0 and 7.0 → 0.11 a minute) and Sokol (1.56 → 0.33 in the mix, mark 0.2). Kim trained against Nick and Sokol at weight 3 and fell more: she is the lightest drive (strength 0.71) under the hurt and body-drain rules, and needs a different fix (her footwork under the rules, or her get-up hand-over) rather than more punishment.</p></div>
 
 <h2>Compared with last night</h2>

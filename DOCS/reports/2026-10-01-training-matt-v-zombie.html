@@ -60,7 +60,7 @@
      Checked afterwards with the final policies acting without any exploration noise: 50 episodes, 600 seconds, no falls.</p>
 
   <h2>Chart 1 · How often somebody falls over</h2>
-  <div class="chart"><img src="img/tb_fall_rate.png" alt="TensorBoard chart env/fall_rate for the three runs"></div>
+  <div class="chart"><img src="img/tb_fall_rate.webp" alt="TensorBoard chart env/fall_rate for the three runs"></div>
   <p class="dim">TensorBoard, <code>env/fall_rate</code>: the share of episodes that ended because a fighter fell. Orange and blue are the two bag stages, red is the match. Across is learning steps.</p>
   <div class="levels">
     <div class="level"><h4>FOR A TODDLER</h4><p>At first they fall down every time. Then they learn to stay up. The line goes down to the floor and stays there. Down is good.</p></div>
@@ -70,7 +70,7 @@
   <div class="verdict"><strong>Against earlier runs: as good, and harder won.</strong> The last rehearsal (one policy playing both sides, 49 minutes) also ended at 0% falls; the one before it, cut off at 16 minutes, was still at 13%. This run reaches the same place with two different bodies and two separate learners, which is the harder problem.</div>
 
   <h2>Chart 2 · How many punches each fighter lands</h2>
-  <div class="chart"><img src="img/tb_hits_per_fighter.png" alt="TensorBoard charts env/matt_hits_per_s and env/zombie_hits_per_s"></div>
+  <div class="chart"><img src="img/tb_hits_per_fighter.webp" alt="TensorBoard charts env/matt_hits_per_s and env/zombie_hits_per_s"></div>
   <p class="dim">TensorBoard, <code>env/matt_hits_per_s</code> and <code>env/zombie_hits_per_s</code>, match stage only: punches landed per second by each fighter.</p>
   <div class="levels">
     <div class="level"><h4>FOR A TODDLER</h4><p>Up means lots of punches. Zombie punches straight away. Matt stands still for a long time, and then he starts punching too.</p></div>
@@ -80,7 +80,7 @@
   <div class="verdict"><strong>Against earlier runs: same end point, an hour slower to reach it.</strong> The rehearsal reached 1.6 landed punches a second per fighter in 49 minutes with no passive phase, because there one policy drove both fighters and could not fall behind itself. With a policy each, one fighter can be left behind, and for an hour Matt was. That hour is the main thing to fix before the next long run.</div>
 
   <h2>Chart 3 · How hard the punches land</h2>
-  <div class="chart"><img src="img/tb_hit_speed.png" alt="TensorBoard chart env/hit_speed for the three runs"></div>
+  <div class="chart"><img src="img/tb_hit_speed.webp" alt="TensorBoard chart env/hit_speed for the three runs"></div>
   <p class="dim">TensorBoard, <code>env/hit_speed</code>: how fast the glove is closing on its target when it lands, in metres per second, averaged over both fighters. Capped at 9, about what a trained boxer's glove does.</p>
   <div class="levels">
     <div class="level"><h4>FOR A TODDLER</h4><p>Up means a big punch. Down means a little tap. They learn big punches, then little taps for a while, then big punches again.</p></div>

@@ -91,7 +91,7 @@ $env:PYTHONPATH=".mj350"; & $py tools/exam_v2.py --only matt   # boxing exam R3-
 ```
 
 Moved-not-deleted files from cleanups live in `../PoBox_quarantine_<date>/` (MANIFEST.md inside). Staged, not-yet-run
-jobs are `training/queue_*_staged.json`; copy entries into `logs/queue.json` to run them. `logs/queue.hold` pauses the
+jobs are `training/queues/queue_*_staged.json`; copy entries into `logs/queue.json` to run them. `logs/queue.hold` pauses the
 runner; it also waits while the GPU is over 25% busy (Unity in play mode).
 
 `PYTHONPATH=training/.mj350` selects MuJoCo 3.5.0 (the version Unity runs); without it the venv's 3.11 is

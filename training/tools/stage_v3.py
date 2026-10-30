@@ -1,17 +1,17 @@
 """Writes the two staged queues of 2026-10-16 night (nothing is run; copy entries into logs/queue.json to run them).
 
-    python tools/stage_v3.py            training/queue_flags_staged.json and training/queue_v3_staged.json
+    python tools/stage_v3.py            training/queues/queue_flags_staged.json and training/queues/queue_v3_staged.json
     python tools/stage_v3.py --books    only the exam books the v3 queue reads (logs/book_v3_<name>.json); its first job
 
 queue_flags_staged.json, on v2 (the game's bodies), about 2 GPU hours: the benchmark of rings x rollout, Matt's footwork
 topped up with the self-contact charge, and rc2_matt: the punch's variety (repeat decay, combinations), hurt starts with the
 clinch's pay, the hand-over share up (H8), the self-contact charge and ringcraft on m9_matt, stopping early on --done-when.
 
-queue_v3_staged.json, on models/v3 (tools/build_v3.py), about 2 h a boxer: every boxer's three shipped brains rebuilt from
+queue_v3_staged.json, on models/v3 (tools/archive/build_v3.py), about 2 h a boxer: every boxer's three shipped brains rebuilt from
 Assets/Boxers/NAME/*.onnx and rescaled to v3's per-joint action scale; the punch rules into the v3 configs; then a boxer at a
 time: footwork topped up (+ exam), get-up topped up against a frozen partner, its hand-over bank, a match round against the
 others' newest v3 brains (+ exam on v3). v3's force each way and its action scale fail the shipped footwork brains
-(tools/ablate_v3.py), so every boxer is topped up before anything of v3 can reach the game.
+(tools/archive/ablate_v3.py), so every boxer is topped up before anything of v3 can reach the game.
 """
 from __future__ import annotations
 
@@ -125,7 +125,7 @@ def main() -> None:
     if args.books:
         return books()
     for name, q in (("queue_flags_staged.json", flags_queue()), ("queue_v3_staged.json", v3_queue())):
-        with open(os.path.join(HERE, name), "w", encoding="utf-8") as f:
+        with open(os.path.join(HERE, "queues", name), "w", encoding="utf-8") as f:
             json.dump(q, f, indent=1)
         print(f"wrote {name}: {len(q)} jobs")
     books()

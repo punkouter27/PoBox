@@ -1043,7 +1043,7 @@ Day queue (09:08 on, ~9.4 h), each run then its exam; opponents are the newest b
 - In Unity (all rules on, all eight, game-only today): a full bout Matt v Zombie, no knockdowns; Matt 22% reserve at
   the end of round 1; Zombie's lasting damage 145. The exam's C MuJoCo ring has the same rules (`tools/exam.py`),
   checked with an in-memory config: 127 pushes a minute, both reserves empty by 30 s.
-- Staged, not run (`training/queue_punch_staged.json`, ~8 x (0.75 h + 13 min) + a baseline exam, ~8.5 h): the world
+- Staged, not run (`training/queues/queue_punch_staged.json`, ~8 x (0.75 h + 13 min) + a baseline exam, ~8.5 h): the world
   rules into every v2 config (fatigue 8000 included), then for each boxer `m9_NAME` from its newest brain (Matt,
   Nick, Grandma, Grandpa from their D8 m1, Zombie sf1, Trump shipped, Kim m7, Sokol m2), against the same opponents
   as the D8 day queue, `--obs-state --taken-w 1.0 --block-w 0.5 --hit-w 1.5 --fall-penalty 12`, 600 iterations,
@@ -1083,7 +1083,7 @@ Day queue (09:08 on, ~9.4 h), each run then its exam; opponents are the newest b
 ## 2026-10-16 night, staged (not run): ten trainer options, and models/v3 (owner: "do all")
 
 Nothing trained or promoted; nothing put in `logs/queue.json`. Every new behaviour is a flag or a config key that is off by
-default: with all of them off, `tools/smoke_flags.py --compare` gives footwork, the match, the match under every rule and
+default: with all of them off, `tools/archive/smoke_flags.py --compare` gives footwork, the match, the match under every rule and
 get-up identical to a baseline recorded before the change (fixed seed, 4 worlds x 30 steps, CPU), number for number.
 
 - **Self-contact charge** (`--selfcontact-w`, footwork and the bout): per cm of a boxer's own parts pressed into each other,
@@ -1105,7 +1105,7 @@ get-up identical to a baseline recorded before the change (fixed seed, 4 worlds 
   `tools/rescale_actions.py` moves a brain to it (last layer, noise and the last-action inputs' statistics times
   old/new): targets agree within 1.3e-4 rad wherever the old action was inside its clip; 10% of joint-samples pressed on
   the clip and now reach up to 0.45 rad further, which is the point.
-- **models/v3** (`tools/build_v3.py`; `rigs/v2` rebuilds `models/v2` byte for byte, checked under 3.5.0 and 3.11, so v3
+- **models/v3** (`tools/archive/build_v3.py`; `rigs/v2` rebuilds `models/v2` byte for byte, checked under 3.5.0 and 3.11, so v3
   differs by exactly these): human force each way (`rig_to_mjcf.HUMAN_FORCE`: ankle dorsiflexion 0.2, knee flexion 0.5,
   hip rotation 0.3; Matt's ankle_y -46/+232 N m); per-joint action scale; head spheres at 95% of the measured half-width
   (were 100-137%); damping for zeta 0.85 measured standing (`tools/pd_sweep.py --loaded`: a balance hand on the pelvis,
@@ -1113,15 +1113,15 @@ get-up identical to a baseline recorded before the change (fixed seed, 4 worlds 
   moves (31-39% reached), so hips, knees and ankles take the model's inertia; arms and trunk are measured. Matt: hips kv
   31.6 -> 58.8, knees -> 21, ankles -> 12.6, shoulders 8.4 -> 3.4-6.3, elbows 5.8 -> 3.1. All eight pass the self-contact
   check in 25 poses; 28 pairs. Configs carry v2's rules and `fatigue_ceiling: true`.
-- **What v3 costs the shipped brains** (`tools/ablate_v3.py`, Matt's footwork, 3 seeds x 2 episodes, C MuJoCo 3.5.0):
+- **What v3 costs the shipped brains** (`tools/archive/ablate_v3.py`, Matt's footwork, 3 seeds x 2 episodes, C MuJoCo 3.5.0):
   v2 stand/walk pass, 0 falls/min, vel err 0.031; +damping pass (turn passes too), +head pass; +force each way FAIL
   (2.19 falls/min); +action scale FAIL (1.15, vel err 0.29); all of v3 FAIL (Matt 1.15 falls/min, Grandma 8.05). So
   every boxer's brains are topped up on v3 before any of it can reach the game.
 - **Cleanup (G9)**: `envs/cgetup.py` reads `MODELS` (models/v2); the v1 models, rigs, `models/dev`, `models/guard`, five
   v1-only tools and the spent `queue_d8_staged.json` / `queue_doall_staged.json` moved to `../PoBox_quarantine_2026-10-16/training/`.
-- **Staged** (`tools/stage_v3.py` writes both): `training/queue_flags_staged.json` (v2, ~2 h: bench_match; Matt's
+- **Staged** (`tools/stage_v3.py` writes both): `training/queues/queue_flags_staged.json` (v2, ~2 h: bench_match; Matt's
   footwork with the self-contact charge + exam; `rc2_matt` from m9 with variety, hurt starts and the clinch, hand-over
-  0.5 (H8), self-contact, ringcraft, --done-when + exam). `training/queue_v3_staged.json` (99 jobs, ~2 h a boxer, ~16 h):
+  0.5 (H8), self-contact, ringcraft, --done-when + exam). `training/queues/queue_v3_staged.json` (99 jobs, ~2 h a boxer, ~16 h):
   bench_match; the exam books; every shipped brain rebuilt from Assets and rescaled; the punch rules into v3's configs;
   then per boxer (Matt, Sokol, Kim, Zombie, Nick, Trump, Grandpa, Grandma) footwork top-up + exam, get-up top-up against a
   frozen partner, hand-over bank, a match round on v3 against the others' newest v3 brains + exam on v3.
@@ -1129,7 +1129,7 @@ get-up identical to a baseline recorded before the change (fixed seed, 4 worlds 
   prefabs rebuilt, `PoBox/Mj/Check Every Boxer Against Training`, fingerprints and C MuJoCo recordings from v3, the gate
   and parity tests; one boxer's v3 brains go in together (footwork, get-up, match), never mixed with v2 bodies.
 - Bench (`bench_match`) is staged, not run: it times whole PPO iterations on the GPU, which is training's work.
-- Checks: `tools/smoke_flags.py --compare` identical; `--flags` all pass on v2 and v3; one CPU iteration each of a v3
+- Checks: `tools/archive/smoke_flags.py --compare` identical; `--flags` all pass on v2 and v3; one CPU iteration each of a v3
   gauntlet (every new flag), get-up (`--models models/v3`), hand-over bank and exam_v2 (`--models models/v3`) ran clean
   (throwaway output deleted). Unity with the new `MjBoxer.Drive`: MjParity 3/3, MjGate 24/24 (v2 unchanged).
 
@@ -1137,7 +1137,7 @@ get-up identical to a baseline recorded before the change (fixed seed, 4 worlds 
 
 Decision: one match round for all eight on v2 with every improvement staged so far, then exams; the old day queue (m2/m3
 under the pre-rules terms, 26 jobs never run) is superseded and backed up in `logs/queue.before-night-2026-10-17.json`.
-The queue is `training/queue_night_staged.json` (copied into `logs/queue.json`). v3 (~16 h) does not fit in 10 h.
+The queue is `training/queues/queue_night_staged.json` (copied into `logs/queue.json`). v3 (~16 h) does not fit in 10 h.
 
 1. `rules_punch` (the world rules into every v2 config, fatigue 8000 included, so the exams box under them), `bank_trump`
    (Trump had no hand-over bank).
@@ -1178,13 +1178,13 @@ overnight: the exams decide and promotion is done with the editor.
 ## 2026-10-17 23:35, overnight (owner: "train and improve all behaviours ... for next 10 hours")
 
 Decision: one more match round for all eight, `m11_NAME` from m10 against the others' m10, each aimed at the lines its
-`exam2_m10` failed; the grandparents' get-up first. Queue `training/queue_m11_staged.json` (22 jobs, copied into
+`exam2_m10` failed; the grandparents' get-up first. Queue `training/queues/queue_m11_staged.json` (22 jobs, copied into
 `logs/queue.json`; the old one backed up as `logs/queue.before-night-2026-10-18.json`). Estimate ~9.2 h.
 
 - **New flag `--slow-v`** (envs/boxing.py, train_gauntlet.py; off by default): a landed punch slower than this pays
   (speed / slow_v)^2 of its worth. Why: Zombie (3.6 m/s), Nick (3.3), Kim (2.7, mark 4.4) and Grandpa (1.3, mark 3.0) fail
   attack on the speed of what lands, not only the count, and nothing paid for speed above the style's `power`.
-  `tools/smoke_flags.py --compare` against a baseline saved just before: identical; `--flags` all pass.
+  `tools/archive/smoke_flags.py --compare` against a baseline saved just before: identical; `--flags` all pass.
 - **Get-up**: `u1_d9_grandpa_matt` (D8's recipe from his shipped get-up, 600 iterations: D8 reached 83-90% unaided in
   training, but that checkpoint is gone, so the exam used the shipped one, 24/60); `u1_d9_grandma_matt` (from D8's, 1500
   more: D8 stalled at 0% unaided, help 0.22). New banks `logs/handover_d9_NAME.npz` (the v2 banks are kept).
@@ -1366,19 +1366,19 @@ Running status, one line a milestone: `training/logs/night_status.md`. Nothing p
   1.65 -> 0.02; landed 1.31 -> 0.63/s), Zombie 4 -> 4 (guard 72 -> 86%), Nick 2 -> 4 (footing 1.11 -> 0, attack 0.78/s at 3.3 -> 1.19/s at
   4.5 m/s), Sokol 3 -> 4 (head shots taken 0.34 -> 0.03/s; landed 0.87 -> 0.53), Kim 2 -> 3, Trump 4 -> 4 (all a little better),
   Grandma 4 -> 3 (attack 0.54/s at 4.6 -> 0.41 at 3.2: not exported), Grandpa 3 -> 3 (attack 0.02 -> 0.14/s, still fails). 24 -> 29.
-  Seven exported (`tools/m13_compare.py`: not fewer lines than shipped) as `checkpoints/m13[b]_NAME/latest_NAME.onnx`, obs_state brains.
+  Seven exported (`tools/archive/m13_compare.py`: not fewer lines than shipped) as `checkpoints/m13[b]_NAME/latest_NAME.onnx`, obs_state brains.
 - **What the recipe did**: the guard terms worked again (Matt, Sokol, Zombie, Grandpa take almost no head shots), at the price of
   landing less for Matt and Sokol. The head price (x2, Matt x2.5) did not move Matt (0 -> 3% to the head) or Sokol (2 -> 0%): their
   punches reach only the trunk from the range they keep; a stance or range term would be next, not more head price. Repeat share
   rose with the punching (Kim 0.25 -> 0.52, Nick 0.27 -> 0.43) even at repeat decay 0.7; Nick's combinations 0.07 -> 0.25/s, the
   only boxer to combine. The arm pull (`--arms-w 0.01`) is untested by any exam line (hands at the chin are not measured).
-- Report: `SCREENSHOTS/2026-10-19-night/report.html`. Melee jobs staged in `training/queue_melee_staged.json`, not run.
+- Report: `SCREENSHOTS/2026-10-19-night/report.html`. Melee jobs staged in `training/queues/queue_melee_staged.json`, not run.
 - **Mixed exam, the roster the game would get** (`logs/book_night_mix.json`, against itself, 12 rounds, 30 knockdowns, game get-up
   rule): 39 of 48 (last night's mix 34 under fatigue 8000). Nick passes all six lines, a first. Footing, guard, chin, getting up pass
   for all eight; attack fails for seven (0.04-0.50/s: when every boxer guards, less lands); carrying on fails for the grandparents.
   Next: a range/stance term for attack; the grandparents' hand-over. Nothing promoted; GPU idle from 05:43.
 - Check: with every new flag off, tonight's envs/boxing.py and envs/getup.py give numbers identical to the committed ones
-  (`tools/smoke_flags.py`, same models at fatigue 8000). `logs/smoke_baseline.npz` (2026-10-16) no longer matches either: the
+  (`tools/archive/smoke_flags.py`, same models at fatigue 8000). `logs/smoke_baseline.npz` (2026-10-16) no longer matches either: the
   configs changed since (match obs/reward, getup obs 0.002); re-save it before the next flag change.
 
 ## 2026-10-19 day (owner: "do all": m14 attack, head shots, the Melee's bodies in the observation, exams)
@@ -1388,7 +1388,7 @@ Running status: `training/logs/night_status.md` (Day section). Nothing under Ass
 - **Baseline** is last night's mixed exam of the game's roster against itself (`logs/book_night_mix.json` = what Assets/Boxers ships since
   e218acc; `logs/exam_nightmix_NAME.json`): attack fails for seven. Per opponent the quiet pairs are plain: Grandpa lands 0.00-0.04/s on
   six of seven, Kim 0.00 on Grandpa and Zombie, Grandma 0.00 on Grandpa, Trump, Zombie; Sokol 0% to the head on every opponent.
-- **m14 recipe** (`tools/m14_job.py`): from the game's brain, against the game's roster, **under the game's daze line** (Fighter: hi 26,
+- **m14 recipe** (`tools/archive/m14_job.py`): from the game's brain, against the game's roster, **under the game's daze line** (Fighter: hi 26,
   lo 9, tau 3.5, body 0.45; new `train_gauntlet.py --daze-body`, the env already had it): the brains face that line in the game, and a
   lower line makes taking punches dearer and putting someone down reachable. Landing paid more than m13 (hit 2.0 -> 3.0, seek 0.3 -> 0.5),
   m13's guard and footing terms kept as they were (block 0.5, fall penalty 12-20, arms 0.01, self-contact), 3072 rings, 0.67 h cap, the
