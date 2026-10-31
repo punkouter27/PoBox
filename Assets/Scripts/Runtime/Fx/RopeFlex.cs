@@ -48,7 +48,7 @@ namespace PoBox.Fx
         [Tooltip("How far along a rope, and above or below it, a body pressing on the ropes reaches, metres.")]
         public float reach = 0.3f, band = 0.32f;
 
-        const int Sides = 6;
+        const int Sides = 12;        // round in a close-up (6 read as hexagons, 2026-10-31)
         Mesh _mesh;
         Vector3[] _vertices, _normals;
         float[] _x, _v, _push;         // per point: how far out it is, how fast, how far out a body holds it
