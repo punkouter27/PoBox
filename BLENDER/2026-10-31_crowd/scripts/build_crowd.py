@@ -166,15 +166,14 @@ def build(p, pose, idx):
     B.capsule(ta, tb, tr1, tr2, TOP, "top", fy=0.62, cap=(0.5, 0.42))
     # shoulders
     B.capsule((-sw, dy + 0.005, sz - 0.01), (sw, dy + 0.005, sz - 0.01), 0.055 * k * gb, 0.055 * k * gb, TOP, "top", side=(0, 0, 1))
-    if fem:
-        for s in (-1, 1):
-            B.ellipsoid((s * 0.048 * k, dy - tr2 * 0.62 * 0.72, up(FLOOR + 0.715 * H)), (0.048 * k * gb, 0.036 * k * gb, 0.046 * k * gb), TOP, "top")
+    # (2026-10-31: no separate bust spheres; at stand distance they read as two circles on the chest.)
     if "belly" in p["x"]:
         B.ellipsoid((0, dy - 0.05, up(FLOOR + 0.585 * H)), (0.15 * k * b, 0.11 * b, 0.15 * k), TOP, "top")
     chest_front = dy - tr2 * 0.62
     # top details
     if top in ("jacket", "cardigan"):
-        B.ellipsoid((0, chest_front + 0.012, up(FLOOR + 0.66 * H)), (0.045 * k, 0.03, 0.17 * k), p.get("inner", (0.9, 0.9, 0.9)), "fixed")
+        # The shirt under an open jacket: a flat strip set into the chest, not a bulging oval (read as a hole).
+        B.ellipsoid((0, chest_front + 0.022, up(FLOOR + 0.66 * H)), (0.032 * k, 0.008, 0.16 * k), p.get("inner", (0.9, 0.9, 0.9)), "fixed")
         for s in (-1, 1):      # lapels / collar
             B.capsule((s * 0.07 * k, dy + 0.0, sz + 0.02), (s * 0.03 * k, chest_front + 0.02, up(FLOOR + 0.72 * H)), 0.018, 0.012, TOP_ACC, "top")
     elif top == "hoodie":
