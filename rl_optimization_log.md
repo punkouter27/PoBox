@@ -1538,3 +1538,10 @@ solver is not bit-repeatable even old against old).
   Unaided get-up at the end of practice was 0 for six of eight (Kim 0.25, Nick 0.11), assist 0.14-0.51: the 600-iteration
   get-up runs end before the assist fades, so nothing is promoted. Next (not started, owner to approve): get-up runs that
   stop on unaided rate, then 1.5 h match runs with a larger hand-over share.
+
+## 2026-10-31 13:46, Kim get-up test (owner: "yes"): fade the helping hand, more worlds without it
+- New flags (`train_getup.py`, `envs/getup.py`; defaults unchanged): `--fade-above` (the hand shrinks while the aided
+  up rate's EMA is over it; was fixed at 0.6, where v3 stalled) and `--unaided-share` (worlds with no hand; was 0.1).
+- `v3u3_kim`: from `v3u_kim` (iteration 600, assist 0.136), partner `v3u2_matt` frozen, `--fade-above 0.45
+  --unaided-share 0.3 --done-when 0.8` (unaided, no help left, guard pose), 1 h cap. Then `exam_v3c_kim` with
+  `logs/book_v3c_kim.json` (Kim's match brain `v3m_kim`, the new get-up brain). Target: getting up 48 of 60 (was 32).

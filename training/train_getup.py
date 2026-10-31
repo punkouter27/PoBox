@@ -74,6 +74,8 @@ def main() -> None:
     ap.add_argument("--speed-limit", action="store_true", help="as train_box.py --speed-limit")
     ap.add_argument("--no-drain", action="store_true",
                     help="the reserve is drawn at the reset (0.3 to 1) and nothing is taken from it while getting up, as the game does")
+    ap.add_argument("--fade-above", type=float, default=0.6, help="the helping hand shrinks while the aided get-up rate is over this")
+    ap.add_argument("--unaided-share", type=float, default=0.1, help="share of the worlds with no helping hand at all")
     ap.add_argument("--assist-max", type=float, default=0.75, help="the most the helping hand may lift, a share of body weight; 0 = never")
     ap.add_argument("--speed-ramp", type=float, default=-1.0,
                     help="ease the speed limit's damping in from this share (0 = none of it), up while the learners get up "
@@ -111,7 +113,7 @@ def main() -> None:
     env = (GetUpMatchEnv if args.stage == "v2" else GetUpEnv)(xml, args.num_envs, device=args.device, seed=args.seed, slack_lo=args.slack_lo, slack_hi=args.slack_hi, shove=args.shove, assist=args.assist,
                                                               speed_limit=args.speed_limit, action_rate_w=args.action_rate_w,
                                                               obs_delay_max=args.obs_delay_max,
-                                                              assist_max=args.assist_max, no_drain=args.no_drain,
+                                                              assist_max=args.assist_max, fade_above=args.fade_above, unaided_share=args.unaided_share, no_drain=args.no_drain,
                                                               **({"speed_ramp": args.speed_ramp} if args.speed_ramp >= 0.0 else {}),
                                                               **({"speed_ramp": args.speed_share, "speed_fixed": True} if args.speed_share >= 0.0 else {}))
     N, K, A, D = env.N, env.K, env.A, env.obs_dim

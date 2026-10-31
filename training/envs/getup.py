@@ -54,6 +54,10 @@ class GetUpEnv(BoxingEnv):
         # The game's getup_speed_share (2026-10-18): the share held where it starts, never moved by the controller below.
         self.speed_fixed = kw.pop("speed_fixed", False)
         self.assist_max = kw.pop("assist_max", 0.75)
+        # 2026-10-31: the hand fades while the aided rate is over fade_above (0.6 made v3 stall at 14-51% help), and a
+        # share of the worlds go without it from the start (0.1 before).
+        self.fade_above = kw.pop("fade_above", 0.6)
+        self.unaided_share = kw.pop("unaided_share", 0.1)
         # The game (2026-10-18) takes nothing from the reserve while the get-up brain has the body: off = no drain here either.
         self.drain = not kw.pop("no_drain", False)
         kw.setdefault("episode_len_s", 10.0)
@@ -118,7 +122,7 @@ class GetUpEnv(BoxingEnv):
         self.weight = torch.tensor([float(self.m.body_subtreemass[int(self.pelvis[k])]) * 9.81 for k in range(K)], device=dev)
         self.assist = torch.full((K,), float(self.assist0), device=dev)
         self.up_ema = torch.zeros(K, device=dev)
-        self.aided = (torch.arange(N, device=dev) >= max(1, N // 10)).float()[:, None]     # (N,1); the first tenth go without
+        self.aided = (torch.arange(N, device=dev) >= max(1, int(N * self.unaided_share))).float()[:, None]     # (N,1); the first tenth go without
 
     # ---- reset ---------------------------------------------------------------------------------
     def _reset_states(self):
@@ -313,7 +317,7 @@ class GetUpEnv(BoxingEnv):
         if float(ends_k.min().item()) >= 8.0:
             rate_k = self._gk_floor["up_end"] / ends_k
             self.up_ema = 0.9 * self.up_ema + 0.1 * rate_k
-            step = torch.where(self.up_ema > 0.6, -0.004, torch.where(self.up_ema < 0.3, 0.004, 0.0))
+            step = torch.where(self.up_ema > self.fade_above, -0.004, torch.where(self.up_ema < 0.3, 0.004, 0.0))
             self.assist = (self.assist + step).clamp(0.0, self.assist_max)
         if self.speed_ramp and not self.speed_fixed:
             w = self.speed_watch
