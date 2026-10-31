@@ -69,6 +69,26 @@ Earlier in the day (Phase B):
   scene left behind (raw object names); on their own they pass (11 of 11). Run ours with the assembly filter
   `PoBox.Tests`.
 
+## Graphics, sound, a High tier, v3 retrain, the get-up fix (2026-10-31)
+
+- **v3 retrain** (8 boxers, queue 15:32 on 10-30 to 10:51): footwork 8/8 pass, boxing 0/8. A `train_getup.py` bug zeroed the
+  exploration noise on `--reset-std 0` (fixed). The get-up runs stopped while the helping hand still lifted 14-58%; with
+  `--fade-above 0.45 --unaided-share 0.3` Kim got up 52/60 (was 32). New brain rule `blend_steps` (trainer, C exam and
+  `MjBoxer.Drive` alike): with it and half the episodes from get-up poses, Kim stays up after 43/54 (was 2/32 at first).
+  Nothing promoted yet. Status page: `training/tools/v3_status.py` -> `DOCS/reports/v3_training_status.html`.
+- **Play-through audit** (`SCREENSHOTS/2026-10-31-browse`) and fixes: the result card waits for MENU (`Bout.autoAdvance`
+  off), a round with nothing to score is 10-10, the ring map steps aside for the knockdown picture and punch card, 6 s
+  round break, labelled result rows with DOWNS.
+- **Sound**: `Audio/ImpactSynth.cs` builds punches, blocks, the ring floor, steps, a boxing bell and crowd ooh/boo at load;
+  the reverb follows the shot; 64 voices.
+- **Graphics**: crowd impostors from Blender (`BLENDER/2026-10-31_crowd`, 16 people, one draw call); a **High** quality tier
+  (desktop default, `PoBox/Graphics/Make High Tier`): 85% + STP, 4096 shadows, full-res SSAO, volumetric haze
+  (`Fx/VolumetricHaze.cs`, quarter res, 16 steps) and face skin shading; ring spots shadowed and a ring probe
+  (`PoBox/Graphics/Light The Ring`); film grain; 12-sided vinyl ropes. High holds 32-38 fps on the RTX 2060 (the owner's
+  30 floor); PC 42-45. Report: `SCREENSHOTS/2026-10-31-gfx-sound/report.html`.
+- Not done: trunks and boots (`BLENDER/2026-10-31_boxing-kit`) look wrong over the modelled clothes; springy ropes and
+  padded gloves change the physics, so they wait for v4.
+
 ## Broadcast features, ratings online, realism flags (2026-10-30, afternoon)
 
 - **In the fight** (settings VIEW, all off by default): INTENT (`Fx/IntentArrows.cs`, one a corner in `Arena.unity`, added by

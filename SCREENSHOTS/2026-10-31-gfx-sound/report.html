@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PoBox graphics and sound pass, 2026-10-31</title>
+<style>
+  body { margin: 0; background: #0f1115; color: #e8eaef; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 60px; }
+  h1 { font-size: 24px; margin: 0 0 4px; } h2 { font-size: 18px; margin: 36px 0 8px; }
+  p, li { color: #c9cdd6; max-width: 860px; } .dim { color: #8b91a0; font-size: 13px; }
+  .pair { display: flex; gap: 16px; flex-wrap: wrap; }
+  figure { margin: 0; flex: 1 1 300px; max-width: 360px; }
+  figcaption { font-size: 13px; color: #8b91a0; margin-top: 6px; }
+  .shot { position: relative; } .shot img { width: 100%; display: block; border-radius: 6px; }
+  .mark { position: absolute; border: 3px solid #f2c14e; border-radius: 6px; box-shadow: 0 0 0 2px rgba(0,0,0,.5); }
+  .mark span { position: absolute; top: -26px; left: -3px; background: #f2c14e; color: #111; font-size: 12px; font-weight: 700; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+  table { border-collapse: collapse; margin-top: 8px; } td, th { padding: 6px 10px; border-bottom: 1px solid #262a33; text-align: left; font-size: 14px; vertical-align: top; }
+</style>
+</head>
+<body><main>
+<h1>Graphics and sound pass, 2026-10-31</h1>
+<p class="dim">Before: the play-through audit this morning (SCREENSHOTS/2026-10-31-browse). After: the editor at 1080 x 1920 on the new High tier
+(the desktop default), Matt v Zombie, captured with the dev script. Yellow boxes mark what changed. No physics, collision or trained brain was touched.</p>
+
+<h2>1. In the fight: the crowd, the ring lights, the ropes</h2>
+<p>The stands were flat coloured head-and-shoulder blobs; now they are 16 different people rendered in Blender (seated, standing with arms up,
+holding up phones), lit by the hall with their own normal maps, still one draw call. The four ring spots now cast soft shadows (each boxer stands in
+a pool of light with a shadow under him), the six house lamps no longer do (their 36 shadow faces were blurry and cost the most), and a reflection
+probe over the ring replaces the sky in reflections. The ropes have 12 sides instead of 6 and a vinyl sheen. On High, a volumetric haze is lit by the
+spots; tuned down to a quarter resolution to hold 30 fps it is subtle.</p>
+<div class="pair">
+  <figure><div class="shot"><img src="../2026-10-31-browse/13_b2_fight.webp" alt="fight before"></div>
+    <figcaption>Before: blob crowd, no spot shadows, hexagonal ropes.</figcaption></figure>
+  <figure><div class="shot"><img src="after_fight_wide.webp" alt="fight after">
+    <div class="mark" style="left:0%;top:16%;width:100%;height:18%"><span>CROWD V2</span></div>
+    <div class="mark" style="left:16%;top:78%;width:68%;height:7%"><span>SPOT SHADOWS</span></div>
+    <div class="mark" style="left:0%;top:36%;width:100%;height:6%"><span>ROPES</span></div>
+  </div><figcaption>After (High): people in the stands, the boxers' shadows on the canvas, round ropes.</figcaption></figure>
+  <figure><div class="shot"><img src="after_fight_ropes.webp" alt="fight after on the ropes">
+    <div class="mark" style="left:16%;top:72%;width:70%;height:13%"><span>SHADOWS</span></div>
+  </div><figcaption>After: on the ropes in a corner (the red outline is the existing "on the ropes" rim).</figcaption></figure>
+</div>
+<p class="dim">The crowd's own before/after at a wide and a close shot: <a style="color:#9ab" href="../2026-10-31-crowd-impostor/index.html">2026-10-31-crowd-impostor</a>.
+After the first look, the atlas was re-rendered without bust spheres and with a flat shirt strip under open jackets (both read as circles and holes).</p>
+
+<h2>2. Skin on High, and the mistake it fixed</h2>
+<p>The High tier lights skin as skin: light bleeding red past the edge of a shadow, ears glowing when lit from behind, the faint oily second highlight.
+The first version lit the whole mesh, and these boxers wear their clothes as part of one mesh, so Matt's camouflage glowed orange. It now applies to
+the face, ears and neck only, softer.</p>
+<div class="pair">
+  <figure><div class="shot"><img src="skin_before_fix.webp" alt="skin first version">
+    <div class="mark" style="left:2%;top:28%;width:70%;height:62%"><span>CLOTHES LIT AS SKIN</span></div>
+  </div><figcaption>First version: the jacket shines and glows.</figcaption></figure>
+  <figure><div class="shot"><img src="after_results.webp" alt="skin fixed">
+    <div class="mark" style="left:12%;top:23%;width:20%;height:9%"><span>FACE ONLY</span></div>
+  </div><figcaption>Fixed: cloth looks like cloth, the face keeps a warm sheen.</figcaption></figure>
+</div>
+
+<h2>3. Result card: waits for the player, labelled rows, knockdowns</h2>
+<p>From the audit: the card started the next bout by itself after 18 s (AGAIN 18 counting down); the rows were icons with no words; there was no
+knockdown count. Now it waits for MENU or AGAIN, the rows say LANDED, BLOCKED, HARDEST, DOWNS, and a round with nothing to score is 10-10 (the audit
+saw a zero-punch fight won 30-28).</p>
+<div class="pair">
+  <figure><div class="shot"><img src="../2026-10-31-browse/10_b1_results_again_countdown.webp" alt="results before">
+    <div class="mark" style="left:50%;top:88%;width:24%;height:5%"><span>AGAIN 18</span></div>
+  </div><figcaption>Before: counting down to the next bout; icons only.</figcaption></figure>
+  <figure><div class="shot"><img src="after_results.webp" alt="results after">
+    <div class="mark" style="left:39%;top:75%;width:20%;height:9%"><span>LABELS + DOWNS</span></div>
+    <div class="mark" style="left:50%;top:88%;width:24%;height:5%"><span>WAITS</span></div>
+  </div><figcaption>After: labelled rows with knockdowns; AGAIN has no countdown.</figcaption></figure>
+</div>
+
+<h2>4. Sound (no picture: heard, not seen)</h2>
+<table>
+<tr><th>What</th><th>Before</th><th>Now</th></tr>
+<tr><td>Punches</td><td>Generic game clips, pitched by speed</td><td>Built from the impact (Audio/ImpactSynth.cs): a leather slap as long as the glove's contact, over the ring of a skull or the thud of a chest; harder is lower and longer. The clips stay as a quieter top layer.</td></tr>
+<tr><td>Blocks</td><td>Clips</td><td>Padding on padding: a dull pop with a leather tick.</td></tr>
+<tr><td>Bell</td><td>An athletics lap bell</td><td>A struck brass boxing bell: one ding to start a round, three to end it.</td></tr>
+<tr><td>Falls and steps</td><td>A sand-pit thud, carpet footsteps</td><td>A sprung ring floor: a low boom with the boards rattling; canvas under boots.</td></tr>
+<tr><td>Crowd reactions</td><td>Louder or quieter</td><td>An "ooh" when a big punch misses; boos in a long clinch or when nothing lands.</td></tr>
+<tr><td>The hall</td><td>One fixed Auditorium reverb</td><td>A 2.3 s arena that is drier on close-ups and wetter on wide shots.</td></tr>
+<tr><td>Voices</td><td>32 at once (34 sources: some cut off)</td><td>64.</td></tr>
+</table>
+
+<h2>5. Frame rate: the High tier tuned to 30 fps</h2>
+<p>Measured in the editor on the RTX 2060 in a live fight (dev script <code>perf</code>), governor off, render scale pinned.</p>
+<table>
+<tr><th>High tier with</th><th>fps</th><th>GPU ms</th></tr>
+<tr><td>Everything, haze full resolution, 64 steps, soft shadow taps</td><td>2</td><td>~430</td></tr>
+<tr><td>Everything, haze half resolution, 32 steps, soft taps</td><td>9-10</td><td>~100</td></tr>
+<tr><td>No haze, full resolution</td><td>30-36</td><td>28-33</td></tr>
+<tr><td>Haze a quarter resolution, 24 steps, hard taps, full resolution</td><td>21-25</td><td>40-48</td></tr>
+<tr><td><b>Shipped: 85% + STP upscaling, haze a quarter resolution, 16 steps, hard taps</b></td><td><b>32-38</b></td><td><b>26-31</b></td></tr>
+<tr><td>PC tier (unchanged, for comparison)</td><td>42-45</td><td>22-24</td></tr>
+</table>
+<p class="dim">The phone tier (Mobile) cannot be shown in the editor (it is excluded from desktop); it got the crowd textures at 2048 and nothing
+else that costs. Checks: OneScreen layout audit 73/74 (the one left, a momentum label 2 px too small at 1080 x 2340, failed before today), no
+errors in play.</p>
+
+<h2>Not done</h2>
+<ul>
+<li>Trunks and boots: modelled in Blender for all eight (BLENDER/2026-10-31_boxing-kit) but not used: the boxers' meshes wear their clothes, and trunks over camouflage trousers looked worse.</li>
+<li>Collisions were reviewed, not changed: the ropes are rigid walls and gloves as hard as heads; making them springy and padded changes the physics every brain learned, so it belongs to the next body version and its retraining.</li>
+</ul>
+</main></body></html>
