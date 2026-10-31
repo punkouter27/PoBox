@@ -288,6 +288,8 @@ He fell over against Matt and Sokol (1.3-1.6 a minute), got up 16 of 60, and non
 <li><b>Trump:</b> walking exam passed every line (six of six). Get-up ended at 49% with 20% help and 0% on his own.
 In his boxing lesson he lands few punches (about 0.22 a second) but over 60% to the head.
 His <b>boxing exam failed</b> on attack (0.35 a second, but hard: 4.3 m/s, 59% to the head) and getting up (9 of 60, 2 stayed up); footing, guard and chin pass.</li>
+<li><b>Grandpa: the weakest so far.</b> Walking exam passed every line (seven of seven). But his get-up lesson ended with the help still at 51% and 0% on his own,
+and only 47 good get-up endings were saved (others 1,300-1,500). In his boxing lesson he barely lands (about 0.06 a second).</li>
 <li><b>Getting up: got worse while training.</b> Matt's success climbed to about 70% in the first 25 rounds, then fell back to about 50% and stayed there (the exam wants 80%). Cause found: a bug set its "try something new" noise to zero for the whole lesson (train_getup.py read the queue's
 "--reset-std 0", meaning keep the noise, as "make it zero"), so it couldn't explore and its updates went wild (KL 1.3, normally under 0.05).
 Fixed at 19:15, before Sokol's get-up lesson; the other seven get the fix. Matt's get-up and boxing lessons are queued again at the end (v3u2_matt, v3m2_matt).</li>
