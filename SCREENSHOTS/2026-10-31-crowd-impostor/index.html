@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Crowd impostors, 2026-10-31</title>
+<style>body{font-family:sans-serif;background:#111;color:#ddd;margin:24px}figure{display:inline-block;margin:8px;vertical-align:top}img{width:360px;border:1px solid #444}figcaption{max-width:360px;font-size:14px}.chg{color:#7fd}</style></head>
+<body>
+<h1>Crowd: procedural blobs to baked impostors</h1>
+<p>Shader <code>PoBox/Crowd</code> now draws each of the 1,138 quads as a 1.15 x 2.30 m card from the atlas in
+<code>Assets/Textures/Crowd</code> (16 people x seated / arms up / phone, front and turned 40 deg views), lit with the atlas
+normals (main light, ambient probe, spill from the lamps over the ring), AO from mask.A, garment tinted with the old shirt
+and corner colours. Still one draw call, no new C#. The old path stays behind the <code>_CROWD_PROCEDURAL</code> toggle.</p>
+<h2>Wide (fight)</h2>
+<figure><img src="before_wide.png"><figcaption>Before: head-and-shoulder silhouettes (shot taken with the procedural keyword on, same camera).</figcaption></figure>
+<figure><img src="after_wide.png"><figcaption class="chg">After: seated people with faces, hair, clothes; a few in the front rows are up with their arms raised (mood/burst thresholds per figure).</figcaption></figure>
+<h2>Close (high corner, result screen, phones out)</h2>
+<figure><img src="before_close_result.png"><figcaption>Before: blobs, phone lights as large round dots.</figcaption></figure>
+<figure><img src="after_close_result_phones.png"><figcaption class="chg">After: standing fans cheering; phone holders standing with a lit screen (mask.B).</figcaption></figure>
+<figure><img src="after_close_fight.png"><figcaption class="chg">After, during the fight: seated rows, one fan up.</figcaption></figure>
+<p>GPU frame time (editor, PerfTelemetry, Wide shot, vsync 60 fps): impostor 3.7-5.4 ms (typ. 4.3), procedural 4.2-4.3 ms. Difference within noise.</p>
+</body></html>

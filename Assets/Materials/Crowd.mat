@@ -22,17 +22,39 @@ Material:
   m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
-    m_TexEnvs: []
+    m_TexEnvs:
+    - _Albedo:
+        m_Texture: {fileID: 2800000, guid: 67ee25c9e8080024ca46e82896bd8028, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Mask:
+        m_Texture: {fileID: 2800000, guid: bd4d9fd0e42156b438b9d07da5921ed1, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _Normal:
+        m_Texture: {fileID: 2800000, guid: 618b61d1ad6bc634b9b3ac14d82d1bf8, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _AmbientGain: 1
     - _Brightness: 0.38
+    - _Cutoff: 0.5
     - _FlashGain: 9
     - _Height: 0.95
+    - _LitBrightness: 1.35
+    - _MainLightGain: 0.5
     - _PhoneGain: 3
+    - _PivotDrop: 0.1
+    - _Procedural: 0
+    - _SpillHeight: 6
     - _Width: 0.62
     m_Colors:
     - _BlueCorner: {r: 0.2, g: 0.49, b: 0.94, a: 1}
+    - _CellSize: {r: 1.15, g: 2.3, b: 0.2174, a: 0}
     - _RedCorner: {r: 0.89, g: 0.24, b: 0.24, a: 1}
+    - _RingCentre: {r: 0, g: 0, b: 0, a: 0}
     - _SkinColor: {r: 0.72, g: 0.54999995, b: 0.43999997, a: 1}
+    - _SpillColor: {r: 0.54999995, g: 0.5, b: 0.41999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
