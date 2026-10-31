@@ -41,6 +41,28 @@ MonoBehaviour:
       surfaceData: 2
     screenSpaceSettings:
       normalBlend: 0
+--- !u!114 &-1869822597080685241
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0f32d29de6777c54cbc9b1fecd99a93b, type: 3}
+  m_Name: Volumetric Haze
+  m_EditorClassIdentifier: PoBox.Runtime::PoBox.Fx.VolumetricHaze
+  m_Active: 1
+  settings:
+    density: 0.03
+    heightFalloff: 0.1
+    anisotropy: 0.6
+    intensity: 1
+    maxDistance: 28
+    steps: 40
+    halfResolution: 1
+  shader: {fileID: 0}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -69,7 +91,8 @@ MonoBehaviour:
   - {fileID: 7833122117494664109}
   - {fileID: -4793218167879215989}
   - {fileID: -6588207820132486849}
-  m_RendererFeatureMap: ad6b866f10d7b46c8b549ccc78117bbdl
+  - {fileID: -1869822597080685241}
+  m_RendererFeatureMap: ad6b866f10d7b46c8b549ccc78117bbd23044f3950b5b40247e50134410e0de6l
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
   m_AssetVersion: 3
   m_PrepassLayerMask:

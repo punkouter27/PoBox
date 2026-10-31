@@ -52,19 +52,62 @@ namespace PoBox.EditorTools
                 ao.ApplyModifiedPropertiesWithoutUndo();
             }
             data.ApplyModifiedPropertiesWithoutUndo();
+            AddFeature<PoBox.Fx.VolumetricHaze>(renderer, "Volumetric Haze");
             AssetDatabase.SaveAssets();
 
             AddLevel(rp);
             Debug.Log("[HighTier] High_RPAsset / High_Renderer made; quality levels: " + string.Join(", ", QualitySettings.names));
         }
 
+        /// <summary>A renderer feature as a sub-asset of <paramref name="renderer"/>, in its list and its id map.</summary>
+        static void AddFeature<T>(ScriptableRendererData renderer, string name) where T : ScriptableRendererFeature
+        {
+            // Any earlier one goes first: the command can be run again.
+            var old = new SerializedObject(renderer);
+            SerializedProperty oldList = old.FindProperty("m_RendererFeatures"), oldMap = old.FindProperty("m_RendererFeatureMap");
+            for (int i = oldList.arraySize - 1; i >= 0; i--)
+            {
+                if (!(oldList.GetArrayElementAtIndex(i).objectReferenceValue is T stale)) continue;
+                oldList.GetArrayElementAtIndex(i).objectReferenceValue = null;
+                oldList.DeleteArrayElementAtIndex(i);
+                oldMap.DeleteArrayElementAtIndex(i);
+                old.ApplyModifiedPropertiesWithoutUndo();
+                AssetDatabase.RemoveObjectFromAsset(stale);
+                UnityEngine.Object.DestroyImmediate(stale, true);
+            }
+            var feature = ScriptableObject.CreateInstance<T>();
+            feature.name = name;
+            AssetDatabase.AddObjectToAsset(feature, renderer);
+            AssetDatabase.TryGetGUIDAndLocalFileIdentifier(feature, out string _, out long id);
+            var data = new SerializedObject(renderer);
+            SerializedProperty list = data.FindProperty("m_RendererFeatures"), map = data.FindProperty("m_RendererFeatureMap");
+            list.InsertArrayElementAtIndex(list.arraySize);
+            list.GetArrayElementAtIndex(list.arraySize - 1).objectReferenceValue = feature;
+            map.InsertArrayElementAtIndex(map.arraySize);
+            map.GetArrayElementAtIndex(map.arraySize - 1).longValue = id;
+            data.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(renderer);
+        }
+
         static T Copy<T>(string from, string to) where T : ScriptableObject
         {
+            // Once made, the asset keeps its GUID (the quality level and scenes point at it): PC's settings are copied
+            // over it, its own sub-assets (the features) stay, and are reset below.
             string src = Dir + from + ".asset", dst = Dir + to + ".asset";
-            if (AssetDatabase.LoadAssetAtPath<T>(dst) != null) AssetDatabase.DeleteAsset(dst);
-            if (!AssetDatabase.CopyAsset(src, dst)) throw new Exception($"could not copy {src} to {dst}");
-            AssetDatabase.ImportAsset(dst);
-            return AssetDatabase.LoadAssetAtPath<T>(dst);
+            T made = AssetDatabase.LoadAssetAtPath<T>(dst);
+            if (made == null)
+            {
+                if (!AssetDatabase.CopyAsset(src, dst)) throw new Exception($"could not copy {src} to {dst}");
+                AssetDatabase.ImportAsset(dst);
+                return AssetDatabase.LoadAssetAtPath<T>(dst);
+            }
+            if (typeof(T) == typeof(UniversalRenderPipelineAsset))
+            {
+                string name = made.name;
+                EditorUtility.CopySerialized(AssetDatabase.LoadAssetAtPath<T>(src), made);
+                made.name = name;
+            }
+            return made;
         }
 
         static void AddLevel(UniversalRenderPipelineAsset rp)
