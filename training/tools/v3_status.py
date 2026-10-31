@@ -60,7 +60,7 @@ def png(fig):
     return base64.b64encode(buf.getvalue()).decode()
 
 
-def chart(prefix, key, ylabel, title, marks=(), per_boxer_key=False):
+def chart(prefix, key, ylabel, title, marks=(), per_boxer_key=False, dashed=None):
     fig, ax = plt.subplots(figsize=(7.5, 3.4))
     drawn = 0
     for name in ORDER:
@@ -68,6 +68,10 @@ def chart(prefix, key, ylabel, title, marks=(), per_boxer_key=False):
         if xs:
             ax.plot(xs, smooth(ys), color=COLORS[name], lw=2, label=name.capitalize())
             ax.plot(xs, ys, color=COLORS[name], lw=0.6, alpha=0.25)
+            if dashed:
+                dx, dy = series(f"{prefix}_{name}", dashed.format(name=name))
+                if dx:
+                    ax.plot(dx, smooth(dy, 0.9), color=COLORS[name], lw=1.4, ls="--")
             drawn += 1
     for y, text, col in marks:
         ax.axhline(y, color=col, ls="--", lw=1)
@@ -190,7 +194,7 @@ def main():
     c1, _ = chart("v3f", "falls_per_min", "falls a minute",
                   "1. Staying on its feet: falls a minute while walking and turning (lower is better)")
     c2, _ = chart("v3u", "{name}_up_rate", "share that got up",
-                  "2. Getting up: share of knockdowns it stood up from (higher is better)",
+                  "2. Getting up: solid = with the practice helping hand, dashed = on its own (higher is better)", dashed="{name}_up_rate_unaided",
                   marks=[(0.8, "exam mark 80%", "#2a7")], per_boxer_key=True)
     c3, _ = chart("v3m", "hits_per_s", "punches landed a second",
                   "3. Boxing: punches landed a second against the other seven (higher is better)",
@@ -268,18 +272,21 @@ walking and boxing lessons it sits an exam in the same physics the game uses. No
 <li><b>Boxing: slightly worse than the old Matt.</b> His old brain landed 0.65 punches a second; the new one 0.44, just under the 0.5 mark, and none to the head (the old one also struggled with the head). Its chart dips from 0.47 to 0.27 and was climbing back when the 45 minutes ran out.</li>
 <li><b>Boxing, Sokol: steadier than Matt.</b> No dip: about 0.5 punches landed a second all lesson, ending at 0.53, and he fell over less as it went on (falls 0.22 &rarr; 0.04 an episode). He also started from 629 good get-up endings to practise from, against Matt's 99 from the broken lesson.
 But his <b>boxing exam failed</b> on attack: 0.35 a second in the exam against 0.53 in practice. He lands well on Grandpa, Kim and Nick
-(0.6-0.75) and almost never on Grandma, Matt, Trump or Zombie (0.04-0.13), and nothing to the head. Only 2 knockdowns in 60 bouts, so getting up is barely tested.</li>
+(0.6-0.75) and almost never on Grandma, Matt, Trump or Zombie (0.04-0.13), and nothing to the head. And getting up, with no help in the exam: he stood up from only 2 of 60 knockdowns.</li>
 <li><b>Kim: the best so far.</b> Walking exam passed every line; get-up ended at 64% with the help down to 14% (Sokol 38%), and saved 1,500 good endings.
 In his boxing lesson he lands about 0.48 a second and, unlike Matt and Sokol, <b>12% of them to the head</b> (Kim also aimed at the head on the old body).
 His <b>boxing exam failed</b> four lines, but it is the first real test: attack 0.49 a second (mark 0.5) but too soft (3.4 m/s, his mark 4.4),
 10% to the head (49% on Nick). Against Grandma he was knocked down 60 times: he got up 32 times (53%, mark 80%), and only 2 of those 32 stayed
 up 3 seconds once his boxing brain took over. <b>The hand-over from getting up to boxing is the weak link.</b></li>
 <li><b>Zombie:</b> walking exam passed every line (four of four so far); get-up ended at 70% with 31% help, 1,500 good endings saved.
-In his boxing lesson he lands fewer punches (0.30 a second, under the 0.5 mark) but <b>more than half go to the head</b> (52-63%), and he hardly falls (0.03-0.06 an episode).</li>
+In his boxing lesson he lands fewer punches (0.30 a second, under the 0.5 mark) but <b>more than half go to the head</b> (52-63%), and he hardly falls (0.03-0.06 an episode).
+His <b>boxing exam failed</b> three lines: attack 0.31 a second (50% to the head), getting up 9 of 60, and 3 of those 9 stayed up; footing, guard and chin pass.</li>
 <li><b>Getting up: got worse while training.</b> Matt's success climbed to about 70% in the first 25 rounds, then fell back to about 50% and stayed there (the exam wants 80%). Cause found: a bug set its "try something new" noise to zero for the whole lesson (train_getup.py read the queue's
 "--reset-std 0", meaning keep the noise, as "make it zero"), so it couldn't explore and its updates went wild (KL 1.3, normally under 0.05).
 Fixed at 19:15, before Sokol's get-up lesson; the other seven get the fix. Matt's get-up and boxing lessons are queued again at the end (v3u2_matt, v3m2_matt).</li>
-<li><b>Getting up couldn't be examined:</b> nobody knocked Matt down in 60 exam bouts (his opponents still run their old brains on the new bodies), so that line shows 0 of 0. The exam counts it as a fail, but it is an empty test.</li>
+<li><b>Getting up is the real blocker (corrected 01:35).</b> The exam knocks each boxer down 60 times and gives no help. Matt stood up 0 times, Sokol 2,
+Zombie 9, Kim 32 (mark 48). In practice the helping hand never reached zero in the 25-minute lesson: on its own (dashed lines) only Kim ever got up
+(25%), and he is the one who got up most in the exam. An earlier version of this page said Matt and Sokol were barely knocked down; that was wrong.</li>
 </ul>
 <p class="dim">Charts are TensorBoard's numbers (logs/RUN.csv, smoothing 0.6, faint line = raw). Exams: logs/exam_v3f_NAME.json, logs/exam_v3m_NAME.log.</p>
 </main></body></html>"""

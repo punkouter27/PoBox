@@ -1524,5 +1524,10 @@ solver is not bit-repeatable even old against old).
   `v3u_sokol` started; the seven other get-up jobs use the fix. Matt's get-up (and its hand-over bank, match, exam)
   needs a rerun.
 - `v3m_matt` (336 it, 0.75 h cap): hits 0.47 -> 0.27 -> 0.40/s. Exam FAIL: attack 0.44/s (mark 0.5; m11 was 0.65),
-  0% head; getting up 0 of 0 (nobody knocked him down in 60 trials), carrying on 0 of 0; footing, guard 61%, chin pass.
+  0% head; getting up 0 of 60 staged knockdowns (no help in the exam), carrying on 0 of 0; footing, guard 61%, chin pass.
 - Status page: `training/tools/v3_status.py` -> `DOCS/reports/v3_training_status.html` (3 charts, timeline, rerun hourly).
+- 01:35 on 10-31: boxing exams Sokol, Kim, Zombie all FAIL. Getting up (exam knocks down 60 times, no assist): Sokol 2,
+  Kim 32, Zombie 9 (mark 48); carrying on 0/2, 2/32, 3/9. Practice `NAME_up_rate_unaided` at the end of the 600-iteration
+  get-up runs: Matt 0, Sokol 0, Kim 0.25, Zombie 0 (assist still 0.14-0.58), matching the exam order. The get-up lessons stop
+  before the assist fades out; they need more iterations, or a stop on unaided rate rather than `--done-when 0.85` (aided).
+  Attack: Sokol 0.35/s 0% head, Kim 0.49 10% (too soft, 3.4 m/s v 4.4), Zombie 0.31 50% head.
