@@ -320,7 +320,7 @@ namespace PoBox.UI
             // Landed, blocked, hardest, knockdowns: the icon is the key, as on the scoreboard's chips, with its word under it
             // (2026-10-31 browse: icons alone did not read).
             GlyphKind[] kinds = { GlyphKind.Glove, GlyphKind.Shield, GlyphKind.Burst, GlyphKind.Daze };
-            string[] words = { "LANDED", "BLOCKED", "HARDEST", "KNOCKDOWNS" };
+            string[] words = { "LANDED", "BLOCKED", "HARDEST", "DOWNS" };
             for (int i = 0; i < ResultRows; i++)
             {
                 var row = new VisualElement { pickingMode = PickingMode.Ignore };
