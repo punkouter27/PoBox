@@ -126,12 +126,12 @@ Shader "PoBox/FighterOverlay"
                 half atten = l.distanceAttenuation * l.shadowAttenuation;
                 half ndl = dot(n, L);
                 half wrap = saturate((ndl + 0.45) / 1.45) - saturate(ndl);
-                half3 sss = half3(0.85, 0.22, 0.12) * wrap * 0.55;
+                half3 sss = half3(0.85, 0.22, 0.12) * wrap * 0.35;
                 half back = pow(saturate(dot(v, -normalize(L + n * 0.35))), 4) * 0.22;
                 half3 through = half3(1.0, 0.35, 0.2) * back * l.distanceAttenuation;
                 half3 h = normalize(L + v);
                 half f = 0.028 + 0.972 * pow(1 - saturate(dot(h, v)), 5);
-                half oil = pow(saturate(dot(n, h)), 14) * f * 0.6 * saturate(ndl * 4);
+                half oil = pow(saturate(dot(n, h)), 14) * f * 0.35 * saturate(ndl * 4);
                 return l.color * ((sss + oil) * atten + through);
             }
             #endif
@@ -207,7 +207,10 @@ Shader "PoBox/FighterOverlay"
                         skin += SkinLight(n, v, GetAdditionalLight(lightIndex, i.positionWS, half4(1, 1, 1, 1)));
                     LIGHT_LOOP_END
                     #endif
-                    colour += skin * (1 - bruise * 0.5);
+                    // Only where it is skin for every boxer: the face, ears and neck (the meshes are clothed, one mesh with
+                    // the clothes, so a jacket would glow red too). _Flush.xyz is the face.
+                    half face = saturate(1.0 - distance(i.positionWS, _Flush.xyz) / 0.3);
+                    colour += skin * face * (1 - bruise * 0.5);
                 }
                 #endif
                 return half4(colour, max(bruise * 0.55, flushed * 0.22));
