@@ -174,7 +174,9 @@ namespace PoBox.Fx
             }
         }
 
-        static readonly UnityEngine.Rendering.GlobalKeyword SkinHq = UnityEngine.Rendering.GlobalKeyword.Create("_POBOX_SKIN_HQ");
+        // Made on first use: Unity forbids creating a global keyword in a MonoBehaviour's static initialiser.
+        static UnityEngine.Rendering.GlobalKeyword _skinHq;
+        static bool _skinHqMade;
         static int _qualitySeen = -1;
 
         /// <summary>The High tier lights the skin as skin (FighterOverlay's _POBOX_SKIN_HQ); the others keep the plain overlay.</summary>
@@ -184,7 +186,8 @@ namespace PoBox.Fx
             if (level == _qualitySeen) return;
             _qualitySeen = level;
             string[] names = QualitySettings.names;
-            Shader.SetKeyword(SkinHq, level >= 0 && level < names.Length && names[level] == "High");
+            if (!_skinHqMade) { _skinHq = UnityEngine.Rendering.GlobalKeyword.Create("_POBOX_SKIN_HQ"); _skinHqMade = true; }
+            Shader.SetKeyword(_skinHq, level >= 0 && level < names.Length && names[level] == "High");
         }
 
         void LateUpdate()
