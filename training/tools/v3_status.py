@@ -154,7 +154,11 @@ def timeline(times, now):
     # reruns queued after the eight (v3u2_NAME ... exam_v3m2_NAME): the last four steps, about 0.77 of a boxer
     with open(os.path.join(LOGS, "queue.json"), encoding="utf-8") as f:
         redo = [e["run"] for e in json.load(f) if e["run"].startswith("exam_v3m2_")]
-    eta += sum((per * 0.77 for r in redo if not os.path.exists(os.path.join(LOGS, f"{r}.done"))), timedelta())
+    for r in redo:
+        if os.path.exists(os.path.join(LOGS, f"{r}.done")):
+            continue
+        began = times.get(r.replace("exam_v3m2_", "v3u2_"), [None])[0]
+        eta = max(eta, now, began + per * 0.77) if began else eta + per * 0.77
     return rows, per, eta
 
 
@@ -296,7 +300,8 @@ He is the best defender, though: guard 93%, no falls, no head shots taken.</li>
 In her boxing lesson: about 0.22 a second, 15-27% to the head.
 Her <b>boxing exam failed</b>: 0.49 a second but very soft (1.3 m/s, her mark 3.0), and 0 of 60 get-ups; footing, guard (75%) and chin pass.
 <b>All eight boxing exams failed.</b></li>
-<li><b>Matt's redo (with the fix):</b> get-up at 62% with the help at 42% near the end of the lesson (first try: 53%, no learning noise), still 0% on his own.</li>
+<li><b>Matt's redo (with the fix):</b> get-up ended at 64% with the help at 39% (first try: 53%, no learning noise), still 0% on his own; 413 good endings saved (first try 99).
+Boxing lesson: about 0.39 a second (first try 0.40), still almost nothing to the head (3%), but falls dropped to 0.06 an episode (first try 0.07-0.43).</li>
 <li><b>Getting up: got worse while training.</b> Matt's success climbed to about 70% in the first 25 rounds, then fell back to about 50% and stayed there (the exam wants 80%). Cause found: a bug set its "try something new" noise to zero for the whole lesson (train_getup.py read the queue's
 "--reset-std 0", meaning keep the noise, as "make it zero"), so it couldn't explore and its updates went wild (KL 1.3, normally under 0.05).
 Fixed at 19:15, before Sokol's get-up lesson; the other seven get the fix. Matt's get-up and boxing lessons are queued again at the end (v3u2_matt, v3m2_matt).</li>
