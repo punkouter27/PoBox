@@ -382,6 +382,9 @@ Label { margin: 0; padding: 0; }
 .tape-key { width: 60px; flex-direction: row; align-items: center; justify-content: center; flex-shrink: 0; }
 .glyph { width: 30px; height: 30px; margin-right: 10px; color: var(--ink-dim); }
 .tape-key .glyph { margin: 0; }
+/* The result card's keys carry their word under the icon (2026-10-31). */
+.tape-key--worded { width: 170px; flex-direction: column; }
+.tape-key-word { font-size: var(--t-micro); letter-spacing: 1px; color: var(--ink-dim); -unity-text-align: middle-center; margin-top: 2px; }
 
 /* On the scoreboard the tape is one row of three chips: red's number, an icon, blue's number. The icon is
    the label. The third chip changes what it shows on a tap anywhere on the scoreboard, and is tinted to

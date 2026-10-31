@@ -31,7 +31,7 @@ namespace PoBox.Tests
             yield return SceneManager.LoadSceneAsync(MatchSelection.ArenaScene, LoadSceneMode.Single);
             for (float t = 0f; (Bout.Instance == null || Bout.Instance.Phase != BoutPhase.Fight) && t < 30f; t += Time.unscaledDeltaTime) yield return null;
             Assert.IsNotNull(Bout.Instance, "the Arena scene has no Bout");
-            yield return Measure(() => { Bout.Instance.userTimeScale = 4f; Bout.Instance.resultsSeconds = 0.5f; });
+            yield return Measure(() => { Bout.Instance.userTimeScale = 4f; Bout.Instance.resultsSeconds = 0.5f; Bout.Instance.autoAdvance = true; });
             Assert.Less(MjRing.DeepestOverlap[0], OnTheirFeet, "two boxers on their feet went into each other: " + MjRing.DeepestWhere[0]);
             Assert.Less(MjRing.DeepestOverlap[1], OnTheirFeet, "the boxer held over a count was put inside the other: " + MjRing.DeepestWhere[1]);
             Assert.Less(MjRing.Over3cm, MjRing.OverlapSteps * 0.03, $"{MjRing.Over3cm} of {MjRing.OverlapSteps} control steps had two boxers 3 cm inside each other");

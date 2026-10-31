@@ -85,6 +85,8 @@ namespace PoBox.Sim
         {
             float r = round[judge, 0], b = round[judge, 1];
             if (_downs[0] != _downs[1]) return _downs[0] < _downs[1] ? 1 : -1;
+            // Nothing to score (no punch landed or thrown, no knockdown): 10-10, not won on ring generalship alone (2026-10-31).
+            if (r + b < 1e-4f) return 0;
             if (Mathf.Abs(r - b) <= Level[judge] * (r + b) + 1e-4f)
             {
                 float share = CentreShare;

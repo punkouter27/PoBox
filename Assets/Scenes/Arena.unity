@@ -65202,9 +65202,9 @@ MonoBehaviour:
   walkOnSeconds: 5
   countInterval: 1
   stopAfterDowns: 3
-  breakSeconds: 3
+  breakSeconds: 6
   resultsSeconds: 18
-  autoAdvance: 1
+  autoAdvance: 0
   fixedEntrants: 1
   physicsStep: 0.005
   userTimeScale: 1

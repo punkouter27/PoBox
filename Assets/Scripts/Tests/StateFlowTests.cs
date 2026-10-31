@@ -147,7 +147,7 @@ namespace PoBox.Tests
                 yield return Press(hud.Root, "m-next");
                 Assert.IsFalse(MjReplay.Playing, "the menu's NEXT left the replay playing");
                 Assert.AreEqual(number + 2, bout.BoutNumber, "the menu's NEXT did not start the next bout");
-                bout.autoAdvance = true;
+                bout.autoAdvance = false;      // the game's default (2026-10-31): the card waits for MENU
                 bout.roundSeconds = 60f;        // a round long enough to be knocked down in
                 yield return Until(() => bout.Phase == BoutPhase.Fight, 30f, "the bout after the replay never reached the bell");
                 foreach (Fighter f in new[] { bout.red, bout.blue })

@@ -48,7 +48,7 @@ namespace PoBox.UI
         public BroadcastDirector director;
 
         const int LeagueRows = 8;
-        const int ResultRows = 3;
+        const int ResultRows = 4;
 
         UIDocument _doc;
         VisualElement _root, _safe;
@@ -317,8 +317,10 @@ namespace PoBox.UI
             VisualElement host = _root.Q<VisualElement>("res-tape");
             if (host == null) return;
             host.Clear();
-            // Landed, blocked, hardest: the icon is the key, as on the scoreboard's chips.
-            GlyphKind[] kinds = { GlyphKind.Glove, GlyphKind.Shield, GlyphKind.Burst };
+            // Landed, blocked, hardest, knockdowns: the icon is the key, as on the scoreboard's chips, with its word under it
+            // (2026-10-31 browse: icons alone did not read).
+            GlyphKind[] kinds = { GlyphKind.Glove, GlyphKind.Shield, GlyphKind.Burst, GlyphKind.Daze };
+            string[] words = { "LANDED", "BLOCKED", "HARDEST", "KNOCKDOWNS" };
             for (int i = 0; i < ResultRows; i++)
             {
                 var row = new VisualElement { pickingMode = PickingMode.Ignore };
@@ -326,7 +328,7 @@ namespace PoBox.UI
                 _resRed[i] = TapeValue(true);
                 _resBlue[i] = TapeValue(false);
                 row.Add(_resRed[i]);
-                row.Add(TapeKey(kinds[i]));
+                row.Add(TapeKey(kinds[i], words[i]));
                 row.Add(_resBlue[i]);
                 host.Add(row);
             }
@@ -340,13 +342,20 @@ namespace PoBox.UI
             return l;
         }
 
-        static VisualElement TapeKey(GlyphKind kind)
+        static VisualElement TapeKey(GlyphKind kind, string word = null)
         {
             var key = new VisualElement { pickingMode = PickingMode.Ignore };
             key.AddToClassList("tape-key");
             var g = new Glyph { kind = kind };
             g.AddToClassList("glyph");
             key.Add(g);
+            if (!string.IsNullOrEmpty(word))
+            {
+                var l = new Label(word) { pickingMode = PickingMode.Ignore };
+                l.AddToClassList("tape-key-word");
+                key.Add(l);
+                key.AddToClassList("tape-key--worded");
+            }
             return key;
         }
 
@@ -678,7 +687,10 @@ namespace PoBox.UI
             BoutPhase phase = bout.Phase;
             bool show = SettingsPage.Map && bout.red != null && bout.blue != null && !MenuOpen && !DebugOpen
                 && (phase == BoutPhase.Fight || phase == BoutPhase.Count || phase == BoutPhase.Intro || phase == BoutPhase.RoundBreak)
-                && (_predict == null || _predict.ClassListContains("hidden"));
+                && (_predict == null || _predict.ClassListContains("hidden"))
+                // The knockdown picture and the punch card use the same corner (2026-10-31 browse): the map steps aside.
+                && (_pip == null || _pip.ClassListContains("hidden"))
+                && !(_root.Q<VisualElement>("punch-card") is VisualElement card && !card.ClassListContains("hidden"));
             _ringMap.EnableInClassList("hidden", !show);
             if (phase == BoutPhase.Intro && _lastMapRound != bout.Round) { _lastMapRound = bout.Round; _ringMap.Clear(); }
             if (!show) return;
@@ -1315,6 +1327,8 @@ namespace PoBox.UI
             Set(_resBlue[1], blue.stats.blocked.ToString());
             Set(_resRed[2], PunchStats.Power(red));
             Set(_resBlue[2], PunchStats.Power(blue));
+            Set(_resRed[3], red.stats.knockdowns.ToString());
+            Set(_resBlue[3], blue.stats.knockdowns.ToString());
 
             // The cards. After a decision they are the result; after a stoppage they are how it stood.
             for (int j = 0; j < Judges.Count; j++)

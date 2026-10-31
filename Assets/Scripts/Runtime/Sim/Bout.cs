@@ -46,10 +46,11 @@ namespace PoBox.Sim
         [Tooltip("Knockdowns of one fighter in one round that stop the bout: the referee waves it off at this one (TKO, the three-knockdown rule). 0 = never.")]
         public int stopAfterDowns = 3;
         [Tooltip("Real seconds between the end of one round and the start of the next.")]
-        public float breakSeconds = 3f;
+        public float breakSeconds = 6f;
         [Tooltip("Real seconds the results stay up before the next bout starts on its own.")]
         public float resultsSeconds = 18f;
-        public bool autoAdvance = true;
+        [Tooltip("On: the next bout starts on its own after resultsSeconds. Off (the game, 2026-10-31): the result card waits for MENU.")]
+        public bool autoAdvance;
         [Tooltip("The two fighters in the scene are who they are: a trained policy belongs to the body it was trained in, so the ladder does not hand profiles round. Off for the scripted stand-ins, which are interchangeable.")]
         public bool fixedEntrants;
 
