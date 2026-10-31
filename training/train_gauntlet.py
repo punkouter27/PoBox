@@ -152,6 +152,8 @@ def main() -> None:
     ap.add_argument("--handover", default="", help="states the learner's get-up policy leaves it in (tools/make_handover_bank.py); "
                                                    "a share of its episodes begin in one")
     ap.add_argument("--handover-share", type=float, default=0.15)
+    ap.add_argument("--blend-steps", type=int, default=0, help="the learner's brain eases in over this many control steps "
+                    "from the pose it took the body in (15 = 0.3 s); write it into its config (set_brain_rules.py) for the game")
     ap.add_argument("--stage", default="spar", choices=["spar", "match"],
                     help="match: the retrofit's bodies and its 103-number observation (envs/match.py); give --models models/v2")
     ap.add_argument("--randomise", type=float, default=0.15, help="match: each world's body is within this of the file's")
@@ -203,7 +205,7 @@ def main() -> None:
                         hurt_start=args.hurt_start, fatigue_ceiling=args.fatigue_ceiling, slow_v=args.slow_v,
                         head_mult=args.head_mult, arms_w=args.arms_w, bodies=args.bodies, body_mult=args.body_mult, head_aim_w=args.head_aim_w,
                         style_over={args.name: {s.split("=")[0]: float(s.split("=")[1]) for s in args.style}} if args.style else None,
-                        escape_w=args.escape_w, flail_w=args.flail_w, action_filter=args.action_filter, obs_delay=args.obs_delay,
+                        escape_w=args.escape_w, flail_w=args.flail_w, action_filter=args.action_filter, blend_steps=args.blend_steps, obs_delay=args.obs_delay,
                         realism_for=(args.name,), default_rules=not args.legacy_rules, **extra_env)
         assert env.hetero and args.name in env.names and opp in env.names, f"{xml} holds {env.names}"
         envs.append(env)

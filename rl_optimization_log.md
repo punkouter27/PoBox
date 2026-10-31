@@ -1550,3 +1550,12 @@ solver is not bit-repeatable even old against old).
   (was 32, mark 48), 1.5 s on average; carrying on 36 of 52 (was 2 of 32, mark 90%); still FAIL footing 0.33/min (v
   Grandma), attack 0.47/s at 3.3 m/s (mark 4.4); guard, chin pass. Fading the hand works. Next: a match run for Kim
   from the new get-up's hand-over bank, then the same two steps for the other seven.
+
+## 2026-10-31 15:30, the hand-over blend (owner: "yes" to blend + Kim's match run)
+- New brain rule `blend_steps` (rules_<brain>, like action_filter): for the first n control steps a brain has the body,
+  target = w x the joint pose it took the body in + (1 - w) x its own, w = 1 - step/n. Same rule in `envs/boxing.py`
+  (every episode start, from the reset pose; `train_gauntlet.py --blend-steps`), `tools/exam.py` (bout start and the
+  hand-over; not while the get-up brain has the body), and `MjBoxer.Drive` (every brain change). Off when absent.
+- Kim's v3 configs: `rules_match.blend_steps = 15` (0.3 s). Queued (held while Unity is browsed): `bank_v3c_kim` (from
+  `v3u3_kim`), `v3m3_kim` (from `v3m_kim`, `--blend-steps 15 --handover-share 0.5`, 1 h, opponents = their v3 brains),
+  `exam_v3d_kim` (book: `v3m3_kim` + `v3u3_kim`).

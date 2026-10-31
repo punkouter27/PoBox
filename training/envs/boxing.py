@@ -114,7 +114,7 @@ class BoxingEnv:
                  selfcontact_w: float = 0.0, repeat_decay: float = 1.0, combo_w: float = 0.0, combo_s: float = 0.8,
                  hurt_start: float = 0.0, fatigue_ceiling: bool = False, slow_v: float = 0.0,
                  head_mult: float = 1.0, arms_w: float = 0.0, bodies: int = 0, body_mult: float = 1.0, head_aim_w: float = 0.0,
-                 style_over: dict = None, escape_w: float = 0.0, flail_w: float = 0.0, action_filter: float = 0.0,
+                 style_over: dict = None, escape_w: float = 0.0, flail_w: float = 0.0, action_filter: float = 0.0, blend_steps: int = 0,
                  obs_delay: int = 0, realism_for: tuple = (), default_rules: bool = False):
         wp.init()
         wp.config.verbose_warnings = verbose
@@ -292,6 +292,10 @@ class BoxingEnv:
         self.delay_hi_k = [max(lo, int(obs_delay_max), int(r.get("obs_delay_max", 0))) for lo, r in zip(self.delay_lo_k, rules)]
         assert all(0.0 <= f < 1.0 for f in self.act_filter_k), "action_filter is a share of the last action: 0 <= f < 1"
         self.filter_on = any(f > 0.0 for f in self.act_filter_k)
+        # blend_steps (2026-10-31): a brain taking the body eases in. For its first n control steps the target is
+        # w x the pose the body had when it took over + (1 - w) x the brain's own, w = 1 - step / n (MjBoxer.Drive).
+        self.blend_k = [int(blend_steps) if blend_steps and mine(n) else int(r.get("blend_steps", 0)) for n, r in zip(self.names, rules)]
+        self.blend_on = any(b > 0 for b in self.blend_k)
         self.obs_delay_max = max(self.delay_hi_k)
         for p, c, on in zip(("a_", "b_"), self.cfgs, limited):
             if on:
@@ -468,6 +472,7 @@ class BoxingEnv:
         z = lambda *shape: torch.zeros(*shape, device=device)
         self.last_action = z(N, K, A)
         self.prev_action = z(N, K, A)
+        self.held = z(N, K, A)                 # the pose a brain took the body in (blend_steps)
         self.step_count = z(N)
         self.episode_return = z(N, K)
         self.episode_len = z(N)
@@ -659,6 +664,7 @@ class BoxingEnv:
         m3 = mask[:, None, None]
         self.last_action = torch.where(m3, torch.zeros_like(self.last_action), self.last_action)
         self.prev_action = torch.where(m3, torch.zeros_like(self.prev_action), self.prev_action)
+        self.held = torch.where(m3, ctrl.view(self.N, self.K, self.A), self.held)
         self.step_count = torch.where(mask, torch.zeros_like(self.step_count), self.step_count)
         self.episode_len = torch.where(mask, torch.zeros_like(self.episode_len), self.episode_len)
         self.episode_return = torch.where(m1, torch.zeros_like(self.episode_return), self.episode_return)
@@ -850,6 +856,10 @@ class BoxingEnv:
         The game's MujocoRing does exactly this with the same number."""
         N, K, A = self.N, self.K, self.A
         want = (self.default_joint + action * self.scale_ka).clamp(self.joint_lo, self.joint_hi)
+        if self.blend_on:
+            n = torch.tensor(self.blend_k, device=self.device, dtype=torch.float32).view(1, K)
+            w = torch.where(n > 0, (1.0 - self.step_count.view(N, 1) / n.clamp_min(1.0)).clamp(0.0, 1.0), torch.zeros_like(n))
+            want = w[..., None] * self.held + (1.0 - w[..., None]) * want
         q = self.qpos[:, self.jq]
         if self.ceiling_on:
             # A tired drive under the ceiling: the spring keeps the daze's weakening only, and the target is held where

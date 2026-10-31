@@ -87,6 +87,10 @@ class ExamRing(Ring):
         self.sl_extra = m.dof_damping - base
         self.getup_share = [float(c.get("getup_speed_share", 1.0)) for c in self.cfgs]
         self.no_drain = [False, False]        # the game's get-up (2026-10-18): nothing taken from the reserve while rising
+        # The match brain's blend_steps (2026-10-31, envs/boxing.py, MjBoxer.Drive): it eases in from the pose it took the body in.
+        self.blend = [int(c.get("rules_match", {}).get("blend_steps", 0)) for c in self.cfgs]
+        self.held = [None, None]
+        self.blend_at = [0, 0]
         G = mujoco.mjtObj.mjOBJ_GEOM
         self.forearm = [[mujoco.mj_name2id(m, G, p + f"forearm_{s}_geom") for s in "lr"] for p in ("a_", "b_")]
         self.r_glove = [m.geom_size[self.glove[k][0]][0] for k in range(2)]
@@ -145,6 +149,8 @@ class ExamRing(Ring):
         d.ctrl[:] = np.concatenate([q[self.jq[k]] for k in range(2)])
         mujoco.mj_forward(m, d)
         self.last[:] = 0
+        for k in range(2):
+            self.hold(k)
         self.head_vel[:] = 0
         self.scale[:] = 1.0
         self.reserve[:] = 1.0
@@ -174,6 +180,11 @@ class ExamRing(Ring):
         d.qpos[self.jq[k]] = self.default[k]
         d.qvel[self.jv[k]] = 0
 
+    def hold(self, k: int) -> None:
+        """Boxer k's match brain takes the body now: its targets ease in from this pose over blend_steps."""
+        self.held[k] = self.d.qpos[self.jq[k]].copy()
+        self.blend_at[k] = 0
+
     def drive(self, actions) -> None:
         """One control step. actions[k] None = hold the guard pose."""
         d = self.d
@@ -186,6 +197,10 @@ class ExamRing(Ring):
             a = np.asarray(actions[k]).clip(-3.0, 3.0)
             self.last[k] = a
             w = (self.default[k] + a * self.act_scale[k]).clip(self.lo[k], self.hi[k])
+            if self.held[k] is not None and self.blend_at[k] < self.blend[k]:
+                b = 1.0 - self.blend_at[k] / self.blend[k]
+                w = b * self.held[k] + (1.0 - b) * w
+            self.blend_at[k] += 1
             q = d.qpos[self.jq[k]]
             tired = 1.0 - 0.4 * np.clip(1.0 - self.reserve[k] / 0.5, 0.0, 1.0)
             scale = self.scale[k] * (1.0 if self.ceiling[k] else tired)
@@ -364,6 +379,7 @@ def getting_up(ring: ExamRing, k: int, getup: PPO, match, trials: int, within_s:
         spots[o] = their
         ring.ghost(k, True)
         ring.place(spots, yaws, jitter=0.1)
+        ring.held[k] = None                 # the get-up brain has the body first: no blend until the match takes over
         d = ring.d
         slack = rng.uniform(1.6, 2.6)
         hard = 0.2 + 0.8 * slack / 2.6
@@ -417,6 +433,7 @@ def getting_up(ring: ExamRing, k: int, getup: PPO, match, trials: int, within_s:
         ring.ghost(k, False)
         ring.scale[:] = 1.0
         ring.last[:] = 0
+        ring.hold(k)
         low, fell = 0.0, False
         for _ in range(int(3.0 / dt)):
             ring.drive([act(match[j], ring.observe(j)) for j in range(2)])

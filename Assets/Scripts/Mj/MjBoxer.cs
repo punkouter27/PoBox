@@ -40,6 +40,8 @@ namespace PoBox.Mj
     {
         public double action_filter;
         public int obs_delay, obs_delay_max;
+        /// <summary>2026-10-31: the brain eases in over this many control steps from the pose it took the body in (envs/boxing.py).</summary>
+        public int blend_steps;
         public int LagMax => Math.Max(obs_delay, obs_delay_max);
     }
 
@@ -150,6 +152,13 @@ namespace PoBox.Mj
             // from); so does it here. A brain without one sees the last brain's action, as every brain shipped before did.
             if (change && Rules.action_filter > 0.0)
                 for (int i = 0; i < Joints; i++) Action[i] = _applied[i] = 0.0;
+            // A brain trained with blend_steps eases in from the pose the body is in now (the trainer's episode start).
+            if (change)
+            {
+                _blendAt = 0;
+                if (Rules.blend_steps > 0 && _d != null && _jq != null)
+                    for (int i = 0; i < Joints; i++) _blendFrom[i] = _d->qpos[_jq[i]];
+            }
             _worker = null;
             if (asset == null) return;
             if (!_workers.TryGetValue(asset, out _worker))
@@ -490,6 +499,11 @@ namespace PoBox.Mj
                 _applied[i] = Action[i];
                 double perUnit = Config.action_scale_j != null && Config.action_scale_j.Length > i ? Config.action_scale_j[i] : Config.action_scale;
                 double want = Clamp(Config.default_joint_pos[i] + Action[i] * perUnit, Config.lower[i], Config.upper[i]);
+                if (_blendAt < Rules.blend_steps)
+                {
+                    double b = 1.0 - (double)_blendAt / Rules.blend_steps;
+                    want = b * _blendFrom[i] + (1.0 - b) * want;
+                }
                 double q = _d->qpos[_jq[i]];
                 // Hurt or tired: the spring to the target is weakened, the damping is not. Under the ceiling, tiredness caps
                 // the drive's torque instead, and only the daze weakens the spring.
@@ -504,9 +518,12 @@ namespace PoBox.Mj
                 }
                 _d->ctrl[_act[i]] = _held[i] = want;
             }
+            _blendAt++;
         }
 
         readonly double[] _held = new double[64];
+        readonly double[] _blendFrom = new double[64];
+        int _blendAt;
         /// <summary>The action the drives got last control step: what the action filter starts from.</summary>
         readonly double[] _applied = new double[64];
         readonly double[] _speedExtra = new double[64];
