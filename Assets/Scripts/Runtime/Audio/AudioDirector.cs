@@ -82,6 +82,11 @@ namespace PoBox.Audio
         [Tooltip("Impulse at which the thud comes in under the slap, N s.")]
         public float thudImpulse = 6f;
 
+        [Header("Synthesised (ImpactSynth, 2026-10-31)")]
+        [Tooltip("Punches, blocks, falls, steps and the bell made from what makes them; the clips above stay as a quieter top layer.")]
+        public bool synth = true;
+        [Range(0f, 1f)] public float clipLayer = 0.55f;
+
         [Header("Ring")]
         public AudioClip bell;
         public AudioClip countBeep;
@@ -193,6 +198,7 @@ namespace PoBox.Audio
 
         void Awake()
         {
+            if (synth) ImpactSynth.Build();
             AudioMixerGroup hits = Group("Hits"), crowd = Group("Crowd"), ring = Group("Ring");
             _mixed = mixer != null && hits != null && crowd != null && ring != null;
 
@@ -477,8 +483,10 @@ namespace PoBox.Audio
         {
             // Glove on glove: the dull leather of the guard, and over it a pop that comes up with the speed.
             float k = Mathf.InverseLerp(2f, 9f, speed);
-            PlayAt(Pick(punchBlocked), at, Mathf.Lerp(0.3f, 0.85f, k), Mathf.Lerp(1.02f, 1.2f, k) * Random.Range(0.96f, 1.04f));
-            PlayAt(Pick(punchLight), at, Mathf.Lerp(0.08f, 0.35f, k * k), Mathf.Lerp(1.3f, 1.55f, k) * Random.Range(0.96f, 1.04f));
+            float clips = synth ? clipLayer : 1f;
+            if (synth) PlayAt(ImpactSynth.Pick(ImpactSynth.Block, k), at, Mathf.Lerp(0.35f, 0.9f, k), Random.Range(0.97f, 1.03f));
+            PlayAt(Pick(punchBlocked), at, clips * Mathf.Lerp(0.3f, 0.85f, k), Mathf.Lerp(1.02f, 1.2f, k) * Random.Range(0.96f, 1.04f));
+            PlayAt(Pick(punchLight), at, clips * Mathf.Lerp(0.08f, 0.35f, k * k), Mathf.Lerp(1.3f, 1.55f, k) * Random.Range(0.96f, 1.04f));
         }
 
         void OnHit(HitEvent e)
@@ -493,14 +501,18 @@ namespace PoBox.Audio
             // The head rings a little higher than the body.
             float where = e.zone == PartKind.Head ? 1.04f : 0.94f;
 
+            float clips = synth ? clipLayer : 1f;
             if (!e.clean)
             {
-                PlayAt(Pick(punchBlocked), e.point, Mathf.Lerp(0.3f, 0.8f, k), snap * 0.95f);
+                if (synth) PlayAt(ImpactSynth.Pick(ImpactSynth.Block, k), e.point, Mathf.Lerp(0.35f, 0.85f, k), snap);
+                PlayAt(Pick(punchBlocked), e.point, clips * Mathf.Lerp(0.3f, 0.8f, k), snap * 0.95f);
                 return;
             }
 
             bool heavy = e.impulse >= heavyImpulse;
-            PlayAt(Pick(heavy ? punchHeavy : punchLight), e.point, Mathf.Lerp(0.35f, 0.95f, k), snap * where);
+            // The synthesised body of the hit: what it landed on, as hard as it landed; the clip is the slap on top.
+            if (synth) PlayAt(ImpactSynth.Pick(e.zone == PartKind.Head ? ImpactSynth.Head : ImpactSynth.Body, k), e.point, Mathf.Lerp(0.4f, 1f, k), Mathf.Lerp(0.97f, 1.04f, Mathf.Clamp01(e.gloveSpeed / 9f)));
+            PlayAt(Pick(heavy ? punchHeavy : punchLight), e.point, clips * Mathf.Lerp(0.35f, 0.95f, k), snap * where);
             // The air knocked out of whoever took it, a beat after the glove.
             if (e.victim != null) Voice(e.victim, Of(e.victim).pain, Mathf.Lerp(0.35f, painVolume, k), 0.25f, true);
             if (e.impulse >= thudImpulse)
@@ -542,7 +554,8 @@ namespace PoBox.Audio
         {
             // A glove or a knee put down is a pat; a body landing is the whole thud, and lower.
             float k = Mathf.Clamp01(impulse / 120f);
-            PlayAt(bodyFall, point, Mathf.Lerp(0.08f, 1f, k), Mathf.Lerp(1.25f, 0.9f, k) * Random.Range(0.95f, 1.05f));
+            if (synth) PlayAt(ImpactSynth.Pick(ImpactSynth.Floor, k), point, Mathf.Lerp(0.12f, 1f, k), Random.Range(0.96f, 1.04f));
+            PlayAt(bodyFall, point, (synth ? clipLayer : 1f) * Mathf.Lerp(0.08f, 1f, k), Mathf.Lerp(1.25f, 0.9f, k) * Random.Range(0.95f, 1.05f));
         }
 
         void OnFootStep(Vector3 point, float speed)
@@ -550,17 +563,22 @@ namespace PoBox.Audio
             // Boots on canvas: quiet, and only a step that was really taken, not a shuffle.
             if (speed < 0.5f || Time.unscaledTime - _lastStep < 0.08f) return;
             _lastStep = Time.unscaledTime;
-            PlayAt(Pick(footsteps), point, Mathf.Lerp(0.15f, 0.45f, Mathf.Clamp01(speed / 3f)), Random.Range(0.85f, 1.1f));
+            float k = Mathf.Clamp01(speed / 3f);
+            if (synth) PlayAt(ImpactSynth.Pick(ImpactSynth.Step, k), point, Mathf.Lerp(0.12f, 0.35f, k), Random.Range(0.92f, 1.08f));
+            PlayAt(Pick(footsteps), point, (synth ? clipLayer : 1f) * Mathf.Lerp(0.15f, 0.45f, k), Random.Range(0.85f, 1.1f));
         }
 
         void OnPhase(BoutPhase from, BoutPhase to)
         {
-            if (to == BoutPhase.Fight && from == BoutPhase.Intro) PlayRing(bell, 0.8f);
-            else if (to == BoutPhase.RoundBreak) PlayRing(bell, 0.8f);
+            // A boxing bell: one ding to start a round, three to end it (the clip was an athletics lap bell).
+            AudioClip start = synth && ImpactSynth.Bell != null ? ImpactSynth.Bell : bell;
+            AudioClip end = synth && ImpactSynth.BellEnd != null ? ImpactSynth.BellEnd : bell;
+            if (to == BoutPhase.Fight && from == BoutPhase.Intro) PlayRing(start, 0.8f);
+            else if (to == BoutPhase.RoundBreak) PlayRing(end, 0.8f);
             else if (to == BoutPhase.WalkOn) PlayRing(sting, 0.5f);
             else if (to == BoutPhase.Results)
             {
-                PlayRing(bell, 0.7f);
+                PlayRing(end, 0.7f);
                 PlayRing(sting, 0.45f);
                 PlayCrowd(crowdApplause, 0.6f);
             }
