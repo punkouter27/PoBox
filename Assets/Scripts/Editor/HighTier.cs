@@ -24,9 +24,10 @@ namespace PoBox.EditorTools
 
             var so = new SerializedObject(rp);
             so.FindProperty("m_RendererDataList").GetArrayElementAtIndex(0).objectReferenceValue = renderer;
-            // STP upscaling from 80% scale replaces MSAA 4x + FXAA: sharper, temporally stable, and it pays for the rest.
+            // STP from 85% replaces MSAA 4x + FXAA: temporal anti-aliasing, sharper and stable. Measured on the RTX 2060 in a
+            // fight, 2026-10-31 (the owner: "until it comes down to 30 fps"): everything on, 1.0 = 21-25 fps, 0.85 = 32-34.
             so.FindProperty("m_MSAA").intValue = 1;
-            so.FindProperty("m_RenderScale").floatValue = 0.8f;
+            so.FindProperty("m_RenderScale").floatValue = 0.85f;
             so.FindProperty("m_UpscalingFilter").intValue = (int)UpscalingFilterSelection.STP;
             // Sharper shadows: the ring spots now cast them (Lighting: Arena's ring spots), so the atlas grows with them.
             so.FindProperty("m_MainLightShadowmapResolution").intValue = 4096;
@@ -52,7 +53,12 @@ namespace PoBox.EditorTools
                 ao.ApplyModifiedPropertiesWithoutUndo();
             }
             data.ApplyModifiedPropertiesWithoutUndo();
-            AddFeature<PoBox.Fx.VolumetricHaze>(renderer, "Volumetric Haze");
+            var haze = AddFeature<PoBox.Fx.VolumetricHaze>(renderer, "Volumetric Haze");
+            // Quarter resolution, 16 steps, hard shadow taps (measured: full-res 64 steps with soft taps cost 400 ms).
+            haze.settings.halfResolution = true;
+            haze.settings.quarterResolution = true;
+            haze.settings.steps = 16;
+            EditorUtility.SetDirty(haze);
             AssetDatabase.SaveAssets();
 
             AddLevel(rp);
@@ -60,7 +66,7 @@ namespace PoBox.EditorTools
         }
 
         /// <summary>A renderer feature as a sub-asset of <paramref name="renderer"/>, in its list and its id map.</summary>
-        static void AddFeature<T>(ScriptableRendererData renderer, string name) where T : ScriptableRendererFeature
+        static T AddFeature<T>(ScriptableRendererData renderer, string name) where T : ScriptableRendererFeature
         {
             // Any earlier one goes first: the command can be run again.
             var old = new SerializedObject(renderer);
@@ -87,6 +93,7 @@ namespace PoBox.EditorTools
             map.GetArrayElementAtIndex(map.arraySize - 1).longValue = id;
             data.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(renderer);
+            return feature;
         }
 
         static T Copy<T>(string from, string to) where T : ScriptableObject
