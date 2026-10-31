@@ -269,7 +269,8 @@ walking and boxing lessons it sits an exam in the same physics the game uses. No
 <li><b>Boxing, Sokol: steadier than Matt.</b> No dip: about 0.5 punches landed a second all lesson, ending at 0.53, and he fell over less as it went on (falls 0.22 &rarr; 0.04 an episode). He also started from 629 good get-up endings to practise from, against Matt's 99 from the broken lesson.
 But his <b>boxing exam failed</b> on attack: 0.35 a second in the exam against 0.53 in practice. He lands well on Grandpa, Kim and Nick
 (0.6-0.75) and almost never on Grandma, Matt, Trump or Zombie (0.04-0.13), and nothing to the head. Only 2 knockdowns in 60 bouts, so getting up is barely tested.</li>
-<li><b>Kim:</b> walking exam passed every line; his get-up lesson is healthy with the fix (help down to 24%, success about 60%).</li>
+<li><b>Kim: the best so far.</b> Walking exam passed every line; get-up ended at 64% with the help down to 14% (Sokol 38%), and saved 1,500 good endings.
+In his boxing lesson he lands about 0.48 a second and, unlike Matt and Sokol, <b>12% of them to the head</b> (Kim also aimed at the head on the old body).</li>
 <li><b>Getting up: got worse while training.</b> Matt's success climbed to about 70% in the first 25 rounds, then fell back to about 50% and stayed there (the exam wants 80%). Cause found: a bug set its "try something new" noise to zero for the whole lesson (train_getup.py read the queue's
 "--reset-std 0", meaning keep the noise, as "make it zero"), so it couldn't explore and its updates went wild (KL 1.3, normally under 0.05).
 Fixed at 19:15, before Sokol's get-up lesson; the other seven get the fix. Matt's get-up and boxing lessons are queued again at the end (v3u2_matt, v3m2_matt).</li>
