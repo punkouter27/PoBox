@@ -48,7 +48,18 @@ Shader "PoBox/FighterOverlay"
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
+            // High tier (2026-10-31, FighterSkin sets it): skin lit as skin, from every light that reaches it.
+            #pragma multi_compile _ _POBOX_SKIN_HQ
+            #if defined(_POBOX_SKIN_HQ)
+            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
+            #pragma multi_compile _ _ADDITIONAL_LIGHTS
+            #pragma multi_compile _ _ADDITIONAL_LIGHT_SHADOWS
+            #pragma multi_compile _ _LIGHT_COOKIES
+            #pragma multi_compile _ _CLUSTER_LIGHT_LOOP
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
+            #else
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #endif
 
             CBUFFER_START(UnityPerMaterial)
                 half4 _RimColor;
@@ -104,6 +115,26 @@ Shader "PoBox/FighterOverlay"
                 p *= 17.0;
                 return frac(p.x * p.y * p.z * (p.x + p.y + p.z));
             }
+
+            #if defined(_POBOX_SKIN_HQ)
+            // One light on skin, as added light over the body's own Lit shading: the red that light bleeds past the
+            // terminator (wrapped diffuse minus Lambert), light through the thin parts from behind (ears, nose, fingers),
+            // and the broad, faint second lobe of skin's oil.
+            half3 SkinLight(half3 n, half3 v, Light l)
+            {
+                half3 L = l.direction;
+                half atten = l.distanceAttenuation * l.shadowAttenuation;
+                half ndl = dot(n, L);
+                half wrap = saturate((ndl + 0.45) / 1.45) - saturate(ndl);
+                half3 sss = half3(0.85, 0.22, 0.12) * wrap * 0.55;
+                half back = pow(saturate(dot(v, -normalize(L + n * 0.35))), 4) * 0.22;
+                half3 through = half3(1.0, 0.35, 0.2) * back * l.distanceAttenuation;
+                half3 h = normalize(L + v);
+                half f = 0.028 + 0.972 * pow(1 - saturate(dot(h, v)), 5);
+                half oil = pow(saturate(dot(n, h)), 14) * f * 0.6 * saturate(ndl * 4);
+                return l.color * ((sss + oil) * atten + through);
+            }
+            #endif
 
             half4 frag(Varyings i) : SV_Target
             {
@@ -164,6 +195,21 @@ Shader "PoBox/FighterOverlay"
                 half3 glow = half3(1.0, 0.42, 0.06) * load * (0.35 + 0.65 * fresnel) * 0.6 * _LoadGain;
 
                 half3 colour = rim + wet + tint * _BruiseGain + blood + ripple + glow;
+                #if defined(_POBOX_SKIN_HQ)
+                {
+                    half3 skin = SkinLight(n, v, GetMainLight(TransformWorldToShadowCoord(i.positionWS), i.positionWS, half4(1, 1, 1, 1)));
+                    #if defined(_ADDITIONAL_LIGHTS)
+                    InputData inputData = (InputData)0;
+                    inputData.positionWS = i.positionWS;
+                    inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(i.positionCS);
+                    uint count = GetAdditionalLightsCount();
+                    LIGHT_LOOP_BEGIN(count)
+                        skin += SkinLight(n, v, GetAdditionalLight(lightIndex, i.positionWS, half4(1, 1, 1, 1)));
+                    LIGHT_LOOP_END
+                    #endif
+                    colour += skin * (1 - bruise * 0.5);
+                }
+                #endif
                 return half4(colour, max(bruise * 0.55, flushed * 0.22));
             }
             ENDHLSL

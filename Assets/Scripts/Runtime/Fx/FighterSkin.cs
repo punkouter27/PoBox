@@ -174,8 +174,22 @@ namespace PoBox.Fx
             }
         }
 
+        static readonly UnityEngine.Rendering.GlobalKeyword SkinHq = UnityEngine.Rendering.GlobalKeyword.Create("_POBOX_SKIN_HQ");
+        static int _qualitySeen = -1;
+
+        /// <summary>The High tier lights the skin as skin (FighterOverlay's _POBOX_SKIN_HQ); the others keep the plain overlay.</summary>
+        static void SkinQuality()
+        {
+            int level = QualitySettings.GetQualityLevel();
+            if (level == _qualitySeen) return;
+            _qualitySeen = level;
+            string[] names = QualitySettings.names;
+            Shader.SetKeyword(SkinHq, level >= 0 && level < names.Length && names[level] == "High");
+        }
+
         void LateUpdate()
         {
+            SkinQuality();
             if (fighter == null || !_visible) return;
             if (_block == null) _block = new MaterialPropertyBlock();
             if (Application.isPlaying) TurnHead(Time.deltaTime);
