@@ -188,6 +188,53 @@ def gantt(rows, per, now):
     return png(fig)
 
 
+def kim_test():
+    """2026-10-31: Kim's get-up lesson with the helping hand faded (v3u3_kim) and its boxing exam (exam_v3c_kim)."""
+    xs, _ = series("v3u3_kim", "kim_assist")
+    if not xs:
+        return ""
+    fig, ax = plt.subplots(figsize=(7.5, 3.4))
+    for key, label, col, ls in (("kim_up_rate_unaided", "gets up on his own", "#009988", "-"),
+                                ("kim_up_rate", "gets up, with help where given", "#0077bb", "--"),
+                                ("kim_assist", "size of the helping hand", "#cc3311", ":")):
+        x, y = series("v3u3_kim", key)
+        ax.plot(x, smooth(y, 0.9), color=col, lw=2, ls=ls, label=label)
+    ax.axhline(0.8, color="#2a7", ls="--", lw=1)
+    ax.text(ax.get_xlim()[1], 0.8, " exam mark 80%", color="#2a7", va="bottom", ha="right", fontsize=8)
+    ax.set_xlabel("training round (iteration)"); ax.set_ylabel("share"); ax.grid(alpha=0.25)
+    ax.set_title("4. Kim's test: the helping hand taken away (1 hour)", fontsize=10, loc="left")
+    ax.legend(fontsize=8, frameon=False, loc="center right")
+    img = png(fig)
+    verdict = ""
+    for k, p, v in exam_text_of("exam_v3c_kim.log", "KIM"):
+        verdict += f"<li><b class={'ok' if p == 'pass' else 'bad'}>{k}: {p}</b> {v}</li>"
+    verdict = f"<ul>{verdict}</ul>" if verdict else "<p class=dim>Boxing exam still running.</p>"
+    return f"""<h2>Kim's test: fading the helping hand</h2>
+<p>Every lesson above ended with the helping hand still lifting the boxer, and the exam gives none. For Kim the hand now shrinks
+whenever he gets up more than 45% of the time (was 60%), and 3 in 10 practice falls get no help at all (was 1 in 10).</p>
+<img src="data:image/png;base64,{img}" alt="Kim's get-up test">
+<div class="lv"><b>Toddler</b><span>The red line going to the floor means nobody helps him any more; the green line going up means he gets up anyway.</span>
+<b>Child</b><span>The hand was gone after about 25 minutes. Getting up alone went from 25% to about 70%, and was still rising when the hour ran out.</span>
+<b>Adult</b><span>env/kim_assist, kim_up_rate_unaided (the 30% of worlds with no hand), kim_up_rate; smoothing 0.9. Stops early at 80% unaided with no hand for 40 iterations (not reached).</span></div>
+<p><b>Boxing exam with the new get-up brain</b> (the first try got up 32 of 60; the mark is 48):</p>{verdict}"""
+
+
+def exam_text_of(log, head):
+    path = os.path.join(LOGS, log)
+    if not os.path.exists(path):
+        return []
+    out, on = [], False
+    with open(path, encoding="utf-8", errors="replace") as f:
+        for line in f:
+            if line.startswith(head):
+                on = True
+            elif on:
+                m = re.match(r"^\s{4}(footing|attack|guard|chin|getting up|carrying on)\s+(pass|FAIL)\s+(.*)$", line.rstrip())
+                if m:
+                    out.append(m.groups())
+    return out
+
+
 def main():
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "DOCS", "reports", "v3_training_status.html")
     now = datetime.now()
@@ -204,6 +251,7 @@ def main():
                   "3. Boxing: punches landed a second against the other seven (higher is better)",
                   marks=[(0.5, "exam mark 0.5", "#2a7"), (1.2, "training goal 1.2", "#999")])
     g = gantt(rows, per, now)
+    kim = kim_test()
 
     cards = []
     for name, start, end, state, cur in rows:
@@ -269,6 +317,7 @@ walking and boxing lessons it sits an exam in the same physics the game uses. No
 <b>Child</b><span>Punches that actually land each second. The exam asks for at least one every two seconds (0.5), and fast ones (4 m/s).</span>
 <b>Adult</b><span>env/hits_per_s over the gauntlet (all seven opponents mixed). The run stops early if it holds 1.2/s with few falls and varied punches; otherwise at 45 min.</span></div>
 
+{kim}
 <h2>How it compares</h2>
 <ul>
 <li><b>Walking: better than expected.</b> Matt and Sokol learned to stand and walk on the new body within the half hour, about 0.1 falls a minute, and both passed every line of the walking exam.</li>

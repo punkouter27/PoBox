@@ -1545,3 +1545,8 @@ solver is not bit-repeatable even old against old).
 - `v3u3_kim`: from `v3u_kim` (iteration 600, assist 0.136), partner `v3u2_matt` frozen, `--fade-above 0.45
   --unaided-share 0.3 --done-when 0.8` (unaided, no help left, guard pose), 1 h cap. Then `exam_v3c_kim` with
   `logs/book_v3c_kim.json` (Kim's match brain `v3m_kim`, the new get-up brain). Target: getting up 48 of 60 (was 32).
+- **Result (15:00):** `v3u3_kim` 1,465 iterations, 1 h: assist 0.136 -> 0 by it ~500, unaided up 0.25 -> 0.70 (still
+  rising; the 0.8 stop not reached), KL 0.012-0.017, std 0.34 -> 0.39. `exam_v3c_kim`: **getting up PASS 52 of 60**
+  (was 32, mark 48), 1.5 s on average; carrying on 36 of 52 (was 2 of 32, mark 90%); still FAIL footing 0.33/min (v
+  Grandma), attack 0.47/s at 3.3 m/s (mark 4.4); guard, chin pass. Fading the hand works. Next: a match run for Kim
+  from the new get-up's hand-over bank, then the same two steps for the other seven.
