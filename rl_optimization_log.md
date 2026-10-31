@@ -1531,3 +1531,10 @@ solver is not bit-repeatable even old against old).
   get-up runs: Matt 0, Sokol 0, Kim 0.25, Zombie 0 (assist still 0.14-0.58), matching the exam order. The get-up lessons stop
   before the assist fades out; they need more iterations, or a stop on unaided rate rather than `--done-when 0.85` (aided).
   Attack: Sokol 0.35/s 0% head, Kim 0.49 10% (too soft, 3.4 m/s v 4.4), Zombie 0.31 50% head.
+- **Queue done 10:51 on 10-31.** Footwork exam: 8/8 pass. Boxing exam: 0/8 pass. Getting up (60 staged, no assist):
+  Matt 0, Sokol 2, Kim 32, Zombie 9, Nick 16, Trump 9, Grandpa 0, Grandma 0. Attack: Nick 0.70/s (3.8 m/s, mark 4.0) is
+  closest. Guard best: Grandpa 93%, Nick 79%. Matt's redo (`v3u2/v3m2_matt`, fixed noise): get-up practice 64% aided /
+  0 unaided, 413 hand-over states (99 before); exam lower than the first try (attack 0.32/s at 2.6 m/s, 0/60 up).
+  Unaided get-up at the end of practice was 0 for six of eight (Kim 0.25, Nick 0.11), assist 0.14-0.51: the 600-iteration
+  get-up runs end before the assist fades, so nothing is promoted. Next (not started, owner to approve): get-up runs that
+  stop on unaided rate, then 1.5 h match runs with a larger hand-over share.
