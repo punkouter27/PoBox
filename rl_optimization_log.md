@@ -1559,3 +1559,9 @@ solver is not bit-repeatable even old against old).
 - Kim's v3 configs: `rules_match.blend_steps = 15` (0.3 s). Queued (held while Unity is browsed): `bank_v3c_kim` (from
   `v3u3_kim`), `v3m3_kim` (from `v3m_kim`, `--blend-steps 15 --handover-share 0.5`, 1 h, opponents = their v3 brains),
   `exam_v3d_kim` (book: `v3m3_kim` + `v3u3_kim`).
+- **Result (17:02):** `v3m3_kim` 1 h, 520 iterations: hits 0.53/s through the run, head share 0.01 -> 0.19, falls/episode
+  0.44 -> 0.09. `exam_v3d_kim`: getting up PASS 54/60; **carrying on 43/54 (80%; was 36/52 = 69%, 2/32 before the get-up
+  fix; mark 90%)**; guard 78%, chin pass; footing FAIL 1.56/min (all v Trump); attack FAIL 0.37/s at 3.2 m/s (mark 4.4),
+  1% head (Grandpa 0.02, Zombie 0.11, Sokol 0.13 v Matt 0.96). Note: the exam book's opponents are still the un-retrained
+  `checkpoints/v3/match_*` (except Matt) while the run trained against the `v3m_*` brains, so attack is measured against
+  boxers it never met. The blend + half the episodes from get-up poses moved carrying on the most of any change so far.
