@@ -82,12 +82,13 @@ unity command menu --path "PoBox/Dev/Run Script"   # runs Temp/pobox-dev.txt, ou
   only by renaming the file.
 - An unfocused editor runs a few frames a second: `delayCall` may never fire, and play-mode intros take longer.
 
-Training (Python 3.11 venv borrowed from a sibling project, no pip). `../PoDecath` is gone; since 2026-10-14
-runs use `../PoOlympic/training/.venv` (MuJoCo + Warp 3.11, torch 2.14). Retrofit-era checkpoints are not on
+Training (Python 3.11 venv borrowed from a sibling project, no pip). `../PoDecath` and `../PoOlympic` are gone;
+since 2026-10-30 runs use `../PoHillKing/training/.venv` (Python 3.11, MuJoCo 3.15 + Warp, torch 2.9; no matplotlib: run
+chart tools with `uv run --python 3.12 --with matplotlib python ...`). Retrofit-era checkpoints are not on
 disk: warm starts are rebuilt from shipped ONNX brains with `tools/onnx_to_pt.py` (into `checkpoints/onnx/`).
 
 ```
-$py = "..\..\PoOlympic	raining\.venv\Scripts\python.exe"     # from training/
+$py = "..\..\PoHillKing	raining\.venv\Scripts\python.exe"     # from training/
 & $py train_box.py --stage footwork --xml models/v2/matt_solo.xml --resume checkpoints/<run>/latest_matt.pt
 $env:PYTHONPATH=".mj350"; & $py tools/footwork_c.py --exam     # ladder exam R0-R2 in C MuJoCo 3.5.0
 $env:PYTHONPATH=".mj350"; & $py tools/exam_v2.py --only matt   # boxing exam R3-R7
