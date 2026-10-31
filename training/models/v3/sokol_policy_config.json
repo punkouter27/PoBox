@@ -317,5 +317,8 @@
   "stagger_v": 5.0,
   "hurt_full": 400.0,
   "body_drain": 0.0025,
-  "fatigue_ceiling": true
+  "fatigue_ceiling": true,
+  "rules_match": {
+    "blend_steps": 15
+  }
 }

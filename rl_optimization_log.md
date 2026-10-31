@@ -1565,3 +1565,11 @@ solver is not bit-repeatable even old against old).
   1% head (Grandpa 0.02, Zombie 0.11, Sokol 0.13 v Matt 0.96). Note: the exam book's opponents are still the un-retrained
   `checkpoints/v3/match_*` (except Matt) while the run trained against the `v3m_*` brains, so attack is measured against
   boxers it never met. The blend + half the episodes from get-up poses moved carrying on the most of any change so far.
+
+## 2026-10-31 18:33, overnight: Kim's recipe for the other seven (owner: "yes")
+- Per boxer (Matt, Sokol, Zombie, Nick, Trump, Grandpa, Grandma): `v3u4_NAME` get-up from its v3u brain (Matt: v3u2), frozen
+  partner v3u2_matt (Matt's: v3u_zombie), `--fade-above 0.45 --unaided-share 0.3`, up to 1 h, stop at 0.8 unaided (0.7 for
+  Grandpa/Grandma); `bank_v3e_NAME`; `v3m4_NAME` from its v3m brain (Matt: v3m2), opponents their newest v3 brains,
+  `--blend-steps 15 --handover-share 0.5`, 1 h. Every v3 config now has `rules_match.blend_steps = 15`.
+- Then `exam_v3e_NAME` for all eight with one book (`logs/book_v3e.json`: v3m4/v3u4, Kim v3m3/v3u3), so every boxer is
+  examined against the same, newest opponents. About 2.2 h a boxer, ~17 h in all: done about 11:30 on 11-01.
