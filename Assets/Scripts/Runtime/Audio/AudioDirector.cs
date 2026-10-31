@@ -472,8 +472,14 @@ namespace PoBox.Audio
 
         // ------------------------------------------------------------ events
 
+        // The room's own reactions (2026-10-31): an "ooh" at a big punch that just missed, boos at a fight that stalls.
+        Fighter _swinger;
+        float _swungAt = -9f, _lastOoh = -9f, _lastBoo = -9f, _lastLanded, _clinchFor;
+
         void OnPunch(Fighter f, PunchType type, int hand)
         {
+            bool big = type == PunchType.Hook || type == PunchType.Uppercut || type == PunchType.Cross;
+            if (big) { _swinger = f; _swungAt = Time.unscaledTime; }
             bool heavy = type == PunchType.Hook || type == PunchType.Uppercut || type == PunchType.Body;
             if (heavy && Random.value < effortChance) Voice(f, Of(f).effort, effortVolume * Random.Range(0.8f, 1f), 0.3f);
             else if (Random.value < exhaleChance) Voice(f, Of(f).exhale, exhaleVolume * Random.Range(0.8f, 1f), 0.15f);
@@ -481,6 +487,7 @@ namespace PoBox.Audio
 
         void OnBlock(Fighter defender, Vector3 at, float speed)
         {
+            _swinger = null;                // stopped, not missed
             // Glove on glove: the dull leather of the guard, and over it a pop that comes up with the speed.
             float k = Mathf.InverseLerp(2f, 9f, speed);
             float clips = synth ? clipLayer : 1f;
@@ -491,6 +498,8 @@ namespace PoBox.Audio
 
         void OnHit(HitEvent e)
         {
+            _swinger = null;
+            _lastLanded = Time.unscaledTime;
             // Whoever the close-up will be on.
             BroadcastDirector director = BroadcastDirector.Instance;
             if (e.clean && e.impulse >= (director != null ? director.bigHit : 13f)) _victim = e.victim;
@@ -605,6 +614,8 @@ namespace PoBox.Audio
             float side = _close < 0f ? 0.5f : 1f;
             _speech = Mathf.MoveTowards(_speech, Speaking ? 1f : 0f, dt * 4f);
             _bell = Mathf.MoveTowards(_bell, 0f, dt / 1.5f);
+            Hall(_close);
+            Reactions();
             float hitsDb = _close * side * closeHitsDb, crowdDb = -_close * side * closeCrowdDb - _speech * speechDuckDb - _bell * bellDuckDb;
             float crowdLinear = Mathf.Pow(10f, (crowdDb - DuckNow) / 20f);
             _hitsK = _mixed ? 1f : hitsGain * Mathf.Pow(10f, hitsDb / 20f);
@@ -794,6 +805,65 @@ namespace PoBox.Audio
         }
 
         /// <summary>Takes a looping source towards a level, playing it only while it can be heard.</summary>
+        void Reactions()
+        {
+            if (!synth || ImpactSynth.CrowdOoh == null) return;
+            Bout b = Bout.Instance;
+            float now = Time.unscaledTime;
+            if (b == null || b.Phase != BoutPhase.Fight) { _lastLanded = now; _clinchFor = 0f; return; }
+            // A big one thrown, nothing touched for 0.35 s: it whistled past.
+            if (_swinger != null && now - _swungAt > 0.35f)
+            {
+                _swinger = null;
+                float e = Mathf.Clamp01(Excitement.Value);
+                if (now - _lastOoh > 4f && Random.value < Mathf.Lerp(0.25f, 0.7f, e))
+                {
+                    _lastOoh = now;
+                    PlayCrowd(ImpactSynth.CrowdOoh, Mathf.Lerp(0.25f, 0.6f, e));
+                }
+            }
+            // Chest to chest, or nothing landing: the room lets them know.
+            if (b.red != null && b.blue != null && b.red.pelvis != null && b.blue.pelvis != null)
+            {
+                bool close = (b.red.pelvis.transform.position - b.blue.pelvis.transform.position).magnitude < 0.55f;
+                _clinchFor = close ? _clinchFor + Time.unscaledDeltaTime : 0f;
+            }
+            bool stalled = _clinchFor > 4f || now - _lastLanded > 14f;
+            if (stalled && now - _lastBoo > 12f)
+            {
+                _lastBoo = now;
+                _lastLanded = now - 7f;     // again in a while if it goes on
+                PlayCrowd(ImpactSynth.CrowdBoo, 0.45f);
+            }
+        }
+
+        AudioReverbZone _hall;
+        bool _hallLooked;
+
+        /// <summary>
+        /// The arena's reverb follows the shot (2026-10-31): an indoor arena of a few thousand seats, about 2.3 s, its
+        /// first reflections 35 ms late; drier on the close-ups (we are at the ropes), wetter out wide (we hear the room).
+        /// The zone over the ring was Unity's Auditorium preset whatever the camera did.
+        /// </summary>
+        void Hall(float close)
+        {
+            if (!_hallLooked) { _hallLooked = true; _hall = FindAnyObjectByType<AudioReverbZone>(); }
+            if (_hall == null) return;
+            if (_hall.reverbPreset != AudioReverbPreset.User) _hall.reverbPreset = AudioReverbPreset.User;
+            float wide = Mathf.InverseLerp(1f, -1f, close);                    // 0 close, 1 wide
+            _hall.room = (int)Mathf.Lerp(-1500f, -650f, wide);
+            _hall.roomHF = (int)Mathf.Lerp(-1200f, -700f, wide);
+            _hall.roomLF = 0;
+            _hall.decayTime = Mathf.Lerp(1.9f, 2.5f, wide);
+            _hall.decayHFRatio = 0.62f;
+            _hall.reflections = (int)Mathf.Lerp(-1600f, -900f, wide);
+            _hall.reflectionsDelay = 0.035f;
+            _hall.reverb = (int)Mathf.Lerp(-900f, -250f, wide);
+            _hall.reverbDelay = 0.03f;
+            _hall.diffusion = 100f;
+            _hall.density = 100f;
+        }
+
         static void Fade(AudioSource s, float level, float rate)
         {
             if (s.clip == null) return;

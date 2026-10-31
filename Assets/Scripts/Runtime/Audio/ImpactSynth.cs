@@ -17,7 +17,7 @@ namespace PoBox.Audio
         public const int PerHardness = 3;       // variants a step
 
         public static AudioClip[] Head, Body, Block, Floor, Step;
-        public static AudioClip Bell, BellEnd;
+        public static AudioClip Bell, BellEnd, CrowdOoh, CrowdBoo;
         static bool _built;
 
         public static void Build()
@@ -32,6 +32,10 @@ namespace PoBox.Audio
             Step = Bank("Synth Step", rng, StepHit);
             Bell = Clip("Synth Bell", BellStrikes(new System.Random(7), 1));
             BellEnd = Clip("Synth Bell End", BellStrikes(new System.Random(8), 3));
+            // A few thousand people, as a few dozen voices on the one vowel: the "ooh" of a near miss rises and falls,
+            // the boo of a stalled fight sinks and drags.
+            CrowdOoh = Clip("Synth Crowd Ooh", Crowd(new System.Random(9), 48, 1.3f, rise: true));
+            CrowdBoo = Clip("Synth Crowd Boo", Crowd(new System.Random(10), 40, 2.2f, rise: false));
         }
 
         /// <summary>A variant of <paramref name="bank"/> for a hardness 0..1.</summary>
@@ -134,6 +138,50 @@ namespace PoBox.Audio
                     Mode(o, t0, f0 * r[i], a[i] * hit, d[i], 0.0008f);
             }
             return o;
+        }
+
+        static float[] Crowd(System.Random rng, int voices, float len, bool rise)
+        {
+            var src = new float[(int)(len * Rate)];
+            for (int v = 0; v < voices; v++)
+            {
+                bool low = rng.NextDouble() < 0.6;
+                float f0 = (low ? 105f : 195f) * Jitter(rng, 0.18f) * (rise ? 1.08f : 0.95f);
+                float start = (float)rng.NextDouble() * 0.18f, end = len - (float)rng.NextDouble() * 0.35f;
+                float amp = 0.6f + 0.4f * (float)rng.NextDouble(), phase = (float)rng.NextDouble();
+                float vib = 4.5f + (float)rng.NextDouble() * 2f;
+                for (int i = (int)(start * Rate); i < (int)(end * Rate) && i < src.Length; i++)
+                {
+                    float t = i / (float)Rate, u = (t - start) / (end - start);
+                    // The pitch contour: up then down for an ooh, down and down for a boo.
+                    float contour = rise ? 1f + 0.18f * Mathf.Sin(Mathf.PI * Mathf.Min(1f, u * 1.4f)) - 0.12f * u : 1f - 0.16f * u;
+                    float f = f0 * contour * (1f + 0.012f * Mathf.Sin(2f * Mathf.PI * vib * t));
+                    phase += f / Rate;
+                    phase -= Mathf.Floor(phase);
+                    float env = Mathf.Min(1f, (t - start) / 0.12f) * Mathf.Min(1f, (end - t) / 0.3f);
+                    src[i] += amp * env * (2f * phase - 1f);       // a buzzy source: the vocal folds
+                }
+            }
+            // The vowel: "oo", formants near 320, 800 and 2400 Hz, and a breathy hiss of the room under it.
+            var o = new float[src.Length];
+            Formant(src, o, 320f, 4f, 1f);
+            Formant(src, o, 800f, 6f, 0.45f);
+            Formant(src, o, 2400f, 8f, 0.08f);
+            Noise(o, rng, 0f, len * 0.4f, 1200f, 0.4f, 0.03f, len * 0.2f);
+            return o;
+        }
+
+        static void Formant(float[] x, float[] o, float centre, float q, float gain)
+        {
+            float w0 = 2f * Mathf.PI * centre / Rate, alpha = Mathf.Sin(w0) / (2f * q);
+            float b0 = alpha, b2 = -alpha, a0 = 1f + alpha, a1 = -2f * Mathf.Cos(w0), a2 = 1f - alpha;
+            float x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+            for (int i = 0; i < x.Length; i++)
+            {
+                float y = (b0 * x[i] + b2 * x2 - a1 * y1 - a2 * y2) / a0;
+                x2 = x1; x1 = x[i]; y2 = y1; y1 = y;
+                o[i] += gain * y;
+            }
         }
 
         // ------------------------------------------------------------ parts
