@@ -270,7 +270,11 @@ walking and boxing lessons it sits an exam in the same physics the game uses. No
 But his <b>boxing exam failed</b> on attack: 0.35 a second in the exam against 0.53 in practice. He lands well on Grandpa, Kim and Nick
 (0.6-0.75) and almost never on Grandma, Matt, Trump or Zombie (0.04-0.13), and nothing to the head. Only 2 knockdowns in 60 bouts, so getting up is barely tested.</li>
 <li><b>Kim: the best so far.</b> Walking exam passed every line; get-up ended at 64% with the help down to 14% (Sokol 38%), and saved 1,500 good endings.
-In his boxing lesson he lands about 0.48 a second and, unlike Matt and Sokol, <b>12% of them to the head</b> (Kim also aimed at the head on the old body).</li>
+In his boxing lesson he lands about 0.48 a second and, unlike Matt and Sokol, <b>12% of them to the head</b> (Kim also aimed at the head on the old body).
+His <b>boxing exam failed</b> four lines, but it is the first real test: attack 0.49 a second (mark 0.5) but too soft (3.4 m/s, his mark 4.4),
+10% to the head (49% on Nick). Against Grandma he was knocked down 60 times: he got up 32 times (53%, mark 80%), and only 2 of those 32 stayed
+up 3 seconds once his boxing brain took over. <b>The hand-over from getting up to boxing is the weak link.</b></li>
+<li><b>Zombie:</b> walking exam passed every line (four of four so far); get-up lesson healthy with the fix.</li>
 <li><b>Getting up: got worse while training.</b> Matt's success climbed to about 70% in the first 25 rounds, then fell back to about 50% and stayed there (the exam wants 80%). Cause found: a bug set its "try something new" noise to zero for the whole lesson (train_getup.py read the queue's
 "--reset-std 0", meaning keep the noise, as "make it zero"), so it couldn't explore and its updates went wild (KL 1.3, normally under 0.05).
 Fixed at 19:15, before Sokol's get-up lesson; the other seven get the fix. Matt's get-up and boxing lessons are queued again at the end (v3u2_matt, v3m2_matt).</li>
