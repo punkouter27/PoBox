@@ -1,0 +1,142 @@
+15:43:11 | INFO: Data are loaded, start creating Blender stuff
+15:43:11 | INFO: Blender create Mesh node avaturn_body
+15:43:11 | INFO: Blender create Mesh node avaturn_hair_0
+15:43:11 | INFO: Blender create Mesh node avaturn_look_0
+15:43:11 | INFO: glTF import finished in 0.29s
+[kit] Matt leg 0.845 K 0.99 bodies ['avaturn_body', 'avaturn_hair_0', 'avaturn_look_0']
+[kit]  hipjoint 0.937 crotch 0.845 waist 1.061 thigh 0.415
+Info: 89 vertex weights limited
+[kit] Matt {'tris': 3872, 'per_material': {'Waistband': 300, 'Trunks': 1364, 'Boots': 1920, 'Laces': 288}, 'verts': 2116, 'bones': ['Hips', 'LeftFoot', 'LeftLeg', 'LeftToeBase', 'LeftUpLeg', 'RightFoot', 'RightLeg', 'RightToeBase', 'RightUpLeg', 'Spine', 'Spine1'], 'unweighted_verts': 0, 'armature': 'Armature', 'waist_z': 1.061, 'crotch_z': 0.845, 'K': 0.994}
+INFO Draco is available, use library at C:\Program Files\Blender Foundation\Blender 5.2\5.2\scripts\addons_core\io_scene_gltf2\bf_intern_draco_bridge.dll
+INFO MeshOptimizer is available, use library at C:\Program Files\Blender Foundation\Blender 5.2\5.2\scripts\addons_core\io_scene_gltf2\bf_intern_meshopt_bridge.dll
+15:43:12 | INFO: Starting glTF 2.0 export
+15:43:12 | INFO: Extracting primitive: Kit_Matt
+15:43:12 | INFO: Primitives created: 4
+15:43:12 | INFO: Finished glTF 2.0 export in 0.174560546875 s
+00:11.234  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Matt_front.png'
+00:12.375  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Matt_34.png'
+00:13.390  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Matt_legs34.png'
+
+Info: Deleted 38 data-block(s)
+Info: Saved as "Kit_Matt.blend"
+15:43:19 | INFO: Data are loaded, start creating Blender stuff
+15:43:19 | INFO: Blender create Mesh node char1
+15:43:20 | INFO: glTF import finished in 0.27s
+[kit] Nick leg 0.676 K 0.8 bodies ['char1']
+[kit]  hipjoint 0.828 crotch 0.739 waist 0.948 thigh 0.401
+Info: 25 vertex weights limited
+[kit] Nick {'tris': 3792, 'per_material': {'Waistband': 300, 'Trunks': 1364, 'Boots': 1840, 'Laces': 288}, 'verts': 2076, 'bones': ['Hips', 'LeftFoot', 'LeftLeg', 'LeftToeBase', 'LeftUpLeg', 'RightFoot', 'RightLeg', 'RightToeBase', 'RightUpLeg', 'Spine01', 'Spine02'], 'unweighted_verts': 0, 'armature': 'Armature', 'waist_z': 0.948, 'crotch_z': 0.739, 'K': 0.796}
+15:43:20 | INFO: Starting glTF 2.0 export
+15:43:20 | INFO: Extracting primitive: Kit_Nick
+15:43:20 | INFO: Primitives created: 4
+15:43:20 | INFO: Finished glTF 2.0 export in 0.101470947265625 s
+00:16.031  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Nick_front.png'
+00:16.781  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Nick_34.png'
+00:17.546  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Nick_legs34.png'
+
+Info: Deleted 18 data-block(s)
+Info: Saved as "Kit_Nick.blend"
+15:43:23 | INFO: Data are loaded, start creating Blender stuff
+15:43:23 | INFO: Blender create Mesh node char1
+15:43:23 | INFO: glTF import finished in 0.33s
+[kit] Grandma leg 0.654 K 0.77 bodies ['char1']
+[kit]  hipjoint 0.787 crotch 0.706 waist 0.897 thigh 0.366
+Info: 14 vertex weights limited
+[kit] Grandma {'tris': 3792, 'per_material': {'Waistband': 300, 'Trunks': 1364, 'Boots': 1840, 'Laces': 288}, 'verts': 2076, 'bones': ['Hips', 'LeftFoot', 'LeftLeg', 'LeftToeBase', 'LeftUpLeg', 'RightFoot', 'RightLeg', 'RightToeBase', 'RightUpLeg', 'Spine01', 'Spine02'], 'unweighted_verts': 0, 'armature': 'Armature', 'waist_z': 0.897, 'crotch_z': 0.706, 'K': 0.769}
+15:43:24 | INFO: Starting glTF 2.0 export
+15:43:24 | INFO: Extracting primitive: Kit_Grandma
+15:43:24 | INFO: Primitives created: 4
+15:43:24 | INFO: Finished glTF 2.0 export in 0.06582331657409668 s
+00:20.109  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Grandma_front.png'
+00:21.296  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Grandma_34.png'
+00:22.453  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Grandma_legs34.png'
+
+Info: Deleted 18 data-block(s)
+Info: Saved as "Kit_Grandma.blend"
+15:43:28 | INFO: Data are loaded, start creating Blender stuff
+15:43:28 | INFO: Blender create Mesh node char1
+15:43:28 | INFO: glTF import finished in 0.29s
+[kit] Grandpa leg 0.705 K 0.83 bodies ['char1']
+[kit]  hipjoint 0.821 crotch 0.738 waist 0.934 thigh 0.377
+Info: 24 vertex weights limited
+[kit] Grandpa {'tris': 3872, 'per_material': {'Waistband': 300, 'Trunks': 1364, 'Boots': 1920, 'Laces': 288}, 'verts': 2116, 'bones': ['Hips', 'LeftFoot', 'LeftLeg', 'LeftToeBase', 'LeftUpLeg', 'RightFoot', 'RightLeg', 'RightToeBase', 'RightUpLeg', 'Spine01', 'Spine02'], 'unweighted_verts': 0, 'armature': 'Armature', 'waist_z': 0.934, 'crotch_z': 0.738, 'K': 0.829}
+15:43:29 | INFO: Starting glTF 2.0 export
+15:43:29 | INFO: Extracting primitive: Kit_Grandpa
+15:43:29 | INFO: Primitives created: 4
+15:43:29 | INFO: Finished glTF 2.0 export in 0.06588888168334961 s
+00:24.750  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Grandpa_front.png'
+00:25.390  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Grandpa_34.png'
+00:26.375  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Grandpa_legs34.png'
+
+Info: Deleted 18 data-block(s)
+Info: Saved as "Kit_Grandpa.blend"
+15:43:32 | INFO: Data are loaded, start creating Blender stuff
+15:43:32 | INFO: Blender create Mesh node node_0
+15:43:33 | INFO: glTF import finished in 0.91s
+[kit] Trump leg 0.7 K 0.82 bodies ['Trump']
+[kit]  hipjoint 0.8 crotch 0.78 waist 0.909 thigh 0.362
+Info: 6 vertex weights limited
+[kit] Trump {'tris': 3872, 'per_material': {'Waistband': 300, 'Trunks': 1364, 'Boots': 1920, 'Laces': 288}, 'verts': 2116, 'bones': ['mixamorig:Hips', 'mixamorig:LeftFoot', 'mixamorig:LeftLeg', 'mixamorig:LeftToeBase', 'mixamorig:LeftUpLeg', 'mixamorig:RightFoot', 'mixamorig:RightLeg', 'mixamorig:RightToeBase', 'mixamorig:RightUpLeg', 'mixamorig:Spine', 'mixamorig:Spine1'], 'unweighted_verts': 0, 'armature': 'Armature_Trump', 'waist_z': 0.909, 'crotch_z': 0.78, 'K': 0.824}
+15:43:35 | INFO: Starting glTF 2.0 export
+15:43:35 | INFO: Extracting primitive: Kit_Trump
+15:43:35 | INFO: Primitives created: 4
+15:43:35 | INFO: Finished glTF 2.0 export in 0.08308553695678711 s
+00:31.187  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Trump_front.png'
+00:31.984  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Trump_34.png'
+00:32.859  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Trump_legs34.png'
+
+Info: Deleted 19 data-block(s)
+Info: Saved as "Kit_Trump.blend"
+15:43:39 | INFO: Data are loaded, start creating Blender stuff
+15:43:39 | INFO: Blender create Mesh node node_0
+15:43:39 | INFO: glTF import finished in 0.82s
+[kit] Zombie leg 0.469 K 0.55 bodies ['node_0']
+[kit]  hipjoint 0.515 crotch 0.459 waist 0.591 thigh 0.254
+Info: 11 vertex weights limited
+[kit] Zombie {'tris': 3872, 'per_material': {'Waistband': 300, 'Trunks': 1364, 'Boots': 1920, 'Laces': 288}, 'verts': 2116, 'bones': ['CC_Base_Hip', 'CC_Base_L_CalfTwist01', 'CC_Base_L_CalfTwist02', 'CC_Base_L_Foot', 'CC_Base_L_ThighTwist01', 'CC_Base_L_ThighTwist02', 'CC_Base_L_ToeBase', 'CC_Base_R_CalfTwist01', 'CC_Base_R_CalfTwist02', 'CC_Base_R_Foot', 'CC_Base_R_ThighTwist01', 'CC_Base_R_ThighTwist02', 'CC_Base_R_ToeBase', 'CC_Base_Spine01', 'CC_Base_Spine02', 'CC_Base_Waist'], 'unweighted_verts': 0, 'armature': 'Armature', 'waist_z': 0.591, 'crotch_z': 0.459, 'K': 0.552}
+15:43:41 | INFO: Starting glTF 2.0 export
+15:43:41 | INFO: Extracting primitive: Kit_Zombie
+15:43:41 | INFO: Primitives created: 4
+15:43:41 | INFO: Finished glTF 2.0 export in 0.08946442604064941 s
+00:38.015  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Zombie_front.png'
+00:39.203  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Zombie_34.png'
+00:39.953  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Zombie_legs34.png'
+
+Info: Deleted 22 data-block(s)
+Info: Saved as "Kit_Zombie.blend"
+15:43:46 | INFO: Data are loaded, start creating Blender stuff
+15:43:46 | INFO: Blender create Mesh node node_0
+15:43:47 | INFO: glTF import finished in 0.95s
+[kit] Kim leg 0.405 K 0.48 bodies ['node_0']
+[kit]  hipjoint 0.47 crotch 0.43 waist 0.524 thigh 0.18
+[kit] Kim {'tris': 3792, 'per_material': {'Waistband': 300, 'Trunks': 1364, 'Boots': 1840, 'Laces': 288}, 'verts': 2076, 'bones': ['Foot.L', 'Foot.R', 'Hips', 'LowerLeg.L', 'LowerLeg.R', 'Spine', 'Toe.L', 'Toe.R', 'UpperLeg.L', 'UpperLeg.R'], 'unweighted_verts': 0, 'armature': 'Rig', 'waist_z': 0.524, 'crotch_z': 0.43, 'K': 0.476}
+15:43:49 | INFO: Starting glTF 2.0 export
+15:43:49 | INFO: Extracting primitive: Kit_Kim
+15:43:49 | INFO: Primitives created: 4
+15:43:49 | INFO: Finished glTF 2.0 export in 0.09194231033325195 s
+00:45.515  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Kim_front.png'
+00:46.625  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Kim_34.png'
+00:48.187  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Kim_legs34.png'
+
+Info: Deleted 20 data-block(s)
+Info: Saved as "Kit_Kim.blend"
+15:43:54 | INFO: Data are loaded, start creating Blender stuff
+15:43:54 | INFO: Blender create Mesh node Character_LOD0
+15:43:54 | INFO: glTF import finished in 0.36s
+[kit] Sokol leg 0.84 K 0.99 bodies ['Character_LOD0']
+[kit]  hipjoint 0.916 crotch 0.858 waist 1.04 thigh 0.41
+[kit] Sokol {'tris': 3872, 'per_material': {'Waistband': 300, 'Trunks': 1364, 'Boots': 1920, 'Laces': 288}, 'verts': 2116, 'bones': ['foot.L', 'foot.R', 'hips', 'shin.L', 'shin.R', 'spine', 'thigh.L', 'thigh.R'], 'unweighted_verts': 0, 'armature': 'Rig', 'waist_z': 1.04, 'crotch_z': 0.858, 'K': 0.988}
+15:43:55 | INFO: Starting glTF 2.0 export
+15:43:55 | INFO: Extracting primitive: Kit_Sokol
+15:43:55 | INFO: Primitives created: 4
+15:43:55 | INFO: Finished glTF 2.0 export in 0.14905858039855957 s
+00:51.859  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Sokol_front.png'
+00:53.578  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Sokol_34.png'
+00:54.765  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Sokol_legs34.png'
+
+Info: Deleted 24 data-block(s)
+Info: Saved as "Kit_Sokol.blend"
+[kit] done C:/Users/punko/Downloads/PoBox/BLENDER/2026-10-31_boxing-kit/scripts/report_all.json
+Blender 5.2.3 LTS (hash e13b728c6880 built 2026-10-22 01:37:16)
+
+Blender quit

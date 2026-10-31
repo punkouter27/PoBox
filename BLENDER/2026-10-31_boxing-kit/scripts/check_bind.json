@@ -1,0 +1,138 @@
+{
+ "Matt": {
+  "tris": 3872,
+  "joints_used": 11,
+  "max_ibm_diff": 4.3213367462158203e-07,
+  "joints_without_orig_ibm": [],
+  "missing_in_boxer": [],
+  "materials": [
+   "Trunks",
+   "Waistband",
+   "Boots",
+   "Laces"
+  ],
+  "meshes": [
+   "Kit_Matt"
+  ],
+  "nodes": 54
+ },
+ "Zombie": {
+  "tris": 3872,
+  "joints_used": 16,
+  "max_ibm_diff": 0.0006881952285766602,
+  "joints_without_orig_ibm": [],
+  "missing_in_boxer": [],
+  "materials": [
+   "Trunks",
+   "Waistband",
+   "Boots",
+   "Laces"
+  ],
+  "meshes": [
+   "Kit_Zombie"
+  ],
+  "nodes": 73
+ },
+ "Nick": {
+  "tris": 3792,
+  "joints_used": 11,
+  "max_ibm_diff": 0.0008544921875,
+  "joints_without_orig_ibm": [],
+  "missing_in_boxer": [],
+  "materials": [
+   "Trunks",
+   "Waistband",
+   "Boots",
+   "Laces"
+  ],
+  "meshes": [
+   "Kit_Nick"
+  ],
+  "nodes": 26
+ },
+ "Trump": {
+  "tris": 3872,
+  "joints_used": 11,
+  "max_ibm_diff": 8.936971426010132e-06,
+  "joints_without_orig_ibm": [],
+  "missing_in_boxer": [],
+  "materials": [
+   "Trunks",
+   "Waistband",
+   "Boots",
+   "Laces"
+  ],
+  "meshes": [
+   "Kit_Trump"
+  ],
+  "nodes": 26
+ },
+ "Grandma": {
+  "tris": 3792,
+  "joints_used": 11,
+  "max_ibm_diff": 0.000873565673828125,
+  "joints_without_orig_ibm": [],
+  "missing_in_boxer": [],
+  "materials": [
+   "Trunks",
+   "Waistband",
+   "Boots",
+   "Laces"
+  ],
+  "meshes": [
+   "Kit_Grandma"
+  ],
+  "nodes": 26
+ },
+ "Grandpa": {
+  "tris": 3872,
+  "joints_used": 11,
+  "max_ibm_diff": 0.0010418891906738281,
+  "joints_without_orig_ibm": [],
+  "missing_in_boxer": [],
+  "materials": [
+   "Trunks",
+   "Waistband",
+   "Boots",
+   "Laces"
+  ],
+  "meshes": [
+   "Kit_Grandpa"
+  ],
+  "nodes": 26
+ },
+ "Kim": {
+  "tris": 3792,
+  "joints_used": 10,
+  "max_ibm_diff": 6.0498714447021484e-06,
+  "joints_without_orig_ibm": [],
+  "missing_in_boxer": [],
+  "materials": [
+   "Trunks",
+   "Waistband",
+   "Boots",
+   "Laces"
+  ],
+  "meshes": [
+   "Kit_Kim"
+  ],
+  "nodes": 23
+ },
+ "Sokol": {
+  "tris": 3872,
+  "joints_used": 8,
+  "max_ibm_diff": 2.086162567138672e-07,
+  "joints_without_orig_ibm": [],
+  "missing_in_boxer": [],
+  "materials": [
+   "Trunks",
+   "Waistband",
+   "Boots",
+   "Laces"
+  ],
+  "meshes": [
+   "Kit_Sokol"
+  ],
+  "nodes": 21
+ }
+}

@@ -1,0 +1,227 @@
+{
+ "Matt": {
+  "tris": 3872,
+  "per_material": {
+   "Waistband": 300,
+   "Trunks": 1364,
+   "Boots": 1920,
+   "Laces": 288
+  },
+  "verts": 2116,
+  "bones": [
+   "Hips",
+   "LeftFoot",
+   "LeftLeg",
+   "LeftToeBase",
+   "LeftUpLeg",
+   "RightFoot",
+   "RightLeg",
+   "RightToeBase",
+   "RightUpLeg",
+   "Spine",
+   "Spine1"
+  ],
+  "unweighted_verts": 0,
+  "armature": "Armature",
+  "waist_z": 1.061,
+  "crotch_z": 0.845,
+  "K": 0.994
+ },
+ "Nick": {
+  "tris": 3792,
+  "per_material": {
+   "Waistband": 300,
+   "Trunks": 1364,
+   "Boots": 1840,
+   "Laces": 288
+  },
+  "verts": 2076,
+  "bones": [
+   "Hips",
+   "LeftFoot",
+   "LeftLeg",
+   "LeftToeBase",
+   "LeftUpLeg",
+   "RightFoot",
+   "RightLeg",
+   "RightToeBase",
+   "RightUpLeg",
+   "Spine01",
+   "Spine02"
+  ],
+  "unweighted_verts": 0,
+  "armature": "Armature",
+  "waist_z": 0.948,
+  "crotch_z": 0.739,
+  "K": 0.796
+ },
+ "Grandma": {
+  "tris": 3792,
+  "per_material": {
+   "Waistband": 300,
+   "Trunks": 1364,
+   "Boots": 1840,
+   "Laces": 288
+  },
+  "verts": 2076,
+  "bones": [
+   "Hips",
+   "LeftFoot",
+   "LeftLeg",
+   "LeftToeBase",
+   "LeftUpLeg",
+   "RightFoot",
+   "RightLeg",
+   "RightToeBase",
+   "RightUpLeg",
+   "Spine01",
+   "Spine02"
+  ],
+  "unweighted_verts": 0,
+  "armature": "Armature",
+  "waist_z": 0.897,
+  "crotch_z": 0.706,
+  "K": 0.769
+ },
+ "Grandpa": {
+  "tris": 3872,
+  "per_material": {
+   "Waistband": 300,
+   "Trunks": 1364,
+   "Boots": 1920,
+   "Laces": 288
+  },
+  "verts": 2116,
+  "bones": [
+   "Hips",
+   "LeftFoot",
+   "LeftLeg",
+   "LeftToeBase",
+   "LeftUpLeg",
+   "RightFoot",
+   "RightLeg",
+   "RightToeBase",
+   "RightUpLeg",
+   "Spine01",
+   "Spine02"
+  ],
+  "unweighted_verts": 0,
+  "armature": "Armature",
+  "waist_z": 0.934,
+  "crotch_z": 0.738,
+  "K": 0.829
+ },
+ "Trump": {
+  "tris": 3872,
+  "per_material": {
+   "Waistband": 300,
+   "Trunks": 1364,
+   "Boots": 1920,
+   "Laces": 288
+  },
+  "verts": 2116,
+  "bones": [
+   "mixamorig:Hips",
+   "mixamorig:LeftFoot",
+   "mixamorig:LeftLeg",
+   "mixamorig:LeftToeBase",
+   "mixamorig:LeftUpLeg",
+   "mixamorig:RightFoot",
+   "mixamorig:RightLeg",
+   "mixamorig:RightToeBase",
+   "mixamorig:RightUpLeg",
+   "mixamorig:Spine",
+   "mixamorig:Spine1"
+  ],
+  "unweighted_verts": 0,
+  "armature": "Armature_Trump",
+  "waist_z": 0.909,
+  "crotch_z": 0.78,
+  "K": 0.824
+ },
+ "Zombie": {
+  "tris": 3872,
+  "per_material": {
+   "Waistband": 300,
+   "Trunks": 1364,
+   "Boots": 1920,
+   "Laces": 288
+  },
+  "verts": 2116,
+  "bones": [
+   "CC_Base_Hip",
+   "CC_Base_L_CalfTwist01",
+   "CC_Base_L_CalfTwist02",
+   "CC_Base_L_Foot",
+   "CC_Base_L_ThighTwist01",
+   "CC_Base_L_ThighTwist02",
+   "CC_Base_L_ToeBase",
+   "CC_Base_R_CalfTwist01",
+   "CC_Base_R_CalfTwist02",
+   "CC_Base_R_Foot",
+   "CC_Base_R_ThighTwist01",
+   "CC_Base_R_ThighTwist02",
+   "CC_Base_R_ToeBase",
+   "CC_Base_Spine01",
+   "CC_Base_Spine02",
+   "CC_Base_Waist"
+  ],
+  "unweighted_verts": 0,
+  "armature": "Armature",
+  "waist_z": 0.591,
+  "crotch_z": 0.459,
+  "K": 0.552
+ },
+ "Kim": {
+  "tris": 3792,
+  "per_material": {
+   "Waistband": 300,
+   "Trunks": 1364,
+   "Boots": 1840,
+   "Laces": 288
+  },
+  "verts": 2076,
+  "bones": [
+   "Foot.L",
+   "Foot.R",
+   "Hips",
+   "LowerLeg.L",
+   "LowerLeg.R",
+   "Spine",
+   "Toe.L",
+   "Toe.R",
+   "UpperLeg.L",
+   "UpperLeg.R"
+  ],
+  "unweighted_verts": 0,
+  "armature": "Rig",
+  "waist_z": 0.524,
+  "crotch_z": 0.43,
+  "K": 0.476
+ },
+ "Sokol": {
+  "tris": 3872,
+  "per_material": {
+   "Waistband": 300,
+   "Trunks": 1364,
+   "Boots": 1920,
+   "Laces": 288
+  },
+  "verts": 2116,
+  "bones": [
+   "foot.L",
+   "foot.R",
+   "hips",
+   "shin.L",
+   "shin.R",
+   "spine",
+   "thigh.L",
+   "thigh.R"
+  ],
+  "unweighted_verts": 0,
+  "armature": "Rig",
+  "waist_z": 1.04,
+  "crotch_z": 0.858,
+  "K": 0.988
+ }
+}
