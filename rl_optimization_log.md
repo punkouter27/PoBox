@@ -1573,3 +1573,26 @@ solver is not bit-repeatable even old against old).
   `--blend-steps 15 --handover-share 0.5`, 1 h. Every v3 config now has `rules_match.blend_steps = 15`.
 - Then `exam_v3e_NAME` for all eight with one book (`logs/book_v3e.json`: v3m4/v3u4, Kim v3m3/v3u3), so every boxer is
   examined against the same, newest opponents. About 2.2 h a boxer, ~17 h in all: done about 11:30 on 11-01.
+
+- **Result (11-01 09:29, 15 h):** no boxer passes every line. Every job ran cleanly except `v3m4_trump`: its queue entry had
+  `--weights matt=<ckpt path> ...` (should be `matt=2 grandma=2 grandpa=2`), so it faulted eight times at start-up; the
+  book's Trump match brain was pointed back at `v3m_trump` (copy before: `logs/book_v3e.before_trump_fix.json`) so the
+  other exams could load him. Training ends: get-up unaided Matt 5%, Sokol 64%, Zombie 11%, Nick 66%, Trump 38%, Grandpa 0%
+  (assist left 0.29), Grandma 0% (0.32); banks 1500 each, Grandpa 9 (of 9033 knockdowns), Grandma 276; match hits/s
+  Matt 0.39, Sokol 0.71, Zombie 0.55, Nick 1.00, Grandpa 0.15 (falls 0.40), Grandma 0.50 (falls 0.16).
+
+  | boxer | footing | attack | guard | chin | getting up | carrying on |
+  |---|---|---|---|---|---|---|
+  | Sokol | pass | pass 0.54/s 4.8 m/s | pass 54% | pass | pass 54/60 | FAIL 47/54 (87%) |
+  | Zombie | pass | pass 0.62/s 6.8 m/s, 51% head | pass 53% | pass | FAIL 42/60 | FAIL 35/42 (83%) |
+  | Nick | pass | FAIL 0.75/s at 3.8 m/s (mark 4.0) | pass 84% | pass | pass 55/60 | FAIL 36/55 (65%) |
+  | Kim | pass | FAIL 0.31/s 2.8 m/s (4.4) | pass 68% | pass | pass 53/60 | FAIL 44/53 (83%) |
+  | Matt | pass | FAIL 0.19/s 2.4 m/s | pass 43% | pass | FAIL 25/60 | FAIL 22/25 (88%) |
+  | Trump (v3m brain) | pass | FAIL 0.06/s | pass 38% | pass 0.86/min | FAIL 33/60 | FAIL 26/33 |
+  | Grandpa | pass | FAIL 0.29/s 2.7 m/s (3.0) | pass 53% | pass | FAIL 0/60 | - |
+  | Grandma | pass | FAIL 0.57/s 2.5 m/s (3.0) | pass 67% | pass | FAIL 0/60 | - |
+
+  Footing now passes for all eight (Kim failed it at 1.56/min before the blend). Carrying on (83-88%, Nick 65%) is the line
+  that fails everyone who gets up; attack speed the next. Grandpa/Grandma never got up unaided in 1 h with the hand
+  fading from 0.45: their get-up needs a slower fade and longer. Next (owner to choose): Trump's match run again with the
+  weights fixed; a carrying-on push (handover share above 0.5, longer blend); slower-fade get-up for Grandpa, Grandma, Matt, Zombie.
