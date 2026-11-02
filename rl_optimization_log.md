@@ -1682,3 +1682,12 @@ solver is not bit-repeatable even old against old).
   now shows the exam's failure.
 - Queued: `v3m8_nick` (from v3m7, 1.5 h) and `v3m8_sokol` (from v3m6, the promoted one, 1 h), both `--handover-yaw 3.14
   --handover-reserve 0.5 --recover-w 1.0`; then `exam_v3y_*` (strict) and `exam_v3yn_*` (game rule) on `logs/book_v3y.json`.
+
+## 2026-11-02 13:40, squaring up after a get-up, tried in the exam (owner: "yes" to preparing it as an option)
+- `tools/exam.py --square-up v3f`: after the get-up, the footwork policy (checkpoints/v3f_NAME) turns the boxer to face its
+  opponent on the turn command, as the game's walk-out does (MjBrain.Squaring: within 0.26 rad, under 0.3 m/s, after 0.5 s,
+  or 3 s), the opponent held in its guard; then the hand-over as before. Off by default; nothing changed in the game.
+- Game rule (no drain), 60 knockdowns: **Nick** (v3m7) 36/58 carried on (was 34/58): 43 squared up and 36 of those carried
+  on (**84%**), but **15 of 58 fell while turning** (the footwork policy was taught to turn from a quiet stand, not from a
+  get-up). **Sokol** (v3m6) 54/57 (was 53/57). Facing the opponent fixes the hand-over; the turn is the new weak step.
+  Not put in the game. The facing lesson (`v3m8_nick`, `--handover-yaw 3.14`) attacks the same problem from the match side.

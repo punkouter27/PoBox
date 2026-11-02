@@ -364,11 +364,12 @@ def rounds(ring: ExamRing, pols, n_rounds: int, round_s: float, daze_on: bool) -
     return out
 
 
-def getting_up(ring: ExamRing, k: int, getup: PPO, match, trials: int, within_s: float) -> dict:
-    """Fighter k is knocked down; the other is held in its guard. Then both box on."""
+def getting_up(ring: ExamRing, k: int, getup: PPO, match, trials: int, within_s: float, footwork: PPO = None) -> dict:
+    """Fighter k is knocked down; the other is held in its guard. Then both box on.
+    With a footwork policy (--square-up), it squares up to the other boxer on it first, as the game does (Sim/MjBrain.cs)."""
     o = 1 - k
     rng, dt = ring.rng, ring.dt
-    res = dict(trials=0, floored=0, up=0, t_up=0.0, carried=0)
+    res = dict(trials=0, floored=0, up=0, t_up=0.0, carried=0, squared=0, square_s=0.0)
     for _ in range(trials):
         spot = rng.uniform(-1.6, 1.6, 2)
         yaw = rng.uniform(-math.pi, math.pi)
@@ -429,6 +430,33 @@ def getting_up(ring: ExamRing, k: int, getup: PPO, match, trials: int, within_s:
         res["t_up"] += up_at
         if stood_for < HANDOVER_S:
             continue            # got up, and was down again before the match could be handed the body
+        if footwork is not None:
+            # 2026-11-02 (tools/carry_diag_v3.py): a boxer up facing away from its opponent fell after the hand-over about
+            # half the time. The game can square it up first on its footwork policy's turn (cmd zero, the opponent where
+            # it stands), as after the walk out of the corner: square within 0.26 rad and under 0.3 m/s after 0.5 s, or
+            # 3 s. The other boxer stays held in its guard meanwhile; down while squaring counts as not carried on.
+            ring.held[k] = None
+            ts, down = 0.0, False
+            while ts < 3.0:
+                here = d.xpos[ring.pelvis[k]]
+                ring.pin(o, their, math.atan2(here[1] - their[1], here[0] - their[0]))
+                mujoco.mj_forward(ring.m, d)
+                ring.drive([act(footwork, ring.observe(k)) if j == k else None for j in range(2)])
+                ts += dt
+                h, up = ring.posture(k)
+                if h < 0.6 or up < 0.4:
+                    down = True
+                    break
+                R = d.xmat[ring.pelvis[k]].reshape(3, 3)
+                here = d.xpos[ring.pelvis[k]]
+                off = math.atan2(their[1] - here[1], their[0] - here[0]) - math.atan2(R[1, 0], R[0, 0])
+                err = abs(math.atan2(math.sin(off), math.cos(off)))
+                if ts > 0.5 and err < 0.26 and float(np.linalg.norm(d.qvel[rv:rv + 2])) < 0.3:
+                    break
+            res["square_s"] += ts
+            if down:
+                continue
+            res["squared"] += 1
         # The match takes over: the other boxer is let go, bodies touch again, three seconds of boxing.
         ring.ghost(k, False)
         ring.scale[:] = 1.0
@@ -499,6 +527,8 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--walls", action="store_true", help="always the trainer's ring (walls), even where the game's (ropes) exists")
     ap.add_argument("--getup-no-drain", action="store_true", help="the get-up test as the game runs it: reserve 0.5 at the start, nothing drained while rising")
+    ap.add_argument("--square-up", default="", help="square up on the footwork policy before the hand-over: the run prefix of "
+                    "its checkpoints (v3f: checkpoints/v3f_NAME/latest.pt)")
     args = ap.parse_args()
     global GETUP_NO_DRAIN
     GETUP_NO_DRAIN = args.getup_no_drain
@@ -552,7 +582,11 @@ def main() -> None:
                 if n in subjects and rows[n]["getup"] is None and "getup" in book[n]:
                     frail = float(cfgs[n].get("strength", 1.0)) < 0.7
                     within = MARKS["getup_within_s_frail" if frail else "getup_within_s"]
-                    g = getting_up(ring, k, load_policy(book[n]["getup"], ring.A), pols, args.trials, within)
+                    fw = os.path.join(HERE, "checkpoints", f"{args.square_up}_{n}", "latest.pt") if args.square_up else ""
+                    if fw and not os.path.exists(fw):
+                        raise SystemExit(f"--square-up: no {fw}")
+                    g = getting_up(ring, k, load_policy(book[n]["getup"], ring.A), pols, args.trials, within,
+                                   footwork=load_policy(fw, ring.A) if fw else None)
                     g.update(within_s=within, frail=frail, against=y if k == 0 else x, policy=os.path.relpath(book[n]["getup"], HERE))
                     rows[n]["getup"] = g
         print(f"  {x} v {y}: done ({time.time() - t0:.0f} s)", flush=True)
