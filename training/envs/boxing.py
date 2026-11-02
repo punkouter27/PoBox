@@ -115,7 +115,8 @@ class BoxingEnv:
                  hurt_start: float = 0.0, fatigue_ceiling: bool = False, slow_v: float = 0.0,
                  head_mult: float = 1.0, arms_w: float = 0.0, bodies: int = 0, body_mult: float = 1.0, head_aim_w: float = 0.0,
                  style_over: dict = None, escape_w: float = 0.0, flail_w: float = 0.0, action_filter: float = 0.0, blend_steps: int = 0,
-                 obs_delay: int = 0, realism_for: tuple = (), default_rules: bool = False):
+                 obs_delay: int = 0, realism_for: tuple = (), default_rules: bool = False,
+                 recover_w: float = 0.0, recover_s: float = 3.0):
         wp.init()
         wp.config.verbose_warnings = verbose
         if device == "cpu":
@@ -214,6 +215,13 @@ class BoxingEnv:
             self.TERMS = self.TERMS + ["escape"]
         if flail_w and self.MODE != "getup":
             self.TERMS = self.TERMS + ["flail"]
+        # 2026-11-01 (carrying on): the exam's line is "still up 3 s after the match policy took over", and starting
+        # more episodes from get-up states (--handover-share 0.75) made it worse. recover_w pays, in an episode begun
+        # from the hand-over bank, 0.2 a step for being up and charges recover_w x the fall penalty again for falling,
+        # both only for the first recover_s seconds: the hand-over itself is what is rewarded.
+        self.recover_w, self.recover_s = recover_w, recover_s
+        if recover_w and not self.MODE:
+            self.TERMS = self.TERMS + ["recover"]
         # The share of the charges for effort (power, action size, action change) in force. The trainer holds it
         # at 0 while a skill is being found and brings it back (--effort-free-iters): charged from the first
         # step, a boxer that cannot punch yet learns that standing still is cheapest (bag_trump2, 2026-10-03).
@@ -505,7 +513,7 @@ class BoxingEnv:
         self._acc = {k: torch.zeros((), device=device) for k in
                      ("ret_sum", "len_sum", "fell_sum", "done_n", "steps", "upright_sum", "dist_sum",
                       "hits_head", "hits_body", "strength_sum", "strength_max", "glove_speed", "power_sum",
-                      "sat_sum", "ko_sum", "daze_sum", "weak_sum", "reserve_sum")}
+                      "sat_sum", "ko_sum", "daze_sum", "weak_sum", "reserve_sum", "rec_ok", "rec_fell")}
         self._acc.update({f"rt_{t}": torch.zeros((), device=device) for t in self.TERMS})
         # The same counts kept per fighter, for a match between two different ones.
         self._kacc = {k: torch.zeros(self.K, device=device) for k in ("hits", "speed", "fell", "ko", "ret", "blocks", "legs", "head", "rope", "cutoff", "clinch",
@@ -525,6 +533,9 @@ class BoxingEnv:
             if path:
                 z = np.load(path)
                 self.bank[k] = {key: torch.tensor(z[key], device=device, dtype=torch.float32) for key in ("joint", "jvel", "z", "tilt", "lin", "ang")}
+        # Which fighters began this episode from the bank (recover_w, the carrying-on stats).
+        self.from_bank = torch.zeros(N, self.K, dtype=torch.bool, device=device)
+        self._bank_use = torch.zeros(N, self.K, dtype=torch.bool, device=device)
         self._init_extra()
         if self.obs_delay_max > 0:
             # Every caller of _observe (reset, each stage's step) gets the late observation; a subclass's own
@@ -640,6 +651,7 @@ class BoxingEnv:
             if b is not None:
                 pick = torch.randint(0, b["z"].shape[0], (N,), device=self.device, generator=self.rng)
                 use = self._u(N) < self.handover_share
+                self._bank_use[:, k] = use
                 u1 = use[:, None]
                 q[:, self.jq[k]] = torch.where(u1, b["joint"][pick], q[:, self.jq[k]])
                 q[:, rq + 2] = torch.where(use, b["z"][pick] + 0.002, q[:, rq + 2])
@@ -665,6 +677,7 @@ class BoxingEnv:
         self.last_action = torch.where(m3, torch.zeros_like(self.last_action), self.last_action)
         self.prev_action = torch.where(m3, torch.zeros_like(self.prev_action), self.prev_action)
         self.held = torch.where(m3, ctrl.view(self.N, self.K, self.A), self.held)
+        self.from_bank = torch.where(m1, self._bank_use, self.from_bank)
         self.step_count = torch.where(mask, torch.zeros_like(self.step_count), self.step_count)
         self.episode_len = torch.where(mask, torch.zeros_like(self.episode_len), self.episode_len)
         self.episode_return = torch.where(m1, torch.zeros_like(self.episode_return), self.episode_return)
@@ -752,6 +765,8 @@ class BoxingEnv:
         self._reseed_trackers(all_envs)
         # Spread the episode clock, so the population does not time out in lockstep for ever.
         self.step_count = torch.randint(0, max(1, self.max_steps), (self.N,), device=self.device, generator=self.rng).float()
+        # Those clocks are not time since a hand-over: recover_w and carry_on start counting at the next resets.
+        self.from_bank = torch.zeros_like(self.from_bank)
         self._obs = self._observe(self._geometry())
         return self._obs
 
@@ -1179,6 +1194,13 @@ class BoxingEnv:
         timeout = self.step_count >= self.max_steps
         any_fell = fell.any(1)
         r["fall"] = -self.fall_penalty * fell.float()
+        t = self.step_count.view(N, 1) * self.dt
+        early = self.from_bank & (t <= self.recover_s)
+        if self.recover_w:
+            r["recover"] = early.float() * (0.2 * (~fell).float() - self.recover_w * self.fall_penalty * fell.float())
+        # Carrying on as the exam counts it: of the bank starts, the share up at recover_s.
+        self._acc["rec_fell"] += (early & fell).float().sum()
+        self._acc["rec_ok"] += (self.from_bank & ~fell & (t > self.recover_s) & (t <= self.recover_s + self.dt)).float().sum()
         if self.spar:
             # Putting the other fighter down is the point; being there when they trip is worth little.
             other_fell = fell.flip(1) & ~fell
@@ -1273,6 +1295,7 @@ class BoxingEnv:
             "reserve": a["reserve_sum"] / s,
         }
         out.update({f"rt_{t}": a[f"rt_{t}"] / s for t in self.TERMS})
+        out["carry_on"] = a["rec_ok"] / max(1.0, a["rec_ok"] + a["rec_fell"])
         if self.hetero:
             ka = {k: v.tolist() for k, v in self._kacc.items()}
             seconds = s * self.dt * self.N

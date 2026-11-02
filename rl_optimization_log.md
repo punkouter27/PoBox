@@ -1596,3 +1596,33 @@ solver is not bit-repeatable even old against old).
   that fails everyone who gets up; attack speed the next. Grandpa/Grandma never got up unaided in 1 h with the hand
   fading from 0.45: their get-up needs a slower fade and longer. Next (owner to choose): Trump's match run again with the
   weights fixed; a carrying-on push (handover share above 0.5, longer blend); slower-fade get-up for Grandpa, Grandma, Matt, Zombie.
+
+## 2026-11-01 17:33, carrying-on push v3f (owner: "do all" / "yes")
+- `v3m5_sokol` (from v3m4), `v3m5_nick` (from v3m4), `v3m4_kim` (from v3m3): `--handover-share 0.75 --blend-steps 25`, 1 h,
+  opponents the newest v3 brains; then `rules_v3f` (blend_steps 25 into their configs); `v3m5_trump` (from v3m_trump, the
+  recipe of v3m_trump with `--weights matt=2 grandma=2 grandpa=2` this time). Exams on `logs/book_v3f.json`.
+- Name clash: the exams were queued as `exam_v3f_*`, a name already used on 10-30/31, so the runner skipped them as done
+  (idle 21:35-21:50); renamed `exam_v3g_*`. Queue job names must be new: check `logs/queue.state.json` first.
+- Training ends: Sokol hits 0.77/s, falls 0.14 (0.18 -> 0.12 -> 0.14); Nick 0.89/s, 49% head, falls 0.07 -> 0.15; **Kim
+  regressed: 0.26/s, falls 0.26 (v3m3 ended 0.53/s, 0.09)**; Trump 0.11 -> 0.06/s, falls 0.21.
+- **Exams v3g (vs v3e this morning):** carrying on got worse for all three it was aimed at.
+
+  | boxer | footing | attack | guard | chin | getting up | carrying on | vs v3e |
+  |---|---|---|---|---|---|---|---|
+  | Sokol | pass | pass 0.68/s 4.9 m/s | pass | pass | pass 54/60 | FAIL 44/54 (81%) | was 47/54; attack up |
+  | Nick | pass | **pass** 0.87/s 4.3 m/s | pass | pass | pass 51/60 | FAIL 29/51 (57%) | was 36/55; attack now passes |
+  | Kim | **FAIL 2.11/min** | FAIL 0.30/s | pass | pass | pass 54/60 | FAIL 42/54 | worse: keep v3m3 |
+  | Trump (v3m5) | pass | FAIL 0.06/s | pass | pass 0.17/min | FAIL 33/60 | FAIL 26/33 | same; chin steadier |
+  | Zombie | pass | pass 0.65/s | pass | pass | FAIL 42/60 | FAIL 35/42 | same brain |
+  | Matt | pass | FAIL 0.24/s | pass | pass | FAIL 25/60 | FAIL 22/25 | same brain |
+  | Grandpa | pass | FAIL 0.28/s | pass | pass | FAIL 0/60 | - | same brain |
+  | Grandma | **FAIL 5.56/min** | FAIL 0.36/s | pass | pass | FAIL 0/60 | - | same brain, harder opponents |
+
+  No boxer passes every line. More get-up starts made better punchers, not better carriers-on; the 0.5 s blend probably
+  holds the get-up crouch too long into the bout.
+- **Next, queued 23:30 (owner: "do all"):** `rules_v3h` (blend back to 15 for Sokol, Nick, Kim); `exam_v3h_sokol/nick`
+  (get-up test only, tonight's brains at 0.3 s: was the blend the cause?); a new reward `--recover-w` (envs/boxing.py: in an
+  episode begun from the hand-over bank, 0.2 a step for being up and recover_w x the fall penalty again for a fall in the
+  first `--recover-s` 3 s; new CSV column `carry_on`, the share of bank starts up at 3 s, which read ~0.85 for Sokol's
+  v3m4 in a smoke test against the exam's 0.87); `v3m6_sokol` (from v3m4), `v3m6_nick` (from v3m5), `v3m5_kim` (from
+  v3m3), share 0.5, blend 15, recover-w 1.0, 1 h each; `exam_v3r_*` on `logs/book_v3r.json`.

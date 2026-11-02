@@ -152,6 +152,9 @@ def main() -> None:
     ap.add_argument("--handover", default="", help="states the learner's get-up policy leaves it in (tools/make_handover_bank.py); "
                                                    "a share of its episodes begin in one")
     ap.add_argument("--handover-share", type=float, default=0.15)
+    ap.add_argument("--recover-w", type=float, default=0.0, help="in an episode begun from the hand-over bank: 0.2 a step for "
+                    "being up and this x the fall penalty again for falling, for the first --recover-s seconds (2026-11-01)")
+    ap.add_argument("--recover-s", type=float, default=3.0)
     ap.add_argument("--blend-steps", type=int, default=0, help="the learner's brain eases in over this many control steps "
                     "from the pose it took the body in (15 = 0.3 s); write it into its config (set_brain_rules.py) for the game")
     ap.add_argument("--stage", default="spar", choices=["spar", "match"],
@@ -206,7 +209,8 @@ def main() -> None:
                         head_mult=args.head_mult, arms_w=args.arms_w, bodies=args.bodies, body_mult=args.body_mult, head_aim_w=args.head_aim_w,
                         style_over={args.name: {s.split("=")[0]: float(s.split("=")[1]) for s in args.style}} if args.style else None,
                         escape_w=args.escape_w, flail_w=args.flail_w, action_filter=args.action_filter, blend_steps=args.blend_steps, obs_delay=args.obs_delay,
-                        realism_for=(args.name,), default_rules=not args.legacy_rules, **extra_env)
+                        realism_for=(args.name,), default_rules=not args.legacy_rules,
+                        recover_w=args.recover_w, recover_s=args.recover_s, **extra_env)
         assert env.hetero and args.name in env.names and opp in env.names, f"{xml} holds {env.names}"
         envs.append(env)
         side.append(env.names.index(args.name))
@@ -303,7 +307,8 @@ def main() -> None:
             for k in e.TERMS:      # the reward's terms, both fighters' mean, weighted by rings (as train_box.py logs them)
                 terms[k] = terms.get(k, 0.0) + s[f"rt_{k}"] * e.N / total_n
             rows[opp] = {"fall_rate": s["fall_rate"], "ep_return": s["ep_return"], "their_hits_per_s": s[f"{opp}_hits_per_s"],
-                         "their_falls": s[f"{opp}_falls"], "their_head_share": s[f"{opp}_head_share"]}
+                         "their_falls": s[f"{opp}_falls"], "their_head_share": s[f"{opp}_head_share"],
+                         "carry_on": s["carry_on"]}   # only the learner starts from its hand-over bank
             rows[opp].update({k: s[f"{args.name}_{k}"] for k in per})
         w = {o: e.N / total_n for (o, _), e in zip(opponents, envs)}
         mean = {k: sum(rows[o][k] * w[o] for o in rows) for k in next(iter(rows.values()))}
