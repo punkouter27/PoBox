@@ -155,6 +155,8 @@ def main() -> None:
     ap.add_argument("--recover-w", type=float, default=0.0, help="in an episode begun from the hand-over bank: 0.2 a step for "
                     "being up and this x the fall penalty again for falling, for the first --recover-s seconds (2026-11-01)")
     ap.add_argument("--recover-s", type=float, default=3.0)
+    ap.add_argument("--handover-yaw", type=float, default=0.6, help="an episode begun from the hand-over bank faces the other "
+                    "boxer to within this many radians; 3.14 = any way, as a boxer gets up wherever it fell (2026-11-02)")
     ap.add_argument("--handover-reserve", type=float, default=1.0, help="an episode begun from the hand-over bank starts with a "
                     "reserve of 0 to this (needs --fatigue-ceiling or fatigue_j); 1 = as any other episode (2026-11-02)")
     ap.add_argument("--blend-steps", type=int, default=0, help="the learner's brain eases in over this many control steps "
@@ -212,7 +214,8 @@ def main() -> None:
                         style_over={args.name: {s.split("=")[0]: float(s.split("=")[1]) for s in args.style}} if args.style else None,
                         escape_w=args.escape_w, flail_w=args.flail_w, action_filter=args.action_filter, blend_steps=args.blend_steps, obs_delay=args.obs_delay,
                         realism_for=(args.name,), default_rules=not args.legacy_rules,
-                        recover_w=args.recover_w, recover_s=args.recover_s, handover_reserve=args.handover_reserve, **extra_env)
+                        recover_w=args.recover_w, recover_s=args.recover_s, handover_reserve=args.handover_reserve,
+                        handover_yaw=args.handover_yaw, **extra_env)
         assert env.hetero and args.name in env.names and opp in env.names, f"{xml} holds {env.names}"
         envs.append(env)
         side.append(env.names.index(args.name))

@@ -116,7 +116,7 @@ class BoxingEnv:
                  head_mult: float = 1.0, arms_w: float = 0.0, bodies: int = 0, body_mult: float = 1.0, head_aim_w: float = 0.0,
                  style_over: dict = None, escape_w: float = 0.0, flail_w: float = 0.0, action_filter: float = 0.0, blend_steps: int = 0,
                  obs_delay: int = 0, realism_for: tuple = (), default_rules: bool = False,
-                 recover_w: float = 0.0, recover_s: float = 3.0, handover_reserve: float = 1.0):
+                 recover_w: float = 0.0, recover_s: float = 3.0, handover_reserve: float = 1.0, handover_yaw: float = 0.6):
         wp.init()
         wp.config.verbose_warnings = verbose
         if device == "cpu":
@@ -221,6 +221,7 @@ class BoxingEnv:
         # both only for the first recover_s seconds: the hand-over itself is what is rewarded.
         self.recover_w, self.recover_s = recover_w, recover_s
         self.handover_reserve = handover_reserve
+        self.handover_yaw = handover_yaw
         if recover_w and not self.MODE:
             self.TERMS = self.TERMS + ["recover"]
         # The share of the charges for effort (power, action size, action change) in force. The trainer holds it
@@ -654,6 +655,11 @@ class BoxingEnv:
                 use = self._u(N) < self.handover_share
                 self._bank_use[:, k] = use
                 u1 = use[:, None]
+                if self.handover_yaw > 0.6:
+                    # 2026-11-02 (tools/carry_diag_v3.py): a boxer gets up facing wherever it fell. Nick's falls after the
+                    # hand-over were side-on or turned away (facing -0.07, against 0.72 for those that stayed up), and the
+                    # bank's starts all faced the other boxer within 0.6 rad. handover_yaw widens that spread.
+                    yaw = facing[k] + self._u(N, lo=-self.handover_yaw, hi=self.handover_yaw)
                 q[:, self.jq[k]] = torch.where(u1, b["joint"][pick], q[:, self.jq[k]])
                 q[:, rq + 2] = torch.where(use, b["z"][pick] + 0.002, q[:, rq + 2])
                 q[:, rq + 3:rq + 7] = torch.where(u1, quat_mul(yaw_quat(yaw), b["tilt"][pick]), q[:, rq + 3:rq + 7])

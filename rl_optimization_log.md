@@ -1669,3 +1669,16 @@ solver is not bit-repeatable even old against old).
   Training: v3m7_sokol carry_on 0.83 -> 0.80 (tired), v3m7_nick 0.91 -> 0.84, hits 1.30/s. Sokol v3m6 stays promoted.
   Nick's carrying on is a separate problem: ~85-90% in training against 50-59% in the exam whatever the start; next is to
   look at what puts him down in the exam's 3 s (it hands over facing Grandma, let go at that moment).
+
+## 2026-11-02 12:15, why Nick falls after the hand-over: he gets up facing away (owner: "continue")
+- `tools/carry_diag_v3.py`: the exam's get-up test under the game's rule, each hand-over measured, and each knockdown run
+  twice from one seed: the opponent boxing (as the exam) and a ghost held in its guard. Nick v3m7 v Grandma, 38 hand-overs:
+  up at 3 s 68% boxing, **53% with a ghost**; the opponent touched him first in 3 of 12 falls. The falls are his own.
+  At the hand-over, falls v stayed up: **facing the opponent -0.07 v 0.72** (cosine), speed 0.24 v 0.15 m/s, actions at the
+  clip 9% v 4%; reserve, height and tilt the same. Sokol v3m6: 38 of 39 up; the one fall faced away (-0.69) at 2 m/s.
+- Cause: training's bank starts faced the other boxer within 0.6 rad (envs/boxing.py `yaw = facing + U(-0.6, 0.6)`); a
+  boxer gets up facing wherever it fell. New `--handover-yaw` (default 0.6, as before): the spread for bank starts.
+  Learning off, v3m7_nick v Grandma: carry_on **0.915 at 0.6, 0.53 at 3.14** (exam 50% strict, 59% game rule): training
+  now shows the exam's failure.
+- Queued: `v3m8_nick` (from v3m7, 1.5 h) and `v3m8_sokol` (from v3m6, the promoted one, 1 h), both `--handover-yaw 3.14
+  --handover-reserve 0.5 --recover-w 1.0`; then `exam_v3y_*` (strict) and `exam_v3yn_*` (game rule) on `logs/book_v3y.json`.
