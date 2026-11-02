@@ -1626,3 +1626,25 @@ solver is not bit-repeatable even old against old).
   first `--recover-s` 3 s; new CSV column `carry_on`, the share of bank starts up at 3 s, which read ~0.85 for Sokol's
   v3m4 in a smoke test against the exam's 0.87); `v3m6_sokol` (from v3m4), `v3m6_nick` (from v3m5), `v3m5_kim` (from
   v3m3), share 0.5, blend 15, recover-w 1.0, 1 h each; `exam_v3r_*` on `logs/book_v3r.json`.
+
+## 2026-11-02 03:14, recover reward v3r (owner: "do all")
+- `exam_v3h_*` (tonight's v3m5 brains, blend back to 0.3 s, get-up test only): Sokol carrying on 46/55 (was 44/54 at 0.5 s),
+  Nick 23/47 (was 29/51). The blend length was not the cause.
+- Training with `--recover-w 1.0` (share 0.5, blend 15, 1 h): `v3m6_sokol` carry_on 0.80 -> **0.95**, falls 0.11 -> 0.03,
+  hits 0.86/s; `v3m6_nick` carry_on 0.89 flat, hits **1.17/s**, falls 0.06; `v3m5_kim` carry_on 0.89, hits 0.26/s, falls 0.22.
+- **Exams v3r:**
+
+  | boxer | footing | attack | guard | chin | getting up | carrying on |
+  |---|---|---|---|---|---|---|
+  | Sokol v3m6 | pass | pass 0.69/s 5.4 m/s | pass 47% | pass | pass 54/60 | FAIL 47/54 (87%) |
+  | Nick v3m6 | pass | pass **1.47/s** 4.1 m/s, 43% head | pass 81% | pass | pass 51/60 | FAIL 23/51 (45%) |
+  | Kim v3m5 | FAIL 1.78/min | FAIL 0.36/s 2.9 m/s | pass 81% | pass | pass 54/60 | FAIL 41/54 |
+
+- **Training's carry_on (0.95) and the exam's (0.87) disagree.** The exam's get-up test drains the reserve while the get-up
+  brain rises; the bank's states (and so training's hand-over starts) carry no reserve and start full. `exam_v2.py
+  --getup-no-drain` is the test as the game runs it (Sim/Fighter.cs: get-up from reserve 0.5, nothing drained while rising).
+  Run by hand on book_v3r, get-up test only: **Sokol carrying on PASS 53/57 (93%)** (drained: 47/55), getting up 57/60;
+  Nick 31/58 no drain (17/47 drained). So under the game's rule Sokol v3m6 passes all six lines; under the exam as it has
+  been run (drained) he is 2 short. Nick's gap is something else (the exam's opponent is Grandma, let go at the hand-over).
+- Next (owner to choose): promote Sokol v3m6 on the game's rule (parity + gate tests first), or make the bank and training
+  start hand-overs with a drained reserve so training matches the stricter exam.
