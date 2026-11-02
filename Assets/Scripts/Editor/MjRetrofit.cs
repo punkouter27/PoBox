@@ -26,9 +26,10 @@ namespace PoBox.EditorTools
         const string Models = "training/models/v2", Rigs = "training/rigs/v2", BoxersDir = "Assets/Boxers";
 
         // The boxers whose body is the next version (models/v3: de Leva's masses, the trunk's range the right way round,
-        // human force each way), one at a time as each passes its exam on it (Sokol, 2026-11-02). Their brains were
-        // trained on that body and fall in the old one; the rest stay on v2 until theirs pass.
-        static readonly HashSet<string> OnV3 = new HashSet<string> { "sokol" };
+        // human force each way), one at a time as each passes its exam on it (Sokol, 2026-11-02; Nick the same day, on
+        // the owner's word, at five of six lines: carrying on 84%). Their brains were trained on that body and fall in
+        // the old one; the rest stay on v2 until theirs pass.
+        static readonly HashSet<string> OnV3 = new HashSet<string> { "sokol", "nick" };
         static string ModelsOf(string name) => OnV3.Contains(name) ? "training/models/v3" : Models;
         static string RigsOf(string name) => OnV3.Contains(name) ? "training/rigs/v3" : Rigs;
 

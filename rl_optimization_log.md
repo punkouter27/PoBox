@@ -1701,3 +1701,11 @@ solver is not bit-repeatable even old against old).
   Training ends: v3m8_nick carry_on (any facing) 0.41 -> 0.58, flat for the last 30 min; v3m8_sokol 0.43 -> 0.49, hits
   0.86 -> 0.68/s. Nick's game-rule carrying on rose 25 points; 4 more of 58 would pass (90%). Nick v3m8 with `--square-up
   v3f`: 36/58, worse (the turn is still where he falls). Sokol v3m8 ties v3m6; v3m6 stays promoted. No promotion.
+
+## 2026-11-02 16:35, Nick promoted on v3 (owner: "import brains and test scene")
+- Nick on models/v3 with `v3f_nick` (footwork), `v3m8_nick` (match, the facing lesson), `v3u4_nick` (get-up, exported on
+  exam_v3y_nick). Five of six lines; carrying on 84% under the game's rule (49/58), 67% strict. Promoted on the owner's
+  word below the 90% mark. Parity 0 differences; MjParityTests 3/3; MjGateTests 24/24 (Nick's and Sokol's three each).
+- In the game: Nick v Sokol, **Nick by KO in R2** (102 landed to 100, Sokol down twice, Nick never down). A forced
+  knockdown (`down 0`) on Nick: he got up, then went down twice more within 25 s (Sokol credited with one): TKO R1. The
+  hand-over is still his weak moment. Free-for-all: no errors.

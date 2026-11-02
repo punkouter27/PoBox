@@ -116,7 +116,7 @@ SkinnedMeshRenderer:
     m_Center: {x: 4.8642654, y: -8.493992, z: 15.473019}
     m_Extent: {x: 42.576477, y: 75.20192, z: 89.634796}
   m_DirtyAABB: 0
---- !u!1 &3945951039422700808
+--- !u!1 &1893334299481769291
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -124,8 +124,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8218981918020500082}
-  - component: {fileID: 447621526748446587}
+  - component: {fileID: 8830820434263028016}
+  - component: {fileID: 1883011117108331632}
   m_Layer: 0
   m_Name: Trail
   m_TagString: Untagged
@@ -133,13 +133,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8218981918020500082
+--- !u!4 &8830820434263028016
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3945951039422700808}
+  m_GameObject: {fileID: 1893334299481769291}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -148,14 +148,14 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2383595303033701670}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!96 &447621526748446587
+--- !u!96 &1883011117108331632
 TrailRenderer:
   serializedVersion: 4
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3945951039422700808}
+  m_GameObject: {fileID: 1893334299481769291}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 1
@@ -267,7 +267,7 @@ TrailRenderer:
   m_Autodestruct: 0
   m_Emitting: 0
   m_ApplyActiveColorSpace: 1
---- !u!1 &6254709301097202518
+--- !u!1 &3945951039422700808
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -275,8 +275,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8503046801214954863}
-  - component: {fileID: 109758443972031084}
+  - component: {fileID: 8218981918020500082}
+  - component: {fileID: 447621526748446587}
   m_Layer: 0
   m_Name: Trail
   m_TagString: Untagged
@@ -284,13 +284,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8503046801214954863
+--- !u!4 &8218981918020500082
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6254709301097202518}
+  m_GameObject: {fileID: 3945951039422700808}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -299,14 +299,14 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2033216646788705483}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!96 &109758443972031084
+--- !u!96 &447621526748446587
 TrailRenderer:
   serializedVersion: 4
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6254709301097202518}
+  m_GameObject: {fileID: 3945951039422700808}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 1
@@ -454,14 +454,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: a_exclude_10
       objectReference: {fileID: 0}
-    - target: {fileID: 6370163268786275417, guid: 57aec688f0390424f807182851361070, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6370163268786275417, guid: 57aec688f0390424f807182851361070, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 04d24069755247042806612685faf12f, type: 2}
     - target: {fileID: 7011757554779853792, guid: 57aec688f0390424f807182851361070, type: 3}
       propertyPath: m_Name
       value: a_exclude_7
@@ -478,14 +470,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: a_exclude_6
       objectReference: {fileID: 0}
-    - target: {fileID: 8203101259496020792, guid: 57aec688f0390424f807182851361070, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8203101259496020792, guid: 57aec688f0390424f807182851361070, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 04d24069755247042806612685faf12f, type: 2}
     - target: {fileID: 8828905005660163635, guid: 57aec688f0390424f807182851361070, type: 3}
       propertyPath: m_Name
       value: a_exclude_0
@@ -535,10 +519,10 @@ PrefabInstance:
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 4748678868917764964, guid: 57aec688f0390424f807182851361070, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 8503046801214954863}
+      addedObject: {fileID: 8218981918020500082}
     - targetCorrespondingSourceObject: {fileID: 8990846001889815177, guid: 57aec688f0390424f807182851361070, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 8218981918020500082}
+      addedObject: {fileID: 8830820434263028016}
     - targetCorrespondingSourceObject: {fileID: 824062839122079149, guid: 57aec688f0390424f807182851361070, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2276101953049151009}
@@ -1113,6 +1097,15 @@ MonoBehaviour:
   dazeBody: 0.45
   slackSeconds: {x: 1.2, y: 2.4}
   handOverSeconds: 1.5
+  staggerSpeed: 5
+  staggerSeconds: 0.3
+  staggerDrive: 0.55
+  hurtFull: 400
+  hurtHi: 0.4
+  hurtWeak: 0.25
+  hurtTau: 600
+  hurtRest: 0.15
+  bodyDrain: 0.0025
 --- !u!114 &1153369765585631838
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1129,6 +1122,8 @@ MonoBehaviour:
   boxer: {fileID: 8679780130513438971}
   ring: {fileID: 0}
   punchSpeed: 3.5
+  squareFacing: 0.26
+  squareSpeed: 0.3
 --- !u!114 &3293427904944712371
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1169,8 +1164,8 @@ MonoBehaviour:
   - bone: {fileID: 5786043793742679965}
     renderers: []
   trails:
-  - {fileID: 109758443972031084}
   - {fileID: 447621526748446587}
+  - {fileID: 1883011117108331632}
   fighter: {fileID: 8365331038167600363}
   rimColor: {r: 0.89, g: 0.24, b: 0.24, a: 1}
   headOffset: {x: 0, y: 0, z: 0}
@@ -1179,7 +1174,14 @@ MonoBehaviour:
   overlayRenderers:
   - {fileID: 8111924987498603144}
   trailSpeed: 4.5
-  bruiseRadius: 0.09
+  snapPerSpeed: 70
+  snapHz: 2.6
+  snapDamping: 0.35
+  snapMax: 38
+  tiredDroop: 14
+  rimIntensity: 0.55
+  pressedRim: 1.4
+  rippleImpulse: 12
 --- !u!114 &8679780130513438971 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2712604636769970004, guid: 57aec688f0390424f807182851361070, type: 3}

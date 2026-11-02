@@ -83,6 +83,9 @@ Earlier in the day (Phase B):
   (reference trajectory, 25 fall episodes: 0% down, the guard held). MjParityTests 3/3, MjGateTests 24/24.
 - In the game: Sokol v Nick, unanimous decision 30-27 x3 (160 landed to 80, no knockdowns); a forced knockdown
   (`down 0`): up within 10 s and still up 6 s later. The free-for-all ran with no errors.
+- **Nick joins him on v3** the same afternoon (owner's word, at five of six lines; carrying on 84% under the game's rule):
+  `v3f_nick`, `v3m8_nick` (a lesson whose get-up starts face any way: `--handover-yaw`), `v3u4_nick`. Parity 0 differences,
+  gate tests 24/24. Nick beat Sokol by KO in round 2; forced down once, he got up but fell twice more inside 25 s.
 
 ## Graphics, sound, a High tier, v3 retrain, the get-up fix (2026-10-31)
 
