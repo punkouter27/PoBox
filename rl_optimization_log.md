@@ -1659,3 +1659,13 @@ solver is not bit-repeatable even old against old).
 - Queued: `v3m7_sokol` (from v3m6), `v3m7_nick` (from v3m6), `--handover-reserve 0.5 --recover-w 1.0`, share 0.5, blend 15,
   1 h; then `exam_v3t_*` (strict, drained) and `exam_v3tn_*` (get-up test under the game's rule) on `logs/book_v3t.json`.
   v3m7_sokol shared the GPU with Unity's play-mode tests for its first ~15 min (iteration 69 at 08:23).
+- **Result (10:35):** tired starts did not move the exam's carrying-on line.
+
+  | | strict (drained) carrying on | game rule (no drain) | attack | other lines |
+  |---|---|---|---|---|
+  | Sokol v3m7 | 47/54 (87%), same as v3m6 | **50/57 (88%), v3m6 was 53/57** | pass 0.58/s | all pass |
+  | Nick v3m7 | 26/52 (50%), was 23/51 | 34/58 (59%), was 31/58 | pass **1.83/s** 5.0 m/s, 49% head | all pass |
+
+  Training: v3m7_sokol carry_on 0.83 -> 0.80 (tired), v3m7_nick 0.91 -> 0.84, hits 1.30/s. Sokol v3m6 stays promoted.
+  Nick's carrying on is a separate problem: ~85-90% in training against 50-59% in the exam whatever the start; next is to
+  look at what puts him down in the exam's 3 s (it hands over facing Grandma, let go at that moment).
