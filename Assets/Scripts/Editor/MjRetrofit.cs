@@ -25,6 +25,13 @@ namespace PoBox.EditorTools
     {
         const string Models = "training/models/v2", Rigs = "training/rigs/v2", BoxersDir = "Assets/Boxers";
 
+        // The boxers whose body is the next version (models/v3: de Leva's masses, the trunk's range the right way round,
+        // human force each way), one at a time as each passes its exam on it (Sokol, 2026-11-02). Their brains were
+        // trained on that body and fall in the old one; the rest stay on v2 until theirs pass.
+        static readonly HashSet<string> OnV3 = new HashSet<string> { "sokol" };
+        static string ModelsOf(string name) => OnV3.Contains(name) ? "training/models/v3" : Models;
+        static string RigsOf(string name) => OnV3.Contains(name) ? "training/rigs/v3" : Rigs;
+
         static string Title(string name) => char.ToUpperInvariant(name[0]) + name.Substring(1);
 
         /// <summary>One boxer's corner prefab put in a scene, wired to the ring, switched off. Null when there is no such prefab.</summary>
@@ -59,7 +66,7 @@ namespace PoBox.EditorTools
         /// <summary>The name on the scoreboard: the rig file's "display" ("LIL MATT"), otherwise the name in capitals.</summary>
         public static string DisplayName(string name)
         {
-            string rig = $"{Rigs}/{name}.json";
+            string rig = $"{RigsOf(name)}/{name}.json";
             if (File.Exists(rig))
             {
                 Match m = Regex.Match(File.ReadAllText(rig), "\"display\"\\s*:\\s*\"([^\"]+)\"");
@@ -162,7 +169,7 @@ namespace PoBox.EditorTools
                 AssetDatabase.CreateAsset(material, shapeMaterial);
             }
             MjcfImporter.DefaultMujocoMaterial = material;
-            var root = new MjcfImporter().ImportString(File.ReadAllText($"{Models}/{name}_solo.xml"), name);
+            var root = new MjcfImporter().ImportString(File.ReadAllText($"{ModelsOf(name)}/{name}_solo.xml"), name);
             root.GetComponentInChildren<MjGlobalSettings>().UseRawGameObjectNames = true;   // the trainer's names, so the two models can be matched
             return root;
         }
@@ -193,9 +200,9 @@ namespace PoBox.EditorTools
             foreach (var r in boxer.GetComponentsInChildren<MeshRenderer>()) r.enabled = false;
 
             var mj = boxer.AddComponent<MjBoxer>();
-            mj.config = Copy<TextAsset>($"{Models}/{name}_policy_config.json", $"{dir}/config.json");
-            Copy<TextAsset>($"{Models}/{name}_fingerprint.json", $"{dir}/fingerprint.json");
-            if (File.Exists($"{Models}/{name}_reference_hold.json")) Copy<TextAsset>($"{Models}/{name}_reference_hold.json", $"{dir}/reference_hold.json");
+            mj.config = Copy<TextAsset>($"{ModelsOf(name)}/{name}_policy_config.json", $"{dir}/config.json");
+            Copy<TextAsset>($"{ModelsOf(name)}/{name}_fingerprint.json", $"{dir}/fingerprint.json");
+            if (File.Exists($"{ModelsOf(name)}/{name}_reference_hold.json")) Copy<TextAsset>($"{ModelsOf(name)}/{name}_reference_hold.json", $"{dir}/reference_hold.json");
             mj.policy = Copy<ModelAsset>($"{Models}/zero_policy.onnx", $"{BoxersDir}/zero_policy.onnx");
 
             string note = "no mesh";
@@ -208,7 +215,7 @@ namespace PoBox.EditorTools
                 var binder = boxer.AddComponent<SkinBinder>();
                 binder.rigRoot = boxer.transform;
                 binder.skin = skin;
-                ConfigureBinder(binder, BoneMap(File.ReadAllText($"{Rigs}/{name}.json")));
+                ConfigureBinder(binder, BoneMap(File.ReadAllText($"{RigsOf(name)}/{name}.json")));
                 note = $"{binder.map.Count} bones bound";
             }
 
@@ -314,10 +321,9 @@ namespace PoBox.EditorTools
                 fighter.boxer = mj;
                 fighter.standingPelvisHeight = (float)cfg.stand_height;
                 fighter.totalMass = (float)cfg.total_mass_kg;
-                // The rule the match policies are trained under (queue: --daze --daze-hi 42), and the scoring
-                // measured from these boxers sparring in the game (2026-10-01).
+                // The daze rule on, with Fighter's own numbers (the review fix a8cd70d made knockdowns common:
+                // 3.5 s, 9 to 26, body 0.45). This line set 2.5/14/42/0.3 until 2026-11-02 and undid that on a rebuild.
                 fighter.dazeRule = true;
-                fighter.dazeTau = 2.5f; fighter.dazeLo = 14f; fighter.dazeHi = 42f; fighter.dazeWeak = 0.45f; fighter.dazeBody = 0.3f;
                 fighter.graceSeconds = 2f;
                 fighter.impulseFloor = Fighter.PunchMass;
                 fighter.damagePerNs = 0.045f;      // 2026-10-16: 0.018 left a boxer at 94% after 194 punches
@@ -411,7 +417,7 @@ namespace PoBox.EditorTools
             string title = Title(name), dir = $"{BoxersDir}/{title}", from = $"training/checkpoints/{run}";
             var policy = Copy<ModelAsset>($"{from}/latest.onnx", $"{dir}/policy.onnx");
             // The body's config goes with it: the rules a policy was trained under (speed limit, fatigue) are in there.
-            Copy<TextAsset>($"{Models}/{name}_policy_config.json", $"{dir}/config.json");
+            Copy<TextAsset>($"{ModelsOf(name)}/{name}_policy_config.json", $"{dir}/config.json");
             foreach (string file in new[] { "reference_trajectory.json", "falls.json" })
                 if (File.Exists($"{from}/{file}")) Copy<TextAsset>($"{from}/{file}", $"{dir}/{file}");
             string prefabPath = $"{dir}/{title}.prefab";
@@ -457,7 +463,7 @@ namespace PoBox.EditorTools
                 var model = MjEngineTool.LoadModelFromString(doc.OuterXml);
                 try
                 {
-                    var diffs = ModelFingerprint.FromJson(File.ReadAllText($"{Models}/{name}_fingerprint.json")).Differences(model);
+                    var diffs = ModelFingerprint.FromJson(File.ReadAllText($"{ModelsOf(name)}/{name}_fingerprint.json")).Differences(model);
                     var kinds = diffs.GroupBy(x => x.Split(' ')[0]).Select(g => $"{g.Count()} {g.Key}");
                     var sb = new StringBuilder($"{name}: {diffs.Count} difference(s) [{string.Join(", ", kinds)}]; generated MJCF in Temp/mj_{name}.xml\n");
                     foreach (var line in diffs) sb.AppendLine(line);

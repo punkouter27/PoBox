@@ -1648,3 +1648,14 @@ solver is not bit-repeatable even old against old).
   been run (drained) he is 2 short. Nick's gap is something else (the exam's opponent is Grandma, let go at the hand-over).
 - Next (owner to choose): promote Sokol v3m6 on the game's rule (parity + gate tests first), or make the bank and training
   start hand-overs with a drained reserve so training matches the stricter exam.
+
+## 2026-11-02 08:00, Sokol promoted on v3; tired hand-over starts (owner: "3")
+- **Promoted:** Sokol on models/v3 with `v3f_sokol` (footwork), `v3m6_sokol` (match), `v3u4_sokol` (get-up, exported by
+  `export_getup_v2.py` on exam_v3r_sokol). Parity 0 differences after regenerating the stale v3 fingerprints; MjParityTests
+  3/3, MjGateTests 24/24. See DOCS/README.md 2026-11-02.
+- **Tired starts:** `--handover-reserve X` (envs/boxing.py): a bank start begins with a reserve of 0 to X. Measured with
+  learning off (lr 1e-9), v3m6_sokol v Grandma: carry_on 0.885 fresh, 0.833 with X = 0.5, so the fresh bank starts were
+  part of training's 0.95 against the exam's 0.87.
+- Queued: `v3m7_sokol` (from v3m6), `v3m7_nick` (from v3m6), `--handover-reserve 0.5 --recover-w 1.0`, share 0.5, blend 15,
+  1 h; then `exam_v3t_*` (strict, drained) and `exam_v3tn_*` (get-up test under the game's rule) on `logs/book_v3t.json`.
+  v3m7_sokol shared the GPU with Unity's play-mode tests for its first ~15 min (iteration 69 at 08:23).

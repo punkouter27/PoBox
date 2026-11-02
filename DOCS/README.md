@@ -69,6 +69,21 @@ Earlier in the day (Phase B):
   scene left behind (raw object names); on their own they pass (11 of 11). Run ours with the assembly filter
   `PoBox.Tests`.
 
+## Sokol on the v3 body, the first boxer through the exam's six lines (2026-11-02)
+
+- **Sokol is promoted on models/v3** (owner: "3", promote and tighten training): footwork `v3f_sokol`, boxing
+  `v3m6_sokol` (the new `--recover-w` reward), get-up `v3u4_sokol`. He passes footing, attack, guard, chin and getting up
+  in the C exam; carrying on is 53/57 (93%) under the game's get-up rule (`exam_v2.py --getup-no-drain`, reserve 0.5,
+  nothing drained while rising) and 47/54 (87%) under the exam's stricter drained rule. The other seven stay on v2.
+- `MjRetrofit` builds a boxer from `models/v3` / `rigs/v3` when it is in `OnV3` (just `sokol`); everything else as before.
+  `BuildCorners` no longer writes the old daze numbers (2.5/14/42/0.3) over Fighter's own (3.5/9/26/0.45, review fix a8cd70d);
+  a rebuild had been undoing that fix.
+- The v3 fingerprints were stale (written before the 10-30 de Leva/trunk rebuild): regenerated under MuJoCo 3.5.0.
+  Unity's Sokol then compiles to the trainer's model with 0 differences. New C MuJoCo recordings for the gate tests
+  (reference trajectory, 25 fall episodes: 0% down, the guard held). MjParityTests 3/3, MjGateTests 24/24.
+- In the game: Sokol v Nick, unanimous decision 30-27 x3 (160 landed to 80, no knockdowns); a forced knockdown
+  (`down 0`): up within 10 s and still up 6 s later. The free-for-all ran with no errors.
+
 ## Graphics, sound, a High tier, v3 retrain, the get-up fix (2026-10-31)
 
 - **v3 retrain** (8 boxers, queue 15:32 on 10-30 to 10:51): footwork 8/8 pass, boxing 0/8. A `train_getup.py` bug zeroed the

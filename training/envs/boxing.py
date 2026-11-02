@@ -116,7 +116,7 @@ class BoxingEnv:
                  head_mult: float = 1.0, arms_w: float = 0.0, bodies: int = 0, body_mult: float = 1.0, head_aim_w: float = 0.0,
                  style_over: dict = None, escape_w: float = 0.0, flail_w: float = 0.0, action_filter: float = 0.0, blend_steps: int = 0,
                  obs_delay: int = 0, realism_for: tuple = (), default_rules: bool = False,
-                 recover_w: float = 0.0, recover_s: float = 3.0):
+                 recover_w: float = 0.0, recover_s: float = 3.0, handover_reserve: float = 1.0):
         wp.init()
         wp.config.verbose_warnings = verbose
         if device == "cpu":
@@ -220,6 +220,7 @@ class BoxingEnv:
         # from the hand-over bank, 0.2 a step for being up and charges recover_w x the fall penalty again for falling,
         # both only for the first recover_s seconds: the hand-over itself is what is rewarded.
         self.recover_w, self.recover_s = recover_w, recover_s
+        self.handover_reserve = handover_reserve
         if recover_w and not self.MODE:
             self.TERMS = self.TERMS + ["recover"]
         # The share of the charges for effort (power, action size, action change) in force. The trainer holds it
@@ -694,6 +695,12 @@ class BoxingEnv:
         if self.fatigue_on:
             # An episode is twelve seconds and a round is forty-five: it begins anywhere in a round's tiredness.
             self.reserve = torch.where(m1 & self.tires, self._u(self.N, self.K, lo=0.3, hi=1.0), self.reserve)
+            if self.handover_reserve < 1.0:
+                # 2026-11-02: a hand-over comes after a get-up, and the body is spent by then: the game gets up from
+                # 0.5 with nothing drained while rising, the C exam from a full reserve drained by the rise. The
+                # bank's states carry no reserve; they begin with 0 to handover_reserve of it.
+                tired = self._u(self.N, self.K, lo=0.0, hi=self.handover_reserve)
+                self.reserve = torch.where(m1 & self.tires & self.from_bank, tired, self.reserve)
         # And anywhere in a fight's punishment.
         self.hurt = torch.where(m1, self._u(self.N, self.K, lo=0.0, hi=0.8) * self.hurt_full, self.hurt)
         self.stagger = torch.where(m1, torch.zeros_like(self.stagger), self.stagger)
