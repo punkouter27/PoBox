@@ -1691,3 +1691,13 @@ solver is not bit-repeatable even old against old).
   on (**84%**), but **15 of 58 fell while turning** (the footwork policy was taught to turn from a quiet stand, not from a
   get-up). **Sokol** (v3m6) 54/57 (was 53/57). Facing the opponent fixes the hand-over; the turn is the new weak step.
   Not put in the game. The facing lesson (`v3m8_nick`, `--handover-yaw 3.14`) attacks the same problem from the match side.
+- **Result (15:46):**
+
+  | | strict carrying on | game rule | attack | other lines |
+  |---|---|---|---|---|
+  | Nick v3m8 | **39/58 (67%)**, was 26/52 | **49/58 (84%)**, was 34/58 | pass 1.51/s, 54% head | all pass |
+  | Sokol v3m8 | 46/54 (85%), v3m6 47/54 | 53/57 (93%), v3m6 53/57 | pass 0.72/s | all pass |
+
+  Training ends: v3m8_nick carry_on (any facing) 0.41 -> 0.58, flat for the last 30 min; v3m8_sokol 0.43 -> 0.49, hits
+  0.86 -> 0.68/s. Nick's game-rule carrying on rose 25 points; 4 more of 58 would pass (90%). Nick v3m8 with `--square-up
+  v3f`: 36/58, worse (the turn is still where he falls). Sokol v3m8 ties v3m6; v3m6 stays promoted. No promotion.
