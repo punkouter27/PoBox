@@ -1764,3 +1764,15 @@ solver is not bit-repeatable even old against old).
   against Matt, where the v2 brain threw 110-180 against Matt and stopped him. The exam's attack line (0.65/s) does
   not see it; it is a passive brain under pressure, not a parity fault (parity 0 differences). Zombie stays on v2
   until his attack is trained against the strong boxers.
+
+- **Zombie punching lessons (2026-11-03, 12:10-13:28, owner: "ok. you have 60 minutes max", then "another 60 minutes").**
+  New exam line `under pressure` (`tools/exam.py`): punches landed a second against the boxer's *hardest* opponent,
+  mark 0.25 (the attack line's mean hid Zombie hitting only the weak ones). v3m4 failed it: 0.02/s against Kim.
+  `v3m5_zombie` (from v3m4; hit_w 2.2, taken_w 0.7, block_w 0.25, weights nick/sokol/kim/trump=2, 0.6 h): Nick
+  0.11 -> 1.5/s in the exam, but value loss rose 10 -> 200 after iteration 150 (the v3m6_trump pattern). `v3m6_zombie`
+  (from v3m5 model_000200, weights kim=4 matt=3 sokol=3, `--lr-max 6e-5`, 0.6 h): value loss steady. Exam
+  (`exam_v3q_zombie`, rounds 2, game-rule get-up): attack 1.14/s (was 0.71), Kim 1.42, Nick 1.22, Sokol 0.20, Matt 0.02
+  (the exam's v3 Matt does not engage: no blocks, no hits either way); getting up 60/60, carrying on 58/60; under
+  pressure still FAIL (Matt). **In the game:** against Sokol 92 thrown, 73 landed (was 2/0), against Nick a TKO win in
+  R1 (3 knockdowns). Parity 3/3, gate 24/24. **Zombie promoted on v3** (v3f footwork, v3m6 boxing, v3u4 get-up).
+  Report: `DOCS/reports/2026-11-03-zombie-punching.html`.

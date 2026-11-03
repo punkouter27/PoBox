@@ -314,7 +314,7 @@ SkinnedMeshRenderer:
     m_Center: {x: -0.060361862, y: -4.641958, z: 51.3925}
     m_Extent: {x: 28.670835, y: 19.194899, z: 57.788544}
   m_DirtyAABB: 0
---- !u!1 &6123180533644090490
+--- !u!1 &8883307289061577951
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -322,8 +322,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8231099289389928345}
-  - component: {fileID: 2066814476181422515}
+  - component: {fileID: 4522513507103286371}
+  - component: {fileID: 1119475751768359361}
   m_Layer: 0
   m_Name: Trail
   m_TagString: Untagged
@@ -331,13 +331,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8231099289389928345
+--- !u!4 &4522513507103286371
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6123180533644090490}
+  m_GameObject: {fileID: 8883307289061577951}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -346,14 +346,14 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2231836154461391533}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!96 &2066814476181422515
+--- !u!96 &1119475751768359361
 TrailRenderer:
   serializedVersion: 4
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6123180533644090490}
+  m_GameObject: {fileID: 8883307289061577951}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 1
@@ -521,6 +521,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: b_hip_y_r
       objectReference: {fileID: 0}
+    - target: {fileID: 850524847408199025, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+      propertyPath: m_Name
+      value: b_ankle_x_l
+      objectReference: {fileID: 0}
     - target: {fileID: 919364326406474254, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_exclude_7
@@ -528,6 +532,10 @@ PrefabInstance:
     - target: {fileID: 924186736365813295, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_chest_geom
+      objectReference: {fileID: 0}
+    - target: {fileID: 932368085584097378, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+      propertyPath: m_Name
+      value: b_hip_y_l
       objectReference: {fileID: 0}
     - target: {fileID: 1002304196245309096, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
@@ -549,10 +557,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: b_forearm_l
       objectReference: {fileID: 0}
-    - target: {fileID: 1634969296927726883, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: m_Name
-      value: b_shoulder_z_r
-      objectReference: {fileID: 0}
     - target: {fileID: 1641896223631632709, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_forearm_r_geom
@@ -573,15 +577,19 @@ PrefabInstance:
       propertyPath: m_Name
       value: b_ankle_y_r
       objectReference: {fileID: 0}
+    - target: {fileID: 1869922113492838266, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+      propertyPath: m_Name
+      value: b_hip_z_r
+      objectReference: {fileID: 0}
     - target: {fileID: 2071803301656363234, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_exclude_5
       objectReference: {fileID: 0}
-    - target: {fileID: 2089982892977383716, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: m_Name
-      value: b_ankle_y_r
-      objectReference: {fileID: 0}
     - target: {fileID: 2270635700973168860, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+      propertyPath: m_Name
+      value: b_ankle_x_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 2401047822214862381, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_ankle_x_r
       objectReference: {fileID: 0}
@@ -589,13 +597,13 @@ PrefabInstance:
       propertyPath: m_Name
       value: b_pelvis_up
       objectReference: {fileID: 0}
-    - target: {fileID: 2541113886626614727, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: m_Name
-      value: b_hip_y_r
-      objectReference: {fileID: 0}
     - target: {fileID: 2560398321708092341, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: Zombie Blue
+      objectReference: {fileID: 0}
+    - target: {fileID: 2581590977331918904, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+      propertyPath: m_Name
+      value: b_elbow_l
       objectReference: {fileID: 0}
     - target: {fileID: 2745327927705313898, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
@@ -609,6 +617,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: b_upper_arm_r
       objectReference: {fileID: 0}
+    - target: {fileID: 3070812401254372997, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+      propertyPath: m_Name
+      value: b_elbow_r
+      objectReference: {fileID: 0}
     - target: {fileID: 3169648076649833792, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_abdomen_y
@@ -617,13 +629,13 @@ PrefabInstance:
       propertyPath: m_Name
       value: b_torso_geom
       objectReference: {fileID: 0}
-    - target: {fileID: 3382681331967187275, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+    - target: {fileID: 3326805911103839783, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
-      value: b_hip_x_l
+      value: b_shoulder_z_l
       objectReference: {fileID: 0}
-    - target: {fileID: 3454218853614835909, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+    - target: {fileID: 3422876062634354838, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
-      value: b_hip_z_l
+      value: b_ankle_y_r
       objectReference: {fileID: 0}
     - target: {fileID: 3591642366183561642, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
@@ -637,17 +649,13 @@ PrefabInstance:
       propertyPath: m_Name
       value: b_knee_r
       objectReference: {fileID: 0}
-    - target: {fileID: 4059636721584475360, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: m_Name
-      value: b_hip_z_r
-      objectReference: {fileID: 0}
-    - target: {fileID: 4068324926738053593, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: m_Name
-      value: b_abdomen_z
-      objectReference: {fileID: 0}
     - target: {fileID: 4117410208062463884, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_shoulder_z_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 4159643369536391358, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+      propertyPath: m_Name
+      value: b_knee_r
       objectReference: {fileID: 0}
     - target: {fileID: 4493099218335718080, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_LocalPosition.x
@@ -689,6 +697,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4524239768742263884, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+      propertyPath: m_Name
+      value: b_shoulder_z_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 4532607826179644022, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+      propertyPath: m_Name
+      value: b_shoulder_x_l
+      objectReference: {fileID: 0}
     - target: {fileID: 4547325888694683991, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_exclude_10
@@ -697,17 +713,13 @@ PrefabInstance:
       propertyPath: m_Name
       value: b_exclude_2
       objectReference: {fileID: 0}
-    - target: {fileID: 4687210629454764341, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: m_Name
-      value: b_elbow_l
-      objectReference: {fileID: 0}
     - target: {fileID: 4697526830048195525, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_exclude_0
       objectReference: {fileID: 0}
-    - target: {fileID: 4760866145915697794, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+    - target: {fileID: 4707874524508517423, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
-      value: b_ankle_x_r
+      value: b_abdomen_x
       objectReference: {fileID: 0}
     - target: {fileID: 4779832949603922885, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
@@ -717,9 +729,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: b_pelvis_geom
       objectReference: {fileID: 0}
+    - target: {fileID: 4836576239917194920, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+      propertyPath: m_Name
+      value: b_knee_l
+      objectReference: {fileID: 0}
     - target: {fileID: 4844776852936240184, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_exclude_4
+      objectReference: {fileID: 0}
+    - target: {fileID: 4886797941006482324, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+      propertyPath: m_Name
+      value: b_ankle_y_l
       objectReference: {fileID: 0}
     - target: {fileID: 4909828499080224477, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
@@ -737,9 +757,9 @@ PrefabInstance:
       propertyPath: m_Name
       value: b_exclude_9
       objectReference: {fileID: 0}
-    - target: {fileID: 5186870158030254384, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+    - target: {fileID: 5174996001771605755, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
-      value: b_ankle_x_l
+      value: b_abdomen_y
       objectReference: {fileID: 0}
     - target: {fileID: 5220179845963884051, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
@@ -753,29 +773,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: b_shin_r_geom
       objectReference: {fileID: 0}
-    - target: {fileID: 5850442376720897666, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: m_Name
-      value: b_knee_r
-      objectReference: {fileID: 0}
     - target: {fileID: 5905562475089661525, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_exclude_6
       objectReference: {fileID: 0}
-    - target: {fileID: 6085891536135268210, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+    - target: {fileID: 6336812114848593898, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
-      value: b_elbow_r
-      objectReference: {fileID: 0}
-    - target: {fileID: 6151243841341109120, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: m_Name
-      value: b_hip_x_r
+      value: b_abdomen_z
       objectReference: {fileID: 0}
     - target: {fileID: 6445634113489266064, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_forearm_r
-      objectReference: {fileID: 0}
-    - target: {fileID: 6540372581584673278, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: m_Name
-      value: b_shoulder_z_l
       objectReference: {fileID: 0}
     - target: {fileID: 6742414856611257707, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
@@ -785,6 +793,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: b_knee_l
       objectReference: {fileID: 0}
+    - target: {fileID: 6758659676761374627, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+      propertyPath: m_Name
+      value: b_hip_x_l
+      objectReference: {fileID: 0}
     - target: {fileID: 6781603023507515622, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_thigh_r
@@ -792,10 +804,6 @@ PrefabInstance:
     - target: {fileID: 6862386785061754160, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_thigh_l_geom
-      objectReference: {fileID: 0}
-    - target: {fileID: 6929962599473828913, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: m_Name
-      value: b_abdomen_x
       objectReference: {fileID: 0}
     - target: {fileID: 6985298178275871590, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: prefix
@@ -805,6 +813,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: b_exclude_8
       objectReference: {fileID: 0}
+    - target: {fileID: 7469887061918694484, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+      propertyPath: m_Name
+      value: b_hip_y_r
+      objectReference: {fileID: 0}
     - target: {fileID: 7567946482015714860, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_root
@@ -813,62 +825,34 @@ PrefabInstance:
       propertyPath: m_Name
       value: b_abdomen_x
       objectReference: {fileID: 0}
-    - target: {fileID: 7673245792869848098, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: m_Name
-      value: b_shoulder_x_l
-      objectReference: {fileID: 0}
     - target: {fileID: 7749557315267676344, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_shin_r
       objectReference: {fileID: 0}
-    - target: {fileID: 8062283368125490663, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+    - target: {fileID: 8206094860671748227, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
-      value: b_knee_l
+      value: b_shoulder_x_r
       objectReference: {fileID: 0}
-    - target: {fileID: 8189732499035352900, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: m_Name
-      value: b_abdomen_y
-      objectReference: {fileID: 0}
-    - target: {fileID: 8314337632231411127, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8314337632231411127, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 7aca246f5142af64a9a982af997fc385, type: 2}
     - target: {fileID: 8509037903262770441, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_foot_r_geom
-      objectReference: {fileID: 0}
-    - target: {fileID: 8523421489912052184, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: m_Name
-      value: b_ankle_y_l
       objectReference: {fileID: 0}
     - target: {fileID: 8621739118079121907, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_exclude_1
       objectReference: {fileID: 0}
-    - target: {fileID: 8656192858691465463, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: m_Name
-      value: b_shoulder_x_r
-      objectReference: {fileID: 0}
-    - target: {fileID: 8902198049626779515, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: m_Name
-      value: b_hip_y_l
-      objectReference: {fileID: 0}
     - target: {fileID: 8991554494088063210, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_upper_arm_r_geom
       objectReference: {fileID: 0}
-    - target: {fileID: 9093210407333702592, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: m_Enabled
-      value: 0
+    - target: {fileID: 9055919594866964005, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+      propertyPath: m_Name
+      value: b_hip_z_l
       objectReference: {fileID: 0}
-    - target: {fileID: 9093210407333702592, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 7aca246f5142af64a9a982af997fc385, type: 2}
+    - target: {fileID: 9096540418921166368, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+      propertyPath: m_Name
+      value: b_hip_x_r
+      objectReference: {fileID: 0}
     - target: {fileID: 9151051228073095447, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       propertyPath: m_Name
       value: b_head_geom
@@ -885,7 +869,7 @@ PrefabInstance:
       addedObject: {fileID: 6596736985011475729}
     - targetCorrespondingSourceObject: {fileID: 5885822566045454772, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 8231099289389928345}
+      addedObject: {fileID: 4522513507103286371}
     - targetCorrespondingSourceObject: {fileID: 783971980776387138, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2455779364297264133}
@@ -1640,7 +1624,7 @@ MonoBehaviour:
   - {fileID: 2374690343965498058}
   - {fileID: 5336467613644010186}
   standingPelvisHeight: 0.9688
-  totalMass: 91.566
+  totalMass: 91.5663
   boxer: {fileID: 3433841844390498431}
   ring: {fileID: 0}
   headAnchor: {fileID: 4249502325426279236}
@@ -1661,6 +1645,15 @@ MonoBehaviour:
   dazeBody: 0.45
   slackSeconds: {x: 1.2, y: 2.4}
   handOverSeconds: 1.5
+  staggerSpeed: 5
+  staggerSeconds: 0.3
+  staggerDrive: 0.55
+  hurtFull: 400
+  hurtHi: 0.4
+  hurtWeak: 0.25
+  hurtTau: 600
+  hurtRest: 0.15
+  bodyDrain: 0.0025
 --- !u!114 &2032982451558766183
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1677,6 +1670,8 @@ MonoBehaviour:
   boxer: {fileID: 3433841844390498431}
   ring: {fileID: 0}
   punchSpeed: 3.5
+  squareFacing: 0.26
+  squareSpeed: 0.3
 --- !u!114 &2533326549530119735
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1718,7 +1713,7 @@ MonoBehaviour:
     renderers: []
   trails:
   - {fileID: 1474270883495348277}
-  - {fileID: 2066814476181422515}
+  - {fileID: 1119475751768359361}
   fighter: {fileID: 6944292863868996908}
   rimColor: {r: 0.2, g: 0.49, b: 0.94, a: 1}
   headOffset: {x: 0, y: 0, z: 0}
@@ -1727,7 +1722,14 @@ MonoBehaviour:
   overlayRenderers:
   - {fileID: 1140550073567269814}
   trailSpeed: 4.5
-  bruiseRadius: 0.09
+  snapPerSpeed: 70
+  snapHz: 2.6
+  snapDamping: 0.35
+  snapMax: 38
+  tiredDroop: 14
+  rimIntensity: 0.55
+  pressedRim: 1.4
+  rippleImpulse: 12
 --- !u!4 &7948388191868929443 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2385200993690476218, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}

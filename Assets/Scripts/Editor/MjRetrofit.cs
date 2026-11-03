@@ -29,7 +29,7 @@ namespace PoBox.EditorTools
         // human force each way), one at a time as each passes its exam on it (Sokol, 2026-11-02; Nick the same day, on
         // the owner's word, at five of six lines: carrying on 84%). Their brains were trained on that body and fall in
         // the old one; the rest stay on v2 until theirs pass.
-        static readonly HashSet<string> OnV3 = new HashSet<string> { "sokol", "nick" };
+        static readonly HashSet<string> OnV3 = new HashSet<string> { "sokol", "nick", "zombie" };
         static string ModelsOf(string name) => OnV3.Contains(name) ? "training/models/v3" : Models;
         static string RigsOf(string name) => OnV3.Contains(name) ? "training/rigs/v3" : Rigs;
 

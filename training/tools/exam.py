@@ -48,6 +48,7 @@ MARKS = {
     "footing_falls_per_min": 0.2,       # at most
     "attack_hits_per_s": 0.5,           # at least
     "attack_speed": 4.0,                # at least, times the boxer's own speed factor
+    "pressure_hits_per_s": 0.25,        # at least, against its hardest opponent (the mean above hides a boxer that only hits the weak)
     "guard_block_share": 0.3,           # at least, or ...
     "guard_head_taken_per_s": 0.3,      # ... at most this many head shots taken a second
     "chin_legs_per_min": 1.5,           # at most
@@ -606,6 +607,10 @@ def main() -> None:
             lines["footing"] = (worst("falls_own_per_min") <= MARKS["footing_falls_per_min"], f"{worst('falls_own_per_min'):.2f} falls a minute at worst")
             lines["attack"] = (mean("hits_per_s") >= MARKS["attack_hits_per_s"] and mean("speed") >= speed_mark,
                                f"{mean('hits_per_s'):.2f} a second at {mean('speed'):.1f} m/s (mark {speed_mark:.1f}), {mean('head_share'):.0%} to the head")
+            hardest = min(vs, key=lambda o: vs[o].get("hits_per_s", float("inf")))
+            low = vs[hardest].get("hits_per_s", float("nan"))
+            lines["under pressure"] = (low >= MARKS["pressure_hits_per_s"],
+                                       f"{low:.2f} a second against {hardest}, its hardest opponent (mark {MARKS['pressure_hits_per_s']})")
             ok = mean("block_share") >= MARKS["guard_block_share"] or mean("head_taken_per_s") <= MARKS["guard_head_taken_per_s"]
             lines["guard"] = (ok if guards else None, f"stops {mean('block_share'):.0%} of what comes at its head ({mean('blocks_per_s'):.2f} blocks a second), "
                                                       f"takes {mean('head_taken_per_s'):.2f} head shots a second" + ("" if guards else "; built without a guard"))
