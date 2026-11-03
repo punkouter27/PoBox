@@ -69,6 +69,20 @@ Earlier in the day (Phase B):
   scene left behind (raw object names); on their own they pass (11 of 11). Run ours with the assembly filter
   `PoBox.Tests`.
 
+## Overnight training: Nick passes everything, Matt gets up (2026-11-03)
+
+- About 9 h of lessons in urgency order (owner: "EXTENDED TRAINING (10 hours)"). Report with charts:
+  `DOCS/reports/2026-11-03-overnight.html`; best brains per boxer: `DOCS/reports/2026-11-03-overnight-weights.json`.
+- **Nick** `v3m9_nick` (reward for staying up doubled, get-ups facing any way): carrying on 97% under the game's rule
+  (was 84%): all six lines pass. Ready to replace v3m8 in the game.
+- **Zombie** passes all six lines under the game's get-up rule with his existing v3 brains; moved to v3 in the working
+  tree (parity 0 differences) but not committed: the Unity tests were blocked by a save-scene dialog.
+- **Matt** `v3u5_matt` get-up: 54/60 (was 31/60), carrying on 53/54. Attack still fails, so he stays on v2.
+- **Grandma** 5/60 and **Grandpa** 14/60 get up (both were 0/60): a start, far below the mark. **Trump**'s attack lesson
+  `v3m6_trump` made him fall more (the critic diverged) and was stopped; v3m5 stays.
+- Game side, uncommitted: `Bout.refereeCheckSeconds` (2 s): after a get-up the opponent stays held while the referee looks
+  the boxer over, no punch scores, a fall continues the count. Waits for the Unity tests with Zombie.
+
 ## Sokol on the v3 body, the first boxer through the exam's six lines (2026-11-02)
 
 - **Sokol is promoted on models/v3** (owner: "3", promote and tighten training): footwork `v3f_sokol`, boxing

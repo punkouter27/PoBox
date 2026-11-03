@@ -1,0 +1,215 @@
+{
+ "written": "2026-11-03",
+ "note": "Best v3 brains per boxer after the 2026-11-02/03 overnight run. Exams in C MuJoCo 3.5.0; get-up lines under the game's rule (--getup-no-drain). ONNX only where the export gate passed.",
+ "boxers": {
+  "sokol": {
+   "footwork": {
+    "pt": "checkpoints/v3f_sokol/latest.pt",
+    "onnx": "checkpoints/v3f_sokol/latest.onnx"
+   },
+   "match": {
+    "run": "v3m6_sokol",
+    "pt": "checkpoints/v3m6_sokol/latest_sokol.pt",
+    "onnx": "checkpoints/v3m6_sokol/latest_sokol.onnx"
+   },
+   "getup": {
+    "run": "v3u4_sokol",
+    "pt": "checkpoints/v3u4_sokol/latest_sokol.pt",
+    "onnx": "checkpoints/v3u4_sokol/latest_sokol.onnx"
+   },
+   "exam": {
+    "footing": true,
+    "attack": true,
+    "guard": true,
+    "chin": true,
+    "getting up": true,
+    "carrying on": true
+   },
+   "passes_all": true,
+   "status": "in the game on v3 (since 2026-11-02)",
+   "exam_note": "game-rule carrying on 53/57 for v3m6 (rl_optimization_log 2026-11-02); exam_v3yn_sokol: v3m8 ties at 53/57"
+  },
+  "nick": {
+   "footwork": {
+    "pt": "checkpoints/v3f_nick/latest.pt",
+    "onnx": "checkpoints/v3f_nick/latest.onnx"
+   },
+   "match": {
+    "run": "v3m9_nick",
+    "pt": "checkpoints/v3m9_nick/latest_nick.pt",
+    "onnx": "checkpoints/v3m9_nick/latest_nick.onnx"
+   },
+   "getup": {
+    "run": "v3u4_nick",
+    "pt": "checkpoints/v3u4_nick/latest_nick.pt",
+    "onnx": "checkpoints/v3u4_nick/latest_nick.onnx"
+   },
+   "exam": {
+    "footing": true,
+    "attack": true,
+    "guard": true,
+    "chin": true,
+    "getting up": true,
+    "carrying on": true
+   },
+   "passes_all": true,
+   "status": "in the game on v3 with v3m8; v3m9 passes all six lines: promote"
+  },
+  "zombie": {
+   "footwork": {
+    "pt": "checkpoints/v3f_zombie/latest.pt",
+    "onnx": "checkpoints/v3f_zombie/latest.onnx"
+   },
+   "match": {
+    "run": "v3m4_zombie",
+    "pt": "checkpoints/v3m4_zombie/latest_zombie.pt",
+    "onnx": "checkpoints/v3m4_zombie/latest_zombie.onnx"
+   },
+   "getup": {
+    "run": "v3u4_zombie",
+    "pt": "checkpoints/v3u4_zombie/latest_zombie.pt",
+    "onnx": "checkpoints/v3u4_zombie/latest_zombie.onnx"
+   },
+   "exam": {
+    "footing": true,
+    "attack": true,
+    "guard": true,
+    "chin": true,
+    "getting up": true,
+    "carrying on": true
+   },
+   "passes_all": true,
+   "status": "promoted in the working tree, uncommitted: waits for Unity tests"
+  },
+  "matt": {
+   "footwork": {
+    "pt": "checkpoints/v3f_matt/latest.pt",
+    "onnx": "checkpoints/v3f_matt/latest.onnx"
+   },
+   "match": {
+    "run": "v3m4_matt",
+    "pt": "checkpoints/v3m4_matt/latest_matt.pt",
+    "onnx": "checkpoints/v3m4_matt/latest_matt.onnx"
+   },
+   "getup": {
+    "run": "v3u5_matt",
+    "pt": "checkpoints/v3u5_matt/latest_matt.pt",
+    "onnx": "checkpoints/v3u5_matt/latest_matt.onnx"
+   },
+   "exam": {
+    "footing": true,
+    "attack": false,
+    "guard": true,
+    "chin": true,
+    "getting up": true,
+    "carrying on": true
+   },
+   "passes_all": false,
+   "status": "get-up passes; attack fails: stays on v2"
+  },
+  "trump": {
+   "footwork": {
+    "pt": "checkpoints/v3f_trump/latest.pt",
+    "onnx": "checkpoints/v3f_trump/latest.onnx"
+   },
+   "match": {
+    "run": "v3m5_trump",
+    "pt": "checkpoints/v3m5_trump/latest_trump.pt",
+    "onnx": "checkpoints/v3m5_trump/latest_trump.onnx"
+   },
+   "getup": {
+    "run": "v3u4_trump",
+    "pt": "checkpoints/v3u4_trump/latest_trump.pt",
+    "onnx": null
+   },
+   "exam": {
+    "footing": true,
+    "attack": false,
+    "guard": true,
+    "chin": true,
+    "getting up": true,
+    "carrying on": true
+   },
+   "passes_all": false,
+   "status": "attack fails (v3m6 regressed, stopped): stays on v2"
+  },
+  "kim": {
+   "footwork": {
+    "pt": "checkpoints/v3f_kim/latest.pt",
+    "onnx": "checkpoints/v3f_kim/latest.onnx"
+   },
+   "match": {
+    "run": "v3m3_kim",
+    "pt": "checkpoints/v3m3_kim/latest_kim.pt",
+    "onnx": "checkpoints/v3m3_kim/latest_kim.onnx"
+   },
+   "getup": {
+    "run": "v3u3_kim",
+    "pt": "checkpoints/v3u3_kim/latest_kim.pt",
+    "onnx": null
+   },
+   "exam": {
+    "footing": false,
+    "attack": false,
+    "guard": true,
+    "chin": true,
+    "getting up": true,
+    "carrying on": false
+   },
+   "passes_all": false,
+   "status": "footing, attack, carrying on fail: stays on v2"
+  },
+  "grandma": {
+   "footwork": {
+    "pt": "checkpoints/v3f_grandma/latest.pt",
+    "onnx": "checkpoints/v3f_grandma/latest.onnx"
+   },
+   "match": {
+    "run": "v3m4_grandma",
+    "pt": "checkpoints/v3m4_grandma/latest_grandma.pt",
+    "onnx": "checkpoints/v3m4_grandma/latest_grandma.onnx"
+   },
+   "getup": {
+    "run": "v3u5_grandma",
+    "pt": "checkpoints/v3u5_grandma/latest_grandma.pt",
+    "onnx": null
+   },
+   "exam": {
+    "footing": false,
+    "attack": false,
+    "guard": true,
+    "chin": true,
+    "getting up": false,
+    "carrying on": false
+   },
+   "passes_all": false,
+   "status": "get-up fails (5/60): stays on v2"
+  },
+  "grandpa": {
+   "footwork": {
+    "pt": "checkpoints/v3f_grandpa/latest.pt",
+    "onnx": "checkpoints/v3f_grandpa/latest.onnx"
+   },
+   "match": {
+    "run": "v3m4_grandpa",
+    "pt": "checkpoints/v3m4_grandpa/latest_grandpa.pt",
+    "onnx": "checkpoints/v3m4_grandpa/latest_grandpa.onnx"
+   },
+   "getup": {
+    "run": "v3u5_grandpa",
+    "pt": "checkpoints/v3u5_grandpa/latest_grandpa.pt",
+    "onnx": null
+   },
+   "exam": {
+    "footing": true,
+    "attack": false,
+    "guard": true,
+    "chin": true,
+    "getting up": false,
+    "carrying on": false
+   },
+   "passes_all": false,
+   "status": "get-up fails (14/60): stays on v2"
+  }
+ }
+}

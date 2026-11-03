@@ -1709,3 +1709,50 @@ solver is not bit-repeatable even old against old).
 - In the game: Nick v Sokol, **Nick by KO in R2** (102 landed to 100, Sokol down twice, Nick never down). A forced
   knockdown (`down 0`) on Nick: he got up, then went down twice more within 25 s (Sokol credited with one): TKO R1. The
   hand-over is still his weak moment. Free-for-all: no errors.
+
+## 2026-11-02 20:00, overnight: Nick's staying-up lesson, the other six toward v3, a referee check (owner: "yes")
+- Game-rule get-up exams (`exam_v3zn_NAME`, `--skip box chin --getup-no-drain`, book_v3y) for the six still on v2:
+
+  | | getting up | carrying on | the strict lines (exam_v3g) |
+  |---|---|---|---|
+  | Zombie (v3u4/v3m4) | pass 56/60 | pass 51/56 (91%) | footing, attack, guard, chin pass |
+  | Trump (v3u4/v3m5) | pass 56/60 | pass 53/56 | attack FAIL 0.06/s |
+  | Matt (v3u4/v3m4) | FAIL 31/60 | FAIL 25/31 | attack FAIL 0.24/s |
+  | Kim (v3u3/v3m3) | pass 60/60 | FAIL 51/60 (85%) | footing FAIL 2.1/min, attack FAIL 0.30/s |
+  | Grandma, Grandpa (v3u4) | FAIL 0/60 | - | attack FAIL |
+
+- **Zombie promoted on v3** (all six lines, on Sokol's standard): `v3f_zombie`, `v3m4_zombie`, `v3u4_zombie` (get-up
+  exported on exam_v3zn_zombie). Parity 0 differences; reference 250 steps up; 0% of 25 fall episodes down.
+- Queued: `v3m9_nick` (from v3m8, `--recover-w 2.0`, any facing, 2 h) and its exams on `book_v3z`; `v3u5_grandma`,
+  `v3u5_grandpa` (2 h), `v3u5_matt` (1.5 h): get-up from v3u4 with the hand fading more slowly (`--fade-above 0.6`, was
+  0.45); `v3m6_trump` (from v3m5, 2 h, `--handover-yaw 3.14`; v3m5 ended at 0.06 hits/s, 21% falls, still climbing);
+  then `exam_v3wn_*` (game rule) and `exam_v3w_trump` on `book_v3w`. About 10 h.
+- Game side: `Bout.refereeCheckSeconds` (2 s). After a get-up the count phase holds on while the referee looks the boxer
+  over: the opponent stays held in its guard (`MjBrain`), no punch scores, a fall in that time continues the count. Forced
+  knockdowns on Nick v Sokol: once he stayed up for the rest of the round (before: TKO); once he fell twice more after the
+  check (TKO R2). It removes the punch at the hand-over, not the falls of his own after it.
+- **v3m9_nick result (22:24):** training carry_on 0.59 -> 0.66 (2 h, 942 iterations, hits 1.26/s, falls 0.22 -> 0.19).
+  Exam: **game rule getting up 58/60, carrying on 56/58 (97%; v3m8 49/58)**; strict: footing, attack 1.68/s at 4.1 m/s,
+  guard 65%, chin, getting up 49/60 pass, carrying on 38/49 (78%; v3m8 39/58 = 67%). **Nick v3m9 passes all six lines on
+  Sokol's standard** (the game's get-up rule): candidate to replace v3m8 in the game.
+- Correction: match runs train at 14-15k samples/s with or without Unity (v3m5_trump, v3m8_nick, v3m8_sokol all 14-15k);
+  the ~60k figure is the footwork env. v3m9_nick was not slowed by the editor.
+- **v3m6_trump stopped at ~1.3 h (owner away; unattended call):** reward fell from iteration ~120 on (ep_return 237 ->
+  123), falls 0.43 -> 0.72, carry_on 0.25 -> 0.16, hits flat at 0.04-0.06/s. The any-facing get-up starts
+  (`--handover-yaw 3.14`) that lifted Nick pulled Trump down; the good early checkpoints were pruned (kept: 450+). Stopped
+  with `logs/v3m6_trump.stop`, its exams taken off the queue, book_v3w's Trump back on v3m5; v3m5 stays his best match brain.
+- **v3u5_matt (01:12):** training unaided get-up 0.05 -> ~0.30, assist 0.20 -> 0.13 (1.5 h, 2410 iterations). Exam,
+  game rule: **getting up 54/60 (was 31/60), carrying on 53/54 (98%)**: both pass. Matt still fails attack (0.24/s strict,
+  exam_v3g) on v3m4, so not yet a full six-line pass.
+- **v3u5_grandma (03:14):** 2 h, 3357 iterations; training unaided get-up stayed ~0 (peak 0.003), assist 0.36 -> 0.24,
+  aided up rate ~0.46. Exam, game rule: getting up **5/60** (was 0/60; mark 60% within 9 s), carrying on 2/5. Fails. The
+  slower fade alone does not get her up; her get-up needs another approach (strength/pose, or a different partner start).
+- **v3u5_grandpa (05:15):** 2 h, 3302 iterations; training unaided ~0, assist 0.35 -> 0.29, aided up rate 0.35 -> 0.49.
+  Exam, game rule: getting up **14/60** (was 0/60), carrying on 9/14. Fails.
+- **v3m6_trump, why:** its value_loss climbed from ~150 to over 500,000 in the last 20 minutes (the critic diverged)
+  while the reward fell; the any-facing get-up starts made his episodes much shorter and harder to value.
+- **Night summary (05:20):** passes all six lines: Nick v3m9 (new), Zombie v3m4/v3u4 (found on the game rule), Sokol
+  (in the game). Matt's get-up now passes (v3u5, exported); his attack still fails. Trump, Kim, Grandma, Grandpa stay on
+  v2. Exports: `v3u5_matt` get-up ONNX; Grandma/Grandpa not exported (the export gate refused their failing exams).
+  Manifest `DOCS/reports/2026-11-03-overnight-weights.json` (copy of training/logs/overnight_2026-11-03_weights.json);
+  report `DOCS/reports/2026-11-03-overnight.html`. Nothing promoted into Unity unattended.
