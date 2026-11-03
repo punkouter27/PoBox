@@ -82,6 +82,13 @@ Earlier in the day (Phase B):
   `v3m6_trump` made him fall more (the critic diverged) and was stopped; v3m5 stays.
 - Game side, uncommitted: `Bout.refereeCheckSeconds` (2 s): after a get-up the opponent stays held while the referee looks
   the boxer over, no punch scores, a fall continues the count. Waits for the Unity tests with Zombie.
+- **Morning (2026-11-03, Unity open):** Nick promoted with `v3m9_nick` boxing (only `match.onnx` changes; the body and
+  get-up are v3u4 as before). `MjParityTests` 3/3, `MjGateTests` 24/24, `StateFlowTests` 2/2. Referee check committed.
+  Bouts: Nick beat Zombie by TKO in R1 (67 thrown, 52 landed, 3 knockdowns); 0 errors. **Zombie's v3 move held back:**
+  in the game the v3m4 brain hardly punches: 3 thrown against Nick, 2 in three rounds against Sokol, 39 in three rounds
+  against Matt, where the v2 brain threw 110-180 against Matt and stopped him. The exam's attack line (0.65/s) does
+  not see it; it is a passive brain under pressure, not a parity fault (parity 0 differences). Zombie stays on v2
+  until his attack is trained against the strong boxers.
 
 ## Sokol on the v3 body, the first boxer through the exam's six lines (2026-11-02)
 

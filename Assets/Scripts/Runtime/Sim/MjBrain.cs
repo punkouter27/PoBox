@@ -197,12 +197,14 @@ namespace PoBox.Sim
             if (_out == Out.Square) Squaring();
 
             // While the referee counts over the other fighter this one stands in its guard, turned towards them,
-            // and waits. When they are up it is let go from that stance, with a clear head.
+            // and waits, through the referee's look at them once they are up. Then it is let go from that stance,
+            // with a clear head.
             Fighter them = fighter.opponent;
             if (them != null && !fighter.IsDown)
             {
                 Vector3 towards = them.pelvis.transform.position - fighter.pelvis.transform.position;
-                if (them.IsDown)
+                Bout bout = Bout.Instance;
+                if (them.IsDown || (bout != null && bout.Phase == BoutPhase.Count && bout.Downed == them))
                 {
                     ring.Hold(boxer, towards);
                     _holding = true;

@@ -45,6 +45,8 @@ namespace PoBox.Sim
         public float countInterval = 1f;
         [Tooltip("Knockdowns of one fighter in one round that stop the bout: the referee waves it off at this one (TKO, the three-knockdown rule). 0 = never.")]
         public int stopAfterDowns = 3;
+        [Tooltip("Seconds the referee looks a boxer over once they are back up, the other still held in its guard and the count still showing, before the fight goes on. Gives a boxer who got up the moment to settle and turn to the other (where most falls after a get-up came from). Down again in that time: the count goes on from where it stood. 0 = box on at once.")]
+        public float refereeCheckSeconds = 2f;
         [Tooltip("Real seconds between the end of one round and the start of the next.")]
         public float breakSeconds = 6f;
         [Tooltip("Real seconds the results stay up before the next bout starts on its own.")]
@@ -82,9 +84,9 @@ namespace PoBox.Sim
         public float PhaseAge => _phaseAge;
         public float ResultsTimeLeft => Mathf.Max(0f, resultsSeconds - PhaseAge);
 
-        float _phaseTimer, _countTimer, _phaseAge;
+        float _phaseTimer, _countTimer, _phaseAge, _checkTimer;
         readonly int[] _roundDowns = new int[2];
-        bool _started;
+        bool _started, _checking;
 
         void Awake()
         {
@@ -162,7 +164,7 @@ namespace PoBox.Sim
         {
             if (red == null || blue == null) return;
             BoutNumber++;
-            Winner = null; Method = ""; EloDelta = 0f; Round = 1; Clock = 0f; Count = 0; Downed = null; AlsoDowned = null;
+            Winner = null; Method = ""; EloDelta = 0f; Round = 1; Clock = 0f; Count = 0; Downed = null; AlsoDowned = null; _checking = false;
             Array.Clear(_roundDowns, 0, 2);
             Decision = false;
             judges.Reset();
@@ -248,7 +250,18 @@ namespace PoBox.Sim
                     Clock += dt;
                     // The count stands still while everybody it is over is back on their feet: up is up, whoever
                     // still has the body (the get-up policy hands it over a moment later).
-                    if (!Lying(Downed) && !Lying(AlsoDowned)) break;
+                    if (!Lying(Downed) && !Lying(AlsoDowned))
+                    {
+                        // Up and handed over: the referee's look, then box on.
+                        if (_checking && (_checkTimer += dt) >= refereeCheckSeconds)
+                        {
+                            _checking = false;
+                            Downed = null;
+                            SetPhase(BoutPhase.Fight);
+                        }
+                        break;
+                    }
+                    _checkTimer = 0f;
                     _countTimer += dt;
                     while (_countTimer >= countInterval && Phase == BoutPhase.Count)
                     {
@@ -317,6 +330,7 @@ namespace PoBox.Sim
             Downed = f;
             Count = 0;
             _countTimer = 0f;
+            _checking = false;
             SetPhase(BoutPhase.Count);
         }
 
@@ -327,6 +341,7 @@ namespace PoBox.Sim
             if (f != Downed) return;
             // The other is still down: the count goes on over them. The count is left showing what it reached.
             if (AlsoDowned != null) { Downed = AlsoDowned; AlsoDowned = null; return; }
+            if (refereeCheckSeconds > 0f) { _checking = true; _checkTimer = 0f; return; }
             Downed = null;
             SetPhase(BoutPhase.Fight);
         }

@@ -1756,3 +1756,11 @@ solver is not bit-repeatable even old against old).
   v2. Exports: `v3u5_matt` get-up ONNX; Grandma/Grandpa not exported (the export gate refused their failing exams).
   Manifest `DOCS/reports/2026-11-03-overnight-weights.json` (copy of training/logs/overnight_2026-11-03_weights.json);
   report `DOCS/reports/2026-11-03-overnight.html`. Nothing promoted into Unity unattended.
+
+- **Morning (2026-11-03, Unity open):** Nick promoted with `v3m9_nick` boxing (only `match.onnx` changes; the body and
+  get-up are v3u4 as before). `MjParityTests` 3/3, `MjGateTests` 24/24, `StateFlowTests` 2/2. Referee check committed.
+  Bouts: Nick beat Zombie by TKO in R1 (67 thrown, 52 landed, 3 knockdowns); 0 errors. **Zombie's v3 move held back:**
+  in the game the v3m4 brain hardly punches: 3 thrown against Nick, 2 in three rounds against Sokol, 39 in three rounds
+  against Matt, where the v2 brain threw 110-180 against Matt and stopped him. The exam's attack line (0.65/s) does
+  not see it; it is a passive brain under pressure, not a parity fault (parity 0 differences). Zombie stays on v2
+  until his attack is trained against the strong boxers.
