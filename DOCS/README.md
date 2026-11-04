@@ -80,6 +80,9 @@ Earlier in the day (Phase B):
   under-pressure line, on Zombie. Not promoted (owner's call).
 - **Trump, Kim:** punching lessons did not take (with a fresh critic too, `train_gauntlet.py --reset-critic`); kept as
   they were. **Grandma, Grandpa:** not trained; their get-up needs a design decision.
+- **Morning lessons (2026-11-04):** Matt promoted (v3f/v3p2/v3u5). Trump closing distance (`v3c1_trump`, press 1.2,
+  range 0.5): attack 0.05 -> 0.11/s, guard passes again; still short of 0.5, not promoted. Kim footing (`v3f2_kim`, fall
+  penalty 30): worse (attack 0.07/s, 2.0 falls a minute); stays on v3m3.
 
 ## Overnight training: Nick passes everything, Matt gets up (2026-11-03)
 
