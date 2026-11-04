@@ -301,6 +301,65 @@ namespace PoBox.Mj
             MujocoLib.mj_forward(_m, _d);
         }
 
+        /// <summary>
+        /// The poses the bout holds a boxer in (joint, angle; the rest as in the guard), found on the v3 bodies in
+        /// MuJoCo, whose joints all turn the same ways. Sitting: thighs level, shins upright, the gloves on the knees.
+        /// Victory: both gloves as high as the shoulders' limits let them go, about 20 cm over the head.
+        /// </summary>
+        public static readonly (string joint, double angle)[] Sitting =
+        {
+            ("hip_y_l", -1.45), ("hip_y_r", -1.45), ("knee_l", 1.45), ("knee_r", 1.45), ("ankle_y_l", 0.0), ("ankle_y_r", 0.0),
+            ("hip_x_l", 0.25), ("hip_x_r", -0.25), ("abdomen_y", 0.3),
+            ("shoulder_x_l", -1.64), ("shoulder_z_l", -1.01), ("elbow_l", 0.0), ("shoulder_x_r", 1.64), ("shoulder_z_r", 1.01), ("elbow_r", 0.0),
+        };
+        public static readonly (string joint, double angle)[] Victory =
+        {
+            ("shoulder_x_l", -1.51), ("shoulder_z_l", -1.92), ("elbow_l", -1.2), ("shoulder_x_r", 1.51), ("shoulder_z_r", 1.92), ("elbow_r", 1.2),
+        };
+
+        /// <summary>The guard's joints with the ones named set otherwise, each inside its limits.</summary>
+        public double[] Pose((string joint, double angle)[] set)
+        {
+            var q = (double[])Config.default_joint_pos.Clone();
+            foreach (var (joint, angle) in set)
+            {
+                int i = Array.IndexOf(Config.joint_order, joint);
+                if (i >= 0) q[i] = Math.Max(Config.lower[i], Math.Min(Config.upper[i], angle));
+            }
+            return q;
+        }
+
+        /// <summary>Held in a pose at (x, y), facing yaw, nothing moving: the joints as given, the body lowered or raised until the lower sole is on the floor.</summary>
+        public void ResetToPose(double x, double y, double yaw, double[] joints)
+        {
+            double* q = _d->qpos + _rootQ;
+            q[0] = x; q[1] = y; q[2] = Config.stand_height;
+            q[3] = Math.Cos(yaw / 2); q[4] = 0; q[5] = 0; q[6] = Math.Sin(yaw / 2);
+            for (int k = 0; k < 6; k++) _d->qvel[_rootV + k] = 0;
+            for (int i = 0; i < Joints; i++)
+            {
+                _d->qpos[_jq[i]] = joints[i];
+                _d->qvel[_jv[i]] = 0;
+                _d->ctrl[_act[i]] = _held[i] = joints[i];
+                Action[i] = _applied[i] = 0;
+            }
+            MujocoLib.mj_kinematics(_m, _d);
+            q[2] += 0.002 - Math.Min(SoleBottom(0), SoleBottom(1));
+            _fresh = true;
+            MujocoLib.mj_forward(_m, _d);
+        }
+
+        /// <summary>The lowest corner of a foot's sole, MuJoCo's z.</summary>
+        double SoleBottom(int f)
+        {
+            double* gp = _d->geom_xpos + 3 * _foot[f], gm = _d->geom_xmat + 9 * _foot[f], size = _m->geom_size + 3 * _foot[f];
+            double low = double.MaxValue;
+            for (int sx = -1; sx <= 1; sx += 2)
+                for (int sy = -1; sy <= 1; sy += 2)
+                    low = Math.Min(low, gp[2] + gm[6] * sx * size[0] + gm[7] * sy * size[1] - gm[8] * size[2]);
+            return low;
+        }
+
         /// <summary>The body put in a given state, in MuJoCo's own numbers: the root's position, turn and velocity, and the joints, at rest.</summary>
         public void SetState(double[] rootPos, double[] rootQuat, double[] rootLinVel, double[] jointPos)
         {

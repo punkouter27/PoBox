@@ -93,6 +93,8 @@ namespace PoBox.Sim
         public float dazeBody = 0.45f;
         [Tooltip("How long the drives stay slack after the legs go, seconds, least and most. Then the fighter starts to get up.")]
         public Vector2 slackSeconds = new Vector2(1.2f, 2.4f);
+        [Tooltip("Share of its drive strength a fighter counted out has while it goes on trying to get up after the bout: enough to try, not enough to make it look easy.")]
+        public float beatenDrive = 0.6f;
         [Tooltip("Seconds a fighter that has got up by itself stands before the match policy takes the body back.")]
         public float handOverSeconds = 1.5f;
 
@@ -237,6 +239,7 @@ namespace PoBox.Sim
             _floorY = position.y;
             _upSince = Time.time;
             _stagger = 0f; _rocked = 0f; _downTimer = 0f; _lowTime = 0f; _stoodFor = 0f;
+            _beaten = false;
             _hasPrevCom = false;
             Daze = 0f;
             IsDown = false; IsRising = false; Authority = 1f; DriveScale = 1f;
@@ -323,6 +326,7 @@ namespace PoBox.Sim
 
         bool _wentDownThisStep;
         float _upSince = -99f;
+        bool _beaten;
 
         public static float ZoneWeight(PartKind zone)
         {
@@ -599,7 +603,7 @@ namespace PoBox.Sim
                     Authority = Mathf.MoveTowards(Authority, 0f, dt * 10f);
                     DriveScale = 0.04f;
                     _downTimer -= dt;
-                    if (_downTimer <= 0f && !IsOut)
+                    if (_downTimer <= 0f && (!IsOut || _beaten))
                     {
                         // Its breath back on the canvas: the get-up starts with its drives whole (a reserve of half or
                         // more), as the get-up brains were trained and examined. Spent, none of them can stand.
@@ -620,7 +624,7 @@ namespace PoBox.Sim
                     // second, with the body still settling into its guard, the match policy fell over in a
                     // third of the trials (training/tools/exam.py, HANDOVER_S, which is the same number).
                     Authority = Mathf.MoveTowards(Authority, 1f, dt * 10f);
-                    DriveScale = 1f;
+                    DriveScale = _beaten ? beatenDrive : 1f;
                     bool standing = PelvisHeight > standingPelvisHeight * 0.88f && Upright > 0.85f;
                     _stoodFor = standing ? _stoodFor + dt : 0f;
                     // Up a quarter of a second beats the count; only falling back to the canvas loses it again.
@@ -680,6 +684,16 @@ namespace PoBox.Sim
             _downTimer = float.PositiveInfinity;
             // Ruled out half way up: the brain lets go of the get-up as well.
             if (wasRising) SendMessage("EndGetUp", SendMessageOptions.DontRequireReceiver);
+        }
+
+        /// <summary>
+        /// Counted out: the bout is over and this fighter lost it on the canvas. It goes on trying to get up, with
+        /// part of its strength (beatenDrive), however hurt it is; the results phase keeps the ring running for it.
+        /// </summary>
+        public void Beaten()
+        {
+            _beaten = true;
+            if (IsDown && !IsRising) _downTimer = Mathf.Min(_downTimer, UnityEngine.Random.Range(1.5f, 3f));
         }
 
         /// <summary>The brain's answer to BeginGetUp: it has a policy for this.</summary>

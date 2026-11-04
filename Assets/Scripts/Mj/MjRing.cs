@@ -78,6 +78,7 @@ namespace PoBox.Mj
         int[] _body;                        // solid bodies: 0 standing, 1 lying, 2 getting up (-1 not yet set)
         float[] _bodyAt;                    // when each one's last changed (the overlap measurement reads it)
         double[] _holdX, _holdY, _holdYaw, _ghostFor;
+        double[][] _pose;                   // a held boxer's joints; null holds the guard
         int[] _target;                      // which boxer each one's punches were last measured against
         int[][] _geoms;
         bool[,] _armed, _blocking, _footDown;   // _blocking is the attacker's hand
@@ -103,6 +104,7 @@ namespace PoBox.Mj
             _bodyAt = new float[n];
             for (int k = 0; k < n; k++) _body[k] = -1;
             _holdX = new double[n]; _holdY = new double[n]; _holdYaw = new double[n]; _ghostFor = new double[n];
+            _pose = new double[n][];
             _target = new int[n];
             _geoms = new int[n][];
             _armed = new bool[n, 2]; _blocking = new bool[n, 2]; _footDown = new bool[n, 2];
@@ -228,6 +230,7 @@ namespace PoBox.Mj
             b.DriveScale = 1.0;
             // The reserve is left as it is: a boxer stood up by the referee is as tired as it was. The bout fills it (Fighter.Respawn).
             _held[k] = false;
+            _pose[k] = null;
             SetGhost(k, false);
             Forget(k);                      // the other's target has just jumped too
             MjScene.Instance.SyncUnityToMjState();
@@ -245,6 +248,7 @@ namespace PoBox.Mj
             if (!_held[k])
             {
                 _held[k] = true;
+                _pose[k] = null;
                 double limit = ringHalf - 0.5;          // a boxer caught on the ropes is stood a step in
                 var pelvis = b.transform.Find(b.prefix + "pelvis");
                 Vector3 at = pelvis != null ? pelvis.position : b.transform.position;
@@ -254,10 +258,36 @@ namespace PoBox.Mj
             if (facing.x * facing.x + facing.z * facing.z > 1e-4f) _holdYaw[k] = Math.Atan2(facing.z, facing.x);
         }
 
+        /// <summary>
+        /// Holds a boxer in a pose (MjBoxer.Pose) on a spot (Unity), facing a way, until it is placed or let go: on its
+        /// stool between rounds, the winner's gloves up. Put there now, so it shows with the ring stopped too.
+        /// </summary>
+        public void HoldPose(MjBoxer b, Vector3 floorPoint, Vector3 facing, double[] joints)
+        {
+            if (!Ready) return;
+            int k = Slot(b);
+            _held[k] = true;
+            _pose[k] = joints;
+            _holdX[k] = floorPoint.x;
+            _holdY[k] = floorPoint.z;
+            if (facing.x * facing.x + facing.z * facing.z > 1e-4f) _holdYaw[k] = Math.Atan2(facing.z, facing.x);
+            Rehold(k);
+            Forget(k);
+            MjScene.Instance.SyncUnityToMjState();
+        }
+
+        /// <summary>A held boxer back on its spot, in its pose or its guard.</summary>
+        void Rehold(int k)
+        {
+            if (_pose[k] != null) _b[k].ResetToPose(_holdX[k], _holdY[k], _holdYaw[k], _pose[k]);
+            else _b[k].ResetToGuard(_holdX[k], _holdY[k], _holdYaw[k]);
+        }
+
         public void Release(MjBoxer b)
         {
             int k = Slot(b);
             _held[k] = false;
+            _pose[k] = null;
             if (_b != null) Forget(k);
         }
 
@@ -409,7 +439,7 @@ namespace PoBox.Mj
                     }
                     else _ghostFor[k] = 0.0;
                     SetBody(k, state);
-                    if (_held[k]) _b[k].ResetToGuard(_holdX[k], _holdY[k], _holdYaw[k]);
+                    if (_held[k]) Rehold(k);
                     continue;
                 }
                 bool ghost = _down[k];
@@ -431,7 +461,7 @@ namespace PoBox.Mj
                 if (!ghost) _ghostFor[k] = 0.0;
                 SetGhost(k, ghost);
                 // A held boxer is put back in its guard on its spot before every step: it stands and waits.
-                if (_held[k]) _b[k].ResetToGuard(_holdX[k], _holdY[k], _holdYaw[k]);
+                if (_held[k]) Rehold(k);
             }
             if (_sub == 0 && _cubes != null) _cubes.Tick(_dt);
             if (solidBodies)

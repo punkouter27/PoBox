@@ -33,6 +33,8 @@ namespace PoBox.Sim
         public Transform blueNeutral;
         [Tooltip("Where each fighter stands for the walk-on: in its own corner, by the post. Empty: at its starting mark.")]
         public Transform redStool, blueStool;
+        [Tooltip("The stools each fighter sits on between rounds (the corner props). Empty: where it stands for the walk-on.")]
+        public Transform redSeat, blueSeat;
         public LeagueTable league;
 
         [Header("Rules")]
@@ -43,12 +45,12 @@ namespace PoBox.Sim
         public float walkOnSeconds = 5f;
         [Tooltip("Seconds per number of the referee's count.")]
         public float countInterval = 1f;
-        [Tooltip("Knockdowns of one fighter in one round that stop the bout: the referee waves it off at this one (TKO, the three-knockdown rule). 0 = never.")]
-        public int stopAfterDowns = 3;
+        [Tooltip("Knockdowns of one fighter in one round that stop the bout: the referee waves it off at this one (TKO, the three-knockdown rule). 0 = never: every stoppage is a count of ten (owner 2026-11-03: the third knockdown ended bouts with the loser still on his feet).")]
+        public int stopAfterDowns = 0;
         [Tooltip("Seconds the referee looks a boxer over once they are back up, the other still held in its guard and the count still showing, before the fight goes on. Gives a boxer who got up the moment to settle and turn to the other (where most falls after a get-up came from). Down again in that time: the count goes on from where it stood. 0 = box on at once.")]
         public float refereeCheckSeconds = 2f;
         [Tooltip("Real seconds between the end of one round and the start of the next.")]
-        public float breakSeconds = 6f;
+        public float breakSeconds = 10f;
         [Tooltip("Real seconds the results stay up before the next bout starts on its own.")]
         public float resultsSeconds = 18f;
         [Tooltip("On: the next bout starts on its own after resultsSeconds. Off (the game, 2026-10-31): the result card waits for MENU.")]
@@ -200,7 +202,8 @@ namespace PoBox.Sim
             _phaseAge = 0f;
             _phaseTimer = 0f;
 
-            bool run = next == BoutPhase.Intro || next == BoutPhase.Fight || next == BoutPhase.Count;
+            // The results run too: the winner holds its gloves up and a loser on the canvas tries to rise.
+            bool run = next == BoutPhase.Intro || next == BoutPhase.Fight || next == BoutPhase.Count || next == BoutPhase.Results;
             // MuJoCo steps only while this is set, which is what freezes the ring between rounds.
             SimRunning = run;
             if (red != null && red.ring != null) red.ring.running = run;
@@ -359,6 +362,14 @@ namespace PoBox.Sim
             }
             SimBus.Say($"End of round {Round}. The cards: {CardsText()}", 2);
             SetPhase(BoutPhase.RoundBreak);
+            // The minute on the stools: each sits in its own corner, facing the ring.
+            Sit(red, redSeat != null ? redSeat : redStool);
+            Sit(blue, blueSeat != null ? blueSeat : blueStool);
+        }
+
+        static void Sit(Fighter f, Transform stool)
+        {
+            if (f != null && stool != null && f.TryGetComponent(out MjBrain brain)) brain.Sit(stool.position);
         }
 
         void Finish(Fighter winner, string method, bool knockout)
@@ -372,6 +383,8 @@ namespace PoBox.Sim
                 EloDelta = league.Report(red.displayName, blue.displayName, score, knockout);
             }
             SimBus.Say(winner != null ? $"{winner.displayName} wins: {method}" : method, 3);
+            // Counted out, the loser goes on trying to get up, slowly, while the winner's gloves go up (MjBrain).
+            if (knockout && winner != null) Other(winner).Beaten();
             SetPhase(BoutPhase.Results);
         }
 

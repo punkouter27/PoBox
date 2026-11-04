@@ -32,7 +32,7 @@ namespace PoBox.Sim
         public float Value => boxer != null ? boxer.Value : 0f;
         public bool HasValue => boxer != null && boxer.Running != null;
 
-        bool _holding, _releaseNext;
+        bool _holding, _releaseNext, _raised;
         readonly float[] _punchNotedAt = { -9f, -9f };
         Transform[] _gloves;
 
@@ -173,9 +173,18 @@ namespace PoBox.Sim
         /// <summary>Called when the fighter is stood back up: the policy starts from a clean slate, as an episode does.</summary>
         public void ResetBrain() => BackToTheBout();
 
+        /// <summary>The minute between rounds: sat on the stool at this spot, facing the middle of the ring, until the bout places it again.</summary>
+        public void Sit(Vector3 stool)
+        {
+            Vector3 facing = new Vector3(ring.centre.x - stool.x, 0f, ring.centre.y - stool.z);
+            ring.HoldPose(boxer, stool, facing, boxer.Pose(MjBoxer.Sitting));
+            _holding = _releaseNext = false;
+        }
+
         void BackToTheBout()
         {
             GettingUp = false;
+            _raised = false;
             boxer.SetSpeedShare(1.0);
             _out = Out.None;
             // A boxer with no match policy boxes on its footwork policy (Sokol, until his boxing is trained).
@@ -196,14 +205,29 @@ namespace PoBox.Sim
             if (!Bout.SimRunning) return;
             if (_out == Out.Square) Squaring();
 
+            Fighter them = fighter.opponent;
+            Bout bout = Bout.Instance;
+            // The result: the winner's gloves go up where it stands; the loser on its feet, and both after a draw,
+            // wait in the guard. A loser on the canvas is left to its get-up (Fighter.Beaten).
+            if (bout != null && bout.Phase == BoutPhase.Results)
+            {
+                if (fighter.IsDown) return;
+                Vector3 facing = them != null ? them.pelvis.transform.position - fighter.pelvis.transform.position : boxer.Forward;
+                if (fighter != bout.Winner) ring.Hold(boxer, facing);
+                else if (!_raised)
+                {
+                    ring.HoldPose(boxer, fighter.pelvis.transform.position, facing, boxer.Pose(MjBoxer.Victory));
+                    _raised = true;
+                }
+                return;
+            }
+
             // While the referee counts over the other fighter this one stands in its guard, turned towards them,
             // and waits, through the referee's look at them once they are up. Then it is let go from that stance,
             // with a clear head.
-            Fighter them = fighter.opponent;
             if (them != null && !fighter.IsDown)
             {
                 Vector3 towards = them.pelvis.transform.position - fighter.pelvis.transform.position;
-                Bout bout = Bout.Instance;
                 if (them.IsDown || (bout != null && bout.Phase == BoutPhase.Count && bout.Downed == them))
                 {
                     ring.Hold(boxer, towards);

@@ -322,6 +322,8 @@ namespace PoBox.Broadcast
             else if (bout.Phase == BoutPhase.WalkOn) want = bout.PhaseAge < bout.walkOnSeconds * 0.5f ? Shot.WalkRed : Shot.WalkBlue;
             // The instant replay (Mj/MjReplay.cs) is watched wide: the whole ring, both boxers.
             else if (bout.Phase == BoutPhase.Results) want = Mj.MjReplay.Playing ? Shot.Wide : bout.Winner != null ? Shot.Winner : Shot.Orbit;
+            // The minute between rounds: each corner in turn, its boxer on the stool, from the ring.
+            else if (bout.Phase == BoutPhase.RoundBreak) want = bout.PhaseAge < bout.breakSeconds * 0.5f ? Shot.WalkRed : Shot.WalkBlue;
             else if (now < _forcedUntil) want = _forced;
             else if (bout.Phase == BoutPhase.Count && bout.Downed != null) { want = Shot.Overhead; _impactVictim = bout.Downed; }
             else if (bout.Phase != BoutPhase.Fight) want = Shot.Orbit;
@@ -530,7 +532,7 @@ namespace PoBox.Broadcast
         void PlaceWalk(CinemachineCamera cam, FighterSkin who, FighterSkin other)
         {
             if (cam == null) return;
-            if (Announcer.TeethAnnouncer.Current != null) { PlaceIntroduction(cam, who, Announcer.TeethAnnouncer.Current); return; }
+            if (Announcer.TeethAnnouncer.Current != null && bout.Phase != BoutPhase.RoundBreak) { PlaceIntroduction(cam, who, Announcer.TeethAnnouncer.Current); return; }
             Vector3 chest = who.ChestPoint;
             Vector3 facing = other.ChestPoint - chest;
             facing.y = 0f;
