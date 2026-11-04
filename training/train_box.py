@@ -110,6 +110,8 @@ def main() -> None:
     ap.add_argument("--turn-share", type=float, default=0.25, help="footwork: share that are a turn to face the stand-in")
     ap.add_argument("--disturb", type=float, default=1.0, help="footwork: size of the shoves and speed of the cubes; 0 is none")
     ap.add_argument("--randomise", type=float, default=0.15, help="footwork: each world's body is within this of the file's")
+    ap.add_argument("--gesture", type=float, default=0.0, help="footwork: share of episodes with the right arm held from outside "
+                    "the brain (the referee's count, or arm up), as the game's MjCrew.Hold does")
     ap.add_argument("--rsi", type=float, default=0.0, help="footwork: share of walks begun at a moment of a walking clip")
     ap.add_argument("--style-w", type=float, default=0.0,
                     help="footwork: what a moment the judge takes for a walking clip's is paid (style.py); 0 is no judge")
@@ -199,7 +201,8 @@ def main() -> None:
                           shove_hi=args.shove_max, start_spread=args.start_spread,
                           speed_limit=args.speed_limit, action_rate_w=args.action_rate_w, obs_delay_max=args.obs_delay_max,
                           selfcontact_w=args.selfcontact_w, cmd_fwd_max=args.cmd_fwd_max, slope_deg=args.slope_deg,
-                          action_filter=args.action_filter, obs_delay=args.obs_delay, default_rules=not args.legacy_rules, flail_w=args.flail_w)
+                          action_filter=args.action_filter, obs_delay=args.obs_delay, default_rules=not args.legacy_rules, flail_w=args.flail_w,
+                          gesture=args.gesture)
     else:
         env = (MatchEnv if args.stage == "v2" else BoxingEnv)(args.xml, args.num_envs, device=device, seed=args.seed, action_scale=args.action_scale,
                         episode_len_s=args.episode_s, cuda_graph=not args.no_cuda_graph, obs_noise=args.obs_noise,

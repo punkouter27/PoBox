@@ -69,6 +69,18 @@ Earlier in the day (Phase B):
   scene left behind (raw object names); on their own they pass (11 of 11). Run ours with the assembly filter
   `PoBox.Tests`.
 
+## Overnight 2: the referee and card walker walk on their own, Matt punches (2026-11-04)
+
+- Report `DOCS/reports/2026-11-04-overnight.html`; best weights `DOCS/reports/2026-11-04-overnight-weights.json`.
+- **Crew:** referee and ring-card walker built from the stylised figures (`training/tools/build_crew.py`, models/crew),
+  footwork trained from Sokol's and Nick's (`crewf1_*`), the referee again with his arm held (`--gesture`, `crewf2`).
+  Every C MuJoCo footwork line passes; both in the game (Assets/Crew, Mj/MjCrew), 0 differences from the trainer.
+  Game-side: the crew changes episode only from standing (MjCrew.GoTo); a fallen referee is stood back up at a quiet moment.
+- **Matt** `v3p2_matt` + `v3u5_matt`: all six original lines pass (attack 0.18 -> 0.66/s); fails only the new
+  under-pressure line, on Zombie. Not promoted (owner's call).
+- **Trump, Kim:** punching lessons did not take (with a fresh critic too, `train_gauntlet.py --reset-critic`); kept as
+  they were. **Grandma, Grandpa:** not trained; their get-up needs a design decision.
+
 ## Overnight training: Nick passes everything, Matt gets up (2026-11-03)
 
 - About 9 h of lessons in urgency order (owner: "EXTENDED TRAINING (10 hours)"). Report with charts:

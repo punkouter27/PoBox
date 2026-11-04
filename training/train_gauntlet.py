@@ -89,6 +89,8 @@ def main() -> None:
     ap.add_argument("--gamma", type=float, default=0.99, help="0.99 at 50 Hz looks 2 s ahead; 0.995 looks 4 s")
     ap.add_argument("--entropy-coef", type=float, default=0.0)
     ap.add_argument("--reset-std", type=float, default=0.0)
+    ap.add_argument("--reset-critic", action="store_true", help="a fresh critic over the resumed actor (2026-11-04: Trump's "
+                    "v3m5 critic came in with a value loss of 2e5 and every lesson from it ran away)")
     ap.add_argument("--max-std", type=float, default=0.35)
     ap.add_argument("--episode-s", type=float, default=12.0)
     ap.add_argument("--obs-noise", type=float, default=1.0)
@@ -247,6 +249,16 @@ def main() -> None:
     if args.reset_std > 0.0:
         with torch.no_grad():
             ppo.model.log_std.fill_(float(np.log(args.reset_std)))
+    if args.reset_critic:
+        with torch.no_grad():
+            for m in ppo.model.critic.modules():
+                if isinstance(m, torch.nn.Linear):
+                    torch.nn.init.orthogonal_(m.weight, gain=float(np.sqrt(2)))
+                    torch.nn.init.zeros_(m.bias)
+            torch.nn.init.orthogonal_(ppo.model.critic[-1].weight, gain=1.0)
+        for prm in ppo.model.critic.parameters():
+            ppo.opt.state.pop(prm, None)
+        print("[reset-critic] a fresh critic over the resumed actor", flush=True)
     if args.max_std > 0.0:
         with torch.no_grad():
             ppo.model.log_std.clamp_(max=float(np.log(args.max_std)))

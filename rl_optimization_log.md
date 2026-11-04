@@ -1793,3 +1793,49 @@ solver is not bit-repeatable even old against old).
   --lr-max 6e-5, 1 h; each boxer's opponents it landed under 0.25/s on drawn 3x), then their exams.
 - Not queued: Grandma's and Grandpa's get-up. v3u5 ended with the helping hand stuck at 22-24% and 0% unaided: more of the
   same will not do it; strength (their "age") or getting up off the ropes is the owner's call.
+- **23:35** `crewf1_referee` (1600 it, 0.89 h): footing exam in C MuJoCo 3.5.0 passes every line (stand 100%, walk off by
+  0.02 m/s with no falls, turn 100%, joints at 0.35 of their speed limit). Promoted into his Unity body (Assets/Crew,
+  not a boxer). In the game he walked to his spots but fell: (1) the steering turned him out of mid-stride whenever the
+  moving target drifted (never trained: a turn always starts from standing) -> MjCrew.GoTo now stops before it turns, the
+  goal moves only when the fight moves it 0.6 m, spots 0.9 m inside the ropes, 0.6 m/s; (2) with his right arm held up over
+  the brain at the result he still fell twice in 36 s. RL fix: `envs/footwork.py --gesture SHARE` (new): in that share of
+  episodes the right arm is held as the game holds it (the count's stroke once a second, or straight up) and those joints
+  do not count against the arms term. Queued `smoke_gesture` (2 iterations) and `crewf2_referee` (from crewf1, gesture
+  0.35, 0.75 h) after the walker's exams. Game-side safety net: a referee down is stood back in his corner at the next
+  walk-on, intro or break, or after 4 s.
+- **00:31** `crewf1_cardwalker` exam passes every line (stand 100%, walk off by 0.008 m/s, no falls, turn 100%, joints 0.48);
+  promoted into her Unity body. `smoke_gesture` ran clean (deleted). `crewf2_referee` (gesture 0.35) at iteration 2762:
+  falls 0.0%, turns 100%, arms term steady.
+- **01:31** `crewf2_referee` (gesture 0.35, to iteration 3000): exam passes every line (stand 100%, walk off 0.009 m/s, no
+  falls, turn 100%, joints 0.36); promoted into his Unity body. `v3p1_matt` at 0.83 h: hits 0.02 -> 0.47/s (Kim 1.20,
+  Nick 0.86, Trump 0.60, Grandma 0.67, Grandpa 0.31, Sokol 0.17, Zombie 0.03), falls 0.45 -> 0.09, value loss 62 -> 143
+  (no runaway).
+- **02:31** `v3p1_matt` (1.0 h): exam attack 0.18 -> 0.62/s (fails on speed, 3.8 m/s against 4.0; all body), under
+  pressure 0.02/s against Sokol and Zombie. Queued `v3p2_matt` from it (zombie=4 sokol=4 nick=3 trump=3).
+  `v3p1_trump` **stopped** at 0.7 h: it resumed v3m5's critic with a value loss of 2.2e5 already; it climbed to 2.5e6,
+  falls rose 0.34 -> 0.48 and hits stayed 0.04/s. New `train_gauntlet.py --reset-critic` (a fresh critic over the
+  resumed actor, its Adam state dropped); queued `v3p2_trump` with it after Kim.
+- **03:31** `v3p1_kim` (1.0 h): its critic ran away like Trump's (value loss 51 -> 1,331 at it 350), hits peaked at 0.27/s
+  (it 200) and fell to 0.20, falls 0.22 -> 0.25. Only its 400-460 checkpoints survive the pruning (little between them):
+  its exam takes the latest. Queued `v3p2_kim` (from v3m3, --reset-critic, --lr-max 3e-5, fall penalty 18) after
+  v3p2_matt: the queue holds work to about 06:50.
+- **04:31** `v3p2_trump` (--reset-critic): the fresh critic held (value loss 38 -> 15 through 0.5 h; a late spike to 1.3e4
+  in the last minutes), falls 0.57 -> 0.19-0.24, but hits stayed 0.05/s against everyone. Stability was not all of it:
+  his reach is the roster's shortest (0.44 m shoulder to wrist, roster.json) and at range_m 0.60 he lands on boxers that
+  come to him. Next for him (morning proposal): a closing-distance lesson (press / range in his style), not more of this.
+- **05:31** `v3p2_matt` at 0.97 h: hits 0.72/s (Sokol 0.02 -> 0.47, Nick 1.33, Trump 1.11, Kim 1.10), Zombie still 0.04;
+  falls 0.09, value loss 6-8 throughout (lr-max 6e-5, no runaway). Queued `v3p3_matt` (from it, zombie=6 sokol=2, 0.75 h)
+  after v3p2_kim to keep the GPU busy to about 07:40.
+- **06:31 exams** (rounds 2, 60 get-up trials, game rule): `v3p2_matt` **attack passes** (0.66/s at 4.3 m/s; v3m4 0.18 at
+  3.0), footing and guard pass, under pressure 0.02/s against Zombie only (Sokol now 0.47 in training). Its get-up lines
+  failed because the book still pairs it with v3u4_matt (34/60); v3u5_matt passed 54/60 last night. `v3p1_matt`: attack
+  0.62 at 3.8 m/s (fails on speed). `v3p2_trump`: attack 0.05/s, guard now FAIL (21%): kept on v3m5. `v3p1_kim`: attack
+  0.42 (0.39 before), footing worse (2.0 falls a minute): kept on v3m3. `v3p2_kim` (fresh critic, lr-max 3e-5): hits 0.12/s
+  and its value loss ran away again (1.3e5) near the end: Kim and Trump do not learn to punch from this recipe; their
+  problem is elsewhere (Kim's footing, Trump's reach). `v3p3_matt` (Zombie) runs next to about 07:35.
+- **07:31** `v3p3_matt` (Zombie 6x, 0.75 h) made him worse (hits 0.48 -> 0.40, Zombie 0.08, value loss to 2.1e3; exam
+  attack 0.51 at 3.4 m/s fails): v3p2 stays. **v3p2_matt with v3u5_matt's get-up** (exam_v3p2u5_matt): footing, attack
+  (0.66/s at 4.3 m/s), guard, getting up 60/60, carrying on 59/60 all pass; under pressure 0.02/s against Zombie.
+- **Night summary:** crew trained and in the game (referee crewf2, walker crewf1, every footwork line passes). Matt passes
+  the six original lines (proposed for promotion). Trump and Kim: the Zombie/Matt recipe does not work for them, with or
+  without a fresh critic. Report `DOCS/reports/2026-11-04-overnight.html`, weights `DOCS/reports/2026-11-04-overnight-weights.json`.

@@ -46,8 +46,14 @@ class FootworkEnv(BoxingEnv):
 
     def __init__(self, xml_path: str, num_envs: int, walk_share: float = 0.5, turn_share: float = 0.25,
                  disturb: float = 1.0, randomise: float = 0.15, shove_every_s: float = 3.0, cube_every_s: float = 3.0,
-                 rsi: float = 0.0, shove_hi: float = 30.0, cmd_fwd_max: float = 1.0, slope_deg: float = 0.0, **kw):
+                 rsi: float = 0.0, shove_hi: float = 30.0, cmd_fwd_max: float = 1.0, slope_deg: float = 0.0,
+                 gesture: float = 0.0, **kw):
         self.walk_share, self.turn_share = walk_share, turn_share
+        # One more (2026-11-03, the referee): the share of episodes in which the right arm is held from outside the brain,
+        # as the game holds it (Mj/MjCrew.Hold): the count's stroke, forward and down once a second, or the winner's arm
+        # straight up. The brain keeps its feet with an arm it does not move; those joints do not count against its
+        # arms. Off unless asked for.
+        self.gesture_share = gesture
         # Two more rungs (2026-10-30, both off unless asked for). cmd_fwd_max: the fastest forward walk a command asks for,
         # m/s (1.0 is the ladder's walk; 2.0-2.5 is a jog). slope_deg: each world's floor slopes up to this many degrees,
         # any way: the gravity is tilted a world, which is the same physics as a sloping floor seen from the floor, and the
@@ -86,6 +92,11 @@ class FootworkEnv(BoxingEnv):
         order = self.cfg["joint_order"]
         self.arm_idx = L([i for i, n in enumerate(order) if n.split("_")[0] in ("abdomen", "shoulder", "elbow")])
         self.style_idx = L([i for i, n in enumerate(order) if n.split("_")[0] in ("abdomen", "hip", "knee", "ankle")])
+        self.gest = torch.zeros(N, K, dtype=torch.long, device=dev)        # 0 none, 1 counting, 2 arm up
+        self.g_idx = [order.index(n) for n in ("shoulder_x_r", "shoulder_z_r", "elbow_r")] if "elbow_r" in order else []
+        self.g_mask = torch.zeros(len(order), dtype=torch.bool, device=dev)
+        if self.g_idx:
+            self.g_mask[L(self.g_idx)] = True
         name = lambda k, part: mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_BODY, ("a_", "b_")[k] + part)
         self.leg_len = torch.tensor([float(np.linalg.norm(m.body_pos[name(k, "shin_l")]) + np.linalg.norm(m.body_pos[name(k, "foot_l")]))
                                      for k in range(K)], device=dev)
@@ -217,6 +228,10 @@ class FootworkEnv(BoxingEnv):
         super()._apply_reset(mask)          # the keyframe has every cube at its parking place
         m1, m3 = mask[:, None], mask[:, None, None]
         self.kind = torch.where(m1, self._new_kind, self.kind)
+        if self.gesture_share > 0.0 and self.g_idx:
+            on = torch.rand(self.N, self.K, device=self.device) < self.gesture_share
+            which = 1 + (torch.rand(self.N, self.K, device=self.device) < 0.5).long()
+            self.gest = torch.where(m1, torch.where(on, which, torch.zeros_like(which)), self.gest)
         self.cmd = torch.where(m3, self._new_cmd, self.cmd)
         self.cmd_left = torch.where(m1, self._u(self.N, self.K, lo=2.0, hi=4.0), self.cmd_left)
         self.opp_xy = torch.where(m3, self._new_opp, self.opp_xy)
@@ -226,6 +241,23 @@ class FootworkEnv(BoxingEnv):
         self.was_down = torch.where(m1[..., None], torch.ones_like(self.was_down), self.was_down)
         if self.C:
             self.cube_left = torch.where(m1, torch.zeros_like(self.cube_left), self.cube_left)
+
+    def _drive(self, action: torch.Tensor) -> None:
+        super()._drive(action)
+        if self.gesture_share <= 0.0 or not self.g_idx:
+            return
+        N, K, A = self.N, self.K, self.A
+        t = self.step_count.view(N, 1) * self.dt
+        stroke = 1.1 + 0.6 * torch.cos(2.0 * math.pi * t)                 # the count: 0.5 to 1.7 rad, once a second
+        ctrl = self.ctrl.view(N, K, A)
+        sx, sz, el = self.g_idx
+        count, up = (self.gest == 1), (self.gest == 2)
+        def put(i, value_count, value_up):
+            v = torch.where(count, value_count, torch.where(up, torch.full_like(stroke, value_up), ctrl[..., i]))
+            ctrl[..., i] = v.clamp(self.joint_lo[..., i], self.joint_hi[..., i])
+        put(sz, stroke, 1.92)
+        put(el, torch.full_like(stroke, 0.3), 1.2)
+        put(sx, ctrl[..., sx], 1.51)
 
     # ---- what the boxer is shown ---------------------------------------------------------------
     def _geometry(self) -> Dict[str, torch.Tensor]:
@@ -365,6 +397,8 @@ class FootworkEnv(BoxingEnv):
         jv = self.qvel[:, self.jv]
         tau = self.act_force.reshape(N, K, A)
         away = jp - self.default_joint
+        if self.gesture_share > 0.0 and self.g_idx:
+            away = torch.where((self.gest > 0)[..., None] & self.g_mask, torch.zeros_like(away), away)
 
         r = {}
         r["alive"] = torch.full((N, K), 0.15, device=self.device)

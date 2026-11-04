@@ -1,0 +1,56 @@
+{
+ "written": "2026-11-04 07:45",
+ "note": "Best weights after overnight 2. 'in_game' says whether the game runs them now. Nothing was put into a boxer unattended.",
+ "crew": {
+  "referee": {
+   "footwork_pt": "checkpoints/crewf2_referee/latest.pt",
+   "onnx": "checkpoints/crewf2_referee/latest.onnx",
+   "exam": "logs/exam_crewf2_referee.json",
+   "passes_all": true,
+   "in_game": "yes (Assets/Crew/Referee/policy.onnx)"
+  },
+  "cardwalker": {
+   "footwork_pt": "checkpoints/crewf1_cardwalker/latest.pt",
+   "onnx": "checkpoints/crewf1_cardwalker/latest.onnx",
+   "exam": "logs/exam_crewf1_cardwalker.json",
+   "passes_all": true,
+   "in_game": "yes (Assets/Crew/Cardwalker/policy.onnx)"
+  }
+ },
+ "boxers": {
+  "matt": {
+   "match_pt": "checkpoints/v3p2_matt/latest_matt.pt",
+   "match_onnx": "checkpoints/v3p2_matt/latest_matt.onnx",
+   "getup_pt": "checkpoints/v3u5_matt/latest_matt.pt",
+   "exam": "logs/exam_v3p2u5_matt.json",
+   "lines": "footing, attack, guard, getting up 60/60, carrying on 59/60 pass; under pressure fails (Zombie 0.02/s)",
+   "in_game": "no (still v2): proposed for promotion with v3f/v3u5"
+  },
+  "trump": {
+   "match_pt": "checkpoints/v3m5_trump/latest_trump.pt",
+   "status": "kept: v3p1 stopped (critic runaway), v3p2 no better (0.05/s, guard worse)"
+  },
+  "kim": {
+   "match_pt": "checkpoints/v3m3_kim/latest_kim.pt",
+   "status": "kept: v3p1/v3p2 did not improve attack, footing worse"
+  },
+  "zombie": {
+   "match_pt": "checkpoints/v3m6_zombie/latest_zombie.pt",
+   "status": "unchanged tonight (in the game since 2026-11-03)"
+  },
+  "nick": {
+   "match_pt": "checkpoints/v3m9_nick/latest_nick.pt",
+   "status": "unchanged"
+  },
+  "sokol": {
+   "match_pt": "checkpoints/v3m8_sokol/latest_sokol.pt",
+   "status": "unchanged"
+  },
+  "grandma": {
+   "status": "not trained tonight: get-up needs a design decision"
+  },
+  "grandpa": {
+   "status": "not trained tonight: get-up needs a design decision"
+  }
+ }
+}
