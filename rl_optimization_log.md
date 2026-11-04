@@ -1839,3 +1839,7 @@ solver is not bit-repeatable even old against old).
 - **Night summary:** crew trained and in the game (referee crewf2, walker crewf1, every footwork line passes). Matt passes
   the six original lines (proposed for promotion). Trump and Kim: the Zombie/Matt recipe does not work for them, with or
   without a fresh critic. Report `DOCS/reports/2026-11-04-overnight.html`, weights `DOCS/reports/2026-11-04-overnight-weights.json`.
+- **2026-11-04 morning (owner: "ok")** Matt promoted on the v3 body: footwork v3f_matt (exam passes; references recorded
+  in C MuJoCo 3.5.0: walk, falls 0% of 25, hold), boxing v3p2_matt, get-up v3u5_matt. Parity 0 differences; MjParity 3/3,
+  MjGate 24/24, StateFlow 2/2, OneScreen 74/74. Bouts: v Sokol 25 of 30 landed to 1 (decision), v Zombie a stand-off
+  (5 and 3 thrown), as the exam's under-pressure line said.

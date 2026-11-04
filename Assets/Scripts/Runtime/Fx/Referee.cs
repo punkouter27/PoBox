@@ -21,22 +21,34 @@ namespace PoBox.Fx
         [Tooltip("Nearer than this to either boxer, metres, he steps away.")]
         public float keepClear = 1.0f;
         [Tooltip("Walking speed, m/s (what the brain was taught: 0.3 to 1.0).")]
-        public float speed = 0.9f;
+        public float speed = 0.6f;
+        [Tooltip("His spot is moved only when the fight has moved it this far, metres: a brain asked somewhere new every frame never settles.")]
+        public float settle = 0.6f;
 
         int _lastCount = -1;
         float _countAt;
         bool _placed;
+        Vector3 _goal;
+        float _downSince = -1f;
 
         void FixedUpdate()
         {
             Bout bout = Bout.Instance;
             if (crew == null || !crew.Ready || bout == null || bout.red == null || bout.blue == null || bout.red.ring == null) return;
             Vector2 c = bout.red.ring.centre;
-            float half = bout.red.ring.ringHalf - 0.5f;
+            // Well inside the ropes: his brain learned to walk on an open floor.
+            float half = bout.red.ring.ringHalf - 0.9f;
             Vector3 centre = new Vector3(c.x, 0f, c.y);
             Vector3 r = Flat(bout.red.pelvis.transform.position), b = Flat(bout.blue.pelvis.transform.position);
             Vector3 neutral = centre + new Vector3(Side(centre) * half, 0f, -Side(centre) * half) * 0.85f;
-            if (!_placed) { crew.Place(neutral, centre - neutral); _placed = true; }
+            if (!_placed) { crew.Place(neutral, centre - neutral); _placed = true; _goal = neutral; }
+            // Down (he has no get-up brain): stood back in his corner at the next moment nobody is watching the ring, or
+            // after a few seconds whatever is happening.
+            bool fallen = crew.body.transform.Find(crew.body.prefix + "pelvis").position.y < 0.5f;
+            if (!fallen) _downSince = -1f;
+            else if (_downSince < 0f) _downSince = Time.time;
+            bool quiet = bout.Phase == BoutPhase.WalkOn || bout.Phase == BoutPhase.Intro || bout.Phase == BoutPhase.RoundBreak;
+            if (fallen && (quiet || Time.time - _downSince > 4f)) { crew.Place(neutral, centre - neutral); _goal = neutral; _downSince = -1f; return; }
 
             Vector3 target, look;
             switch (bout.Phase)
@@ -78,7 +90,8 @@ namespace PoBox.Fx
             target = Clear(target, r, b);
             target.x = Mathf.Clamp(target.x, centre.x - half, centre.x + half);
             target.z = Mathf.Clamp(target.z, centre.z - half, centre.z + half);
-            crew.GoTo(target, look, speed);
+            if ((target - _goal).magnitude > settle) _goal = target;
+            crew.GoTo(_goal, look, speed, 0.4f);
             Gesture(bout);
         }
 

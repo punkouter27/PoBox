@@ -346,7 +346,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: PoBox.Mj::PoBox.Mj.MjBoxer
   prefix: a_
   config: {fileID: 4900000, guid: bdf8ce7174ead2f47ba49bfccdb341cb, type: 3}
-  policy: {fileID: 5022602860645237092, guid: 75d5545dd5b40ee4287e21b6ac83ff26, type: 3}
+  policy: {fileID: 5022602860645237092, guid: 01a3888c8411f4448912e450dae16280, type: 3}
   matchPolicy: {fileID: 0}
   getUpPolicy: {fileID: 0}
   opponent: {fileID: 0}

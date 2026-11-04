@@ -126,21 +126,36 @@ namespace PoBox.Mj
         }
 
         /// <summary>
-        /// Goes to a spot on the floor (Unity) and stands there facing a point: turned towards the spot and walking at this
-        /// speed while it is further than <paramref name="near"/>, turned to it again whenever it is off by more than a third
-        /// of a right angle. True once it is there.
+        /// Goes to a spot on the floor (Unity) and stands there facing a point. Each change of episode is one the brain met in
+        /// training, from standing: it turns to the spot, walks while the spot stays ahead, and stops (stands) before it turns
+        /// again; a walk is never turned out of mid-stride (seen 2026-11-03: the referee fell every time it was). True once there.
         /// </summary>
         public bool GoTo(Vector3 spot, Vector3 face, double speed, float near = 0.35f)
         {
             Vector3 to = spot - Position;
             to.y = 0f;
-            if (to.magnitude < near) { Stand(Ahead(face)); return true; }
+            float dist = to.magnitude;
             float off = Mathf.Abs(Vector3.SignedAngle(Forward, to, Vector3.up)) * Mathf.Deg2Rad;
-            if (Kind == MjBoxer.Walk) { if (off > 0.6f) Turn(spot); }
-            else if (Kind == MjBoxer.Turn && off < 0.25f) Walk(speed);
-            else Turn(spot);
-            return false;
+            switch (Kind)
+            {
+                case MjBoxer.Walk:
+                    // Arrived, or the spot has gone off to the side: stop, and decide from standing.
+                    if (dist < near || off > 1.0f) { Stand(Ahead(face)); _stoppedAt = Time.time; }
+                    return false;
+                case MjBoxer.Turn:
+                    if (dist < near * 2f) { Stand(Ahead(face)); return true; }
+                    if (off < 0.25f) Walk(speed);
+                    else Turn(spot);
+                    return false;
+                default:
+                    // Standing: still near enough, face the point; otherwise, once settled from a walk, turn to the spot.
+                    if (dist < near * 2f) { Stand(Ahead(face)); return true; }
+                    if (Time.time - _stoppedAt > 0.6f) Turn(spot);
+                    return false;
+            }
         }
+
+        float _stoppedAt = -9f;
 
         /// <summary>A point to face put a step and a half off, as the stand-in stood in training (one too close turns it on itself).</summary>
         Vector3 Ahead(Vector3 face)

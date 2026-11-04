@@ -7011,7 +7011,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: PoBox.Mj::PoBox.Mj.MjBoxer
   prefix: a_
   config: {fileID: 4900000, guid: 8e9cbbe3aaa0d464790bd8e719dda09d, type: 3}
-  policy: {fileID: 5022602860645237092, guid: 75d5545dd5b40ee4287e21b6ac83ff26, type: 3}
+  policy: {fileID: 5022602860645237092, guid: c8cf8683f921c0341b5633121ff43610, type: 3}
   matchPolicy: {fileID: 0}
   getUpPolicy: {fileID: 0}
   opponent: {fileID: 0}

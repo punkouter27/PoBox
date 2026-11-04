@@ -440,7 +440,7 @@ MonoBehaviour:
   crew: {fileID: 6593670989855256768}
   offLine: 1.5
   keepClear: 1
-  speed: 0.9
+  speed: 0.6
 --- !u!114 &2957141435692692784 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4592054376816606608, guid: af0b9cc49e14c9e4ab43f636c1e27766, type: 3}
