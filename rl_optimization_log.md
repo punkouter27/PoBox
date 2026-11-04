@@ -1843,3 +1843,12 @@ solver is not bit-repeatable even old against old).
   in C MuJoCo 3.5.0: walk, falls 0% of 25, hold), boxing v3p2_matt, get-up v3u5_matt. Parity 0 differences; MjParity 3/3,
   MjGate 24/24, StateFlow 2/2, OneScreen 74/74. Bouts: v Sokol 25 of 30 landed to 1 (decision), v Zombie a stand-off
   (5 and 3 thrown), as the exam's under-pressure line said.
+- **Next lessons (owner: "yes"):** `v3c1_trump` closing distance: his style press 0.4 -> 1.2 and range_m 0.60 -> 0.50
+  (models/v3/trump_policy_config.json; paid for walking in on the target from outside its range), from v3m5 with a fresh
+  critic, lr-max 6e-5, 1 h. `v3f2_kim` footing in the bout: from v3m3, fall penalty 12 -> 30, hit_w 2.2 -> 1.5,
+  taken_w 1.0, fresh critic, lr-max 3e-5, 1 h. (Her footwork brain passes its exam; the falls are the boxing brain's.)
+- **10:39 exams** (rounds 2, 60 get-up trials): `v3c1_trump` (closing distance): attack 0.11/s at 3.3 m/s (v3p2 0.05; mark
+  0.5 at 4.0), guard back to PASS (49% stopped; v3p2 21%), footing, getting up 59/60, carrying on 55/59 pass; under
+  pressure 0.00 against Grandma. Better than v3m5/v3p2 but not good enough to promote; kept on file. `v3f2_kim` (fall
+  penalty 30): footing still 2.0 falls a minute, attack 0.07/s at 1.4 m/s (v3p1 0.42), carrying on 50/60 FAIL: the lesson
+  made her worse; she stays on v3m3. Neither promoted.

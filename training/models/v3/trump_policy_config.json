@@ -298,8 +298,8 @@
     "pace_s": 0.9,
     "taken": 0.4,
     "block_w": 0.0,
-    "range_m": 0.6,
-    "press": 0.4,
+    "range_m": 0.5,
+    "press": 1.2,
     "energy": 0.8
   },
   "strength": 1.102,
@@ -320,5 +320,6 @@
   "fatigue_ceiling": true,
   "rules_match": {
     "blend_steps": 15
-  }
+  },
+  "style_note": "2026-11-04: press 0.4 -> 1.2, range_m 0.60 -> 0.50 for a closing-distance lesson (v3c1_trump): shortest reach in the roster, he landed only on boxers who came to him."
 }
