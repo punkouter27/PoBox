@@ -126,6 +126,10 @@ class Fighter:
         # ("ranges_deg": the trunk's bend the right way round; "segment_mass_frac": de Leva's shares, tools/build_v3.py).
         self.ranges = dict(RANGES_DEG, **{k: tuple(v) for k, v in rig.get("ranges_deg", {}).items()})
         self.mass_frac = dict(SEGMENT_MASS_FRAC, **{k: float(v) for k, v in rig.get("segment_mass_frac", {}).items()})
+        # Optional, for the ring's people who are not boxers (the referee, the card walker; 2026-11-03): the pose a zero
+        # action asks for, by joint in degrees. "shoulder_x" is the left arm's and is mirrored as GUARD_DEG's is;
+        # "shoulder_x_r" is the right arm's own, as it is, for a pose that is not the same on both sides.
+        self.stance = {k: float(v) for k, v in rig.get("stance_deg", {}).items()}
         self.joints: List[Dict] = []
         self.actuators: List[str] = []
         self.lines: List[str] = []
@@ -152,7 +156,7 @@ class Fighter:
 
     def joint(self, name: str, axis: str, group: str, side: str = "") -> str:
         lo, hi = self.ranges[name]
-        default = GUARD_DEG[name]
+        default = self.stance.get(name, GUARD_DEG[name])
         if name == "hip_y":
             default += self.lean
         elif name == "ankle_y":
@@ -161,6 +165,8 @@ class Fighter:
             lo, hi = -hi, -lo
             default = -default
         full = f"{name}_{side}" if side else name
+        if full in self.stance:
+            default = self.stance[full]
         kp, kv, fl = (round(x * self.strength, 3) for x in JOINT_GAINS.get(name, self.gains[group]))
         kv = self.joint_kv.get(full, self.joint_kv.get(name, kv))
         neg, pos = HUMAN_FORCE.get(name, (1.0, 1.0)) if self.human_force else (1.0, 1.0)

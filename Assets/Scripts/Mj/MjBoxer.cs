@@ -706,6 +706,12 @@ namespace PoBox.Mj
                 }
         }
 
+        /// <summary>A joint's target set from outside the policy (MjCrew's gestures), held until the next decision.</summary>
+        public void SetTarget(int i, double q) => _d->ctrl[_act[i]] = _held[i] = Math.Max(Config.lower[i], Math.Min(Config.upper[i], q));
+
+        /// <summary>The whole body's mass, kg.</summary>
+        public double Mass => _m != null ? _m->body_subtreemass[_pelvis] : 75.0;
+
         /// <summary>Which way the boxer faces, Unity's frame, flat on the floor.</summary>
         public Vector3 Forward
         {

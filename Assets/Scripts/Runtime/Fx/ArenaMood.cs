@@ -72,6 +72,7 @@ namespace PoBox.Fx
         static readonly int FlashId = Shader.PropertyToID("_PoBoxCrowdFlash");
         static readonly int PhonesId = Shader.PropertyToID("_PoBoxCrowdPhones");
         static readonly int SideId = Shader.PropertyToID("_PoBoxCrowdSide");
+        static readonly int LeadId = Shader.PropertyToID("_PoBoxCrowdLead");
         static readonly int EmissionId = Shader.PropertyToID("_EmissionColor");
         static readonly int BeamId = Shader.PropertyToID("_BeamColor");
         /// <summary>Who just scored, as the stands have it: -1 red, +1 blue, easing back to 0. The crowd's sound uses it too.</summary>
@@ -90,7 +91,7 @@ namespace PoBox.Fx
         public static float TimeScaleK { get; internal set; } = 1f;
 
         float[] _rest;
-        float _flash, _phones, _side, _nextPop, _down, _heat;
+        float _flash, _phones, _side, _nextPop, _down, _heat, _lead;
         Vector3 _hotAt;
         readonly float[] _landed = new float[2];
         MaterialPropertyBlock _block;
@@ -186,6 +187,9 @@ namespace PoBox.Fx
             Shader.SetGlobalFloat(FlashId, Flash);
             Shader.SetGlobalFloat(PhonesId, _phones);
             Shader.SetGlobalFloat(SideId, _side);
+            // Who is ahead, as the win bar has it: -1 red well ahead, +1 blue. Each corner's half sits up or slumps with it.
+            _lead = Mathf.MoveTowards(_lead, Mathf.Clamp((0.5f - Excitement.RedShare) * 2.5f, -1f, 1f), dt * 0.3f);
+            Shader.SetGlobalFloat(LeadId, _lead);
             Side = _side;
 
             // The count: whoever is down, alone in a light of their own.

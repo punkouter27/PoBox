@@ -6,7 +6,8 @@
 // simulation is saying about the fighter, fed per renderer through a property block:
 //
 //   _Bruise        accumulated damage on the whole part, 0..1 (the stand-in, one renderer a link)
-//   _BruiseMarks   up to eight marks where punches landed: xyz in the world, w how bad, 0..1 (trained fighters)
+//   _BruiseMarks   up to eight marks where punches landed: xyz in the world, w how bad, 0..1, plus 1 on the head
+//                  (trained fighters); a bad one on the head bleeds, a thin glossy line running down from it
 //   _Sweat         1 - stamina: a tight wet highlight from the key light, and a sheen that grows with it
 //   _Flush         the face going red as health goes: xyz the middle of the head in the world, w how much, 0..1
 //   _RimColor      the corner colour, as a fresnel edge so the two fighters separate from the crowd
@@ -157,14 +158,22 @@ Shader "PoBox/FighterOverlay"
                 half bruise = saturate(_Bruise);
                 half3 tint = half3(0.16, 0.02, 0.05) * bruise;
                 int count = (int)min(_BruiseCount, 8);
+                half cut = 0;
                 for (int k = 0; k < count; k++)
                 {
+                    half onHead = step(1.0, _BruiseMarks[k].w);
+                    half bad = _BruiseMarks[k].w - onHead;
                     float d = distance(i.positionWS, _BruiseMarks[k].xyz);
+                    // A cut: from a bad mark on the head, blood runs down a few centimetres, thinning as it goes.
+                    float3 off = i.positionWS - _BruiseMarks[k].xyz;
+                    half drop = saturate(-off.y / 0.09);
+                    half across = saturate(1.0 - length(off.xz) / (0.010 + 0.008 * drop));
+                    cut = max(cut, onHead * across * step(off.y, 0.006) * (1.0 - drop) * saturate((bad - 0.5) / 0.4));
                     // A dark middle and a redder, wider edge: what a day-old knock looks like.
                     half core = saturate(1.0 - d / (_BruiseRadius * 0.6));
                     half halo = saturate(1.0 - d / _BruiseRadius);
                     half mottle = 0.75 + 0.5 * hash3(floor(i.positionWS * 120.0));
-                    half amount = _BruiseMarks[k].w * mottle;
+                    half amount = bad * mottle;
                     bruise = max(bruise, saturate(core * core * amount * 1.2));
                     tint += half3(0.20, 0.03, 0.07) * halo * halo * amount * 0.3;
                 }
@@ -194,7 +203,9 @@ Shader "PoBox/FighterOverlay"
                 }
                 half3 glow = half3(1.0, 0.42, 0.06) * load * (0.35 + 0.65 * fresnel) * 0.6 * _LoadGain;
 
-                half3 colour = rim + wet + tint * _BruiseGain + blood + ripple + glow;
+                // The blood is wet: dark red with the key light's highlight on it.
+                half3 bleed = (half3(0.22, 0.01, 0.01) + _MainLightColor.rgb * pow(saturate(dot(n, h)), 60) * 0.5) * cut;
+                half3 colour = rim + wet + tint * _BruiseGain + blood + ripple + glow + bleed;
                 #if defined(_POBOX_SKIN_HQ)
                 {
                     half3 skin = SkinLight(n, v, GetMainLight(TransformWorldToShadowCoord(i.positionWS), i.positionWS, half4(1, 1, 1, 1)));
@@ -213,7 +224,7 @@ Shader "PoBox/FighterOverlay"
                     colour += skin * face * (1 - bruise * 0.5);
                 }
                 #endif
-                return half4(colour, max(bruise * 0.55, flushed * 0.22));
+                return half4(colour, max(max(bruise * 0.55, flushed * 0.22), cut * 0.9));
             }
             ENDHLSL
         }

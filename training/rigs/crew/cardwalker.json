@@ -1,0 +1,328 @@
+{
+  "source": "C:/Users/punko/Downloads/PoBox/Assets/Art/Exports/GLB/SK_RingCardWalker.glb",
+  "frame": "blender_z_up (x = character left, -y = forward, z = up)",
+  "height_m": 1.732,
+  "mass_kg": 60.0,
+  "notes": [
+    "turned 180 degrees about the vertical: the file's toes pointed along +y",
+    "left and right are swapped relative to the bone names; kept the names, mirrored x",
+    "arms straightened to a T-pose: they rested 45 degrees below the shoulder line",
+    "2026-11-03: thigh radius 0.0735 -> 0.065 by hand: at 0.0735 the thighs sat 7 mm inside the torso capsule in every pose (tools/check_self_collision.py).",
+    "joint_kv from tools/pd_sweep.py --loaded (target zeta 0.85)"
+  ],
+  "bones": [
+    {
+      "name": "Hips",
+      "parent": null,
+      "head": [
+        0.0,
+        0.0,
+        0.9337
+      ],
+      "tail": [
+        0.0,
+        0.0,
+        1.032
+      ]
+    },
+    {
+      "name": "Spine",
+      "parent": "Hips",
+      "head": [
+        0.0,
+        0.0,
+        1.032
+      ],
+      "tail": [
+        0.0,
+        0.0,
+        1.1794
+      ]
+    },
+    {
+      "name": "Chest",
+      "parent": "Spine",
+      "head": [
+        0.0,
+        0.0,
+        1.1794
+      ],
+      "tail": [
+        0.0,
+        0.0,
+        1.4055
+      ]
+    },
+    {
+      "name": "Neck",
+      "parent": "Chest",
+      "head": [
+        0.0,
+        0.0,
+        1.4055
+      ],
+      "tail": [
+        0.0,
+        0.0,
+        1.5038
+      ]
+    },
+    {
+      "name": "Head",
+      "parent": "Neck",
+      "head": [
+        0.0,
+        0.0,
+        1.5038
+      ],
+      "tail": [
+        0.0,
+        0.0,
+        1.7318
+      ]
+    },
+    {
+      "name": "UpperArm.L",
+      "parent": "Chest",
+      "head": [
+        0.172,
+        0.0,
+        1.3662
+      ],
+      "tail": [
+        0.4472,
+        0.0,
+        1.3662
+      ]
+    },
+    {
+      "name": "ForeArm.L",
+      "parent": "UpperArm.L",
+      "head": [
+        0.4472,
+        0.0,
+        1.3662
+      ],
+      "tail": [
+        0.6929,
+        0.0,
+        1.3662
+      ]
+    },
+    {
+      "name": "Hand.L",
+      "parent": "ForeArm.L",
+      "head": [
+        0.6929,
+        0.0,
+        1.3662
+      ],
+      "tail": [
+        0.7729,
+        0.0,
+        1.3662
+      ]
+    },
+    {
+      "name": "UpperArm.R",
+      "parent": "Chest",
+      "head": [
+        -0.172,
+        0.0,
+        1.3662
+      ],
+      "tail": [
+        -0.4472,
+        0.0,
+        1.3662
+      ]
+    },
+    {
+      "name": "ForeArm.R",
+      "parent": "UpperArm.R",
+      "head": [
+        -0.4472,
+        0.0,
+        1.3662
+      ],
+      "tail": [
+        -0.6929,
+        0.0,
+        1.3662
+      ]
+    },
+    {
+      "name": "Hand.R",
+      "parent": "ForeArm.R",
+      "head": [
+        -0.6929,
+        0.0,
+        1.3662
+      ],
+      "tail": [
+        -0.7729,
+        0.0,
+        1.3662
+      ]
+    },
+    {
+      "name": "Thigh.L",
+      "parent": "Hips",
+      "head": [
+        0.0934,
+        -0.0,
+        0.9141
+      ],
+      "tail": [
+        0.0934,
+        0.0098,
+        0.4914
+      ]
+    },
+    {
+      "name": "Shin.L",
+      "parent": "Thigh.L",
+      "head": [
+        0.0934,
+        0.0098,
+        0.4914
+      ],
+      "tail": [
+        0.0934,
+        -0.0,
+        0.0835
+      ]
+    },
+    {
+      "name": "Foot.L",
+      "parent": "Shin.L",
+      "head": [
+        0.0934,
+        -0.0,
+        0.0835
+      ],
+      "tail": [
+        0.0934,
+        -0.0029,
+        -0.0388
+      ]
+    },
+    {
+      "name": "Thigh.R",
+      "parent": "Hips",
+      "head": [
+        -0.0934,
+        -0.0,
+        0.9141
+      ],
+      "tail": [
+        -0.0934,
+        0.0098,
+        0.4914
+      ]
+    },
+    {
+      "name": "Shin.R",
+      "parent": "Thigh.R",
+      "head": [
+        -0.0934,
+        0.0098,
+        0.4914
+      ],
+      "tail": [
+        -0.0934,
+        -0.0,
+        0.0835
+      ]
+    },
+    {
+      "name": "Foot.R",
+      "parent": "Shin.R",
+      "head": [
+        -0.0934,
+        -0.0,
+        0.0835
+      ],
+      "tail": [
+        -0.0934,
+        -0.0029,
+        -0.0388
+      ]
+    }
+  ],
+  "map": {
+    "pelvis": "Hips",
+    "neck": "Neck",
+    "head": "Head",
+    "spine": "Spine",
+    "torso": "Chest",
+    "thigh_l": "Thigh.L",
+    "shin_l": "Shin.L",
+    "foot_l": "Foot.L",
+    "upper_arm_l": "UpperArm.L",
+    "forearm_l": "ForeArm.L",
+    "hand_l": "Hand.L",
+    "thigh_r": "Thigh.R",
+    "shin_r": "Shin.R",
+    "foot_r": "Foot.R",
+    "upper_arm_r": "UpperArm.R",
+    "forearm_r": "ForeArm.R",
+    "hand_r": "Hand.R"
+  },
+  "all_bones": 17,
+  "radii": {
+    "thigh": 0.065,
+    "shin": 0.0404,
+    "forearm": 0.028,
+    "torso": 0.1002,
+    "pelvis": 0.1008,
+    "head": 0.114
+  },
+  "mesh": {
+    "vertices": 4759,
+    "height_m": 1.732,
+    "volume_l": 84.5,
+    "bmi_from_volume": 27.7
+  },
+  "human_force": true,
+  "per_joint_action": true,
+  "ranges_deg": {
+    "abdomen_y": [
+      -30,
+      60
+    ]
+  },
+  "segment_mass_frac": {
+    "pelvis": 0.12471,
+    "torso": 0.30103,
+    "head": 0.06681,
+    "upper_arm": 0.0255,
+    "forearm": 0.0138,
+    "hand": 0.0056,
+    "thigh": 0.14781,
+    "shin": 0.0481,
+    "foot": 0.0129
+  },
+  "stance_deg": {
+    "shoulder_x": -84,
+    "shoulder_z": -8,
+    "elbow": -12,
+    "shoulder_x_r": 86.5,
+    "shoulder_z_r": 100.0,
+    "elbow_r": 69.0
+  },
+  "joint_kv": {
+    "abdomen_z": 8.4,
+    "abdomen_y": 30.161,
+    "abdomen_x": 19.543,
+    "shoulder_x": 5.847,
+    "shoulder_z": 7.409,
+    "elbow": 2.2,
+    "hip_x": 47.633,
+    "hip_z": 12.0,
+    "hip_y": 48.031,
+    "knee": 12.0,
+    "ankle_y": 12.0,
+    "ankle_x": 1.6
+  }
+}

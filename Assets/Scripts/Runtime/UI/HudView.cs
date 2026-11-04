@@ -89,7 +89,11 @@ namespace PoBox.UI
         // between rounds, the inset, the speed of a punch
         VisualElement _break, _pip, _picture;
         Label _breakTitle, _flash;
-        readonly Label[] _breakLanded = new Label[2], _breakBlocked = new Label[2], _breakCentre = new Label[2];
+        readonly Label[] _breakLanded = new Label[2], _breakBlocked = new Label[2], _breakCentre = new Label[2], _breakSplit = new Label[2];
+        Label _breakBest;
+        // The round's clean punches landed, head and body, by corner, and the hardest of them.
+        readonly int[] _roundHead = new int[2], _roundBody = new int[2];
+        HitEvent _roundBestHit;
         readonly VisualElement[] _breakCards = new VisualElement[Judges.Count];
         readonly Label[] _breakScores = new Label[Judges.Count];
         readonly FighterStats[] _roundStart = new FighterStats[2];
@@ -138,7 +142,9 @@ namespace PoBox.UI
         VisualElement[] _brainBars = new VisualElement[0];
         int[] _brainGroup = new int[0];
         int _brainCorner;
-        bool _replaying;
+        bool _replaying, _autoReplayed;
+        [Tooltip("After a knockout the punch that did it is replayed by itself, once, this many seconds into the result (the winner's moment first).")]
+        public float autoReplayAfter = 4f;
         TwitchChat _twitch;
         /// <summary>The brain cam's groups of the 21 joints, in the order drawn.</summary>
         static readonly string[] BrainGroups = { "LEGS", "TORSO", "L ARM", "R ARM" };
@@ -231,8 +237,10 @@ namespace PoBox.UI
                 _breakLanded[i] = _root.Q<Label>("break-landed-" + corners[i]);
                 _breakBlocked[i] = _root.Q<Label>("break-blocked-" + corners[i]);
                 _breakCentre[i] = _root.Q<Label>("break-centre-" + corners[i]);
+                _breakSplit[i] = _root.Q<Label>("break-split-" + corners[i]);
             }
             _break = _root.Q<VisualElement>("break");
+            _breakBest = _root.Q<Label>("break-best");
             _breakTitle = _root.Q<Label>("break-title");
             _pip = _root.Q<VisualElement>("pip");
             _flash = _root.Q<Label>("flash");
@@ -669,6 +677,7 @@ namespace PoBox.UI
         void OnNewBout()
         {
             if (MjReplay.Instance != null) MjReplay.Instance.Clear();
+            _autoReplayed = false;
             Prediction.Reset();
             _twitch?.ClearVotes();
             _winRecord.Clear();
@@ -903,6 +912,12 @@ namespace PoBox.UI
 
         void OnHit(HitEvent e)
         {
+            if (e.clean && bout != null && e.attacker != null && bout.Phase == BoutPhase.Fight)
+            {
+                int who = e.attacker == bout.red ? 0 : 1;
+                if (e.zone == PartKind.Head) _roundHead[who]++; else _roundBody[who]++;
+                if (e.impulse > _roundBestHit.impulse) _roundBestHit = e;
+            }
             Excitement ex = Excitement.Instance;
             // The radar gun: with STATS every hard clean punch; without, only the rare one far over the usual.
             float over = SettingsPage.Stats ? flashOverUsual : radarOverUsual;
@@ -968,6 +983,12 @@ namespace PoBox.UI
             // The replay over: the card back. One still playing as the result runs out is stopped first, so the
             // next bout is placed on the live state and not under the replay's.
             if (_replaying && !MjReplay.Playing) { _replaying = false; ShowResults(); }
+            if (!_autoReplayed && !_replaying && bout.Phase == BoutPhase.Results && bout.PhaseAge > autoReplayAfter
+                && (bout.Method.StartsWith("KO") || bout.Method.StartsWith("TKO") || bout.Method.StartsWith("DOUBLE KO")))
+            {
+                _autoReplayed = true;
+                PlayReplay();
+            }
             if (MjReplay.Playing && (bout.Phase != BoutPhase.Results || (bout.autoAdvance && bout.ResultsTimeLeft < 0.5f))) StopReplay();
             bool brain = BrainOn;
             if (brain) RefreshBrain(false);
@@ -1046,6 +1067,8 @@ namespace PoBox.UI
             {
                 if (red != null) _roundStart[0] = red.stats;
                 if (blue != null) _roundStart[1] = blue.stats;
+                _roundHead[0] = _roundHead[1] = _roundBody[0] = _roundBody[1] = 0;
+                _roundBestHit = default;
             }
             if (_break != null) _break.EnableInClassList("hidden", phase != BoutPhase.RoundBreak);
             if (phase == BoutPhase.RoundBreak) FillBreak();
@@ -1184,6 +1207,10 @@ namespace PoBox.UI
                 Set(_breakLanded[i], $"{f.stats.landed - _roundStart[i].landed}/{f.stats.thrown - _roundStart[i].thrown}");
                 Set(_breakBlocked[i], (f.stats.blocked - _roundStart[i].blocked).ToString());
             }
+            for (int i = 0; i < 2; i++) Set(_breakSplit[i], $"{_roundHead[i]} / {_roundBody[i]}");
+            HitEvent best = _roundBestHit;
+            Set(_breakBest, best.attacker == null ? "" :
+                $"PUNCH OF THE ROUND  {best.attacker.displayName} · {(best.hand < 0 ? "LEFT" : "RIGHT")} {PunchNames[(int)best.punch]} · {best.gloveSpeed * 3.6f:0} km/h · {best.impulse:0} N·s");
             float centre = bout.judges.LastCentreShare;
             Set(_breakCentre[0], $"{centre * 100f:0}%");
             Set(_breakCentre[1], $"{(1f - centre) * 100f:0}%");

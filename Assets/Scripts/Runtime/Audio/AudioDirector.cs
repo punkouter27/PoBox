@@ -182,7 +182,9 @@ namespace PoBox.Audio
         readonly MjBoxer[] _pair = new MjBoxer[2];
         RopeFlex _ropes;
         AudioLowPassFilter _lowPass;
-        AudioClip _twang;
+        AudioClip _twang, _clack;
+        float _clacksAt = -1f;
+        int _clacks;
         Fighter _victim;
         MjRing _ring;
         /// <summary>How loud each boxer's scrape is at this moment, 0 to 1.</summary>
@@ -240,6 +242,7 @@ namespace PoBox.Audio
             _creak.name = "Ropes";
             _creak.clip = CreakLoop();
             _twang = Twang();
+            _clack = Clack();
 
             _heart = Source2D(null);
             _heart.clip = Heartbeat();
@@ -372,6 +375,28 @@ namespace PoBox.Audio
                 raw[i] = ring * (0.55f + 0.45f * Mathf.Sin(2f * Mathf.PI * 3f * i / rate));
             }
             return Loop("Creak", raw, rate, fade);
+        }
+
+        /// <summary>The timekeeper's sticks: two pieces of hardwood struck together, a bright knock that is gone in a few hundredths of a second.</summary>
+        static AudioClip Clack()
+        {
+            const int rate = 22050, n = rate / 8;
+            var rng = new System.Random(17);
+            var data = new float[n];
+            float a = 0f, av = 0f, b = 0f, bv = 0f;
+            float wa = 2f * Mathf.PI * 1850f / rate, wb = 2f * Mathf.PI * 2930f / rate;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)rate;
+                // The strike: a two-millisecond burst of noise into two wooden resonances.
+                float hit = t < 0.002f ? (float)rng.NextDouble() * 2f - 1f : 0f;
+                av += hit * 0.5f - wa * wa * a - 0.02f * av; a += av;
+                bv += hit * 0.4f - wb * wb * b - 0.03f * bv; b += bv;
+                data[i] = (a + 0.6f * b) * Mathf.Exp(-t * 55f) * 0.9f;
+            }
+            AudioClip clip = AudioClip.Create("Clack", n, 1, rate, false);
+            clip.SetData(data, 0);
+            return clip;
         }
 
         /// <summary>A rope hit hard: a low thrum that sags in pitch as it dies, with the slap of the body on it at the front.</summary>
@@ -599,6 +624,7 @@ namespace PoBox.Audio
         {
             AudioListener.volume = Muted ? 0f : master;
             float dt = Time.unscaledDeltaTime;
+            TenSeconds();
 
             // The bed follows the excitement squared: a quiet hall most of the time, a roar when it earns one.
             float e = Excitement.Value;
@@ -958,6 +984,21 @@ namespace PoBox.Audio
         void PlayCrowd(AudioClip clip, float volume)
         {
             if (clip != null && _crowdSource != null) _crowdSource.PlayOneShot(clip, volume);
+        }
+
+        /// <summary>Ten seconds left in the round: the timekeeper knocks his sticks three times.</summary>
+        void TenSeconds()
+        {
+            Bout b = bout != null ? bout : Bout.Instance;
+            if (b == null || _clack == null) return;
+            bool ten = b.Phase == BoutPhase.Fight && b.RoundTimeLeft <= 10f && b.RoundTimeLeft > 0f;
+            if (!ten) { if (b.Phase != BoutPhase.Fight && b.Phase != BoutPhase.Count) _clacksAt = -1f; return; }
+            if (_clacksAt < 0f) { _clacksAt = Time.unscaledTime; _clacks = 0; }
+            if (_clacks < 3 && Time.unscaledTime >= _clacksAt + _clacks * 0.22f)
+            {
+                PlayRing(_clack, 0.8f);
+                _clacks++;
+            }
         }
 
         void PlayRing(AudioClip clip, float volume)

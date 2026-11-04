@@ -108,6 +108,7 @@ Shader "PoBox/Crowd"
             float _PoBoxCrowdFlash;
             float _PoBoxCrowdPhones;
             float _PoBoxCrowdSide;
+            float _PoBoxCrowdLead;
 
             struct Attributes
             {
@@ -155,16 +156,18 @@ Shader "PoBox/Crowd"
                 float side = dot(normalize(fromRing + float2(1e-4, 0)), float2(0.7071, 0.7071));
                 float blueSide = smoothstep(-0.15, 0.15, side);
                 float fan = step(hash2(v.seed * 31.7 + 4.2), 0.4);
-                // +1 when this figure's own fighter has just scored, -1 when the other has.
+                // +1 when this figure's own fighter has just scored, -1 when the other has; lead the same for who is ahead.
                 float cheer = _PoBoxCrowdSide * (blueSide * 2 - 1);
+                float lead = _PoBoxCrowdLead * (blueSide * 2 - 1);
 
                 float mood = saturate(_PoBoxCrowdMood);
-                float burst = saturate(_PoBoxCrowdBurst) * (1.0 + 0.5 * cheer * fan);
+                // The scorer's half is on its feet; the other half stays down (owner 2026-11-03: the sides should be seen to take sides).
+                float burst = saturate(_PoBoxCrowdBurst) * saturate(1.0 + 0.9 * cheer) * (1.0 + 0.5 * fan * max(cheer, 0));
                 float phase = v.seed.x * 6.2831853;
                 float energy = 0.4 + 0.6 * v.seed.y;
                 float t = _Time.y;
                 float bob = sin(t * 1.7 + phase) * 0.015 * (0.3 + mood);
-                float bounce = max(0, sin(t * (4.0 + 2.0 * mood) + phase)) * 0.10 * mood * energy;
+                float bounce = max(0, sin(t * (4.0 + 2.0 * mood) + phase)) * 0.10 * mood * energy * (1.0 + 0.6 * lead);
                 float jump = max(0, sin(t * 9.0 + phase)) * 0.30 * burst * energy;
                 float lean = sin(t * 1.3 + phase * 1.7) * 0.05 * (0.2 + mood);
 
@@ -201,7 +204,7 @@ Shader "PoBox/Crowd"
                 float view = abs(nose) < 0.34 ? 0 : (nose > 0 ? 2 : 1); // 0 front, 1 nose-left, 2 nose-right (40 deg renders; 0.34 = sin 20)
 
                 // Pose: seated unless this figure is up. Each has its own threshold, so the hall rises in a wave.
-                float stand = step(hash2(v.seed * 7.1) * 0.8 + 0.1, max(mood * energy * 0.6, burst));
+                float stand = step(hash2(v.seed * 7.1) * 0.8 + 0.1, max(mood * energy * 0.6 + 0.35 * max(lead, 0) * fan, burst));
                 float row = phone > 0.5 ? (view == 0 ? 6 : 7) : (stand > 0.5 ? 3 : 0) + view;
                 float mirror = (phone > 0.5 && view == 1) ? 1 : 0;      // row 7 is nose-right only
                 stand = max(stand, phone);

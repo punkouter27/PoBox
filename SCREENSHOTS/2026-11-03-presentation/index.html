@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>PoBox: the bout's presentation, 3 November 2026</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:1100px;margin:24px auto;padding:0 16px;color:#222}
+.pair{display:flex;gap:16px;align-items:flex-start;margin:12px 0 28px}
+figure{margin:0;flex:1}img{width:100%;max-width:320px;border:1px solid #ccc;display:block}
+figcaption{font-size:13px;color:#444;margin-top:6px}.chg{background:#fff3c4;padding:1px 4px;border-radius:3px}
+h2{margin-top:32px}
+</style></head><body>
+<h1>The bout's presentation: what changed (3 November 2026)</h1>
+<p>Owner's requests: every stoppage a count of ten; boxers sitting in their corners between rounds; the winner's arm up;
+a beaten boxer trying slowly to get up; then ten presentation ideas, all done; and the referee and ring-card walker as
+trained physics bodies. Changes are <span class="chg">marked</span>. Screenshots are the game's 1080 x 1920 capture.</p>
+
+<h2>The end of a bout</h2>
+<div class="pair">
+<figure><img src="before_result_frozen.png"><figcaption><b>Before</b> (phone, build 261103 first install): the third
+knockdown ended the bout the instant it was called and the ring froze, the loser still upright. (The purple was a stale
+Android shader build, fixed by the rebuild.)</figcaption></figure>
+<figure><img src="after_ko_getup.png"><figcaption><b>After</b>: <span class="chg">counted out at ten</span>; the winner's
+<span class="chg">gloves go up</span> and the loser <span class="chg">goes on trying to get up at 60% strength</span>
+while the result is shown.</figcaption></figure>
+<figure><img src="after_referee_result.png"><figcaption><span class="chg">The referee</span> stands by the winner with his
+arm up; <span class="chg">the announcer</span> says how it was won ("by knockout", "by split decision").</figcaption></figure>
+</div>
+
+<h2>Between rounds</h2>
+<div class="pair">
+<figure><img src="after_stool.png"><figcaption>At the bell each boxer <span class="chg">walks back to its corner on its
+own footwork brain</span> and <span class="chg">sits on the stool</span>; the break is 12 s and the cameras take each
+corner in turn.</figcaption></figure>
+<figure><img src="after_break_card.png"><figcaption>The break card: <span class="chg">head / body split</span> and
+<span class="chg">punch of the round</span>; the <span class="chg">ring-card walker</span> crosses with "ROUND 2", the
+referee waits in a neutral corner, <span class="chg">cornermen</span> in the corners' colours.</figcaption></figure>
+</div>
+
+<h2>During the fight</h2>
+<div class="pair">
+<figure><img src="after_count.png"><figcaption>A count: the referee stands over the boxer down and counts with his arm.
+Crowd: <span class="chg">camera flashes one in eighty</span> (was one in twelve), the scorer's half of the hall on its
+feet, the leader's fans standing more; the timekeeper's <span class="chg">ten-second clapper</span>.</figcaption></figure>
+<figure><img src="after_replay_belt.png"><figcaption>After a knockout the punch is <span class="chg">replayed by itself</span>;
+the top-ranked boxer <span class="chg">wears the championship belt</span>; a bad head bruise <span class="chg">bleeds</span>.</figcaption></figure>
+<figure><img src="after_physics_crew.png"><figcaption>The referee and the walker are now <span class="chg">MuJoCo bodies with
+trained footwork brains</span> (models/crew, 0 differences from the trainer), on a collision layer that never meets a
+boxer; their brains were in training when this was taken.</figcaption></figure>
+</div>
+<p>Tests with these changes: StateFlow 2/2, OneScreen 74/74 (incl. the layout audit), MjGate 24/24, MjParity 3/3.</p>
+</body></html>

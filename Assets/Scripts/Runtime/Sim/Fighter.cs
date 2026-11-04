@@ -647,7 +647,10 @@ namespace PoBox.Sim
 
             // On the canvas without having been put there by a rule: a trip, a shove into the ropes, legs
             // that were too weak to hold. If a punch landed just before, the punch gets the credit.
-            if (PelvisHeight < standingPelvisHeight * 0.6f || Upright < 0.4f)
+            // Held in a pose (sat on its stool, its gloves up) it is where the bout put it, not fallen; and the walk back to
+            // the corner is not the fight (a stumble there is the brain's to deal with: it sits the boxer down).
+            bool counts = !ring.Held(boxer) && !(Bout.Instance != null && Bout.Instance.Phase == BoutPhase.RoundBreak);
+            if (counts && (PelvisHeight < standingPelvisHeight * 0.6f || Upright < 0.4f))
             {
                 _lowTime += dt;
                 if (_lowTime > 0.4f)

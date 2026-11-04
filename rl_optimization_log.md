@@ -1776,3 +1776,20 @@ solver is not bit-repeatable even old against old).
   pressure still FAIL (Matt). **In the game:** against Sokol 92 thrown, 73 landed (was 2/0), against Nick a TKO win in
   R1 (3 knockdowns). Parity 3/3, gate 24/24. **Zombie promoted on v3** (v3f footwork, v3m6 boxing, v3u4 get-up).
   Report: `DOCS/reports/2026-11-03-zombie-punching.html`.
+
+## 2026-11-03 22:20, overnight 2: the crew's footwork, then punching under pressure
+
+- **Crew bodies** (owner: "use rl training for ringcard girl and referee"): rigs from the stylised figures
+  (`glb_to_rig.py` on Assets/Art/Exports/GLB/SK_Referee, SK_RingCardWalker), built the v3 way by the new
+  `tools/build_crew.py` (human force, per-joint action, de Leva masses, damping standing, Nick's rules of a living body)
+  into `models/crew`, with their own rest pose (`rig_to_mjcf.py` "stance_deg": the referee's arms hanging, the walker's
+  right arm up with the card). The walker's thighs were 7 mm inside her torso in every pose: thigh radius 0.0735 -> 0.065.
+  Both clear the self-contact check; Unity compiles both with 0 differences from the trainer.
+- `crewf1_referee` (from v3f_sokol) and `crewf1_cardwalker` (from v3f_nick): footwork, 1 h each, then footwork_c exams.
+- **exam_v3r_all** (rounds 2, new "under pressure" line): 0 of 8 pass. The hardest opponent is Matt for six of them: his
+  v3m4 brain lands 0.18/s and keeps away, so nobody lands on him either. Attack fails for Trump (0.03/s), Matt (0.18),
+  Kim (0.39), Grandma (0.35), Grandpa (0.22); footing for Kim, Grandma, Grandpa.
+- Queued: `v3p1_matt`, `v3p1_trump`, `v3p1_kim` (v3m6_zombie's recipe: hit_w 2.2, taken_w 0.7, block_w 0.25,
+  --lr-max 6e-5, 1 h; each boxer's opponents it landed under 0.25/s on drawn 3x), then their exams.
+- Not queued: Grandma's and Grandpa's get-up. v3u5 ended with the helping hand stuck at 22-24% and 0% unaided: more of the
+  same will not do it; strength (their "age") or getting up off the ropes is the owner's call.

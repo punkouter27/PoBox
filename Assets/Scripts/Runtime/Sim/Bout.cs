@@ -50,7 +50,7 @@ namespace PoBox.Sim
         [Tooltip("Seconds the referee looks a boxer over once they are back up, the other still held in its guard and the count still showing, before the fight goes on. Gives a boxer who got up the moment to settle and turn to the other (where most falls after a get-up came from). Down again in that time: the count goes on from where it stood. 0 = box on at once.")]
         public float refereeCheckSeconds = 2f;
         [Tooltip("Real seconds between the end of one round and the start of the next.")]
-        public float breakSeconds = 10f;
+        public float breakSeconds = 12f;
         [Tooltip("Real seconds the results stay up before the next bout starts on its own.")]
         public float resultsSeconds = 18f;
         [Tooltip("On: the next bout starts on its own after resultsSeconds. Off (the game, 2026-10-31): the result card waits for MENU.")]
@@ -202,8 +202,9 @@ namespace PoBox.Sim
             _phaseAge = 0f;
             _phaseTimer = 0f;
 
-            // The results run too: the winner holds its gloves up and a loser on the canvas tries to rise.
-            bool run = next == BoutPhase.Intro || next == BoutPhase.Fight || next == BoutPhase.Count || next == BoutPhase.Results;
+            // The break and the results run too: the walk back to the corners, the winner's gloves held up and a
+            // loser on the canvas trying to rise.
+            bool run = next != BoutPhase.WalkOn;
             // MuJoCo steps only while this is set, which is what freezes the ring between rounds.
             SimRunning = run;
             if (red != null && red.ring != null) red.ring.running = run;
@@ -362,14 +363,14 @@ namespace PoBox.Sim
             }
             SimBus.Say($"End of round {Round}. The cards: {CardsText()}", 2);
             SetPhase(BoutPhase.RoundBreak);
-            // The minute on the stools: each sits in its own corner, facing the ring.
-            Sit(red, redSeat != null ? redSeat : redStool);
-            Sit(blue, blueSeat != null ? blueSeat : blueStool);
+            // The minute on the stools: each walks back to its own corner and sits, facing the ring.
+            ToCorner(red, redSeat != null ? redSeat : redStool);
+            ToCorner(blue, blueSeat != null ? blueSeat : blueStool);
         }
 
-        static void Sit(Fighter f, Transform stool)
+        static void ToCorner(Fighter f, Transform stool)
         {
-            if (f != null && stool != null && f.TryGetComponent(out MjBrain brain)) brain.Sit(stool.position);
+            if (f != null && stool != null && f.TryGetComponent(out MjBrain brain)) brain.GoToCorner(stool.position);
         }
 
         void Finish(Fighter winner, string method, bool knockout)

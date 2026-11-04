@@ -56,13 +56,17 @@ namespace PoBox.Sim
 
         /// <summary>Coming out of the corner on the footwork policy (a free-for-all's opening): walking, or squaring up. Not yet boxing.</summary>
         public bool Walking => _out != Out.None;
-        enum Out { None, Walk, Square }
+        enum Out { None, Walk, Square, Corner, Seated }
         Out _out;
         float _squareFor;
         Fighter _aimedAt;
         ModelAsset _footwork;
         [Tooltip("Squaring up after the walk: the match policy takes the body once it faces its opponent this closely (radians) and moves this slowly (m/s), as a training episode starts.")]
         public float squareFacing = 0.26f, squareSpeed = 0.3f;
+        [Tooltip("At the bell: the walk back to the corner on the footwork policy, m/s, and the longest it may take before the boxer is sat down on its stool anyway, seconds.")]
+        public float cornerSpeed = 0.8f, cornerSeconds = 8f;
+        Vector3 _seat, _front;
+        float _toCorner;
 
         /// <summary>
         /// Walks straight ahead at a speed (m/s, the footwork policy's 0.3 to 1.0) on the policy taught to walk on
@@ -173,12 +177,52 @@ namespace PoBox.Sim
         /// <summary>Called when the fighter is stood back up: the policy starts from a clean slate, as an episode does.</summary>
         public void ResetBrain() => BackToTheBout();
 
+        /// <summary>
+        /// The bell: back to the corner on the footwork policy, turning to a spot just in front of the stool and walking
+        /// there, then sat down on it (Sit). Down, or too long about it, it is sat there anyway.
+        /// </summary>
+        public void GoToCorner(Vector3 stool)
+        {
+            _seat = stool;
+            Vector3 middle = new Vector3(ring.centre.x, stool.y, ring.centre.y) - stool;
+            _front = stool + (middle.sqrMagnitude > 0.01f ? middle.normalized : Vector3.zero) * 0.55f;
+            _holding = _releaseNext = false;
+            if (_footwork == null || fighter.IsDown) { Sit(stool); return; }
+            _out = Out.Corner;
+            _toCorner = 0f;
+            boxer.SetPolicy(_footwork);
+            boxer.SetSpeedShare(1.0);
+            boxer.SetEpisodeAt(MjBoxer.Turn, 0, 0, 0, _front.x, _front.z);
+        }
+
+        void Cornering()
+        {
+            _toCorner += Time.fixedDeltaTime;
+            Vector3 to = _front - fighter.pelvis.transform.position;
+            to.y = 0f;
+            // Arrived, too long about it, or stumbling: sat down.
+            bool stumbling = fighter.PelvisHeight < fighter.standingPelvisHeight * 0.7f || fighter.Upright < 0.6f;
+            if (to.magnitude < 0.35f || _toCorner > cornerSeconds || fighter.IsDown || stumbling) { Sit(_seat); return; }
+            // The bell gives a boxer its legs back for the walk: full strength, whatever the round took.
+            boxer.DriveScale = 1.0;
+            float error = Mathf.Abs(Vector3.SignedAngle(boxer.Forward, to, Vector3.up)) * Mathf.Deg2Rad;
+            // Turned to the spot, walk; off it by more than a third of a right angle, turn to it again.
+            if (boxer.Kind == MjBoxer.Turn)
+            {
+                boxer.Opp[0] = _front.x;
+                boxer.Opp[1] = _front.z;
+                if (error < 0.25f) boxer.SetEpisodeAt(MjBoxer.Walk, cornerSpeed, 0, 0, 0, 0);
+            }
+            else if (error > 0.6f) boxer.SetEpisodeAt(MjBoxer.Turn, 0, 0, 0, _front.x, _front.z);
+        }
+
         /// <summary>The minute between rounds: sat on the stool at this spot, facing the middle of the ring, until the bout places it again.</summary>
         public void Sit(Vector3 stool)
         {
             Vector3 facing = new Vector3(ring.centre.x - stool.x, 0f, ring.centre.y - stool.z);
             ring.HoldPose(boxer, stool, facing, boxer.Pose(MjBoxer.Sitting));
             _holding = _releaseNext = false;
+            _out = Out.Seated;
         }
 
         void BackToTheBout()
@@ -203,6 +247,8 @@ namespace PoBox.Sim
             ring.SetDown(boxer, fighter.IsDown);
             ring.SetRising(boxer, fighter.IsDown && fighter.IsRising);
             if (!Bout.SimRunning) return;
+            if (_out == Out.Corner) { Cornering(); return; }
+            if (_out == Out.Seated) return;
             if (_out == Out.Square) Squaring();
 
             Fighter them = fighter.opponent;

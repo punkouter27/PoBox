@@ -495,6 +495,8 @@ Label { margin: 0; padding: 0; }
     border-radius: var(--radius);
 }
 .break-title { font-size: var(--t-title); -unity-font-style: bold; -unity-text-align: middle-center; letter-spacing: 2px; }
+.stat-word { letter-spacing: 1px; -unity-text-align: middle-center; }
+.break-best { font-size: var(--t-small); -unity-text-align: middle-center; color: var(--ink); margin-top: var(--gap-2); white-space: normal; }
 
 .pip {
     position: absolute;

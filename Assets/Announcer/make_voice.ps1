@@ -20,6 +20,10 @@ $phrases = [ordered]@{
     winner      = "And the winner is!"
     draw        = "It is a draw!"
     down        = "Down!"
+    by_ko       = "By knockout!"
+    by_unanimous = "By unanimous decision!"
+    by_split    = "By split decision!"
+    by_majority = "By majority decision!"
 }
 $names = [ordered]@{
     matt    = "Matt!"
@@ -28,6 +32,8 @@ $names = [ordered]@{
     grandma = "Grandma!"
     grandpa = "Grandpa!"
     nick    = "Nick!"
+    kim     = "Kim!"
+    sokol   = "Sokol!"
     lilmatt = "Little Matt!"
 }
 

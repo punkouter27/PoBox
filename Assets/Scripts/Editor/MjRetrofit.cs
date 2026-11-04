@@ -30,8 +30,15 @@ namespace PoBox.EditorTools
         // the owner's word, at five of six lines: carrying on 84%). Their brains were trained on that body and fall in
         // the old one; the rest stay on v2 until theirs pass.
         static readonly HashSet<string> OnV3 = new HashSet<string> { "sokol", "nick", "zombie" };
-        static string ModelsOf(string name) => OnV3.Contains(name) ? "training/models/v3" : Models;
-        static string RigsOf(string name) => OnV3.Contains(name) ? "training/rigs/v3" : Rigs;
+        // The ring's people who are not boxers (2026-11-03): their own bodies (training/tools/build_crew.py), meshes and folder.
+        static readonly Dictionary<string, string> Crew = new Dictionary<string, string>
+        {
+            { "referee", "Assets/Art/Exports/GLB/SK_Referee.glb" }, { "cardwalker", "Assets/Art/Exports/GLB/SK_RingCardWalker.glb" },
+        };
+        const string CrewDir = "Assets/Crew";
+        static string ModelsOf(string name) => Crew.ContainsKey(name) ? "training/models/crew" : OnV3.Contains(name) ? "training/models/v3" : Models;
+        static string RigsOf(string name) => Crew.ContainsKey(name) ? "training/rigs/crew" : OnV3.Contains(name) ? "training/rigs/v3" : Rigs;
+        static string DirOf(string name) => $"{(Crew.ContainsKey(name) ? CrewDir : BoxersDir)}/{Title(name)}";
 
         static string Title(string name) => char.ToUpperInvariant(name[0]) + name.Substring(1);
 
@@ -107,6 +114,7 @@ namespace PoBox.EditorTools
         /// <summary>The owner's mesh for a boxer, Assets/Models/NAME.glb (or .fbx).</summary>
         static GameObject Mesh(string name)
         {
+            if (Crew.TryGetValue(name, out string crewMesh)) return AssetDatabase.LoadAssetAtPath<GameObject>(crewMesh);
             foreach (string ext in new[] { ".glb", ".fbx" })
             {
                 var go = AssetDatabase.LoadAssetAtPath<GameObject>($"Assets/Models/{Title(name)}{ext}");
@@ -190,7 +198,7 @@ namespace PoBox.EditorTools
         /// </summary>
         public static string BuildBoxer(string name)
         {
-            string title = Title(name), dir = $"{BoxersDir}/{title}";
+            string title = Title(name), dir = DirOf(name);
             Directory.CreateDirectory(dir);
             var imported = Import(name);
 
@@ -366,6 +374,39 @@ namespace PoBox.EditorTools
 
         public static string BuildAllCorners() => string.Join("\n", Boxers().Select(BuildCorners));
 
+        /// <summary>
+        /// One of the crew (referee, cardwalker) made ready for the ring: Assets/Crew/NAME/NAME Ring.prefab, a variant of its
+        /// prefab (BuildBoxer) with its objects named with its own prefix (r_, w_: never a boxer's a_ to h_), the MjCrew
+        /// that steps it and the game's part that tells it what to do (Fx/Referee, Fx/RingCardWalker). Its glove spheres
+        /// are not drawn. Its brain is the footwork policy promoted onto the prefab (Promote).
+        /// </summary>
+        public static string BuildCrew(string name, string prefix)
+        {
+            string title = Title(name), dir = DirOf(name);
+            var basePrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{dir}/{title}.prefab");
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(basePrefab);
+            go.name = $"{title} Ring";
+            foreach (Transform t in go.GetComponentsInChildren<Transform>(true))
+                if (t.name.StartsWith("a_")) t.name = prefix + t.name.Substring(2);
+            foreach (MjExclude e in go.GetComponentsInChildren<MjExclude>(true))
+                if (!e.name.StartsWith(prefix)) e.name = prefix + e.name;
+            var mj = go.GetComponent<MjBoxer>();
+            mj.prefix = prefix;
+            var crew = go.AddComponent<MjCrew>();
+            crew.body = mj;
+            foreach (string hand in new[] { "glove_l", "glove_r" })
+            {
+                var r = go.transform.FindDeep(prefix + hand)?.GetComponent<MeshRenderer>();
+                if (r != null) r.enabled = false;
+            }
+            if (name == "referee") go.AddComponent<Referee>().crew = crew;
+            else go.AddComponent<RingCardWalker>().crew = crew;
+            string path = $"{dir}/{title} Ring.prefab";
+            PrefabUtility.SaveAsPrefabAsset(go, path);
+            Object.DestroyImmediate(go);
+            return $"{title}: {path}, prefix {prefix}";
+        }
+
         /// <summary>What the fight does to a boxer, drawn on its own mesh: a second skinned renderer over each of the mesh's, sharing its bones.</summary>
         static Renderer[] Overlays(Renderer[] renderers, Material overlay)
         {
@@ -415,7 +456,7 @@ namespace PoBox.EditorTools
         /// </summary>
         public static string Promote(string name, string run)
         {
-            string title = Title(name), dir = $"{BoxersDir}/{title}", from = $"training/checkpoints/{run}";
+            string title = Title(name), dir = DirOf(name), from = $"training/checkpoints/{run}";
             var policy = Copy<ModelAsset>($"{from}/latest.onnx", $"{dir}/policy.onnx");
             // The body's config goes with it: the rules a policy was trained under (speed limit, fatigue) are in there.
             Copy<TextAsset>($"{ModelsOf(name)}/{name}_policy_config.json", $"{dir}/config.json");

@@ -233,14 +233,16 @@ namespace PoBox.Fx
             }
 
             if (overlayRenderers.Length == 0) return;
-            // Where each mark is now: xyz in the world, w how bad it is. Unused slots are zeroed.
+            // Where each mark is now: xyz in the world, w how bad it is, plus 1 on the head (where a bad one bleeds).
+            // Unused slots are zeroed. The rigs have no head body (it is the torso's), so the head is by height.
             int count = Mathf.Min(fighter.bruises.Count, _marks.Length);
+            float headFrom = fighter.HeadPosition.y - 0.12f;
             for (int i = 0; i < _marks.Length; i++)
             {
                 if (i >= count || fighter.bruises[i].bone == null) { _marks[i] = Vector4.zero; continue; }
                 Fighter.Bruise b = fighter.bruises[i];
                 Vector3 w = b.bone.TransformPoint(b.local);
-                _marks[i] = new Vector4(w.x, w.y, w.z, b.amount);
+                _marks[i] = new Vector4(w.x, w.y, w.z, b.amount + (w.y > headFrom ? 1f : 0f));
             }
             _block.Clear();
             _block.SetFloat(BruiseId, 0f);

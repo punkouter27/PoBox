@@ -89,7 +89,6 @@ MonoBehaviour:
   introHeight: 1.7
   awayHeight: 8
   ceilingHeight: 9
-  travelSeconds: 0.7
   arriveSeconds: 1.1
   lingerSeconds: 0.9
   winnerLingerSeconds: 2.5
@@ -97,7 +96,6 @@ MonoBehaviour:
   openDegrees: 24
   upperShare: 0.3
   syllablesPerSecond: 5.5
-  secondsPerCharacter: 0.055
   loudnessForOpen: 0.16
   jawSmoothSeconds: 0.07
   speakAloud: 1
@@ -116,6 +114,12 @@ MonoBehaviour:
   - winner
   - zombie
   - trump
+  - kim
+  - sokol
+  - by_ko
+  - by_unanimous
+  - by_split
+  - by_majority
   clips:
   - {fileID: 8300000, guid: b9cdf217da164a64ea452bd2abe6a02b, type: 3}
   - {fileID: 8300000, guid: 5cf5c94c92c58f846b8ed13982651f4a, type: 3}
@@ -131,6 +135,12 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 022e49765185f524081b15fbdcce2b53, type: 3}
   - {fileID: 8300000, guid: 5a42b7fa85089a443a635932c3785b8b, type: 3}
   - {fileID: 8300000, guid: c782b751b4889b54c9d07e93dcbe9502, type: 3}
+  - {fileID: 8300000, guid: 8e12613d845245d4e85fd025ec7174f5, type: 3}
+  - {fileID: 8300000, guid: 081b309bc891e6343a6f824e396bba92, type: 3}
+  - {fileID: 8300000, guid: 8b974da7b647f4f41a160479948d6ad9, type: 3}
+  - {fileID: 8300000, guid: 5775ac788632182419ac8d2ba4132870, type: 3}
+  - {fileID: 8300000, guid: 4e11633612025194ba72c996068c51ba, type: 3}
+  - {fileID: 8300000, guid: 918128487988b524cb0375cdfd5110be, type: 3}
 --- !u!82 &7990334006982751925
 AudioSource:
   m_ObjectHideFlags: 0

@@ -170,6 +170,15 @@
                         <ui:Label name="break-centre-blue" class="stat-val stat-val--r" text="50%" picking-mode="Ignore" />
                     </ui:VisualElement>
                 </ui:VisualElement>
+                <!-- Where the round's clean punches landed, head and body, and the hardest of them (HudView.FillBreak). -->
+                <ui:VisualElement class="chips" picking-mode="Ignore">
+                    <ui:VisualElement class="stat" picking-mode="Ignore">
+                        <ui:Label name="break-split-red" class="stat-val stat-val--l" text="0 / 0" picking-mode="Ignore" />
+                        <ui:Label class="label-micro stat-word" text="HEAD / BODY" picking-mode="Ignore" />
+                        <ui:Label name="break-split-blue" class="stat-val stat-val--r" text="0 / 0" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:Label name="break-best" class="break-best" text="" picking-mode="Ignore" />
                 <!-- The win probability so far, red's up, blue's down (WinLine.cs). -->
                 <PoBox.UI.WinLine name="break-winline" class="winline" />
             </ui:VisualElement>

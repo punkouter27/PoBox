@@ -1,0 +1,466 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &3756102536824925001
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3281382943854789, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_abdomen_z
+      objectReference: {fileID: 0}
+    - target: {fileID: 115257303319228532, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_elbow_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 147406140422714987, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_elbow_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 191616212590697899, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_hip_x_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 513346935958933982, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_hip_x_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 515161955744571997, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_forearm_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 828644203386633693, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_shoulder_x_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 830770748833710470, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_hip_y_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 832079526389566124, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_abdomen_y
+      objectReference: {fileID: 0}
+    - target: {fileID: 858384532775365234, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_thigh_l_geom
+      objectReference: {fileID: 0}
+    - target: {fileID: 1101813286506666449, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_thigh_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 1151884585532702317, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_shin_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 1223641359785608359, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_elbow_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 1525932930409226739, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_knee_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 1624191378109215436, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_ankle_x_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 1807379838414065269, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_ankle_x_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 1813179105913428869, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_abdomen_z
+      objectReference: {fileID: 0}
+    - target: {fileID: 1890685242991053325, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_foot_r_site
+      objectReference: {fileID: 0}
+    - target: {fileID: 1956039768134564687, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_hip_z_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 1976622327204238259, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_hip_y_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 2048827501314570747, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_ankle_x_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 2185551186874045116, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_chest_geom
+      objectReference: {fileID: 0}
+    - target: {fileID: 2236624112413111520, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_upper_arm_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 2250881714582168071, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_head_geom
+      objectReference: {fileID: 0}
+    - target: {fileID: 2263464688133610167, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_exclude_3
+      objectReference: {fileID: 0}
+    - target: {fileID: 2353146498339219713, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_hip_z_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 2692577016168760425, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_abdomen_x
+      objectReference: {fileID: 0}
+    - target: {fileID: 2753221881791289592, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_hip_y_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 3031465140886910698, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_ankle_y_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 3048175584273014145, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_ankle_x_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 3063016722966015700, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_hip_z_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 3160292992865635285, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_forearm_r_geom
+      objectReference: {fileID: 0}
+    - target: {fileID: 3536895292454856724, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_exclude_6
+      objectReference: {fileID: 0}
+    - target: {fileID: 3558035777126333770, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_shoulder_x_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 3582619256386972200, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_pelvis_up
+      objectReference: {fileID: 0}
+    - target: {fileID: 3642972627771832427, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_upper_arm_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 3713876323153196848, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_exclude_5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3777388123900938673, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_exclude_2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3826630748303959225, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_shoulder_x_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 3860347218098554256, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_exclude_9
+      objectReference: {fileID: 0}
+    - target: {fileID: 4139289624745612625, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_foot_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 4309828176664157433, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_hip_x_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 4362563304568084608, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_torso_geom
+      objectReference: {fileID: 0}
+    - target: {fileID: 4647285668963252469, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_forearm_l_geom
+      objectReference: {fileID: 0}
+    - target: {fileID: 4650863820506883895, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_hip_z_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 4687637495148723317, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_hip_y_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 4904269511262590117, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_elbow_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 5100675100874748218, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_abdomen_x
+      objectReference: {fileID: 0}
+    - target: {fileID: 5180760408527040002, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_shoulder_z_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 5229404501951947340, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_knee_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 5305146668211659045, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_ankle_y_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 5697101592107499618, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_exclude_10
+      objectReference: {fileID: 0}
+    - target: {fileID: 5780086994902234279, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_glove_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 5834764631895328689, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_foot_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 6054207101359425560, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_foot_l_geom
+      objectReference: {fileID: 0}
+    - target: {fileID: 6129923084667388045, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_hip_x_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 6139672130137475269, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_shoulder_x_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 6145279382948405846, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_foot_r_geom
+      objectReference: {fileID: 0}
+    - target: {fileID: 6244864886962904881, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_exclude_0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6353031713274222470, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_pelvis_geom
+      objectReference: {fileID: 0}
+    - target: {fileID: 6908393241525066151, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_pelvis
+      objectReference: {fileID: 0}
+    - target: {fileID: 6997647010405387379, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_glove_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 7019509313573320708, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_foot_l_site
+      objectReference: {fileID: 0}
+    - target: {fileID: 7196046487039709369, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_torso
+      objectReference: {fileID: 0}
+    - target: {fileID: 7345512116903793824, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_shin_r_geom
+      objectReference: {fileID: 0}
+    - target: {fileID: 7354733405038810601, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_exclude_1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7544181754790985733, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_ankle_y_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 7554913976193844916, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_thigh_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 7693054795700948787, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_shoulder_z_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 7844033471909724583, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_upper_arm_r_geom
+      objectReference: {fileID: 0}
+    - target: {fileID: 7846003329846108898, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_exclude_4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7847678687084185863, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_exclude_7
+      objectReference: {fileID: 0}
+    - target: {fileID: 7869187148793172388, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_shin_l_geom
+      objectReference: {fileID: 0}
+    - target: {fileID: 7887427158355774073, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_shoulder_z_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 7974431009547951489, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_ankle_y_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 8096894317872802535, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: Cardwalker Ring
+      objectReference: {fileID: 0}
+    - target: {fileID: 8313669109437706100, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_shoulder_z_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 8400037393374533733, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_shin_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 8405964517529296839, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_exclude_8
+      objectReference: {fileID: 0}
+    - target: {fileID: 8435796418112542054, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_upper_arm_l_geom
+      objectReference: {fileID: 0}
+    - target: {fileID: 8514824733548413917, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_root
+      objectReference: {fileID: 0}
+    - target: {fileID: 8653959397409435406, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: prefix
+      value: w_
+      objectReference: {fileID: 0}
+    - target: {fileID: 8739371106030843789, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_abdomen_y
+      objectReference: {fileID: 0}
+    - target: {fileID: 8818146991268930019, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_knee_l
+      objectReference: {fileID: 0}
+    - target: {fileID: 8905510405629116943, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_forearm_r
+      objectReference: {fileID: 0}
+    - target: {fileID: 9066364975890381214, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_thigh_r_geom
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161155065036726928, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161155065036726928, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161155065036726928, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161155065036726928, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161155065036726928, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161155065036726928, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161155065036726928, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161155065036726928, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161155065036726928, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9161155065036726928, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 9180341118799124554, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      propertyPath: m_Name
+      value: w_knee_l
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8096894317872802535, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2095834491801854534}
+    - targetCorrespondingSourceObject: {fileID: 8096894317872802535, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5951623621208523564}
+  m_SourcePrefab: {fileID: 100100000, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+--- !u!1 &4935286725460836782 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8096894317872802535, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+  m_PrefabInstance: {fileID: 3756102536824925001}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2095834491801854534
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4935286725460836782}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24fb43e792916a64096984936cd840f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoBox.Mj::PoBox.Mj.MjCrew
+  body: {fileID: 5492510709962671175}
+--- !u!114 &5951623621208523564
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4935286725460836782}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b87a8f66a5420246a7caebe8de647f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoBox.Runtime::PoBox.Fx.RingCardWalker
+  crew: {fileID: 2095834491801854534}
+  cards:
+  - {fileID: 2800000, guid: 8e0929fc223a33846b377a6efc2e9bce, type: 3}
+  - {fileID: 2800000, guid: 219b1da4cdf84b543a551e8c5ae4f9d6, type: 3}
+  - {fileID: 2800000, guid: 53dd2972769c344428473f3e68b268d8, type: 3}
+  - {fileID: 2800000, guid: bf925bbc9165b3b4f80b9c37de2778c4, type: 3}
+  - {fileID: 2800000, guid: 6cd7ec4fb86ba244e8a7acad5795e018, type: 3}
+  - {fileID: 2800000, guid: 8ee085c176c460641805f2f38bb89abb, type: 3}
+  - {fileID: 2800000, guid: e58b241f8a1624541a5e25a0de9ee16d, type: 3}
+  - {fileID: 2800000, guid: 0b4d4512170db1048b7f9ecdf970851b, type: 3}
+  - {fileID: 2800000, guid: 669aa210fbcc37d4898c07fd2e4896e6, type: 3}
+  - {fileID: 2800000, guid: d127b12967c680c4c9f7d15b9dbf198f, type: 3}
+  - {fileID: 2800000, guid: c8c0feecfbb07a545868c3b3a9ac3875, type: 3}
+  startAfter: 1.5
+  speed: 0.8
+  offDuty: {x: 0, y: 12}
+--- !u!114 &5492510709962671175 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8653959397409435406, guid: 51a78d7f0a9fe7f4ca699d432a0f0cd5, type: 3}
+  m_PrefabInstance: {fileID: 3756102536824925001}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4935286725460836782}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9090af764880ceb4e81c3d07bc9af681, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoBox.Mj::PoBox.Mj.MjBoxer

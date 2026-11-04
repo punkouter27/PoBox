@@ -163,8 +163,10 @@ namespace PoBox.Announcer
                         crowded |= off.magnitude < 1.3f;
                     }
                     float height = crowded ? speakHeight : introHeight;
-                    if (bout.Winner != null) Present(height, "winner", NameKey(bout.Winner));
-                    else Present(height, "draw");
+                    string how = HowKey(bout.Method);
+                    if (bout.Winner == null) Present(height, "draw");
+                    else if (how.Length > 0) Present(height, "winner", NameKey(bout.Winner), how);
+                    else Present(height, "winner", NameKey(bout.Winner));
                     _linger = winnerLingerSeconds;
                     break;
                 }
@@ -185,6 +187,17 @@ namespace PoBox.Announcer
             _lowUntil = Time.unscaledTime + lingerSeconds;
             Show(true);
             Begin(true, phrase);
+        }
+
+        /// <summary>How it was won, as the bout writes it ("KO R2 0:31", "SPLIT DECISION"): the recording that says so.</summary>
+        static string HowKey(string method)
+        {
+            if (string.IsNullOrEmpty(method)) return "";
+            if (method.StartsWith("KO") || method.StartsWith("TKO")) return "by_ko";
+            if (method.StartsWith("UNANIMOUS")) return "by_unanimous";
+            if (method.StartsWith("SPLIT")) return "by_split";
+            if (method.StartsWith("MAJORITY")) return "by_majority";
+            return "";
         }
 
         /// <summary>A boxer's recording is named after it in lower-case letters and digits: "LIL MATT" is lilmatt.</summary>
