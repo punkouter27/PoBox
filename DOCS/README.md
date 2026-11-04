@@ -84,7 +84,8 @@ Earlier in the day (Phase B):
   range 0.5): attack 0.05 -> 0.11/s, guard passes again; still short of 0.5, not promoted. Kim footing (`v3f2_kim`, fall
   penalty 30): worse (attack 0.07/s, 2.0 falls a minute); stays on v3m3.
 - **Trump promoted (owner: "promote brains")** onto the v3 body: footwork v3f_trump, boxing v3c1_trump, get-up v3u4_trump.
-  0 differences; MjParity 3/3, MjGate 24/24, StateFlow 2/2, OneScreen 74/74. Kim not promoted (no better brain than v3m3).
+  0 differences; MjParity 3/3, MjGate 24/24, StateFlow 2/2, OneScreen 74/74. Kim then moved too (owner's call): footwork v3f_kim, boxing
+  v3m3_kim, get-up v3u3_kim; 0 differences. Her boxing still falls about twice a minute in the exam.
 
 ## Overnight training: Nick passes everything, Matt gets up (2026-11-03)
 

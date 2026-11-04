@@ -1856,3 +1856,7 @@ solver is not bit-repeatable even old against old).
   (exam passes; references recorded in C MuJoCo 3.5.0: walk, falls 0% of 25, hold), boxing v3c1_trump (attack 0.11/s,
   guard, footing, getting up 59/60, carrying on pass), get-up v3u4_trump (exported to ONNX here; it had none). Check:
   0 differences. Kim not promoted: v3f2 is worse than v3m3, and her v3 stack still fails footing (2.0 falls a minute).
+- **Kim promoted (owner: "put kim on new brain")** onto the v3 body: footwork v3f_kim (exam passes; references in C
+  MuJoCo 3.5.0: walk, falls 0% of 25, hold), boxing v3m3_kim (her best v3 boxing: v3p1 and v3f2 were worse), get-up
+  v3u3_kim (exported to ONNX here). Check: 0 differences. Her boxing still fails footing in the exam (about 2 falls a
+  minute) and carrying on (49/60). Trump checked: already on his newest brains (v3f, v3c1, v3u4).
