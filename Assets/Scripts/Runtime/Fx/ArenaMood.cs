@@ -172,11 +172,11 @@ namespace PoBox.Fx
             bool interval = phase == BoutPhase.RoundBreak;
             foreach (GameObject g in breakProps)
                 if (g != null && g.activeSelf != interval) g.SetActive(interval);
-            // At the result the flashes keep coming, in bursts.
+            // At the result the flashes keep coming, now and then.
             if (phase == BoutPhase.Results && bout != null && bout.Winner != null && Time.unscaledTime >= _nextPop)
             {
-                _nextPop = Time.unscaledTime + Random.Range(0.5f, 1.3f);
-                Flash = Mathf.Max(Flash, Random.Range(0.5f, 1f));
+                _nextPop = Time.unscaledTime + Random.Range(2f, 4f);
+                Flash = Mathf.Max(Flash, Random.Range(0.3f, 0.6f));
                 _side = bout.Winner == bout.red ? -1f : 1f;
             }
 

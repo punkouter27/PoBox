@@ -168,10 +168,11 @@ Shader "PoBox/Crowd"
                 float jump = max(0, sin(t * 9.0 + phase)) * 0.30 * burst * energy;
                 float lean = sin(t * 1.3 + phase * 1.7) * 0.05 * (0.2 + mood);
 
-                // A flash is one figure in about twelve at the peak, a different twelfth every 1/14 s.
+                // A flash is one figure in about eighty at the peak, a different eightieth every 1/14 s (one in twelve read as
+                // a strobe on the phone, owner 2026-11-03).
                 float tick = floor(t * 14.0);
-                float fire = step(hash2(v.seed * 97.0 + tick * 0.618), saturate(_PoBoxCrowdFlash) * 0.085);
-                float phone = step(hash2(v.seed * 53.0 + 9.1), saturate(_PoBoxCrowdPhones) * 0.22);
+                float fire = step(hash2(v.seed * 97.0 + tick * 0.618), saturate(_PoBoxCrowdFlash) * 0.0125);
+                float phone = step(hash2(v.seed * 53.0 + 9.1), saturate(_PoBoxCrowdPhones) * 0.05);
                 o.lights = float3(fire, phone, 0.25 + 0.5 * hash2(v.seed * 11.0));
 
                 float cy = v.corner.y;
