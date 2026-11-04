@@ -1852,3 +1852,7 @@ solver is not bit-repeatable even old against old).
   pressure 0.00 against Grandma. Better than v3m5/v3p2 but not good enough to promote; kept on file. `v3f2_kim` (fall
   penalty 30): footing still 2.0 falls a minute, attack 0.07/s at 1.4 m/s (v3p1 0.42), carrying on 50/60 FAIL: the lesson
   made her worse; she stays on v3m3. Neither promoted.
+- **2026-11-04 afternoon (owner: "promote brains")** Trump moved to the v3 body (MjRetrofit OnV3): footwork v3f_trump
+  (exam passes; references recorded in C MuJoCo 3.5.0: walk, falls 0% of 25, hold), boxing v3c1_trump (attack 0.11/s,
+  guard, footing, getting up 59/60, carrying on pass), get-up v3u4_trump (exported to ONNX here; it had none). Check:
+  0 differences. Kim not promoted: v3f2 is worse than v3m3, and her v3 stack still fails footing (2.0 falls a minute).

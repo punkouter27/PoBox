@@ -67,7 +67,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 18a211d1d5956f1489ae304c82139205, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: PoBox.Runtime::PoBox.Rl.SkinBinder
+  m_EditorClassIdentifier: PoBox.Runtime::PoBox.Fx.SkinBinder
   rigRoot: {fileID: 4237545293017499928}
   skin: {fileID: 9022290350209011105}
   map:
@@ -130,7 +130,7 @@ MonoBehaviour:
     towardBody: foot_r
   skinRootEuler: {x: 0, y: 90, z: 0}
   skinScale: 0
---- !u!1 &155437978521302643
+--- !u!1 &123585763337855251
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -138,37 +138,298 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 7816630868347015447}
-  - component: {fileID: 835059343538862947}
+  - component: {fileID: 6419029112194387024}
+  - component: {fileID: 7689392237016434115}
   m_Layer: 0
-  m_Name: a_hip_y_r
+  m_Name: a_shoulder_z_l
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &7816630868347015447
+--- !u!4 &6419029112194387024
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 155437978521302643}
+  m_GameObject: {fileID: 123585763337855251}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1408479415727091232}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7689392237016434115
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 123585763337855251}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
+  Type: 2
+  Joint: {fileID: 7575861389388285745}
+  Tendon: {fileID: 0}
+  CustomParams:
+    DynType: 0
+    GainType: 0
+    BiasType: 0
+    DynPrm:
+    - 1
+    - 0
+    - 0
+    GainPrm:
+    - 1
+    - 0
+    - 0
+    BiasPrm:
+    - 0
+    - 0
+    - 0
+    Kp: 176.32
+    Kvp: 6.592
+    Kv: 1
+    CylinderTimeConst: 1
+    Area: 1
+    Diameter: 0
+    Bias:
+    - 0
+    - 0
+    - 0
+    MuscleTimeConst: {x: 0.01, y: 0.04}
+    Range: {x: 0.75, y: 1.05}
+    Force: -1
+    Scale: 200
+    LMin: 0.5
+    LMax: 1.6
+    VMax: 1.5
+    FpMax: 1.3
+    FvMax: 1.2
+  CommonParams:
+    CtrlLimited: 1
+    ForceLimited: 1
+    CtrlRange: {x: -1.9199, y: 1.9199}
+    ForceRange: {x: -110.2, y: 110.2}
+    LengthRange: {x: 0, y: 0}
+    Gear:
+    - 1
+  Control: 0
+--- !u!1 &186563488216609054
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 631000444905495138}
+  - component: {fileID: 1144663432205669424}
+  m_Layer: 0
+  m_Name: a_ankle_y_r
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &631000444905495138
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 186563488216609054}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1408479415727091232}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1144663432205669424
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 186563488216609054}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
+  Type: 2
+  Joint: {fileID: 6061380379888798553}
+  Tendon: {fileID: 0}
+  CustomParams:
+    DynType: 0
+    GainType: 0
+    BiasType: 0
+    DynPrm:
+    - 1
+    - 0
+    - 0
+    GainPrm:
+    - 1
+    - 0
+    - 0
+    BiasPrm:
+    - 0
+    - 0
+    - 0
+    Kp: 826.5
+    Kvp: 13.224
+    Kv: 1
+    CylinderTimeConst: 1
+    Area: 1
+    Diameter: 0
+    Bias:
+    - 0
+    - 0
+    - 0
+    MuscleTimeConst: {x: 0.01, y: 0.04}
+    Range: {x: 0.75, y: 1.05}
+    Force: -1
+    Scale: 200
+    LMin: 0.5
+    LMax: 1.6
+    VMax: 1.5
+    FpMax: 1.3
+    FvMax: 1.2
+  CommonParams:
+    CtrlLimited: 1
+    ForceLimited: 1
+    CtrlRange: {x: -0.3491, y: 0.8727}
+    ForceRange: {x: -48.488, y: 242.44}
+    LengthRange: {x: 0, y: 0}
+    Gear:
+    - 1
+  Control: 0
+--- !u!1 &372167954982847486
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5014009531470181363}
+  - component: {fileID: 7575861389388285745}
+  m_Layer: 0
+  m_Name: a_shoulder_z_l
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5014009531470181363
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 372167954982847486}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7989448006959634543}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7575861389388285745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 372167954982847486}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
+  RangeLower: -110
+  RangeUpper: 110
+  Configuration: 0
+  Velocity: 0
+  RawConfiguration: 0
+  Settings:
+    Armature: 0.03
+    Spring:
+      TimeConstant: 0
+      DampingRatio: 0
+      Stiffness: 0
+      Damping: 0.5
+      EquilibriumPose: 0
+    Solver:
+      Limited: 1
+      Margin: 0
+      RefLimit:
+        TimeConst: 0.02
+        DampRatio: 1
+      ImpLimit:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      FrictionLoss: 0
+      ImpFriction:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      RefFriction:
+        TimeConst: 0.02
+        DampRatio: 1
+--- !u!1 &472490785519720609
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8265898199997781315}
+  - component: {fileID: 6752776169762953003}
+  m_Layer: 0
+  m_Name: a_hip_y_l
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8265898199997781315
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 472490785519720609}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 8445277741721288838}
+  m_Father: {fileID: 6599767707678880865}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &835059343538862947
+--- !u!114 &6752776169762953003
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 155437978521302643}
+  m_GameObject: {fileID: 472490785519720609}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
@@ -209,188 +470,6 @@ MonoBehaviour:
       RefFriction:
         TimeConst: 0.02
         DampRatio: 1
---- !u!1 &372167954982847486
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 5014009531470181363}
-  - component: {fileID: 3128599562516047001}
-  m_Layer: 0
-  m_Name: a_shoulder_z_l
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &5014009531470181363
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 372167954982847486}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1408479415727091232}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3128599562516047001
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 372167954982847486}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
-  Type: 2
-  Joint: {fileID: 7604643804642392167}
-  Tendon: {fileID: 0}
-  CustomParams:
-    DynType: 0
-    GainType: 0
-    BiasType: 0
-    DynPrm:
-    - 1
-    - 0
-    - 0
-    GainPrm:
-    - 1
-    - 0
-    - 0
-    BiasPrm:
-    - 0
-    - 0
-    - 0
-    Kp: 176.32
-    Kvp: 8.816
-    Kv: 1
-    CylinderTimeConst: 1
-    Area: 1
-    Diameter: 0
-    Bias:
-    - 0
-    - 0
-    - 0
-    MuscleTimeConst: {x: 0.01, y: 0.04}
-    Range: {x: 0.75, y: 1.05}
-    Force: -1
-    Scale: 200
-    LMin: 0.5
-    LMax: 1.6
-    VMax: 1.5
-    FpMax: 1.3
-    FvMax: 1.2
-  CommonParams:
-    CtrlLimited: 1
-    ForceLimited: 1
-    CtrlRange: {x: -1.9199, y: 1.9199}
-    ForceRange: {x: -110.2, y: 110.2}
-    LengthRange: {x: 0, y: 0}
-    Gear:
-    - 1
-  Control: 0
---- !u!1 &472490785519720609
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 8265898199997781315}
-  - component: {fileID: 4209348209295197528}
-  m_Layer: 0
-  m_Name: a_hip_y_l
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &8265898199997781315
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 472490785519720609}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1408479415727091232}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4209348209295197528
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 472490785519720609}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
-  Type: 2
-  Joint: {fileID: 6050219665319203222}
-  Tendon: {fileID: 0}
-  CustomParams:
-    DynType: 0
-    GainType: 0
-    BiasType: 0
-    DynPrm:
-    - 1
-    - 0
-    - 0
-    GainPrm:
-    - 1
-    - 0
-    - 0
-    BiasPrm:
-    - 0
-    - 0
-    - 0
-    Kp: 661.2
-    Kvp: 33.06
-    Kv: 1
-    CylinderTimeConst: 1
-    Area: 1
-    Diameter: 0
-    Bias:
-    - 0
-    - 0
-    - 0
-    MuscleTimeConst: {x: 0.01, y: 0.04}
-    Range: {x: 0.75, y: 1.05}
-    Force: -1
-    Scale: 200
-    LMin: 0.5
-    LMax: 1.6
-    VMax: 1.5
-    FpMax: 1.3
-    FvMax: 1.2
-  CommonParams:
-    CtrlLimited: 1
-    ForceLimited: 1
-    CtrlRange: {x: -2.0944, y: 0.5236}
-    ForceRange: {x: -264.48, y: 264.48}
-    LengthRange: {x: 0, y: 0}
-    Gear:
-    - 1
-  Control: 0
 --- !u!1 &642747477923282839
 GameObject:
   m_ObjectHideFlags: 0
@@ -505,7 +584,7 @@ MonoBehaviour:
     Terrain: {fileID: 0}
     HeightMapExportPath: 
     UpdateLimit: 0
-  Mass: 3.0324
+  Mass: 2.9349
   Density: 1000
   Settings:
     Priority: 0
@@ -675,7 +754,7 @@ MonoBehaviour:
     Terrain: {fileID: 0}
     HeightMapExportPath: 
     UpdateLimit: 0
-  Mass: 38.4465
+  Mass: 34.9701
   Density: 1000
   Settings:
     Priority: 0
@@ -807,8 +886,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1485628621400522963}
-  - {fileID: 6300032337043488005}
+  - {fileID: 18831336107737054}
+  - {fileID: 8071015176650996994}
   - {fileID: 2709381478073380558}
   - {fileID: 2928810483081655385}
   m_Father: {fileID: 7668783123912470098}
@@ -835,7 +914,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2019103531323532803}
-  - component: {fileID: 7388534706225756778}
+  - component: {fileID: 6230913922003710522}
   m_Layer: 0
   m_Name: a_elbow_l
   m_TagString: Untagged
@@ -851,14 +930,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1149704346187388004}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1408479415727091232}
+  m_Father: {fileID: 3820205047278362977}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7388534706225756778
+--- !u!114 &6230913922003710522
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -867,56 +946,44 @@ MonoBehaviour:
   m_GameObject: {fileID: 1149704346187388004}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
-  Type: 2
-  Joint: {fileID: 2450364617185708782}
-  Tendon: {fileID: 0}
-  CustomParams:
-    DynType: 0
-    GainType: 0
-    BiasType: 0
-    DynPrm:
-    - 1
-    - 0
-    - 0
-    GainPrm:
-    - 1
-    - 0
-    - 0
-    BiasPrm:
-    - 0
-    - 0
-    - 0
-    Kp: 121.22
-    Kvp: 6.061
-    Kv: 1
-    CylinderTimeConst: 1
-    Area: 1
-    Diameter: 0
-    Bias:
-    - 0
-    - 0
-    - 0
-    MuscleTimeConst: {x: 0.01, y: 0.04}
-    Range: {x: 0.75, y: 1.05}
-    Force: -1
-    Scale: 200
-    LMin: 0.5
-    LMax: 1.6
-    VMax: 1.5
-    FpMax: 1.3
-    FvMax: 1.2
-  CommonParams:
-    CtrlLimited: 1
-    ForceLimited: 1
-    CtrlRange: {x: -2.618, y: 0}
-    ForceRange: {x: -77.14, y: 77.14}
-    LengthRange: {x: 0, y: 0}
-    Gear:
-    - 1
-  Control: 0
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
+  RangeLower: -150
+  RangeUpper: 0
+  Configuration: 0
+  Velocity: 0
+  RawConfiguration: 0
+  Settings:
+    Armature: 0.02
+    Spring:
+      TimeConstant: 0
+      DampingRatio: 0
+      Stiffness: 0
+      Damping: 0.5
+      EquilibriumPose: 0
+    Solver:
+      Limited: 1
+      Margin: 0
+      RefLimit:
+        TimeConst: 0.02
+        DampRatio: 1
+      ImpLimit:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      FrictionLoss: 0
+      ImpFriction:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      RefFriction:
+        TimeConst: 0.02
+        DampRatio: 1
 --- !u!1 &1215643553209128055
 GameObject:
   m_ObjectHideFlags: 0
@@ -926,7 +993,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9120106086590625240}
-  - component: {fileID: 3715168428297384362}
+  - component: {fileID: 9084963844903896188}
   m_Layer: 0
   m_Name: a_hip_z_l
   m_TagString: Untagged
@@ -942,14 +1009,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1215643553209128055}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1408479415727091232}
+  m_Father: {fileID: 6599767707678880865}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3715168428297384362
+--- !u!114 &9084963844903896188
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -958,56 +1025,44 @@ MonoBehaviour:
   m_GameObject: {fileID: 1215643553209128055}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
-  Type: 2
-  Joint: {fileID: 3913674502215898235}
-  Tendon: {fileID: 0}
-  CustomParams:
-    DynType: 0
-    GainType: 0
-    BiasType: 0
-    DynPrm:
-    - 1
-    - 0
-    - 0
-    GainPrm:
-    - 1
-    - 0
-    - 0
-    BiasPrm:
-    - 0
-    - 0
-    - 0
-    Kp: 661.2
-    Kvp: 33.06
-    Kv: 1
-    CylinderTimeConst: 1
-    Area: 1
-    Diameter: 0
-    Bias:
-    - 0
-    - 0
-    - 0
-    MuscleTimeConst: {x: 0.01, y: 0.04}
-    Range: {x: 0.75, y: 1.05}
-    Force: -1
-    Scale: 200
-    LMin: 0.5
-    LMax: 1.6
-    VMax: 1.5
-    FpMax: 1.3
-    FvMax: 1.2
-  CommonParams:
-    CtrlLimited: 1
-    ForceLimited: 1
-    CtrlRange: {x: -0.6109, y: 0.6109}
-    ForceRange: {x: -264.48, y: 264.48}
-    LengthRange: {x: 0, y: 0}
-    Gear:
-    - 1
-  Control: 0
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
+  RangeLower: -35
+  RangeUpper: 35
+  Configuration: 0
+  Velocity: 0
+  RawConfiguration: 0
+  Settings:
+    Armature: 0.1
+    Spring:
+      TimeConstant: 0
+      DampingRatio: 0
+      Stiffness: 0
+      Damping: 0.5
+      EquilibriumPose: 0
+    Solver:
+      Limited: 1
+      Margin: 0
+      RefLimit:
+        TimeConst: 0.02
+        DampRatio: 1
+      ImpLimit:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      FrictionLoss: 0
+      ImpFriction:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      RefFriction:
+        TimeConst: 0.02
+        DampRatio: 1
 --- !u!1 &1347479471269059089
 GameObject:
   m_ObjectHideFlags: 0
@@ -1038,8 +1093,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 3743890403931833127}
-  - {fileID: 6127928756292364965}
+  - {fileID: 3257514332431025056}
+  - {fileID: 4837224952978082925}
   - {fileID: 2439489271577242695}
   - {fileID: 341055692171346291}
   m_Father: {fileID: 5295063266681732295}
@@ -1057,6 +1112,97 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjBody
   GravityCompensation: 0
+--- !u!1 &1400186671848294368
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8395085596289897084}
+  - component: {fileID: 677727480665812294}
+  m_Layer: 0
+  m_Name: a_hip_z_r
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8395085596289897084
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1400186671848294368}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1408479415727091232}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &677727480665812294
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1400186671848294368}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
+  Type: 2
+  Joint: {fileID: 2917593834255704426}
+  Tendon: {fileID: 0}
+  CustomParams:
+    DynType: 0
+    GainType: 0
+    BiasType: 0
+    DynPrm:
+    - 1
+    - 0
+    - 0
+    GainPrm:
+    - 1
+    - 0
+    - 0
+    BiasPrm:
+    - 0
+    - 0
+    - 0
+    Kp: 661.2
+    Kvp: 13.224
+    Kv: 1
+    CylinderTimeConst: 1
+    Area: 1
+    Diameter: 0
+    Bias:
+    - 0
+    - 0
+    - 0
+    MuscleTimeConst: {x: 0.01, y: 0.04}
+    Range: {x: 0.75, y: 1.05}
+    Force: -1
+    Scale: 200
+    LMin: 0.5
+    LMax: 1.6
+    VMax: 1.5
+    FpMax: 1.3
+    FvMax: 1.2
+  CommonParams:
+    CtrlLimited: 1
+    ForceLimited: 1
+    CtrlRange: {x: -0.6109, y: 0.6109}
+    ForceRange: {x: -79.344, y: 79.344}
+    LengthRange: {x: 0, y: 0}
+    Gear:
+    - 1
+  Control: 0
 --- !u!1 &1406046788998412199
 GameObject:
   m_ObjectHideFlags: 0
@@ -1087,9 +1233,9 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1632102894777887183}
-  - {fileID: 1068593241979715830}
-  - {fileID: 6750473964083599482}
+  - {fileID: 846015987933832630}
+  - {fileID: 3322393825978703462}
+  - {fileID: 5594757589770050488}
   - {fileID: 5484519313461436886}
   - {fileID: 4769403175469703672}
   - {fileID: 1652098028827891033}
@@ -1154,6 +1300,97 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7ef627bd3075d42d886135a149a187a2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjFreeJoint
+--- !u!1 &1506758212826688031
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5052559589026541396}
+  - component: {fileID: 7672463544872317107}
+  m_Layer: 0
+  m_Name: a_hip_z_l
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5052559589026541396
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1506758212826688031}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1408479415727091232}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7672463544872317107
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1506758212826688031}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
+  Type: 2
+  Joint: {fileID: 9084963844903896188}
+  Tendon: {fileID: 0}
+  CustomParams:
+    DynType: 0
+    GainType: 0
+    BiasType: 0
+    DynPrm:
+    - 1
+    - 0
+    - 0
+    GainPrm:
+    - 1
+    - 0
+    - 0
+    BiasPrm:
+    - 0
+    - 0
+    - 0
+    Kp: 661.2
+    Kvp: 13.224
+    Kv: 1
+    CylinderTimeConst: 1
+    Area: 1
+    Diameter: 0
+    Bias:
+    - 0
+    - 0
+    - 0
+    MuscleTimeConst: {x: 0.01, y: 0.04}
+    Range: {x: 0.75, y: 1.05}
+    Force: -1
+    Scale: 200
+    LMin: 0.5
+    LMax: 1.6
+    VMax: 1.5
+    FpMax: 1.3
+    FvMax: 1.2
+  CommonParams:
+    CtrlLimited: 1
+    ForceLimited: 1
+    CtrlRange: {x: -0.6109, y: 0.6109}
+    ForceRange: {x: -79.344, y: 79.344}
+    LengthRange: {x: 0, y: 0}
+    Gear:
+    - 1
+  Control: 0
 --- !u!1 &1509125069374611523
 GameObject:
   m_ObjectHideFlags: 0
@@ -1222,7 +1459,7 @@ MonoBehaviour:
     Terrain: {fileID: 0}
     HeightMapExportPath: 
     UpdateLimit: 0
-  Mass: 6.1988
+  Mass: 4.8761
   Density: 1000
   Settings:
     Priority: 0
@@ -1333,7 +1570,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 846015987933832630}
-  - component: {fileID: 1803494085207465292}
+  - component: {fileID: 7998940797751667659}
   m_Layer: 0
   m_Name: a_abdomen_z
   m_TagString: Untagged
@@ -1349,14 +1586,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1846586527583190016}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1408479415727091232}
+  m_Father: {fileID: 5295063266681732295}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1803494085207465292
+--- !u!114 &7998940797751667659
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1365,11 +1602,260 @@ MonoBehaviour:
   m_GameObject: {fileID: 1846586527583190016}
   m_Enabled: 1
   m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
+  RangeLower: -45
+  RangeUpper: 45
+  Configuration: 0
+  Velocity: 0
+  RawConfiguration: 0
+  Settings:
+    Armature: 0.08
+    Spring:
+      TimeConstant: 0
+      DampingRatio: 0
+      Stiffness: 0
+      Damping: 0.5
+      EquilibriumPose: 0
+    Solver:
+      Limited: 1
+      Margin: 0
+      RefLimit:
+        TimeConst: 0.02
+        DampRatio: 1
+      ImpLimit:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      FrictionLoss: 0
+      ImpFriction:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      RefFriction:
+        TimeConst: 0.02
+        DampRatio: 1
+--- !u!1 &1875240018225569997
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5492026691893033588}
+  - component: {fileID: 582158554970660632}
+  m_Layer: 0
+  m_Name: a_knee_l
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5492026691893033588
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1875240018225569997}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1408479415727091232}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &582158554970660632
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1875240018225569997}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
   Type: 2
-  Joint: {fileID: 2214074669973855284}
+  Joint: {fileID: 5911589141587599705}
+  Tendon: {fileID: 0}
+  CustomParams:
+    DynType: 0
+    GainType: 0
+    BiasType: 0
+    DynPrm:
+    - 1
+    - 0
+    - 0
+    GainPrm:
+    - 1
+    - 0
+    - 0
+    BiasPrm:
+    - 0
+    - 0
+    - 0
+    Kp: 661.2
+    Kvp: 13.224
+    Kv: 1
+    CylinderTimeConst: 1
+    Area: 1
+    Diameter: 0
+    Bias:
+    - 0
+    - 0
+    - 0
+    MuscleTimeConst: {x: 0.01, y: 0.04}
+    Range: {x: 0.75, y: 1.05}
+    Force: -1
+    Scale: 200
+    LMin: 0.5
+    LMax: 1.6
+    VMax: 1.5
+    FpMax: 1.3
+    FvMax: 1.2
+  CommonParams:
+    CtrlLimited: 1
+    ForceLimited: 1
+    CtrlRange: {x: 0, y: 2.618}
+    ForceRange: {x: -286.52, y: 143.26}
+    LengthRange: {x: 0, y: 0}
+    Gear:
+    - 1
+  Control: 0
+--- !u!1 &1894386748569970025
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6985309576070150422}
+  - component: {fileID: 6061380379888798553}
+  m_Layer: 0
+  m_Name: a_ankle_y_r
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6985309576070150422
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1894386748569970025}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 250140681475029332}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6061380379888798553
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1894386748569970025}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
+  RangeLower: -20
+  RangeUpper: 50
+  Configuration: 0
+  Velocity: 0
+  RawConfiguration: 0
+  Settings:
+    Armature: 0.03
+    Spring:
+      TimeConstant: 0
+      DampingRatio: 0
+      Stiffness: 0
+      Damping: 0.5
+      EquilibriumPose: 0
+    Solver:
+      Limited: 1
+      Margin: 0
+      RefLimit:
+        TimeConst: 0.02
+        DampRatio: 1
+      ImpLimit:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      FrictionLoss: 0
+      ImpFriction:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      RefFriction:
+        TimeConst: 0.02
+        DampRatio: 1
+--- !u!1 &1931698884966400783
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6702744750134485020}
+  - component: {fileID: 534935991555303978}
+  m_Layer: 0
+  m_Name: a_abdomen_x
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6702744750134485020
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1931698884966400783}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1408479415727091232}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &534935991555303978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1931698884966400783}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
+  Type: 2
+  Joint: {fileID: 1130964927469427922}
   Tendon: {fileID: 0}
   CustomParams:
     DynType: 0
@@ -1388,7 +1874,7 @@ MonoBehaviour:
     - 0
     - 0
     Kp: 495.9
-    Kvp: 23.142
+    Kvp: 57.855
     Kv: 1
     CylinderTimeConst: 1
     Area: 1
@@ -1409,99 +1895,8 @@ MonoBehaviour:
   CommonParams:
     CtrlLimited: 1
     ForceLimited: 1
-    CtrlRange: {x: -0.7854, y: 0.7854}
+    CtrlRange: {x: -0.6109, y: 0.6109}
     ForceRange: {x: -187.34, y: 187.34}
-    LengthRange: {x: 0, y: 0}
-    Gear:
-    - 1
-  Control: 0
---- !u!1 &1894386748569970025
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6985309576070150422}
-  - component: {fileID: 8971116327189114639}
-  m_Layer: 0
-  m_Name: a_ankle_y_r
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6985309576070150422
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1894386748569970025}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1408479415727091232}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8971116327189114639
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1894386748569970025}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
-  Type: 2
-  Joint: {fileID: 6678007076566222490}
-  Tendon: {fileID: 0}
-  CustomParams:
-    DynType: 0
-    GainType: 0
-    BiasType: 0
-    DynPrm:
-    - 1
-    - 0
-    - 0
-    GainPrm:
-    - 1
-    - 0
-    - 0
-    BiasPrm:
-    - 0
-    - 0
-    - 0
-    Kp: 826.5
-    Kvp: 33.06
-    Kv: 1
-    CylinderTimeConst: 1
-    Area: 1
-    Diameter: 0
-    Bias:
-    - 0
-    - 0
-    - 0
-    MuscleTimeConst: {x: 0.01, y: 0.04}
-    Range: {x: 0.75, y: 1.05}
-    Force: -1
-    Scale: 200
-    LMin: 0.5
-    LMax: 1.6
-    VMax: 1.5
-    FpMax: 1.3
-    FvMax: 1.2
-  CommonParams:
-    CtrlLimited: 1
-    ForceLimited: 1
-    CtrlRange: {x: -0.3491, y: 0.8727}
-    ForceRange: {x: -242.44, y: 242.44}
     LengthRange: {x: 0, y: 0}
     Gear:
     - 1
@@ -1536,8 +1931,8 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 5284440663672175093}
-  - {fileID: 6811945992571645437}
+  - {fileID: 2044521915525187779}
+  - {fileID: 5014009531470181363}
   - {fileID: 614496428327659209}
   - {fileID: 3820205047278362977}
   m_Father: {fileID: 5295063266681732295}
@@ -1669,7 +2064,7 @@ MonoBehaviour:
     Terrain: {fileID: 0}
     HeightMapExportPath: 
     UpdateLimit: 0
-  Mass: 0.9328
+  Mass: 0.9436
   Density: 1000
   Settings:
     Priority: 0
@@ -1836,85 +2231,6 @@ MonoBehaviour:
     Terrain: {fileID: 0}
     HeightMapExportPath: 
     UpdateLimit: 0
---- !u!1 &2186340703373299689
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 920335940735428178}
-  - component: {fileID: 5798257609306617139}
-  m_Layer: 0
-  m_Name: a_elbow_r
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &920335940735428178
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2186340703373299689}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 341055692171346291}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5798257609306617139
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2186340703373299689}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: 0
-  RangeUpper: 150
-  Configuration: 0
-  Velocity: 0
-  RawConfiguration: 0
-  Settings:
-    Armature: 0.02
-    Spring:
-      TimeConstant: 0
-      DampingRatio: 0
-      Stiffness: 0
-      Damping: 0.5
-      EquilibriumPose: 0
-    Solver:
-      Limited: 1
-      Margin: 0
-      RefLimit:
-        TimeConst: 0.02
-        DampRatio: 1
-      ImpLimit:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      FrictionLoss: 0
-      ImpFriction:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      RefFriction:
-        TimeConst: 0.02
-        DampRatio: 1
 --- !u!1 &2273344465148035818
 GameObject:
   m_ObjectHideFlags: 0
@@ -1983,7 +2299,7 @@ MonoBehaviour:
     Terrain: {fileID: 0}
     HeightMapExportPath: 
     UpdateLimit: 0
-  Mass: 1.7328
+  Mass: 1.7545
   Density: 1000
   Settings:
     Priority: 0
@@ -2115,9 +2431,9 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1413556299379859428}
-  - {fileID: 4153830603240661317}
-  - {fileID: 5453449602220419143}
+  - {fileID: 8469889110993019211}
+  - {fileID: 9120106086590625240}
+  - {fileID: 8265898199997781315}
   - {fileID: 1047383882887745009}
   - {fileID: 7668783123912470098}
   m_Father: {fileID: 655159894640112523}
@@ -2135,85 +2451,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjBody
   GravityCompensation: 0
---- !u!1 &2501443240668785773
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6811945992571645437}
-  - component: {fileID: 7604643804642392167}
-  m_Layer: 0
-  m_Name: a_shoulder_z_l
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6811945992571645437
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2501443240668785773}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 7989448006959634543}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7604643804642392167
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2501443240668785773}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: -110
-  RangeUpper: 110
-  Configuration: 0
-  Velocity: 0
-  RawConfiguration: 0
-  Settings:
-    Armature: 0.03
-    Spring:
-      TimeConstant: 0
-      DampingRatio: 0
-      Stiffness: 0
-      Damping: 0.5
-      EquilibriumPose: 0
-    Solver:
-      Limited: 1
-      Margin: 0
-      RefLimit:
-        TimeConst: 0.02
-        DampRatio: 1
-      ImpLimit:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      FrictionLoss: 0
-      ImpFriction:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      RefFriction:
-        TimeConst: 0.02
-        DampRatio: 1
 --- !u!1 &2524747482522795509
 GameObject:
   m_ObjectHideFlags: 0
@@ -2288,7 +2525,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2044521915525187779}
-  - component: {fileID: 33939767428901099}
+  - component: {fileID: 1389499910040554341}
   m_Layer: 0
   m_Name: a_shoulder_x_l
   m_TagString: Untagged
@@ -2304,14 +2541,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2541642470191792727}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1408479415727091232}
+  m_Father: {fileID: 7989448006959634543}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &33939767428901099
+--- !u!114 &1389499910040554341
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2320,230 +2557,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 2541642470191792727}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
-  Type: 2
-  Joint: {fileID: 8528748749278617773}
-  Tendon: {fileID: 0}
-  CustomParams:
-    DynType: 0
-    GainType: 0
-    BiasType: 0
-    DynPrm:
-    - 1
-    - 0
-    - 0
-    GainPrm:
-    - 1
-    - 0
-    - 0
-    BiasPrm:
-    - 0
-    - 0
-    - 0
-    Kp: 176.32
-    Kvp: 8.816
-    Kv: 1
-    CylinderTimeConst: 1
-    Area: 1
-    Diameter: 0
-    Bias:
-    - 0
-    - 0
-    - 0
-    MuscleTimeConst: {x: 0.01, y: 0.04}
-    Range: {x: 0.75, y: 1.05}
-    Force: -1
-    Scale: 200
-    LMin: 0.5
-    LMax: 1.6
-    VMax: 1.5
-    FpMax: 1.3
-    FvMax: 1.2
-  CommonParams:
-    CtrlLimited: 1
-    ForceLimited: 1
-    CtrlRange: {x: -2.9671, y: 0.5236}
-    ForceRange: {x: -110.2, y: 110.2}
-    LengthRange: {x: 0, y: 0}
-    Gear:
-    - 1
-  Control: 0
---- !u!1 &2548903903830166990
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 250140681475029332}
-  - component: {fileID: 1494700976270239}
-  m_Layer: 0
-  m_Name: a_foot_r
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &250140681475029332
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2548903903830166990}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.3404, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 582465296353601303}
-  - {fileID: 744304953113360431}
-  - {fileID: 3853988163296609612}
-  - {fileID: 419993545323921273}
-  m_Father: {fileID: 4565938186637856001}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1494700976270239
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2548903903830166990}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4ef51a360e7c24695800e2d06f70db49, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjBody
-  GravityCompensation: 0
---- !u!1 &2621044374984033709
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1068593241979715830}
-  - component: {fileID: 1089672843332222734}
-  m_Layer: 0
-  m_Name: a_abdomen_y
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1068593241979715830
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2621044374984033709}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 5295063266681732295}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1089672843332222734
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2621044374984033709}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: -60
+  RangeLower: -170
   RangeUpper: 30
-  Configuration: 0
-  Velocity: 0
-  RawConfiguration: 0
-  Settings:
-    Armature: 0.08
-    Spring:
-      TimeConstant: 0
-      DampingRatio: 0
-      Stiffness: 0
-      Damping: 0.5
-      EquilibriumPose: 0
-    Solver:
-      Limited: 1
-      Margin: 0
-      RefLimit:
-        TimeConst: 0.02
-        DampRatio: 1
-      ImpLimit:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      FrictionLoss: 0
-      ImpFriction:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      RefFriction:
-        TimeConst: 0.02
-        DampRatio: 1
---- !u!1 &2726308881368712465
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 3743890403931833127}
-  - component: {fileID: 1142875013031166755}
-  m_Layer: 0
-  m_Name: a_shoulder_x_r
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &3743890403931833127
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2726308881368712465}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3158452917746878118}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1142875013031166755
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2726308881368712465}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: -30
-  RangeUpper: 170
   Configuration: 0
   Velocity: 0
   RawConfiguration: 0
@@ -2577,7 +2595,7 @@ MonoBehaviour:
       RefFriction:
         TimeConst: 0.02
         DampRatio: 1
---- !u!1 &2789515665145288574
+--- !u!1 &2548903903830166990
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2585,22 +2603,71 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5644323010622983949}
-  - component: {fileID: 1824103999029298207}
+  - component: {fileID: 250140681475029332}
+  - component: {fileID: 1494700976270239}
   m_Layer: 0
-  m_Name: a_ankle_x_r
+  m_Name: a_foot_r
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5644323010622983949
+--- !u!4 &250140681475029332
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2789515665145288574}
+  m_GameObject: {fileID: 2548903903830166990}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.3404, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 6985309576070150422}
+  - {fileID: 5644323010622983949}
+  - {fileID: 3853988163296609612}
+  - {fileID: 419993545323921273}
+  m_Father: {fileID: 4565938186637856001}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1494700976270239
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2548903903830166990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ef51a360e7c24695800e2d06f70db49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjBody
+  GravityCompensation: 0
+--- !u!1 &2607387595294137261
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5369004575202369913}
+  - component: {fileID: 6375630789510458365}
+  m_Layer: 0
+  m_Name: a_elbow_l
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5369004575202369913
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2607387595294137261}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -2609,20 +2676,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1408479415727091232}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1824103999029298207
+--- !u!114 &6375630789510458365
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2789515665145288574}
+  m_GameObject: {fileID: 2607387595294137261}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
   Type: 2
-  Joint: {fileID: 5900532367390446687}
+  Joint: {fileID: 6230913922003710522}
   Tendon: {fileID: 0}
   CustomParams:
     DynType: 0
@@ -2640,8 +2707,8 @@ MonoBehaviour:
     - 0
     - 0
     - 0
-    Kp: 88.16
-    Kvp: 4.408
+    Kp: 121.22
+    Kvp: 3.363
     Kv: 1
     CylinderTimeConst: 1
     Area: 1
@@ -2662,12 +2729,182 @@ MonoBehaviour:
   CommonParams:
     CtrlLimited: 1
     ForceLimited: 1
-    CtrlRange: {x: -0.4363, y: 0.4363}
-    ForceRange: {x: -66.12, y: 66.12}
+    CtrlRange: {x: -2.618, y: 0}
+    ForceRange: {x: -77.14, y: 77.14}
     LengthRange: {x: 0, y: 0}
     Gear:
     - 1
   Control: 0
+--- !u!1 &2626999076281840488
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8451444368385905618}
+  - component: {fileID: 1955890919211900370}
+  m_Layer: 0
+  m_Name: a_hip_y_l
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8451444368385905618
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2626999076281840488}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1408479415727091232}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1955890919211900370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2626999076281840488}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
+  Type: 2
+  Joint: {fileID: 6752776169762953003}
+  Tendon: {fileID: 0}
+  CustomParams:
+    DynType: 0
+    GainType: 0
+    BiasType: 0
+    DynPrm:
+    - 1
+    - 0
+    - 0
+    GainPrm:
+    - 1
+    - 0
+    - 0
+    BiasPrm:
+    - 0
+    - 0
+    - 0
+    Kp: 661.2
+    Kvp: 58.987
+    Kv: 1
+    CylinderTimeConst: 1
+    Area: 1
+    Diameter: 0
+    Bias:
+    - 0
+    - 0
+    - 0
+    MuscleTimeConst: {x: 0.01, y: 0.04}
+    Range: {x: 0.75, y: 1.05}
+    Force: -1
+    Scale: 200
+    LMin: 0.5
+    LMax: 1.6
+    VMax: 1.5
+    FpMax: 1.3
+    FvMax: 1.2
+  CommonParams:
+    CtrlLimited: 1
+    ForceLimited: 1
+    CtrlRange: {x: -2.0944, y: 0.5236}
+    ForceRange: {x: -264.48, y: 264.48}
+    LengthRange: {x: 0, y: 0}
+    Gear:
+    - 1
+  Control: 0
+--- !u!1 &2789515665145288574
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5644323010622983949}
+  - component: {fileID: 8064092258668036049}
+  m_Layer: 0
+  m_Name: a_ankle_x_r
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5644323010622983949
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2789515665145288574}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 250140681475029332}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8064092258668036049
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2789515665145288574}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
+  RangeLower: -25
+  RangeUpper: 25
+  Configuration: 0
+  Velocity: 0
+  RawConfiguration: 0
+  Settings:
+    Armature: 0.03
+    Spring:
+      TimeConstant: 0
+      DampingRatio: 0
+      Stiffness: 0
+      Damping: 0.5
+      EquilibriumPose: 0
+    Solver:
+      Limited: 1
+      Margin: 0
+      RefLimit:
+        TimeConst: 0.02
+        DampRatio: 1
+      ImpLimit:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      FrictionLoss: 0
+      ImpFriction:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      RefFriction:
+        TimeConst: 0.02
+        DampRatio: 1
 --- !u!1 &2802044780545050680
 GameObject:
   m_ObjectHideFlags: 0
@@ -2698,7 +2935,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 6333789852080896717}
+  - {fileID: 7832925718239107026}
   - {fileID: 125163747786424375}
   - {fileID: 250140681475029332}
   m_Father: {fileID: 8445277741721288838}
@@ -2784,7 +3021,7 @@ MonoBehaviour:
     Terrain: {fileID: 0}
     HeightMapExportPath: 
     UpdateLimit: 0
-  Mass: 1.5704
+  Mass: 1.4837
   Density: 1000
   Settings:
     Priority: 0
@@ -2954,7 +3191,7 @@ MonoBehaviour:
     Terrain: {fileID: 0}
     HeightMapExportPath: 
     UpdateLimit: 0
-  Mass: 1.7328
+  Mass: 1.7545
   Density: 1000
   Settings:
     Priority: 0
@@ -3056,7 +3293,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &2914383551553612085
+--- !u!1 &2964749522998927159
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3064,156 +3301,89 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1413556299379859428}
-  - component: {fileID: 2420726148597113116}
+  - component: {fileID: 3237684194698317607}
+  - component: {fileID: 8175990588181969057}
   m_Layer: 0
-  m_Name: a_hip_x_l
+  m_Name: a_ankle_x_r
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1413556299379859428
+--- !u!4 &3237684194698317607
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2914383551553612085}
+  m_GameObject: {fileID: 2964749522998927159}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 6599767707678880865}
+  m_Father: {fileID: 1408479415727091232}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2420726148597113116
+--- !u!114 &8175990588181969057
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2914383551553612085}
+  m_GameObject: {fileID: 2964749522998927159}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
+  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: -40
-  RangeUpper: 40
-  Configuration: 0
-  Velocity: 0
-  RawConfiguration: 0
-  Settings:
-    Armature: 0.1
-    Spring:
-      TimeConstant: 0
-      DampingRatio: 0
-      Stiffness: 0
-      Damping: 0.5
-      EquilibriumPose: 0
-    Solver:
-      Limited: 1
-      Margin: 0
-      RefLimit:
-        TimeConst: 0.02
-        DampRatio: 1
-      ImpLimit:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      FrictionLoss: 0
-      ImpFriction:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      RefFriction:
-        TimeConst: 0.02
-        DampRatio: 1
---- !u!1 &2928869631281260472
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1485628621400522963}
-  - component: {fileID: 2695049556299829625}
-  m_Layer: 0
-  m_Name: a_ankle_y_l
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1485628621400522963
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2928869631281260472}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 149182351961247578}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2695049556299829625
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2928869631281260472}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: -20
-  RangeUpper: 50
-  Configuration: 0
-  Velocity: 0
-  RawConfiguration: 0
-  Settings:
-    Armature: 0.03
-    Spring:
-      TimeConstant: 0
-      DampingRatio: 0
-      Stiffness: 0
-      Damping: 0.5
-      EquilibriumPose: 0
-    Solver:
-      Limited: 1
-      Margin: 0
-      RefLimit:
-        TimeConst: 0.02
-        DampRatio: 1
-      ImpLimit:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      FrictionLoss: 0
-      ImpFriction:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      RefFriction:
-        TimeConst: 0.02
-        DampRatio: 1
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
+  Type: 2
+  Joint: {fileID: 8064092258668036049}
+  Tendon: {fileID: 0}
+  CustomParams:
+    DynType: 0
+    GainType: 0
+    BiasType: 0
+    DynPrm:
+    - 1
+    - 0
+    - 0
+    GainPrm:
+    - 1
+    - 0
+    - 0
+    BiasPrm:
+    - 0
+    - 0
+    - 0
+    Kp: 88.16
+    Kvp: 1.763
+    Kv: 1
+    CylinderTimeConst: 1
+    Area: 1
+    Diameter: 0
+    Bias:
+    - 0
+    - 0
+    - 0
+    MuscleTimeConst: {x: 0.01, y: 0.04}
+    Range: {x: 0.75, y: 1.05}
+    Force: -1
+    Scale: 200
+    LMin: 0.5
+    LMax: 1.6
+    VMax: 1.5
+    FpMax: 1.3
+    FvMax: 1.2
+  CommonParams:
+    CtrlLimited: 1
+    ForceLimited: 1
+    CtrlRange: {x: -0.4363, y: 0.4363}
+    ForceRange: {x: -66.12, y: 66.12}
+    LengthRange: {x: 0, y: 0}
+    Gear:
+    - 1
+  Control: 0
 --- !u!1 &3118243440057203525
 GameObject:
   m_ObjectHideFlags: 0
@@ -3282,7 +3452,7 @@ MonoBehaviour:
     Terrain: {fileID: 0}
     HeightMapExportPath: 
     UpdateLimit: 0
-  Mass: 9.1798
+  Mass: 7.221
   Density: 1000
   Settings:
     Priority: 0
@@ -3393,7 +3563,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7832925718239107026}
-  - component: {fileID: 6379608293959012243}
+  - component: {fileID: 5967085541949228717}
   m_Layer: 0
   m_Name: a_knee_r
   m_TagString: Untagged
@@ -3409,14 +3579,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3155637048738033691}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1408479415727091232}
+  m_Father: {fileID: 4565938186637856001}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6379608293959012243
+--- !u!114 &5967085541949228717
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3425,56 +3595,44 @@ MonoBehaviour:
   m_GameObject: {fileID: 3155637048738033691}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
-  Type: 2
-  Joint: {fileID: 7602707830013754033}
-  Tendon: {fileID: 0}
-  CustomParams:
-    DynType: 0
-    GainType: 0
-    BiasType: 0
-    DynPrm:
-    - 1
-    - 0
-    - 0
-    GainPrm:
-    - 1
-    - 0
-    - 0
-    BiasPrm:
-    - 0
-    - 0
-    - 0
-    Kp: 661.2
-    Kvp: 33.06
-    Kv: 1
-    CylinderTimeConst: 1
-    Area: 1
-    Diameter: 0
-    Bias:
-    - 0
-    - 0
-    - 0
-    MuscleTimeConst: {x: 0.01, y: 0.04}
-    Range: {x: 0.75, y: 1.05}
-    Force: -1
-    Scale: 200
-    LMin: 0.5
-    LMax: 1.6
-    VMax: 1.5
-    FpMax: 1.3
-    FvMax: 1.2
-  CommonParams:
-    CtrlLimited: 1
-    ForceLimited: 1
-    CtrlRange: {x: 0, y: 2.618}
-    ForceRange: {x: -286.52, y: 286.52}
-    LengthRange: {x: 0, y: 0}
-    Gear:
-    - 1
-  Control: 0
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
+  RangeLower: 0
+  RangeUpper: 150
+  Configuration: 0
+  Velocity: 0
+  RawConfiguration: 0
+  Settings:
+    Armature: 0.1
+    Spring:
+      TimeConstant: 0
+      DampingRatio: 0
+      Stiffness: 0
+      Damping: 0.5
+      EquilibriumPose: 0
+    Solver:
+      Limited: 1
+      Margin: 0
+      RefLimit:
+        TimeConst: 0.02
+        DampRatio: 1
+      ImpLimit:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      FrictionLoss: 0
+      ImpFriction:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      RefFriction:
+        TimeConst: 0.02
+        DampRatio: 1
 --- !u!1 &3280710375223489270
 GameObject:
   m_ObjectHideFlags: 0
@@ -3484,7 +3642,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 18831336107737054}
-  - component: {fileID: 985394197744100428}
+  - component: {fileID: 3624803610225271296}
   m_Layer: 0
   m_Name: a_ankle_y_l
   m_TagString: Untagged
@@ -3500,14 +3658,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3280710375223489270}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1408479415727091232}
+  m_Father: {fileID: 149182351961247578}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &985394197744100428
+--- !u!114 &3624803610225271296
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3516,56 +3674,44 @@ MonoBehaviour:
   m_GameObject: {fileID: 3280710375223489270}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
-  Type: 2
-  Joint: {fileID: 2695049556299829625}
-  Tendon: {fileID: 0}
-  CustomParams:
-    DynType: 0
-    GainType: 0
-    BiasType: 0
-    DynPrm:
-    - 1
-    - 0
-    - 0
-    GainPrm:
-    - 1
-    - 0
-    - 0
-    BiasPrm:
-    - 0
-    - 0
-    - 0
-    Kp: 826.5
-    Kvp: 33.06
-    Kv: 1
-    CylinderTimeConst: 1
-    Area: 1
-    Diameter: 0
-    Bias:
-    - 0
-    - 0
-    - 0
-    MuscleTimeConst: {x: 0.01, y: 0.04}
-    Range: {x: 0.75, y: 1.05}
-    Force: -1
-    Scale: 200
-    LMin: 0.5
-    LMax: 1.6
-    VMax: 1.5
-    FpMax: 1.3
-    FvMax: 1.2
-  CommonParams:
-    CtrlLimited: 1
-    ForceLimited: 1
-    CtrlRange: {x: -0.3491, y: 0.8727}
-    ForceRange: {x: -242.44, y: 242.44}
-    LengthRange: {x: 0, y: 0}
-    Gear:
-    - 1
-  Control: 0
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
+  RangeLower: -20
+  RangeUpper: 50
+  Configuration: 0
+  Velocity: 0
+  RawConfiguration: 0
+  Settings:
+    Armature: 0.03
+    Spring:
+      TimeConstant: 0
+      DampingRatio: 0
+      Stiffness: 0
+      Damping: 0.5
+      EquilibriumPose: 0
+    Solver:
+      Limited: 1
+      Margin: 0
+      RefLimit:
+        TimeConst: 0.02
+        DampRatio: 1
+      ImpLimit:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      FrictionLoss: 0
+      ImpFriction:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      RefFriction:
+        TimeConst: 0.02
+        DampRatio: 1
 --- !u!1 &3347710223635398326
 GameObject:
   m_ObjectHideFlags: 0
@@ -3575,7 +3721,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5503456735814198575}
-  - component: {fileID: 1998105649129415119}
+  - component: {fileID: 5911589141587599705}
   m_Layer: 0
   m_Name: a_knee_l
   m_TagString: Untagged
@@ -3591,14 +3737,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3347710223635398326}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1408479415727091232}
+  m_Father: {fileID: 7668783123912470098}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1998105649129415119
+--- !u!114 &5911589141587599705
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3607,56 +3753,44 @@ MonoBehaviour:
   m_GameObject: {fileID: 3347710223635398326}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
-  Type: 2
-  Joint: {fileID: 8223606956210562678}
-  Tendon: {fileID: 0}
-  CustomParams:
-    DynType: 0
-    GainType: 0
-    BiasType: 0
-    DynPrm:
-    - 1
-    - 0
-    - 0
-    GainPrm:
-    - 1
-    - 0
-    - 0
-    BiasPrm:
-    - 0
-    - 0
-    - 0
-    Kp: 661.2
-    Kvp: 33.06
-    Kv: 1
-    CylinderTimeConst: 1
-    Area: 1
-    Diameter: 0
-    Bias:
-    - 0
-    - 0
-    - 0
-    MuscleTimeConst: {x: 0.01, y: 0.04}
-    Range: {x: 0.75, y: 1.05}
-    Force: -1
-    Scale: 200
-    LMin: 0.5
-    LMax: 1.6
-    VMax: 1.5
-    FpMax: 1.3
-    FvMax: 1.2
-  CommonParams:
-    CtrlLimited: 1
-    ForceLimited: 1
-    CtrlRange: {x: 0, y: 2.618}
-    ForceRange: {x: -286.52, y: 286.52}
-    LengthRange: {x: 0, y: 0}
-    Gear:
-    - 1
-  Control: 0
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
+  RangeLower: 0
+  RangeUpper: 150
+  Configuration: 0
+  Velocity: 0
+  RawConfiguration: 0
+  Settings:
+    Armature: 0.1
+    Spring:
+      TimeConstant: 0
+      DampingRatio: 0
+      Stiffness: 0
+      Damping: 0.5
+      EquilibriumPose: 0
+    Solver:
+      Limited: 1
+      Margin: 0
+      RefLimit:
+        TimeConst: 0.02
+        DampRatio: 1
+      ImpLimit:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      FrictionLoss: 0
+      ImpFriction:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      RefFriction:
+        TimeConst: 0.02
+        DampRatio: 1
 --- !u!1 &3487765336221894475
 GameObject:
   m_ObjectHideFlags: 0
@@ -3687,7 +3821,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 3017416301598728248}
+  - {fileID: 2019103531323532803}
   - {fileID: 3654115072776136654}
   - {fileID: 4960987900574233536}
   m_Father: {fileID: 7989448006959634543}
@@ -3714,7 +3848,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4837224952978082925}
-  - component: {fileID: 5154858253664587413}
+  - component: {fileID: 6442860406106217106}
   m_Layer: 0
   m_Name: a_shoulder_z_r
   m_TagString: Untagged
@@ -3730,14 +3864,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3487881661961908939}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1408479415727091232}
+  m_Father: {fileID: 3158452917746878118}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5154858253664587413
+--- !u!114 &6442860406106217106
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3746,56 +3880,44 @@ MonoBehaviour:
   m_GameObject: {fileID: 3487881661961908939}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
-  Type: 2
-  Joint: {fileID: 6393302982679334997}
-  Tendon: {fileID: 0}
-  CustomParams:
-    DynType: 0
-    GainType: 0
-    BiasType: 0
-    DynPrm:
-    - 1
-    - 0
-    - 0
-    GainPrm:
-    - 1
-    - 0
-    - 0
-    BiasPrm:
-    - 0
-    - 0
-    - 0
-    Kp: 176.32
-    Kvp: 8.816
-    Kv: 1
-    CylinderTimeConst: 1
-    Area: 1
-    Diameter: 0
-    Bias:
-    - 0
-    - 0
-    - 0
-    MuscleTimeConst: {x: 0.01, y: 0.04}
-    Range: {x: 0.75, y: 1.05}
-    Force: -1
-    Scale: 200
-    LMin: 0.5
-    LMax: 1.6
-    VMax: 1.5
-    FpMax: 1.3
-    FvMax: 1.2
-  CommonParams:
-    CtrlLimited: 1
-    ForceLimited: 1
-    CtrlRange: {x: -1.9199, y: 1.9199}
-    ForceRange: {x: -110.2, y: 110.2}
-    LengthRange: {x: 0, y: 0}
-    Gear:
-    - 1
-  Control: 0
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
+  RangeLower: -110
+  RangeUpper: 110
+  Configuration: 0
+  Velocity: 0
+  RawConfiguration: 0
+  Settings:
+    Armature: 0.03
+    Spring:
+      TimeConstant: 0
+      DampingRatio: 0
+      Stiffness: 0
+      Damping: 0.5
+      EquilibriumPose: 0
+    Solver:
+      Limited: 1
+      Margin: 0
+      RefLimit:
+        TimeConst: 0.02
+        DampRatio: 1
+      ImpLimit:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      FrictionLoss: 0
+      ImpFriction:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      RefFriction:
+        TimeConst: 0.02
+        DampRatio: 1
 --- !u!1 &3490241509532091731
 GameObject:
   m_ObjectHideFlags: 0
@@ -3842,7 +3964,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjExclude
   Body1: {fileID: 5820058274328327106}
   Body2: {fileID: 1494700976270239}
---- !u!1 &3804653087577409459
+--- !u!1 &3510218715401067207
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3850,22 +3972,22 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8190136557598964261}
-  - component: {fileID: 216258054024485569}
+  - component: {fileID: 3943195824909763445}
+  - component: {fileID: 8166816728139128516}
   m_Layer: 0
-  m_Name: a_hip_z_r
+  m_Name: a_hip_x_l
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8190136557598964261
+--- !u!4 &3943195824909763445
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3804653087577409459}
+  m_GameObject: {fileID: 3510218715401067207}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -3874,20 +3996,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1408479415727091232}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &216258054024485569
+--- !u!114 &8166816728139128516
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3804653087577409459}
+  m_GameObject: {fileID: 3510218715401067207}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
   Type: 2
-  Joint: {fileID: 8525755674524530603}
+  Joint: {fileID: 4332098106228493853}
   Tendon: {fileID: 0}
   CustomParams:
     DynType: 0
@@ -3906,7 +4028,7 @@ MonoBehaviour:
     - 0
     - 0
     Kp: 661.2
-    Kvp: 33.06
+    Kvp: 58.454
     Kv: 1
     CylinderTimeConst: 1
     Area: 1
@@ -3927,13 +4049,13 @@ MonoBehaviour:
   CommonParams:
     CtrlLimited: 1
     ForceLimited: 1
-    CtrlRange: {x: -0.6109, y: 0.6109}
+    CtrlRange: {x: -0.6981, y: 0.6981}
     ForceRange: {x: -264.48, y: 264.48}
     LengthRange: {x: 0, y: 0}
     Gear:
     - 1
   Control: 0
---- !u!1 &3850322125905792164
+--- !u!1 &3804653087577409459
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3941,37 +4063,37 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4153830603240661317}
-  - component: {fileID: 3913674502215898235}
+  - component: {fileID: 8190136557598964261}
+  - component: {fileID: 2917593834255704426}
   m_Layer: 0
-  m_Name: a_hip_z_l
+  m_Name: a_hip_z_r
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4153830603240661317
+--- !u!4 &8190136557598964261
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3850322125905792164}
+  m_GameObject: {fileID: 3804653087577409459}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 6599767707678880865}
+  m_Father: {fileID: 8445277741721288838}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3913674502215898235
+--- !u!114 &2917593834255704426
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3850322125905792164}
+  m_GameObject: {fileID: 3804653087577409459}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
@@ -4012,6 +4134,188 @@ MonoBehaviour:
       RefFriction:
         TimeConst: 0.02
         DampRatio: 1
+--- !u!1 &3874675134983391977
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3323336810963784837}
+  - component: {fileID: 6899929553930919500}
+  m_Layer: 0
+  m_Name: a_shoulder_x_r
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3323336810963784837
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3874675134983391977}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1408479415727091232}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6899929553930919500
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3874675134983391977}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
+  Type: 2
+  Joint: {fileID: 8980875942603510844}
+  Tendon: {fileID: 0}
+  CustomParams:
+    DynType: 0
+    GainType: 0
+    BiasType: 0
+    DynPrm:
+    - 1
+    - 0
+    - 0
+    GainPrm:
+    - 1
+    - 0
+    - 0
+    BiasPrm:
+    - 0
+    - 0
+    - 0
+    Kp: 176.32
+    Kvp: 3.526
+    Kv: 1
+    CylinderTimeConst: 1
+    Area: 1
+    Diameter: 0
+    Bias:
+    - 0
+    - 0
+    - 0
+    MuscleTimeConst: {x: 0.01, y: 0.04}
+    Range: {x: 0.75, y: 1.05}
+    Force: -1
+    Scale: 200
+    LMin: 0.5
+    LMax: 1.6
+    VMax: 1.5
+    FpMax: 1.3
+    FvMax: 1.2
+  CommonParams:
+    CtrlLimited: 1
+    ForceLimited: 1
+    CtrlRange: {x: -0.5236, y: 2.9671}
+    ForceRange: {x: -110.2, y: 110.2}
+    LengthRange: {x: 0, y: 0}
+    Gear:
+    - 1
+  Control: 0
+--- !u!1 &3967821196851715171
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1015605756734472747}
+  - component: {fileID: 4170616243752070587}
+  m_Layer: 0
+  m_Name: a_abdomen_z
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1015605756734472747
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3967821196851715171}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1408479415727091232}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4170616243752070587
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3967821196851715171}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
+  Type: 2
+  Joint: {fileID: 7998940797751667659}
+  Tendon: {fileID: 0}
+  CustomParams:
+    DynType: 0
+    GainType: 0
+    BiasType: 0
+    DynPrm:
+    - 1
+    - 0
+    - 0
+    GainPrm:
+    - 1
+    - 0
+    - 0
+    BiasPrm:
+    - 0
+    - 0
+    - 0
+    Kp: 495.9
+    Kvp: 16.083
+    Kv: 1
+    CylinderTimeConst: 1
+    Area: 1
+    Diameter: 0
+    Bias:
+    - 0
+    - 0
+    - 0
+    MuscleTimeConst: {x: 0.01, y: 0.04}
+    Range: {x: 0.75, y: 1.05}
+    Force: -1
+    Scale: 200
+    LMin: 0.5
+    LMax: 1.6
+    VMax: 1.5
+    FpMax: 1.3
+    FvMax: 1.2
+  CommonParams:
+    CtrlLimited: 1
+    ForceLimited: 1
+    CtrlRange: {x: -0.7854, y: 0.7854}
+    ForceRange: {x: -187.34, y: 187.34}
+    LengthRange: {x: 0, y: 0}
+    Gear:
+    - 1
+  Control: 0
 --- !u!1 &3973842715589967512
 GameObject:
   m_ObjectHideFlags: 0
@@ -4058,6 +4362,97 @@ MonoBehaviour:
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjExclude
   Body1: {fileID: 3548081265189203904}
   Body2: {fileID: 5820058274328327106}
+--- !u!1 &4091488408694472558
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 254244836596140714}
+  - component: {fileID: 8363835552648312380}
+  m_Layer: 0
+  m_Name: a_abdomen_y
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &254244836596140714
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4091488408694472558}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1408479415727091232}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8363835552648312380
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4091488408694472558}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
+  Type: 2
+  Joint: {fileID: 7484674154512429808}
+  Tendon: {fileID: 0}
+  CustomParams:
+    DynType: 0
+    GainType: 0
+    BiasType: 0
+    DynPrm:
+    - 1
+    - 0
+    - 0
+    GainPrm:
+    - 1
+    - 0
+    - 0
+    BiasPrm:
+    - 0
+    - 0
+    - 0
+    Kp: 495.9
+    Kvp: 57.855
+    Kv: 1
+    CylinderTimeConst: 1
+    Area: 1
+    Diameter: 0
+    Bias:
+    - 0
+    - 0
+    - 0
+    MuscleTimeConst: {x: 0.01, y: 0.04}
+    Range: {x: 0.75, y: 1.05}
+    Force: -1
+    Scale: 200
+    LMin: 0.5
+    LMax: 1.6
+    VMax: 1.5
+    FpMax: 1.3
+    FvMax: 1.2
+  CommonParams:
+    CtrlLimited: 1
+    ForceLimited: 1
+    CtrlRange: {x: -0.5236, y: 1.0472}
+    ForceRange: {x: -187.34, y: 187.34}
+    LengthRange: {x: 0, y: 0}
+    Gear:
+    - 1
+  Control: 0
 --- !u!1 &4204291002654398057
 GameObject:
   m_ObjectHideFlags: 0
@@ -4088,7 +4483,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1434023024516831427}
+  - {fileID: 5503456735814198575}
   - {fileID: 3870592205747418316}
   - {fileID: 149182351961247578}
   m_Father: {fileID: 6599767707678880865}
@@ -4106,85 +4501,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjBody
   GravityCompensation: 0
---- !u!1 &4301831737277833041
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 6300032337043488005}
-  - component: {fileID: 3462116078226125245}
-  m_Layer: 0
-  m_Name: a_ankle_x_l
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &6300032337043488005
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4301831737277833041}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 149182351961247578}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &3462116078226125245
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4301831737277833041}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: -25
-  RangeUpper: 25
-  Configuration: 0
-  Velocity: 0
-  RawConfiguration: 0
-  Settings:
-    Armature: 0.03
-    Spring:
-      TimeConstant: 0
-      DampingRatio: 0
-      Stiffness: 0
-      Damping: 0.5
-      EquilibriumPose: 0
-    Solver:
-      Limited: 1
-      Margin: 0
-      RefLimit:
-        TimeConst: 0.02
-        DampRatio: 1
-      ImpLimit:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      FrictionLoss: 0
-      ImpFriction:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      RefFriction:
-        TimeConst: 0.02
-        DampRatio: 1
 --- !u!1 &4302431105022389653
 GameObject:
   m_ObjectHideFlags: 0
@@ -4231,7 +4547,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjExclude
   Body1: {fileID: 3987032263912105317}
   Body2: {fileID: 6626004680984041178}
---- !u!1 &4380603444627958537
+--- !u!1 &4487877768098698273
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -4239,8 +4555,99 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5284440663672175093}
-  - component: {fileID: 8528748749278617773}
+  - component: {fileID: 1458570524303190131}
+  - component: {fileID: 246953254915752637}
+  m_Layer: 0
+  m_Name: a_elbow_r
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1458570524303190131
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4487877768098698273}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1408479415727091232}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &246953254915752637
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4487877768098698273}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
+  Type: 2
+  Joint: {fileID: 4356776495314127013}
+  Tendon: {fileID: 0}
+  CustomParams:
+    DynType: 0
+    GainType: 0
+    BiasType: 0
+    DynPrm:
+    - 1
+    - 0
+    - 0
+    GainPrm:
+    - 1
+    - 0
+    - 0
+    BiasPrm:
+    - 0
+    - 0
+    - 0
+    Kp: 121.22
+    Kvp: 3.363
+    Kv: 1
+    CylinderTimeConst: 1
+    Area: 1
+    Diameter: 0
+    Bias:
+    - 0
+    - 0
+    - 0
+    MuscleTimeConst: {x: 0.01, y: 0.04}
+    Range: {x: 0.75, y: 1.05}
+    Force: -1
+    Scale: 200
+    LMin: 0.5
+    LMax: 1.6
+    VMax: 1.5
+    FpMax: 1.3
+    FvMax: 1.2
+  CommonParams:
+    CtrlLimited: 1
+    ForceLimited: 1
+    CtrlRange: {x: 0, y: 2.618}
+    ForceRange: {x: -77.14, y: 77.14}
+    LengthRange: {x: 0, y: 0}
+    Gear:
+    - 1
+  Control: 0
+--- !u!1 &4625621113382168703
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4932474014932938917}
+  - component: {fileID: 9159953944960195864}
   m_Layer: 0
   m_Name: a_shoulder_x_l
   m_TagString: Untagged
@@ -4248,68 +4655,80 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &5284440663672175093
+--- !u!4 &4932474014932938917
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4380603444627958537}
+  m_GameObject: {fileID: 4625621113382168703}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7989448006959634543}
+  m_Father: {fileID: 1408479415727091232}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8528748749278617773
+--- !u!114 &9159953944960195864
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4380603444627958537}
+  m_GameObject: {fileID: 4625621113382168703}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
+  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: -170
-  RangeUpper: 30
-  Configuration: 0
-  Velocity: 0
-  RawConfiguration: 0
-  Settings:
-    Armature: 0.03
-    Spring:
-      TimeConstant: 0
-      DampingRatio: 0
-      Stiffness: 0
-      Damping: 0.5
-      EquilibriumPose: 0
-    Solver:
-      Limited: 1
-      Margin: 0
-      RefLimit:
-        TimeConst: 0.02
-        DampRatio: 1
-      ImpLimit:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      FrictionLoss: 0
-      ImpFriction:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      RefFriction:
-        TimeConst: 0.02
-        DampRatio: 1
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
+  Type: 2
+  Joint: {fileID: 1389499910040554341}
+  Tendon: {fileID: 0}
+  CustomParams:
+    DynType: 0
+    GainType: 0
+    BiasType: 0
+    DynPrm:
+    - 1
+    - 0
+    - 0
+    GainPrm:
+    - 1
+    - 0
+    - 0
+    BiasPrm:
+    - 0
+    - 0
+    - 0
+    Kp: 176.32
+    Kvp: 3.526
+    Kv: 1
+    CylinderTimeConst: 1
+    Area: 1
+    Diameter: 0
+    Bias:
+    - 0
+    - 0
+    - 0
+    MuscleTimeConst: {x: 0.01, y: 0.04}
+    Range: {x: 0.75, y: 1.05}
+    Force: -1
+    Scale: 200
+    LMin: 0.5
+    LMax: 1.6
+    VMax: 1.5
+    FpMax: 1.3
+    FvMax: 1.2
+  CommonParams:
+    CtrlLimited: 1
+    ForceLimited: 1
+    CtrlRange: {x: -2.9671, y: 0.5236}
+    ForceRange: {x: -110.2, y: 110.2}
+    LengthRange: {x: 0, y: 0}
+    Gear:
+    - 1
+  Control: 0
 --- !u!1 &4840953405461287756
 GameObject:
   m_ObjectHideFlags: 0
@@ -4378,7 +4797,7 @@ MonoBehaviour:
     Terrain: {fileID: 0}
     HeightMapExportPath: 
     UpdateLimit: 0
-  Mass: 1.5704
+  Mass: 1.4837
   Density: 1000
   Settings:
     Priority: 0
@@ -4480,7 +4899,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &4894826896872396008
+--- !u!1 &4930473952872330090
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -4488,37 +4907,37 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 8215892422203921695}
-  - component: {fileID: 8525755674524530603}
+  - component: {fileID: 5594757589770050488}
+  - component: {fileID: 1130964927469427922}
   m_Layer: 0
-  m_Name: a_hip_z_r
+  m_Name: a_abdomen_x
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &8215892422203921695
+--- !u!4 &5594757589770050488
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4894826896872396008}
+  m_GameObject: {fileID: 4930473952872330090}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 8445277741721288838}
+  m_Father: {fileID: 5295063266681732295}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8525755674524530603
+--- !u!114 &1130964927469427922
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4894826896872396008}
+  m_GameObject: {fileID: 4930473952872330090}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
@@ -4530,7 +4949,7 @@ MonoBehaviour:
   Velocity: 0
   RawConfiguration: 0
   Settings:
-    Armature: 0.1
+    Armature: 0.08
     Spring:
       TimeConstant: 0
       DampingRatio: 0
@@ -4559,97 +4978,6 @@ MonoBehaviour:
       RefFriction:
         TimeConst: 0.02
         DampRatio: 1
---- !u!1 &4930473952872330090
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 5594757589770050488}
-  - component: {fileID: 1628589430243264239}
-  m_Layer: 0
-  m_Name: a_abdomen_x
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &5594757589770050488
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4930473952872330090}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1408479415727091232}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1628589430243264239
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4930473952872330090}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
-  Type: 2
-  Joint: {fileID: 5001616283665531920}
-  Tendon: {fileID: 0}
-  CustomParams:
-    DynType: 0
-    GainType: 0
-    BiasType: 0
-    DynPrm:
-    - 1
-    - 0
-    - 0
-    GainPrm:
-    - 1
-    - 0
-    - 0
-    BiasPrm:
-    - 0
-    - 0
-    - 0
-    Kp: 495.9
-    Kvp: 23.142
-    Kv: 1
-    CylinderTimeConst: 1
-    Area: 1
-    Diameter: 0
-    Bias:
-    - 0
-    - 0
-    - 0
-    MuscleTimeConst: {x: 0.01, y: 0.04}
-    Range: {x: 0.75, y: 1.05}
-    Force: -1
-    Scale: 200
-    LMin: 0.5
-    LMax: 1.6
-    VMax: 1.5
-    FpMax: 1.3
-    FvMax: 1.2
-  CommonParams:
-    CtrlLimited: 1
-    ForceLimited: 1
-    CtrlRange: {x: -0.6109, y: 0.6109}
-    ForceRange: {x: -187.34, y: 187.34}
-    LengthRange: {x: 0, y: 0}
-    Gear:
-    - 1
-  Control: 0
 --- !u!1 &4958193817062927380
 GameObject:
   m_ObjectHideFlags: 0
@@ -4705,7 +5033,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8071015176650996994}
-  - component: {fileID: 840820905170685664}
+  - component: {fileID: 3708337364608859761}
   m_Layer: 0
   m_Name: a_ankle_x_l
   m_TagString: Untagged
@@ -4721,14 +5049,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5127686428516651671}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1408479415727091232}
+  m_Father: {fileID: 149182351961247578}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &840820905170685664
+--- !u!114 &3708337364608859761
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -4737,56 +5065,44 @@ MonoBehaviour:
   m_GameObject: {fileID: 5127686428516651671}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
-  Type: 2
-  Joint: {fileID: 3462116078226125245}
-  Tendon: {fileID: 0}
-  CustomParams:
-    DynType: 0
-    GainType: 0
-    BiasType: 0
-    DynPrm:
-    - 1
-    - 0
-    - 0
-    GainPrm:
-    - 1
-    - 0
-    - 0
-    BiasPrm:
-    - 0
-    - 0
-    - 0
-    Kp: 88.16
-    Kvp: 4.408
-    Kv: 1
-    CylinderTimeConst: 1
-    Area: 1
-    Diameter: 0
-    Bias:
-    - 0
-    - 0
-    - 0
-    MuscleTimeConst: {x: 0.01, y: 0.04}
-    Range: {x: 0.75, y: 1.05}
-    Force: -1
-    Scale: 200
-    LMin: 0.5
-    LMax: 1.6
-    VMax: 1.5
-    FpMax: 1.3
-    FvMax: 1.2
-  CommonParams:
-    CtrlLimited: 1
-    ForceLimited: 1
-    CtrlRange: {x: -0.4363, y: 0.4363}
-    ForceRange: {x: -66.12, y: 66.12}
-    LengthRange: {x: 0, y: 0}
-    Gear:
-    - 1
-  Control: 0
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
+  RangeLower: -25
+  RangeUpper: 25
+  Configuration: 0
+  Velocity: 0
+  RawConfiguration: 0
+  Settings:
+    Armature: 0.03
+    Spring:
+      TimeConstant: 0
+      DampingRatio: 0
+      Stiffness: 0
+      Damping: 0.5
+      EquilibriumPose: 0
+    Solver:
+      Limited: 1
+      Margin: 0
+      RefLimit:
+        TimeConst: 0.02
+        DampRatio: 1
+      ImpLimit:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      FrictionLoss: 0
+      ImpFriction:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      RefFriction:
+        TimeConst: 0.02
+        DampRatio: 1
 --- !u!1 &5169433345124038741
 GameObject:
   m_ObjectHideFlags: 0
@@ -4833,7 +5149,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjExclude
   Body1: {fileID: 4670054792744912333}
   Body2: {fileID: 3987032263912105317}
---- !u!1 &5270585067450312145
+--- !u!1 &5272679928588745651
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -4841,49 +5157,49 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 6333789852080896717}
-  - component: {fileID: 7602707830013754033}
+  - component: {fileID: 3322393825978703462}
+  - component: {fileID: 7484674154512429808}
   m_Layer: 0
-  m_Name: a_knee_r
+  m_Name: a_abdomen_y
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &6333789852080896717
+--- !u!4 &3322393825978703462
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5270585067450312145}
+  m_GameObject: {fileID: 5272679928588745651}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 4565938186637856001}
+  m_Father: {fileID: 5295063266681732295}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7602707830013754033
+--- !u!114 &7484674154512429808
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5270585067450312145}
+  m_GameObject: {fileID: 5272679928588745651}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: 0
-  RangeUpper: 150
+  RangeLower: -30
+  RangeUpper: 60
   Configuration: 0
   Velocity: 0
   RawConfiguration: 0
   Settings:
-    Armature: 0.1
+    Armature: 0.08
     Spring:
       TimeConstant: 0
       DampingRatio: 0
@@ -4912,97 +5228,6 @@ MonoBehaviour:
       RefFriction:
         TimeConst: 0.02
         DampRatio: 1
---- !u!1 &5272679928588745651
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 3322393825978703462}
-  - component: {fileID: 5979941123141516683}
-  m_Layer: 0
-  m_Name: a_abdomen_y
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &3322393825978703462
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5272679928588745651}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1408479415727091232}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5979941123141516683
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5272679928588745651}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
-  Type: 2
-  Joint: {fileID: 1089672843332222734}
-  Tendon: {fileID: 0}
-  CustomParams:
-    DynType: 0
-    GainType: 0
-    BiasType: 0
-    DynPrm:
-    - 1
-    - 0
-    - 0
-    GainPrm:
-    - 1
-    - 0
-    - 0
-    BiasPrm:
-    - 0
-    - 0
-    - 0
-    Kp: 495.9
-    Kvp: 23.142
-    Kv: 1
-    CylinderTimeConst: 1
-    Area: 1
-    Diameter: 0
-    Bias:
-    - 0
-    - 0
-    - 0
-    MuscleTimeConst: {x: 0.01, y: 0.04}
-    Range: {x: 0.75, y: 1.05}
-    Force: -1
-    Scale: 200
-    LMin: 0.5
-    LMax: 1.6
-    VMax: 1.5
-    FpMax: 1.3
-    FvMax: 1.2
-  CommonParams:
-    CtrlLimited: 1
-    ForceLimited: 1
-    CtrlRange: {x: -1.0472, y: 0.5236}
-    ForceRange: {x: -187.34, y: 187.34}
-    LengthRange: {x: 0, y: 0}
-    Gear:
-    - 1
-  Control: 0
 --- !u!1 &5344054895417728077
 GameObject:
   m_ObjectHideFlags: 0
@@ -5173,85 +5398,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &5444042874337797563
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1434023024516831427}
-  - component: {fileID: 8223606956210562678}
-  m_Layer: 0
-  m_Name: a_knee_l
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1434023024516831427
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5444042874337797563}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 7668783123912470098}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8223606956210562678
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5444042874337797563}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: 0
-  RangeUpper: 150
-  Configuration: 0
-  Velocity: 0
-  RawConfiguration: 0
-  Settings:
-    Armature: 0.1
-    Spring:
-      TimeConstant: 0
-      DampingRatio: 0
-      Stiffness: 0
-      Damping: 0.5
-      EquilibriumPose: 0
-    Solver:
-      Limited: 1
-      Margin: 0
-      RefLimit:
-        TimeConst: 0.02
-        DampRatio: 1
-      ImpLimit:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      FrictionLoss: 0
-      ImpFriction:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      RefFriction:
-        TimeConst: 0.02
-        DampRatio: 1
 --- !u!1 &5532652213278652601
 GameObject:
   m_ObjectHideFlags: 0
@@ -5320,7 +5466,7 @@ MonoBehaviour:
     Terrain: {fileID: 0}
     HeightMapExportPath: 
     UpdateLimit: 0
-  Mass: 10.83
+  Mass: 15.3353
   Density: 1000
   Settings:
     Priority: 0
@@ -5471,7 +5617,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjGeom
   ShapeType: 0
   Sphere:
-    Radius: 0.12
+    Radius: 0.114
   Capsule:
     Radius: 0.5
     HalfHeight: 0.5
@@ -5490,7 +5636,7 @@ MonoBehaviour:
     Terrain: {fileID: 0}
     HeightMapExportPath: 
     UpdateLimit: 0
-  Mass: 8.7723
+  Mass: 7.516
   Density: 1000
   Settings:
     Priority: 0
@@ -5592,7 +5738,7 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!1 &5582889426410851254
+--- !u!1 &5678804793772102249
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -5600,101 +5746,22 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1632102894777887183}
-  - component: {fileID: 2214074669973855284}
+  - component: {fileID: 4942861238266345798}
+  - component: {fileID: 3406939404433223629}
   m_Layer: 0
-  m_Name: a_abdomen_z
+  m_Name: a_ankle_x_l
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1632102894777887183
+--- !u!4 &4942861238266345798
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5582889426410851254}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 5295063266681732295}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2214074669973855284
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5582889426410851254}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: -45
-  RangeUpper: 45
-  Configuration: 0
-  Velocity: 0
-  RawConfiguration: 0
-  Settings:
-    Armature: 0.08
-    Spring:
-      TimeConstant: 0
-      DampingRatio: 0
-      Stiffness: 0
-      Damping: 0.5
-      EquilibriumPose: 0
-    Solver:
-      Limited: 1
-      Margin: 0
-      RefLimit:
-        TimeConst: 0.02
-        DampRatio: 1
-      ImpLimit:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      FrictionLoss: 0
-      ImpFriction:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      RefFriction:
-        TimeConst: 0.02
-        DampRatio: 1
---- !u!1 &5858344686110780458
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 181100491388486444}
-  - component: {fileID: 4648805284876039296}
-  m_Layer: 0
-  m_Name: a_hip_y_r
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &181100491388486444
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5858344686110780458}
+  m_GameObject: {fileID: 5678804793772102249}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -5703,20 +5770,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1408479415727091232}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4648805284876039296
+--- !u!114 &3406939404433223629
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5858344686110780458}
+  m_GameObject: {fileID: 5678804793772102249}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
   Type: 2
-  Joint: {fileID: 835059343538862947}
+  Joint: {fileID: 3708337364608859761}
   Tendon: {fileID: 0}
   CustomParams:
     DynType: 0
@@ -5734,8 +5801,8 @@ MonoBehaviour:
     - 0
     - 0
     - 0
-    Kp: 661.2
-    Kvp: 33.06
+    Kp: 88.16
+    Kvp: 1.763
     Kv: 1
     CylinderTimeConst: 1
     Area: 1
@@ -5756,13 +5823,13 @@ MonoBehaviour:
   CommonParams:
     CtrlLimited: 1
     ForceLimited: 1
-    CtrlRange: {x: -2.0944, y: 0.5236}
-    ForceRange: {x: -264.48, y: 264.48}
+    CtrlRange: {x: -0.4363, y: 0.4363}
+    ForceRange: {x: -66.12, y: 66.12}
     LengthRange: {x: 0, y: 0}
     Gear:
     - 1
   Control: 0
---- !u!1 &5868854604843312323
+--- !u!1 &5858344686110780458
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -5770,49 +5837,49 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 6750473964083599482}
-  - component: {fileID: 5001616283665531920}
+  - component: {fileID: 181100491388486444}
+  - component: {fileID: 2010543392071636675}
   m_Layer: 0
-  m_Name: a_abdomen_x
+  m_Name: a_hip_y_r
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &6750473964083599482
+--- !u!4 &181100491388486444
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5868854604843312323}
+  m_GameObject: {fileID: 5858344686110780458}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 5295063266681732295}
+  m_Father: {fileID: 8445277741721288838}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5001616283665531920
+--- !u!114 &2010543392071636675
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5868854604843312323}
+  m_GameObject: {fileID: 5858344686110780458}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: -35
-  RangeUpper: 35
+  RangeLower: -120
+  RangeUpper: 30
   Configuration: 0
   Velocity: 0
   RawConfiguration: 0
   Settings:
-    Armature: 0.08
+    Armature: 0.1
     Spring:
       TimeConstant: 0
       DampingRatio: 0
@@ -5909,7 +5976,7 @@ MonoBehaviour:
     Terrain: {fileID: 0}
     HeightMapExportPath: 
     UpdateLimit: 0
-  Mass: 3.0324
+  Mass: 2.9349
   Density: 1000
   Settings:
     Priority: 0
@@ -6079,7 +6146,7 @@ MonoBehaviour:
     Terrain: {fileID: 0}
     HeightMapExportPath: 
     UpdateLimit: 0
-  Mass: 10.83
+  Mass: 15.3353
   Density: 1000
   Settings:
     Priority: 0
@@ -6211,7 +6278,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 920335940735428178}
+  - {fileID: 8828453792730448272}
   - {fileID: 9061461573776912748}
   - {fileID: 5507620198108114370}
   m_Father: {fileID: 3158452917746878118}
@@ -6229,7 +6296,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjBody
   GravityCompensation: 0
---- !u!1 &6078022035830600661
+--- !u!1 &6155849130126577437
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -6237,77 +6304,89 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 744304953113360431}
-  - component: {fileID: 5900532367390446687}
+  - component: {fileID: 3748524461759190488}
+  - component: {fileID: 1518518686237181547}
   m_Layer: 0
-  m_Name: a_ankle_x_r
+  m_Name: a_knee_r
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &744304953113360431
+--- !u!4 &3748524461759190488
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6078022035830600661}
+  m_GameObject: {fileID: 6155849130126577437}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 250140681475029332}
+  m_Father: {fileID: 1408479415727091232}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5900532367390446687
+--- !u!114 &1518518686237181547
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6078022035830600661}
+  m_GameObject: {fileID: 6155849130126577437}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
+  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: -25
-  RangeUpper: 25
-  Configuration: 0
-  Velocity: 0
-  RawConfiguration: 0
-  Settings:
-    Armature: 0.03
-    Spring:
-      TimeConstant: 0
-      DampingRatio: 0
-      Stiffness: 0
-      Damping: 0.5
-      EquilibriumPose: 0
-    Solver:
-      Limited: 1
-      Margin: 0
-      RefLimit:
-        TimeConst: 0.02
-        DampRatio: 1
-      ImpLimit:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      FrictionLoss: 0
-      ImpFriction:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      RefFriction:
-        TimeConst: 0.02
-        DampRatio: 1
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
+  Type: 2
+  Joint: {fileID: 5967085541949228717}
+  Tendon: {fileID: 0}
+  CustomParams:
+    DynType: 0
+    GainType: 0
+    BiasType: 0
+    DynPrm:
+    - 1
+    - 0
+    - 0
+    GainPrm:
+    - 1
+    - 0
+    - 0
+    BiasPrm:
+    - 0
+    - 0
+    - 0
+    Kp: 661.2
+    Kvp: 13.224
+    Kv: 1
+    CylinderTimeConst: 1
+    Area: 1
+    Diameter: 0
+    Bias:
+    - 0
+    - 0
+    - 0
+    MuscleTimeConst: {x: 0.01, y: 0.04}
+    Range: {x: 0.75, y: 1.05}
+    Force: -1
+    Scale: 200
+    LMin: 0.5
+    LMax: 1.6
+    VMax: 1.5
+    FpMax: 1.3
+    FvMax: 1.2
+  CommonParams:
+    CtrlLimited: 1
+    ForceLimited: 1
+    CtrlRange: {x: 0, y: 2.618}
+    ForceRange: {x: -286.52, y: 143.26}
+    LengthRange: {x: 0, y: 0}
+    Gear:
+    - 1
+  Control: 0
 --- !u!1 &6423793261172595638
 GameObject:
   m_ObjectHideFlags: 0
@@ -6337,187 +6416,29 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 846015987933832630}
-  - {fileID: 3322393825978703462}
-  - {fileID: 5594757589770050488}
-  - {fileID: 2044521915525187779}
-  - {fileID: 5014009531470181363}
-  - {fileID: 2019103531323532803}
-  - {fileID: 3257514332431025056}
-  - {fileID: 4837224952978082925}
-  - {fileID: 8828453792730448272}
-  - {fileID: 8469889110993019211}
-  - {fileID: 9120106086590625240}
-  - {fileID: 8265898199997781315}
-  - {fileID: 5503456735814198575}
-  - {fileID: 18831336107737054}
-  - {fileID: 8071015176650996994}
-  - {fileID: 3935193198855608736}
-  - {fileID: 8190136557598964261}
-  - {fileID: 181100491388486444}
-  - {fileID: 7832925718239107026}
-  - {fileID: 6985309576070150422}
-  - {fileID: 5644323010622983949}
+  - {fileID: 1015605756734472747}
+  - {fileID: 254244836596140714}
+  - {fileID: 6702744750134485020}
+  - {fileID: 4932474014932938917}
+  - {fileID: 6419029112194387024}
+  - {fileID: 5369004575202369913}
+  - {fileID: 3323336810963784837}
+  - {fileID: 3594110532552919026}
+  - {fileID: 1458570524303190131}
+  - {fileID: 3943195824909763445}
+  - {fileID: 5052559589026541396}
+  - {fileID: 8451444368385905618}
+  - {fileID: 5492026691893033588}
+  - {fileID: 1012199799616230236}
+  - {fileID: 4942861238266345798}
+  - {fileID: 2965071126731842836}
+  - {fileID: 8395085596289897084}
+  - {fileID: 8632112749874814573}
+  - {fileID: 3748524461759190488}
+  - {fileID: 631000444905495138}
+  - {fileID: 3237684194698317607}
   m_Father: {fileID: 4237545293017499928}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &6715842729210021873
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 763933406224620510}
-  - component: {fileID: 7520018529872392311}
-  m_Layer: 0
-  m_Name: a_hip_x_r
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &763933406224620510
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6715842729210021873}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 8445277741721288838}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7520018529872392311
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6715842729210021873}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: -40
-  RangeUpper: 40
-  Configuration: 0
-  Velocity: 0
-  RawConfiguration: 0
-  Settings:
-    Armature: 0.1
-    Spring:
-      TimeConstant: 0
-      DampingRatio: 0
-      Stiffness: 0
-      Damping: 0.5
-      EquilibriumPose: 0
-    Solver:
-      Limited: 1
-      Margin: 0
-      RefLimit:
-        TimeConst: 0.02
-        DampRatio: 1
-      ImpLimit:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      FrictionLoss: 0
-      ImpFriction:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      RefFriction:
-        TimeConst: 0.02
-        DampRatio: 1
---- !u!1 &6830290318207768330
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 3017416301598728248}
-  - component: {fileID: 2450364617185708782}
-  m_Layer: 0
-  m_Name: a_elbow_l
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &3017416301598728248
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6830290318207768330}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 3820205047278362977}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2450364617185708782
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6830290318207768330}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: -150
-  RangeUpper: 0
-  Configuration: 0
-  Velocity: 0
-  RawConfiguration: 0
-  Settings:
-    Armature: 0.02
-    Spring:
-      TimeConstant: 0
-      DampingRatio: 0
-      Stiffness: 0
-      Damping: 0.5
-      EquilibriumPose: 0
-    Solver:
-      Limited: 1
-      Margin: 0
-      RefLimit:
-        TimeConst: 0.02
-        DampRatio: 1
-      ImpLimit:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      FrictionLoss: 0
-      ImpFriction:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      RefFriction:
-        TimeConst: 0.02
-        DampRatio: 1
 --- !u!1 &6995239138596508648
 GameObject:
   m_ObjectHideFlags: 0
@@ -6548,9 +6469,9 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 763933406224620510}
-  - {fileID: 8215892422203921695}
-  - {fileID: 7816630868347015447}
+  - {fileID: 3935193198855608736}
+  - {fileID: 8190136557598964261}
+  - {fileID: 181100491388486444}
   - {fileID: 5816462308894427888}
   - {fileID: 4565938186637856001}
   m_Father: {fileID: 655159894640112523}
@@ -6636,7 +6557,7 @@ MonoBehaviour:
     Terrain: {fileID: 0}
     HeightMapExportPath: 
     UpdateLimit: 0
-  Mass: 5.0359
+  Mass: 4.6894
   Density: 1000
   Settings:
     Priority: 0
@@ -6806,7 +6727,7 @@ MonoBehaviour:
     Terrain: {fileID: 0}
     HeightMapExportPath: 
     UpdateLimit: 0
-  Mass: 0.9328
+  Mass: 0.9436
   Density: 1000
   Settings:
     Priority: 0
@@ -6968,7 +6889,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8469889110993019211}
-  - component: {fileID: 1914822850389396620}
+  - component: {fileID: 4332098106228493853}
   m_Layer: 0
   m_Name: a_hip_x_l
   m_TagString: Untagged
@@ -6984,14 +6905,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7593657377417535771}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1408479415727091232}
+  m_Father: {fileID: 6599767707678880865}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1914822850389396620
+--- !u!114 &4332098106228493853
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -7000,56 +6921,44 @@ MonoBehaviour:
   m_GameObject: {fileID: 7593657377417535771}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
-  Type: 2
-  Joint: {fileID: 2420726148597113116}
-  Tendon: {fileID: 0}
-  CustomParams:
-    DynType: 0
-    GainType: 0
-    BiasType: 0
-    DynPrm:
-    - 1
-    - 0
-    - 0
-    GainPrm:
-    - 1
-    - 0
-    - 0
-    BiasPrm:
-    - 0
-    - 0
-    - 0
-    Kp: 661.2
-    Kvp: 33.06
-    Kv: 1
-    CylinderTimeConst: 1
-    Area: 1
-    Diameter: 0
-    Bias:
-    - 0
-    - 0
-    - 0
-    MuscleTimeConst: {x: 0.01, y: 0.04}
-    Range: {x: 0.75, y: 1.05}
-    Force: -1
-    Scale: 200
-    LMin: 0.5
-    LMax: 1.6
-    VMax: 1.5
-    FpMax: 1.3
-    FvMax: 1.2
-  CommonParams:
-    CtrlLimited: 1
-    ForceLimited: 1
-    CtrlRange: {x: -0.6981, y: 0.6981}
-    ForceRange: {x: -264.48, y: 264.48}
-    LengthRange: {x: 0, y: 0}
-    Gear:
-    - 1
-  Control: 0
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
+  RangeLower: -40
+  RangeUpper: 40
+  Configuration: 0
+  Velocity: 0
+  RawConfiguration: 0
+  Settings:
+    Armature: 0.1
+    Spring:
+      TimeConstant: 0
+      DampingRatio: 0
+      Stiffness: 0
+      Damping: 0.5
+      EquilibriumPose: 0
+    Solver:
+      Limited: 1
+      Margin: 0
+      RefLimit:
+        TimeConst: 0.02
+        DampRatio: 1
+      ImpLimit:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      FrictionLoss: 0
+      ImpFriction:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      RefFriction:
+        TimeConst: 0.02
+        DampRatio: 1
 --- !u!1 &7778359332311032664
 GameObject:
   m_ObjectHideFlags: 0
@@ -7096,7 +7005,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjExclude
   Body1: {fileID: 3054139646188894475}
   Body2: {fileID: 1730215123448594644}
---- !u!1 &7819797848856517001
+--- !u!1 &7786055305166264130
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -7104,8 +7013,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3935193198855608736}
-  - component: {fileID: 2635421262736312358}
+  - component: {fileID: 2965071126731842836}
+  - component: {fileID: 7715428722571148972}
   m_Layer: 0
   m_Name: a_hip_x_r
   m_TagString: Untagged
@@ -7113,13 +7022,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3935193198855608736
+--- !u!4 &2965071126731842836
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7819797848856517001}
+  m_GameObject: {fileID: 7786055305166264130}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -7128,20 +7037,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1408479415727091232}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2635421262736312358
+--- !u!114 &7715428722571148972
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7819797848856517001}
+  m_GameObject: {fileID: 7786055305166264130}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
   Type: 2
-  Joint: {fileID: 7520018529872392311}
+  Joint: {fileID: 2439942529752537876}
   Tendon: {fileID: 0}
   CustomParams:
     DynType: 0
@@ -7160,7 +7069,7 @@ MonoBehaviour:
     - 0
     - 0
     Kp: 661.2
-    Kvp: 33.06
+    Kvp: 58.454
     Kv: 1
     CylinderTimeConst: 1
     Area: 1
@@ -7187,6 +7096,85 @@ MonoBehaviour:
     Gear:
     - 1
   Control: 0
+--- !u!1 &7819797848856517001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3935193198855608736}
+  - component: {fileID: 2439942529752537876}
+  m_Layer: 0
+  m_Name: a_hip_x_r
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3935193198855608736
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7819797848856517001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8445277741721288838}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2439942529752537876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7819797848856517001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
+  RangeLower: -40
+  RangeUpper: 40
+  Configuration: 0
+  Velocity: 0
+  RawConfiguration: 0
+  Settings:
+    Armature: 0.1
+    Spring:
+      TimeConstant: 0
+      DampingRatio: 0
+      Stiffness: 0
+      Damping: 0.5
+      EquilibriumPose: 0
+    Solver:
+      Limited: 1
+      Margin: 0
+      RefLimit:
+        TimeConst: 0.02
+        DampRatio: 1
+      ImpLimit:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      FrictionLoss: 0
+      ImpFriction:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      RefFriction:
+        TimeConst: 0.02
+        DampRatio: 1
 --- !u!1 &7850027836783269422
 GameObject:
   m_ObjectHideFlags: 0
@@ -7196,7 +7184,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8828453792730448272}
-  - component: {fileID: 7784730288328037690}
+  - component: {fileID: 4356776495314127013}
   m_Layer: 0
   m_Name: a_elbow_r
   m_TagString: Untagged
@@ -7212,14 +7200,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7850027836783269422}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1408479415727091232}
+  m_Father: {fileID: 341055692171346291}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7784730288328037690
+--- !u!114 &4356776495314127013
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -7228,11 +7216,90 @@ MonoBehaviour:
   m_GameObject: {fileID: 7850027836783269422}
   m_Enabled: 1
   m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
+  RangeLower: 0
+  RangeUpper: 150
+  Configuration: 0
+  Velocity: 0
+  RawConfiguration: 0
+  Settings:
+    Armature: 0.02
+    Spring:
+      TimeConstant: 0
+      DampingRatio: 0
+      Stiffness: 0
+      Damping: 0.5
+      EquilibriumPose: 0
+    Solver:
+      Limited: 1
+      Margin: 0
+      RefLimit:
+        TimeConst: 0.02
+        DampRatio: 1
+      ImpLimit:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      FrictionLoss: 0
+      ImpFriction:
+        DMin: 0.9
+        DMax: 0.95
+        Width: 0.001
+        Midpoint: 0.5
+        Power: 2
+      RefFriction:
+        TimeConst: 0.02
+        DampRatio: 1
+--- !u!1 &7884240274774248981
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3594110532552919026}
+  - component: {fileID: 1588667033830834034}
+  m_Layer: 0
+  m_Name: a_shoulder_z_r
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3594110532552919026
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7884240274774248981}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1408479415727091232}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1588667033830834034
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7884240274774248981}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
   Type: 2
-  Joint: {fileID: 5798257609306617139}
+  Joint: {fileID: 6442860406106217106}
   Tendon: {fileID: 0}
   CustomParams:
     DynType: 0
@@ -7250,8 +7317,8 @@ MonoBehaviour:
     - 0
     - 0
     - 0
-    Kp: 121.22
-    Kvp: 6.061
+    Kp: 176.32
+    Kvp: 6.592
     Kv: 1
     CylinderTimeConst: 1
     Area: 1
@@ -7272,8 +7339,8 @@ MonoBehaviour:
   CommonParams:
     CtrlLimited: 1
     ForceLimited: 1
-    CtrlRange: {x: 0, y: 2.618}
-    ForceRange: {x: -77.14, y: 77.14}
+    CtrlRange: {x: -1.9199, y: 1.9199}
+    ForceRange: {x: -110.2, y: 110.2}
     LengthRange: {x: 0, y: 0}
     Gear:
     - 1
@@ -7324,7 +7391,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjExclude
   Body1: {fileID: 4686824584280946434}
   Body2: {fileID: 5412813678658968711}
---- !u!1 &8270773352689108239
+--- !u!1 &8451768097915241193
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -7332,156 +7399,89 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 6127928756292364965}
-  - component: {fileID: 6393302982679334997}
+  - component: {fileID: 8632112749874814573}
+  - component: {fileID: 410025789458501341}
   m_Layer: 0
-  m_Name: a_shoulder_z_r
+  m_Name: a_hip_y_r
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &6127928756292364965
+--- !u!4 &8632112749874814573
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8270773352689108239}
+  m_GameObject: {fileID: 8451768097915241193}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 3158452917746878118}
+  m_Father: {fileID: 1408479415727091232}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6393302982679334997
+--- !u!114 &410025789458501341
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8270773352689108239}
+  m_GameObject: {fileID: 8451768097915241193}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
+  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: -110
-  RangeUpper: 110
-  Configuration: 0
-  Velocity: 0
-  RawConfiguration: 0
-  Settings:
-    Armature: 0.03
-    Spring:
-      TimeConstant: 0
-      DampingRatio: 0
-      Stiffness: 0
-      Damping: 0.5
-      EquilibriumPose: 0
-    Solver:
-      Limited: 1
-      Margin: 0
-      RefLimit:
-        TimeConst: 0.02
-        DampRatio: 1
-      ImpLimit:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      FrictionLoss: 0
-      ImpFriction:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      RefFriction:
-        TimeConst: 0.02
-        DampRatio: 1
---- !u!1 &8418481471015643101
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 5453449602220419143}
-  - component: {fileID: 6050219665319203222}
-  m_Layer: 0
-  m_Name: a_hip_y_l
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &5453449602220419143
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8418481471015643101}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6599767707678880865}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6050219665319203222
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8418481471015643101}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: -120
-  RangeUpper: 30
-  Configuration: 0
-  Velocity: 0
-  RawConfiguration: 0
-  Settings:
-    Armature: 0.1
-    Spring:
-      TimeConstant: 0
-      DampingRatio: 0
-      Stiffness: 0
-      Damping: 0.5
-      EquilibriumPose: 0
-    Solver:
-      Limited: 1
-      Margin: 0
-      RefLimit:
-        TimeConst: 0.02
-        DampRatio: 1
-      ImpLimit:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      FrictionLoss: 0
-      ImpFriction:
-        DMin: 0.9
-        DMax: 0.95
-        Width: 0.001
-        Midpoint: 0.5
-        Power: 2
-      RefFriction:
-        TimeConst: 0.02
-        DampRatio: 1
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
+  Type: 2
+  Joint: {fileID: 2010543392071636675}
+  Tendon: {fileID: 0}
+  CustomParams:
+    DynType: 0
+    GainType: 0
+    BiasType: 0
+    DynPrm:
+    - 1
+    - 0
+    - 0
+    GainPrm:
+    - 1
+    - 0
+    - 0
+    BiasPrm:
+    - 0
+    - 0
+    - 0
+    Kp: 661.2
+    Kvp: 58.987
+    Kv: 1
+    CylinderTimeConst: 1
+    Area: 1
+    Diameter: 0
+    Bias:
+    - 0
+    - 0
+    - 0
+    MuscleTimeConst: {x: 0.01, y: 0.04}
+    Range: {x: 0.75, y: 1.05}
+    Force: -1
+    Scale: 200
+    LMin: 0.5
+    LMax: 1.6
+    VMax: 1.5
+    FpMax: 1.3
+    FvMax: 1.2
+  CommonParams:
+    CtrlLimited: 1
+    ForceLimited: 1
+    CtrlRange: {x: -2.0944, y: 0.5236}
+    ForceRange: {x: -264.48, y: 264.48}
+    LengthRange: {x: 0, y: 0}
+    Gear:
+    - 1
+  Control: 0
 --- !u!1 &8479864840766427982
 GameObject:
   m_ObjectHideFlags: 0
@@ -7550,7 +7550,7 @@ MonoBehaviour:
     Terrain: {fileID: 0}
     HeightMapExportPath: 
     UpdateLimit: 0
-  Mass: 5.0359
+  Mass: 4.6894
   Density: 1000
   Settings:
     Priority: 0
@@ -7740,7 +7740,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjExclude
   Body1: {fileID: 1730215123448594644}
   Body2: {fileID: 4686824584280946434}
---- !u!1 &8533807008623693826
+--- !u!1 &8779647077058168071
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -7748,44 +7748,44 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 582465296353601303}
-  - component: {fileID: 6678007076566222490}
+  - component: {fileID: 3257514332431025056}
+  - component: {fileID: 8980875942603510844}
   m_Layer: 0
-  m_Name: a_ankle_y_r
+  m_Name: a_shoulder_x_r
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &582465296353601303
+--- !u!4 &3257514332431025056
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8533807008623693826}
+  m_GameObject: {fileID: 8779647077058168071}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: -0.7071068, z: 0, w: 0.7071068}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 250140681475029332}
+  m_Father: {fileID: 3158452917746878118}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6678007076566222490
+--- !u!114 &8980875942603510844
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8533807008623693826}
+  m_GameObject: {fileID: 8779647077058168071}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 517cde9d618b143a19f0ad61355a7f31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjHingeJoint
-  RangeLower: -20
-  RangeUpper: 50
+  RangeLower: -30
+  RangeUpper: 170
   Configuration: 0
   Velocity: 0
   RawConfiguration: 0
@@ -7819,97 +7819,6 @@ MonoBehaviour:
       RefFriction:
         TimeConst: 0.02
         DampRatio: 1
---- !u!1 &8779647077058168071
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 3257514332431025056}
-  - component: {fileID: 9101007229791196776}
-  m_Layer: 0
-  m_Name: a_shoulder_x_r
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &3257514332431025056
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8779647077058168071}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1408479415727091232}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &9101007229791196776
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8779647077058168071}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
-  Type: 2
-  Joint: {fileID: 1142875013031166755}
-  Tendon: {fileID: 0}
-  CustomParams:
-    DynType: 0
-    GainType: 0
-    BiasType: 0
-    DynPrm:
-    - 1
-    - 0
-    - 0
-    GainPrm:
-    - 1
-    - 0
-    - 0
-    BiasPrm:
-    - 0
-    - 0
-    - 0
-    Kp: 176.32
-    Kvp: 8.816
-    Kv: 1
-    CylinderTimeConst: 1
-    Area: 1
-    Diameter: 0
-    Bias:
-    - 0
-    - 0
-    - 0
-    MuscleTimeConst: {x: 0.01, y: 0.04}
-    Range: {x: 0.75, y: 1.05}
-    Force: -1
-    Scale: 200
-    LMin: 0.5
-    LMax: 1.6
-    VMax: 1.5
-    FpMax: 1.3
-    FvMax: 1.2
-  CommonParams:
-    CtrlLimited: 1
-    ForceLimited: 1
-    CtrlRange: {x: -0.5236, y: 2.9671}
-    ForceRange: {x: -110.2, y: 110.2}
-    LengthRange: {x: 0, y: 0}
-    Gear:
-    - 1
-  Control: 0
 --- !u!1 &9116458108348576428
 GameObject:
   m_ObjectHideFlags: 0
@@ -7956,6 +7865,97 @@ MonoBehaviour:
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjExclude
   Body1: {fileID: 3054139646188894475}
   Body2: {fileID: 3548081265189203904}
+--- !u!1 &9220294760017770603
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1012199799616230236}
+  - component: {fileID: 1077342815326801472}
+  m_Layer: 0
+  m_Name: a_ankle_y_l
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1012199799616230236
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9220294760017770603}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1408479415727091232}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1077342815326801472
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9220294760017770603}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f3a0cb6a6d64327b27c7d5bdd8d430, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjActuator
+  Type: 2
+  Joint: {fileID: 3624803610225271296}
+  Tendon: {fileID: 0}
+  CustomParams:
+    DynType: 0
+    GainType: 0
+    BiasType: 0
+    DynPrm:
+    - 1
+    - 0
+    - 0
+    GainPrm:
+    - 1
+    - 0
+    - 0
+    BiasPrm:
+    - 0
+    - 0
+    - 0
+    Kp: 826.5
+    Kvp: 13.224
+    Kv: 1
+    CylinderTimeConst: 1
+    Area: 1
+    Diameter: 0
+    Bias:
+    - 0
+    - 0
+    - 0
+    MuscleTimeConst: {x: 0.01, y: 0.04}
+    Range: {x: 0.75, y: 1.05}
+    Force: -1
+    Scale: 200
+    LMin: 0.5
+    LMax: 1.6
+    VMax: 1.5
+    FpMax: 1.3
+    FvMax: 1.2
+  CommonParams:
+    CtrlLimited: 1
+    ForceLimited: 1
+    CtrlRange: {x: -0.3491, y: 0.8727}
+    ForceRange: {x: -48.488, y: 242.44}
+    LengthRange: {x: 0, y: 0}
+    Gear:
+    - 1
+  Control: 0
 --- !u!1001 &3374647589114235718
 PrefabInstance:
   m_ObjectHideFlags: 0
