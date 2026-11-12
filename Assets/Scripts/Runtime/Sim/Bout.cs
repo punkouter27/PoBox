@@ -59,7 +59,7 @@ namespace PoBox.Sim
         public bool fixedEntrants;
 
         [Header("Time")]
-        public float physicsStep = 1f / 120f;
+        public float physicsStep = 0.005f;
         [Range(1f, 4f)] public float userTimeScale = 1f;
 
         public BoutPhase Phase { get; private set; } = BoutPhase.Intro;
