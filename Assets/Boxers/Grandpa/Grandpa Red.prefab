@@ -30,7 +30,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 9180714038125318565}
+  m_Father: {fileID: 3671217223243978366}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!96 &4902408789811985
 TrailRenderer:
@@ -151,7 +151,7 @@ TrailRenderer:
   m_Autodestruct: 0
   m_Emitting: 0
   m_ApplyActiveColorSpace: 1
---- !u!1 &3765487439807878918
+--- !u!1 &4632243000905529171
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -159,8 +159,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2511516906804663883}
-  - component: {fileID: 5482478021352311701}
+  - component: {fileID: 698843105159754523}
+  - component: {fileID: 8414296700185845344}
   m_Layer: 0
   m_Name: Trail
   m_TagString: Untagged
@@ -168,29 +168,29 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &2511516906804663883
+--- !u!4 &698843105159754523
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3765487439807878918}
+  m_GameObject: {fileID: 4632243000905529171}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 3671217223243978366}
+  m_Father: {fileID: 9180714038125318565}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!96 &5482478021352311701
+--- !u!96 &8414296700185845344
 TrailRenderer:
   serializedVersion: 4
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3765487439807878918}
+  m_GameObject: {fileID: 4632243000905529171}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 1
@@ -426,22 +426,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 112805010890364914, guid: 28f113dd4527c5447bf8fe7ec003616e, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 112805010890364914, guid: 28f113dd4527c5447bf8fe7ec003616e, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 04d24069755247042806612685faf12f, type: 2}
-    - target: {fileID: 1236919539455512652, guid: 28f113dd4527c5447bf8fe7ec003616e, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1236919539455512652, guid: 28f113dd4527c5447bf8fe7ec003616e, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 04d24069755247042806612685faf12f, type: 2}
     - target: {fileID: 1512433447492935455, guid: 28f113dd4527c5447bf8fe7ec003616e, type: 3}
       propertyPath: m_Name
       value: a_exclude_9
@@ -535,10 +519,10 @@ PrefabInstance:
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 3696479445519331541, guid: 28f113dd4527c5447bf8fe7ec003616e, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 2511516906804663883}
+      addedObject: {fileID: 976559335650866702}
     - targetCorrespondingSourceObject: {fileID: 9139547620431132430, guid: 28f113dd4527c5447bf8fe7ec003616e, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 976559335650866702}
+      addedObject: {fileID: 698843105159754523}
     - targetCorrespondingSourceObject: {fileID: 6933162378410029006, guid: 28f113dd4527c5447bf8fe7ec003616e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3911169314108916785}
@@ -763,8 +747,8 @@ MonoBehaviour:
   - {fileID: 4334659497029974367}
   - {fileID: 1396488591293497573}
   - {fileID: 4095247486468699345}
-  standingPelvisHeight: 0.9062
-  totalMass: 79.7662
+  standingPelvisHeight: 0.9063
+  totalMass: 79.766
   boxer: {fileID: 4199637026109051761}
   ring: {fileID: 0}
   headAnchor: {fileID: 8177366506333312959}
@@ -784,7 +768,17 @@ MonoBehaviour:
   dazeWeak: 0.45
   dazeBody: 0.45
   slackSeconds: {x: 1.2, y: 2.4}
+  beatenDrive: 0.6
   handOverSeconds: 1.5
+  staggerSpeed: 5
+  staggerSeconds: 0.3
+  staggerDrive: 0.55
+  hurtFull: 400
+  hurtHi: 0.4
+  hurtWeak: 0.25
+  hurtTau: 600
+  hurtRest: 0.15
+  bodyDrain: 0.0025
 --- !u!114 &3637233370144161084
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -801,6 +795,10 @@ MonoBehaviour:
   boxer: {fileID: 4199637026109051761}
   ring: {fileID: 0}
   punchSpeed: 3.5
+  squareFacing: 0.26
+  squareSpeed: 0.3
+  cornerSpeed: 0.8
+  cornerSeconds: 8
 --- !u!114 &6433023810647063100
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -841,8 +839,8 @@ MonoBehaviour:
   - bone: {fileID: 6499221526824260033}
     renderers: []
   trails:
-  - {fileID: 5482478021352311701}
   - {fileID: 4902408789811985}
+  - {fileID: 8414296700185845344}
   fighter: {fileID: 197443892362437023}
   rimColor: {r: 0.89, g: 0.24, b: 0.24, a: 1}
   headOffset: {x: 0, y: 0, z: 0}
@@ -851,7 +849,14 @@ MonoBehaviour:
   overlayRenderers:
   - {fileID: 2077451450846804372}
   trailSpeed: 4.5
-  bruiseRadius: 0.09
+  snapPerSpeed: 70
+  snapHz: 2.6
+  snapDamping: 0.35
+  snapMax: 38
+  tiredDroop: 14
+  rimIntensity: 0.55
+  pressedRim: 1.4
+  rippleImpulse: 12
 --- !u!137 &2588292985873113977 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: 2473943099713029586, guid: 28f113dd4527c5447bf8fe7ec003616e, type: 3}

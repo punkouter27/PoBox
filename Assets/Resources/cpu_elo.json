@@ -1,70 +1,70 @@
 {
- "when": "2026-10-16 14:56:42",
- "bouts": 168,
- "bouts_per_pair": 6,
+ "when": "2026-11-13 16:14:51",
+ "bouts": 112,
+ "bouts_per_pair": 4,
  "rows": [
   {
-   "name": "MATT",
-   "elo": 1546.6,
-   "brain": "checkpoints/onnx/match_matt.pt",
-   "wins": 40,
-   "losses": 0,
+   "name": "NICK",
+   "elo": 1447.6,
+   "brain": "checkpoints/onnx/match_nick.pt",
+   "wins": 24,
+   "losses": 2,
    "draws": 2
   },
   {
-   "name": "SOKOL",
-   "elo": 1147.0,
-   "brain": "checkpoints/m2_sokol/latest_sokol.pt",
-   "wins": 29,
-   "losses": 12,
+   "name": "KIM",
+   "elo": 1334.4,
+   "brain": "checkpoints/onnx/match_kim.pt",
+   "wins": 22,
+   "losses": 5,
    "draws": 1
   },
   {
-   "name": "KIM",
-   "elo": 1072.3,
-   "brain": "checkpoints/m7_kim/latest_kim.pt",
-   "wins": 24,
-   "losses": 14,
-   "draws": 4
+   "name": "SOKOL",
+   "elo": 1334.4,
+   "brain": "checkpoints/onnx/match_sokol.pt",
+   "wins": 21,
+   "losses": 4,
+   "draws": 3
+  },
+  {
+   "name": "MATT",
+   "elo": 1075.1,
+   "brain": "checkpoints/onnx/match_matt.pt",
+   "wins": 16,
+   "losses": 12,
+   "draws": 0
+  },
+  {
+   "name": "ZOMBIE",
+   "elo": 830.1,
+   "brain": "checkpoints/onnx/match_zombie.pt",
+   "wins": 9,
+   "losses": 18,
+   "draws": 1
   },
   {
    "name": "GRANDPA",
-   "elo": 939.3,
+   "elo": 773.3,
    "brain": "checkpoints/onnx/match_grandpa.pt",
-   "wins": 18,
-   "losses": 22,
+   "wins": 7,
+   "losses": 19,
    "draws": 2
   },
   {
    "name": "TRUMP",
-   "elo": 911.6,
+   "elo": 734.3,
    "brain": "checkpoints/onnx/match_trump.pt",
-   "wins": 17,
-   "losses": 24,
-   "draws": 1
-  },
-  {
-   "name": "ZOMBIE",
-   "elo": 911.6,
-   "brain": "checkpoints/onnx/match_zombie.pt",
-   "wins": 16,
-   "losses": 23,
-   "draws": 3
-  },
-  {
-   "name": "NICK",
-   "elo": 786.6,
-   "brain": "checkpoints/onnx/match_nick.pt",
-   "wins": 8,
-   "losses": 28,
-   "draws": 6
+   "wins": 6,
+   "losses": 20,
+   "draws": 2
   },
   {
    "name": "GRANDMA",
-   "elo": 685.0,
+   "elo": 470.8,
    "brain": "checkpoints/onnx/match_grandma.pt",
-   "wins": 6,
-   "losses": 35,
+   "wins": 1,
+   "losses": 26,
    "draws": 1
   }
  ]
