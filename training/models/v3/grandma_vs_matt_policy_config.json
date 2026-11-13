@@ -325,7 +325,8 @@
       "fatigue_ceiling": true,
       "rules_match": {
         "blend_steps": 15
-      }
+      },
+      "getup_speed_share": 0.5
     },
     {
       "name": "matt",

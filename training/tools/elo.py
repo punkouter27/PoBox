@@ -140,8 +140,14 @@ def main() -> None:
     ap.add_argument("--book", default="logs/book_shipped.json", help="the brains: the game's by default")
     ap.add_argument("--only", nargs="*", default=[], help="pairs with at least one of these boxers")
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--models", default="", help="models folder (e.g. models/v3); empty keeps exam_v2 default")
     ap.add_argument("--no-write", action="store_true", help="print the table; write nothing (neither the game's file nor the bout log)")
     args = ap.parse_args()
+    if args.models:
+        models_dir = args.models if os.path.isabs(args.models) else os.path.join(HERE, args.models)
+        V.MODELS = models_dir
+        _join = E.os.path.join
+        E.os.path.join = lambda *p: _join(models_dir, p[2]) if len(p) == 3 and p[0] == HERE and p[1] == "models" else _join(*p)
 
     with open(os.path.join(HERE, args.book), "r", encoding="utf-8") as f:
         book = json.load(f)

@@ -267,3 +267,66 @@ Entries from 2 to 31 October 2026 are in [DOCS/archive/rl_optimization_log_2026-
   MuJoCo 3.5.0: walk, falls 0% of 25, hold), boxing v3m3_kim (her best v3 boxing: v3p1 and v3f2 were worse), get-up
   v3u3_kim (exported to ONNX here). Check: 0 differences. Her boxing still fails footing in the exam (about 2 falls a
   minute) and carrying on (49/60). Trump checked: already on his newest brains (v3f, v3c1, v3u4).
+
+## 2026-11-13 10:40, a new PC, and the grandparents toward v3 (owner: "do 1 2 3 4 5 6 7 8 9 12 13 16 17 18 19 20" of the top-20 list)
+- **This PC:** a fresh clone on a laptop (i7-10750H, 16 GB, RTX 2060 6 GB). No checkpoints, logs or `.mj350` came with it.
+  Trainer Python: `../PoOlympic/training/.venv` (3.11.17, mujoco 3.11.0, mujoco_warp 3.11.0, warp 1.17.0, torch 2.14.0+cu130).
+  MuJoCo 3.5.0 for the exams: `uv pip install --python <venv python> --target training/.mj350 mujoco==3.5.0`.
+  Speed here: match gauntlet 8.3k samples/s at 2352 rings (the old PC 14-15k), footwork 23-35k (the old PC ~60k).
+- **Warm starts:** every shipped brain rebuilt into `checkpoints/onnx/{footwork,match,getup}_NAME.pt` (`tools/onnx_to_pt.py`; the
+  grandparents' match brains with `--obs-state`). No v3 run of the old PC is on this disk: the grandparents' v3f/v3u/v3m
+  checkpoints are gone, so they start again from their shipped v2 brains rescaled (`checkpoints/v3/*_grandma|grandpa.pt`).
+- **Where the roster stands (configs):** Matt, Zombie, Nick, Sokol, Kim, Trump on the v3 body (fatigue 8000, ceiling, no
+  obs_state); Grandma and Grandpa on v2 (fatigue 20000, obs_state, Grandma `getup_speed_share` 0.5).
+- **Why the grandparents' v3 get-up failed (0/60, then 5/60 and 14/60 after v3u5):** Grandma's v2 lesson of 2026-10-18 (she
+  cannot rise under the full speed limit; the game holds it at half while her get-up brain has the body) was never carried to
+  v3: no `getup_speed_share` in any models/v3 config, no `--speed-share` in the v3u recipes. Measured today (C MuJoCo 3.5.0,
+  game rule, 20 knockdowns, shipped v2 get-up brains rescaled to v3): Grandma 0/20 at share 1, 2/20 at 0.5, 1/20 at 0.25,
+  2/20 at 0; Grandpa 0/20 at every share. So the rescale alone does not carry a get-up to v3 either: both need the lesson.
+- `tools/set_rules.py --getup-speed-share` (new). **`getup_speed_share` 0.5 set for Grandma and Grandpa in models/v3**
+  (15 configs). For Grandpa this is a new rule (on v2 he rises under the full limit, 49/60): the owner's call to keep.
+- **Queued** (`logs/queue.json`): `v3f_grandma`, `v3f_grandpa` (footwork from the rescaled brains, 0.5 h each, the staged
+  recipe) and their footwork exams; `v3u6_grandma`, `v3u6_grandpa`: get-up from the rescaled brain, Matt's shipped v3 get-up
+  frozen as the partner, `--speed-share 0.5 --no-drain --fresh-assist NAME --fade-above 0.6 --lr 3e-5`, std 0.3 (max 0.4),
+  1.5 h each; then `exam_v3u6_*` (60 knockdowns, game rule, `logs/book_u6.json`).
+- Baseline exam of all eight on models/v3 with the brains on this disk: `logs/exam_base_1113.json` (book_base, rounds 2).
+
+## 2026-11-13 Sprint Update (finished before 14:30)
+- **Footwork v3 exams (`models/v3`):**
+  - `v3f_grandma` (550 it, 0.5 h): PASS 4/4 (`stand 1.00`, `walk err 0.0121 / falls 0.0`, `turn 0.90`, `elbow_r 0.423`). Archived `pass-v3f-grandma`.
+  - `v3f_grandpa` (468 it, 0.5 h): 3/4 (`turn 0.8333` short of `0.90`). Resumed in `v3f2_grandpa` (+0.1 h, to it 565, `--walk-share 0.4 --turn-share 0.4`): PASS 4/4 (`stand 0.9667`, `walk err 0.0180 / falls 0.0`, `turn 0.9667`, `knee_l 0.520`). Archived `pass-v3f2-grandpa`.
+- **Get-up & match handover (`models/v3`, `getup_speed_share 0.5`):**
+  - `v3u6_grandma` (1753 it, 1.50 h): PASS getting up (`54 of 60`, avg `3.6 s`); `carrying on` `25/54` against un-retuned `match_grandma.pt`. Archived `v3u6-grandma-getup90`. Handover bank `logs/handover_v3_grandma.npz` (800 states) built via updated `tools/make_handover_bank.py --models`.
+  - `v3u6_grandpa`: time-boxed stop at it 293 (0.23 h, archived `v3u6-grandpa-it293`, partial `1/60`).
+  - `v3m_grandma` (handover + `--blend-steps 15`, 31 it, 0.07 h): too short to reach boxing competence from footwork (`0.00/s` hits, `12.00/m` falls, `3/27` carry-on, `27/30` get-up PASS, `29%` guard PASS). Archived `sprint-v3m-grandma`. Needs full 1 to 2 h run.
+- **Trump closing distance (`v3c2_trump`):** Synced `rigs/v3/trump.json` + `trump*_policy_config.json` via `tools/set_rules.py --style` (`range_m=0.48, press=1.5, pace_s=0.45, body=1.0, taken=0.4`) and fixed `exam.py` `action_filter` parity. 43-it probe (`0.07 h`) lifted head share `43% -> 64%`, attack speed `2.3 -> 3.0 m/s`, and pressure `0.00 -> 0.02/s`, with footing regression (`1.33/m`) and carry-on `26/29`; kept shipped `v3c1` (archived `probe-v3c2-trump`).
+- **Infra, tooling & smoke checks:**
+  - Verified `tools/smoke_realism.py` (`exit 0`, all checks passed) and `F4` multi-body `getup` (`smoke_f4_getup`, 10 it, `bodies=2`, `exit 0`).
+  - Added `tools/ffa_exam.py` (3-bout `ffa_base_1113.json`: `7.46` slips/boxer/m, `31.29` hits/boxer/m, `40` KDs, `50%` beat count), `tools/archive_checkpoints.py`, `rig_to_mjcf.py` + `build_v3.py --neck`, and `envs/boxing.py` split (`math3d.py`, `boxing_base.py`, `boxing.py`).
+  - Refreshed `Assets/Resources/cpu_elo.json` (`tools/elo.py --models models/v3 --book logs/book_base.json --bouts 2 --workers 3`, 56 bouts, 439 s): Nick 1242, Grandma 1154, Kim 1127, Sokol 1075, Matt 976, Zombie 847, Grandpa 789, Trump 789.
+- **Unity, Android, Art:**
+  - `PoBox/Assets/Scripts/Runtime/{Audio,UI}` split; `PoBox/Packages/org.mujoco` test cleanup fix; `Tools/run_tests.ps1` `124/125` passed (`FreeForAllTests 0/1`: 3/8 boxers landed vs `>=4`).
+  - `Assets/Models/{Grandma,Kim,Sokol}.glb` updated and weight-checked (`SCREENSHOTS/2026-11-13-hands-hair/report.html`).
+  - Android APK built (`PoBox/Build/Android/PoBox.apk`, 340,460,565 bytes; 889.27 MB raw packed GLB textures flagged as primary cut); ADB deploy blocked with no device attached.
+  - Report: `DOCS/reports/2026-11-13-sprint.html` with charts in `DOCS/reports/2026-11-13-sprint-charts/`.
+- **Results by 14:30** (queue.log; all exams C MuJoCo 3.5.0):
+  - `v3f_grandma` (0.5 h, 550 iterations, 23-35k samples/s): footwork exam passes every line (stand 100%, walk off by 0.01 m/s,
+    no falls, turn 90%, joints 0.42 of the limit).
+  - `v3f_grandpa` (0.5 h, 468 it): stand 100%, walk passes, **turn 83% FAIL** (mark 90%). `v3f2_grandpa` (from it, 0.1 h,
+    `--walk-share 0.4 --turn-share 0.4`): stand 97%, walk passes, turn 97%, joints 0.52: passes.
+  - **`v3u6_grandma` (1.5 h, 1753 it, half speed limit while rising): getting up 54 of 60 in 3.6 s: passes** (mark 60% within
+    9 s; the old PC's v3u5 without the share: 5/60). Carrying on 25/54 with her rescaled v2 match brain: fails, her match lesson next.
+  - `v3u6_grandpa` was stopped by a stop file at 0.23 h (iteration 293): 1/60. Carried on below as `v3u7_grandpa`.
+  - Baseline, the brains on this disk on models/v3, rounds 2, 30 knockdowns, game rule (`logs/exam_base_1113.json`): no boxer
+    passes "under pressure" (0.00-0.07/s on the hardest opponent, Matt for five of them). Attack: Zombie 0.90/s, Nick 0.93,
+    Sokol 0.69 pass; Matt 0.55 at 3.8 m/s (speed), Kim 0.44, Trump 0.11, Grandma 0.16, Grandpa 0.06 fail. Footing fails for
+    Kim (3.3 falls/min), Grandma (11.3) and Grandpa (2.7) (the last two on rescaled v2 brains). Head share: Matt 0%, Sokol 0%.
+  - Also run in a stretch of this session whose notes were lost (13:45-14:30; the other open session, codematt-4a, confirms it
+    did none of it): `v3c2_trump` (0.07 h; attack 0.11/s, footing 1.33 falls/min: no gain) and `v3m_grandma`
+    (0.07 h; attack 0.00): neither usable. `Assets/Resources/cpu_elo.json` was also written at 14:29 from 2 bouts a pair with the
+    grandparents on their rescaled v2 brains on v3 bodies, which the game does not run: **not a valid ladder; do not commit it**.
+    The Elo is re-run (6 bouts a pair) once both grandparents have v3 brains.
+- **Queued 14:33 (batch 3):** `v3u7_grandpa` (from v3u6_grandpa's iteration 293, same recipe, 1.5 h) + exam;
+  `bank_v3b_grandma` (hand-over bank from v3u6_grandma); `v3m2_grandma` (the staged v3m recipe from her rescaled match brain,
+  against the six shipped v3 brains and Grandpa's rescaled one, 2304 rings, `--lr 3e-5 --lr-max 6e-5 --handover-share 0.5
+  --handover-yaw 3.14 --recover-w 1.0 --blend-steps 15`, 1.5 h) + full exam on `logs/book_b3m.json`.

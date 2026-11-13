@@ -130,7 +130,9 @@ class Fighter:
         # action asks for, by joint in degrees. "shoulder_x" is the left arm's and is mirrored as GUARD_DEG's is;
         # "shoulder_x_r" is the right arm's own, as it is, for a pose that is not the same on both sides.
         self.stance = {k: float(v) for k, v in rig.get("stance_deg", {}).items()}
+        self.neck = bool(rig.get("neck", False))
         self.joints: List[Dict] = []
+        self.qpos_tokens: List[float] = []
         self.actuators: List[str] = []
         self.lines: List[str] = []
 
@@ -180,11 +182,18 @@ class Fighter:
             "kp": kp, "kv": kv, "force_limit": fl, "force_lo": -f_lo, "force_hi": f_hi, "armature": arm,
             "velocity_limit": round(VELOCITY_LIMIT[group] * self.speed, 3),
         })
+        self.qpos_tokens.append(math.radians(default))
         self.actuators.append(
             f'<position name="{self.p}{full}" joint="{self.p}{full}" kp="{kp}" kv="{kv}" forcerange="-{f_lo} {f_hi}" '
             f'ctrlrange="{math.radians(lo):.4f} {math.radians(hi):.4f}"/>')
         return (f'<joint name="{self.p}{full}" type="hinge" axis="{axis}" range="{lo} {hi}" '
                 f'damping="0.5" armature="{arm}" stiffness="0"/>')
+
+    def passive_joint(self, name: str, axis: str, lo: float, hi: float, stiffness: float, damping: float, armature: float = 0.02) -> str:
+        """Unactuated spring-damper joint (G15 passive neck): keeps A=21 / obs=103 unchanged."""
+        self.qpos_tokens.append(0.0)
+        return (f'<joint name="{self.p}{name}" type="hinge" axis="{axis}" range="{lo} {hi}" '
+                f'stiffness="{stiffness * self.strength:.2f}" damping="{damping * self.strength:.2f}" armature="{armature}"/>')
 
     def build(self, pos: Tuple[float, float], yaw: float) -> str:
         L, p = self.lines, self.p
@@ -216,8 +225,18 @@ class Fighter:
         sh_l, sh_r = self.head("upper_arm_l") - spine, self.head("upper_arm_r") - spine
         L.append(f'    <geom name="{p}chest_geom" type="capsule" fromto="{fmt(sh_r * 0.8)} {fmt(sh_l * 0.8)}" '
                  f'size="{RADII["torso"] * 0.9:.4f}" mass="0.5"/>')
-        L.append(f'    <geom name="{p}head_geom" type="sphere" pos="{fmt(head_c - spine)}" '
-                 f'size="{RADII["head"]:.4f}" {self.mass("head")}/>')
+        if self.neck:
+            # G15: passive spring-damper neck so head snaps on clean hits while keeping A=21 / obs=103 unchanged.
+            L.append(f'    <body name="{p}head" pos="{fmt(neck - spine)}">')
+            L.append('      ' + self.passive_joint("neck_y", "0 1 0", -35.0, 35.0, 12.0, 1.4))
+            L.append('      ' + self.passive_joint("neck_x", "1 0 0", -25.0, 25.0, 12.0, 1.4))
+            L.append('      ' + self.passive_joint("neck_z", "0 0 1", -40.0, 40.0, 10.0, 1.2))
+            L.append(f'      <geom name="{p}head_geom" type="sphere" pos="{fmt(head_c - neck)}" '
+                     f'size="{RADII["head"]:.4f}" {self.mass("head")}/>')
+            L.append('    </body>')
+        else:
+            L.append(f'    <geom name="{p}head_geom" type="sphere" pos="{fmt(head_c - spine)}" '
+                     f'size="{RADII["head"]:.4f}" {self.mass("head")}/>')
         for side in ("l", "r"):
             sh = self.head(f"upper_arm_{side}"); el = self.head(f"forearm_{side}"); wr = self.head(f"hand_{side}")
             tip = self.tail(f"hand_tip_{side}") if self.has(f"hand_tip_{side}") else self.tail(f"hand_{side}")
@@ -272,6 +291,8 @@ class Fighter:
         """Body pairs joined by a joint, which overlap by construction. Everything else collides."""
         p = self.p
         pairs = [(f"{p}pelvis", f"{p}torso")]
+        if self.neck:
+            pairs.append((f"{p}torso", f"{p}head"))
         for s in ("l", "r"):
             pairs += [(f"{p}pelvis", f"{p}thigh_{s}"), (f"{p}thigh_{s}", f"{p}shin_{s}"), (f"{p}shin_{s}", f"{p}foot_{s}"),
                       (f"{p}torso", f"{p}upper_arm_{s}"), (f"{p}upper_arm_{s}", f"{p}forearm_{s}")]
@@ -418,6 +439,7 @@ def fighter_config(rig: Dict, name: str, rig_path: str, a: "Fighter", root_z: fl
         "control_decimation": 4,
         "ring_half": RING_HALF,
         "radii": {"head": a.radii["head"], "torso": a.radii["torso"], "glove": a.radii["glove"]},
+        **({"neck": True} if a.neck else {}),
         # How this fighter is paid in training (envs/boxing.py reads it); empty for the plain boxer.
         "style": rig.get("style", {}),
         "strength": a.strength,
@@ -426,7 +448,8 @@ def fighter_config(rig: Dict, name: str, rig_path: str, a: "Fighter", root_z: fl
 
 
 def key_for(fighter: Fighter, x: float, y: float, yaw: float, root_z: float) -> str:
-    joint_q = " ".join(f"{j['default']:.4f}" for j in fighter.joints)
+    tokens = fighter.qpos_tokens or [j["default"] for j in fighter.joints]
+    joint_q = " ".join(f"{q:.4f}" for q in tokens)
     return f"{x:.4f} {y:.4f} {root_z:.4f} {math.cos(yaw / 2):.5f} 0 0 {math.sin(yaw / 2):.5f} {joint_q}"
 
 
@@ -516,17 +539,22 @@ def main() -> None:
     ap.add_argument("--versus-name", default="")
     ap.add_argument("--out-dir", default=os.path.join(HERE, "models", "v2"))
     ap.add_argument("--cubes", type=int, default=0, help="cubes in the pool thrown at the fighter (see cubes_xml)")
+    ap.add_argument("--neck", action="store_true", help="add passive spring-damper neck joints under a head child body (G15)")
     args = ap.parse_args()
     os.makedirs(args.out_dir, exist_ok=True)
 
     with open(args.rig, "r", encoding="utf-8") as f:
         rig_a = json.load(f)
+    if args.neck:
+        rig_a["neck"] = True
     z_a, cfg_a = build_one(rig_a, args.rig, args.name, args.out_dir, args.cubes)
     if args.versus:
         if not args.versus_name:
             raise SystemExit("--versus needs --versus-name")
         with open(args.versus, "r", encoding="utf-8") as f:
             rig_b = json.load(f)
+        if args.neck:
+            rig_b["neck"] = True
         z_b, cfg_b = build_one(rig_b, args.versus, args.versus_name, args.out_dir, args.cubes)
         build_versus(rig_a, args.name, z_a, cfg_a, rig_b, args.versus_name, z_b, cfg_b, args.out_dir, args.cubes)
 

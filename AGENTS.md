@@ -50,7 +50,7 @@ Standing directives for any coding agent working in this repo. Project-specific 
   *Here: `training/tools/check_self_collision.py`.*
 - **Self-contact:** Never ends an episode. If the policy leans on it, add a small self-contact force penalty.
 - **Action smoothing:** Promote human-like, fluid joint motion without jitter: torque/action-rate penalties, low-pass filtering of actions, or jerk minimisation in the reward.
-  *Here: every env charges the squared action change (`r["rate"]` in `envs/footwork.py`, `getup.py`, `boxing.py`); `train_box.py --action-rate-w` adds more. No low-pass filter on actions yet: one would have to match in `MjBoxer.Drive`.*
+  *Here: every env charges the squared action change (`r["rate"]` in `envs/footwork.py`, `getup.py`, `boxing.py`); `train_box.py --action-rate-w` adds more. Low-pass action smoothing (`--action-filter`, `action_filter` / `drive_filter`) and observation delay (`--obs-delay-max`, `obs_delay_steps`) live in `envs/boxing.py`, `MjBoxer.Drive`, and `tools/set_brain_rules.py`.*
 - **Warm start:** Train a new skill from a warm start (a brain trained without self-collision, or the previous rung), not from scratch.
   *Here: rebuild warm starts from shipped brains with `training/tools/onnx_to_pt.py`.*
 - **Export gate:** Export ONNX only after the policy reaches the target score for 100 consecutive episodes with zero NaN gradients or errors.

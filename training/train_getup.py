@@ -99,6 +99,7 @@ def main() -> None:
     ap.add_argument("--stage", default="getup", choices=["getup", "v2"],
                     help="v2: the retrofit's bodies (models/v2) and its 103-number observation (envs/match.py)")
     ap.add_argument("--models", default="", help="v2 stage: another folder of bodies with the same observation (models/v3)")
+    ap.add_argument("--bodies", type=int, default=0, help="downed bodies lying beside the fallen boxer (F4 crowd get-up)")
     args = ap.parse_args()
 
     torch.manual_seed(args.seed)
@@ -112,7 +113,7 @@ def main() -> None:
     resume = dict(zip((args.a, args.b), args.resume))
     env = (GetUpMatchEnv if args.stage == "v2" else GetUpEnv)(xml, args.num_envs, device=args.device, seed=args.seed, slack_lo=args.slack_lo, slack_hi=args.slack_hi, shove=args.shove, assist=args.assist,
                                                               speed_limit=args.speed_limit, action_rate_w=args.action_rate_w,
-                                                              obs_delay_max=args.obs_delay_max,
+                                                              obs_delay_max=args.obs_delay_max, bodies=args.bodies,
                                                               assist_max=args.assist_max, fade_above=args.fade_above, unaided_share=args.unaided_share, no_drain=args.no_drain,
                                                               **({"speed_ramp": args.speed_ramp} if args.speed_ramp >= 0.0 else {}),
                                                               **({"speed_ramp": args.speed_share, "speed_fixed": True} if args.speed_share >= 0.0 else {}))

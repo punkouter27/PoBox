@@ -90,6 +90,7 @@ class ExamRing(Ring):
         self.no_drain = [False, False]        # the game's get-up (2026-10-18): nothing taken from the reserve while rising
         # The match brain's blend_steps (2026-10-31, envs/boxing.py, MjBoxer.Drive): it eases in from the pose it took the body in.
         self.blend = [int(c.get("rules_match", {}).get("blend_steps", 0)) for c in self.cfgs]
+        self.action_filter = [float(c.get("rules_match", {}).get("action_filter", 0.0)) for c in self.cfgs]
         self.held = [None, None]
         self.blend_at = [0, 0]
         G = mujoco.mjtObj.mjOBJ_GEOM
@@ -196,6 +197,9 @@ class ExamRing(Ring):
                 want.append(self.default[k].copy())
                 continue
             a = np.asarray(actions[k]).clip(-3.0, 3.0)
+            f = self.action_filter[k]
+            if f > 0.0:
+                a = f * self.last[k] + (1.0 - f) * a
             self.last[k] = a
             w = (self.default[k] + a * self.act_scale[k]).clip(self.lo[k], self.hi[k])
             if self.held[k] is not None and self.blend_at[k] < self.blend[k]:

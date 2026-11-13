@@ -96,10 +96,15 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("name")
     ap.add_argument("--book", default=os.path.join(HERE, "logs", "book_night_mix.json"))
+    ap.add_argument("--models", default="models/v3")
     ap.add_argument("--bodies", type=int, default=2)
     ap.add_argument("--rounds", type=int, default=4)
     ap.add_argument("--json", default="")
     a = ap.parse_args()
+    if a.models:
+        models_dir = a.models if os.path.isabs(a.models) else os.path.join(HERE, a.models)
+        _join = E.os.path.join
+        E.os.path.join = lambda *p: _join(models_dir, p[2]) if len(p) == 3 and p[0] == HERE and p[1] == "models" else _join(*p)
     book = json.load(open(a.book, encoding="utf-8"))
     E.act = V.act
     me = a.name

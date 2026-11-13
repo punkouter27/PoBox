@@ -22,8 +22,18 @@ ap.add_argument("--stagger-v", type=float)
 ap.add_argument("--hurt-full", type=float)
 ap.add_argument("--body-drain", type=float)
 ap.add_argument("--obs-state", type=int, choices=[0, 1])
+ap.add_argument("--getup-speed-share", type=float,
+                help="share of the speed limit's damping on while the get-up brain has the body (Grandma on v2: 0.5); 1 takes the key out")
+ap.add_argument("--style", nargs="*", default=[], help="style keys as key=val (writes into e['style'], e.g. range_m=0.48 press=1.5)")
 ap.add_argument("--models", default=os.path.join("models", "v2"), help="the folder of configs to change (models/v3 for the v3 bodies)")
 args = ap.parse_args()
+style_updates = {}
+for item in args.style:
+    k, v = item.split("=", 1)
+    try:
+        style_updates[k] = int(v) if v.lstrip("-").isdigit() else float(v)
+    except ValueError:
+        style_updates[k] = v
 for path in glob.glob(os.path.join(HERE, args.models, "*_policy_config.json")):
     with open(path, "r", encoding="utf-8") as f:
         cfg = json.load(f)
@@ -38,6 +48,13 @@ for path in glob.glob(os.path.join(HERE, args.models, "*_policy_config.json")):
                 e[key] = getattr(args, key)
         if args.obs_state is not None:
             e["obs_state"] = bool(args.obs_state)
+        if args.getup_speed_share is not None:
+            if args.getup_speed_share >= 1.0:
+                e.pop("getup_speed_share", None)
+            else:
+                e["getup_speed_share"] = args.getup_speed_share
+        if style_updates:
+            e.setdefault("style", {}).update(style_updates)
     if mine:
         with open(path, "w", encoding="utf-8") as f:
             json.dump(cfg, f, indent=2)

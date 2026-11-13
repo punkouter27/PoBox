@@ -25,8 +25,8 @@ import torch
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, HERE)
-from envs.cgetup import CGetUp, quat_yaw, to_heading  # noqa: E402
-from ppo import PPO, PPOConfig  # noqa: E402
+import envs.cgetup as cgetup  # noqa: E402
+from ppo import PPO, PPOConfig, obs_dim_of  # noqa: E402
 
 HANDOVER_S = 1.5
 
@@ -42,34 +42,40 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--name", required=True)
     ap.add_argument("--ckpt", required=True)
+    ap.add_argument("--models", default="", help="models folder (e.g. models/v3); empty keeps cgetup default")
     ap.add_argument("--n", type=int, default=1500)
     ap.add_argument("--worlds", type=int, default=64)
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--out", default="")
     args = ap.parse_args()
+    if args.models:
+        cgetup.MODELS = args.models if os.path.isabs(args.models) else os.path.join(HERE, args.models)
     torch.set_num_threads(2)
-    env = CGetUp(args.name, args.worlds, threads=args.threads, assist=0.0, obs_noise=1.0, stand_share=0.0, slack_lo=0.6, seed=7)
-    ppo = PPO(100, env.A, 1, "cpu", PPOConfig())
-    extra = ppo.load(args.ckpt if os.path.isabs(args.ckpt) else os.path.join(HERE, args.ckpt))
+    env = cgetup.CGetUp(args.name, args.worlds, threads=args.threads, assist=0.0, obs_noise=1.0, stand_share=0.0, slack_lo=0.6, seed=7)
+    ckpt = args.ckpt if os.path.isabs(args.ckpt) else os.path.join(HERE, args.ckpt)
+    obs_dim = obs_dim_of(ckpt)
+    ppo = PPO(obs_dim, env.A, 1, "cpu", PPOConfig())
+    extra = ppo.load(ckpt)
     obs = torch.from_numpy(env.reset())
     env.step_count[:] = 0
     keep = {k: [] for k in ("joint", "jvel", "z", "tilt", "lin", "ang")}
     episodes = got = 0
     while got < args.n and episodes < args.n * 6:
+        pi_obs = obs if obs.shape[1] == obs_dim else torch.nn.functional.pad(obs, (0, obs_dim - obs.shape[1]))
         with torch.no_grad():
-            a = ppo.model.actor(ppo.obs_rms.normalize(obs, 10.0))
+            a = ppo.model.actor(ppo.obs_rms.normalize(pi_obs, 10.0))
         o, _, done, _ = env.step(a.numpy())
         obs = torch.from_numpy(o)
         episodes += int(done.sum())
         ready = np.nonzero((env.stood_for >= HANDOVER_S) & (env.step_count < env.max_steps - 1))[0]
         if len(ready):
-            yaw = quat_yaw(env.QUAT[ready])
+            yaw = cgetup.quat_yaw(env.QUAT[ready])
             unyaw = np.stack([np.cos(-yaw / 2), np.zeros_like(yaw), np.zeros_like(yaw), np.sin(-yaw / 2)], -1)
             keep["joint"].append(env.QJ[ready].copy())
             keep["jvel"].append(env.VJ[ready].copy())
             keep["z"].append(env.POS[ready, 2].copy())
             keep["tilt"].append(quat_mul(unyaw, env.QUAT[ready]))
-            keep["lin"].append(to_heading(env.ROOTV[ready, :3], yaw))
+            keep["lin"].append(cgetup.to_heading(env.ROOTV[ready, :3], yaw))
             keep["ang"].append(env.ROOTV[ready, 3:6].copy())
             got += len(ready)
             env.step_count[ready] = env.max_steps        # that world's episode is over: the next step resets it

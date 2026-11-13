@@ -169,6 +169,23 @@ class GetUpEnv(BoxingEnv):
         self.since_drives = torch.where(m1, torch.zeros_like(self.since_drives), self.since_drives)
         self.was_floored = torch.where(m1, torch.zeros_like(self.was_floored), self.was_floored)
 
+    def _place_bodies(self, mask: torch.Tensor, q: torch.Tensor) -> None:
+        """F4 get-up in a pile: downed bodies placed 0.15-0.85 m beside each fighter's spot (25% away)."""
+        N, dev = self.N, self.device
+        lim = self.ring_half - 0.5
+        for j in range(self.n_bodies):
+            k = j % self.K
+            base = q[:, self.root_q[k]:self.root_q[k] + 2]
+            ang = self._u(N, lo=-math.pi, hi=math.pi)
+            rad = self._u(N, lo=0.15, hi=0.85)
+            xy = (base + torch.stack([torch.cos(ang), torch.sin(ang)], -1) * rad[:, None]).clamp(-lim, lim)
+            there = self._u(N) > 0.25
+            away = torch.tensor([30.0 + 5.0 * j, 30.0], device=dev).expand(N, 2)
+            xy = torch.where(there[:, None], xy, away)
+            pos = torch.cat([xy, torch.zeros(N, 1, device=dev)], -1)
+            self.mocap_pos[:, j] = torch.where(mask[:, None], pos, self.mocap_pos[:, j])
+            self.mocap_quat[:, j] = torch.where(mask[:, None], yaw_quat(self._u(N, lo=-math.pi, hi=math.pi)), self.mocap_quat[:, j])
+
     # ---- what the fighter is shown -------------------------------------------------------------
     def _geometry(self) -> Dict[str, torch.Tensor]:
         g = super()._geometry()

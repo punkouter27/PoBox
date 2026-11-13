@@ -351,13 +351,13 @@
   "speed": 1.0,
   "style": {
     "head": 1.8,
-    "body": 0.8,
+    "body": 1.0,
     "power": 1.8,
-    "pace_s": 0.9,
+    "pace_s": 0.45,
     "taken": 0.4,
     "block_w": 0.0,
-    "range_m": 0.6,
-    "press": 0.4,
+    "range_m": 0.48,
+    "press": 1.5,
     "energy": 0.8
   },
   "display": "TRUMP",

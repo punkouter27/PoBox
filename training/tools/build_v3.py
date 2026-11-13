@@ -71,7 +71,7 @@ def save(path: str, obj: dict) -> None:
         json.dump(obj, f, indent=2)
 
 
-def build(name: str, v2_models: str, rigs: str, models: str) -> tuple:
+def build(name: str, v2_models: str, rigs: str, models: str, neck: bool = False) -> tuple:
     v2 = json.load(open(os.path.join(v2_models, f"{name}_policy_config.json"), encoding="utf-8"))
     rig = json.load(open(os.path.join(HERE, "rigs", "v2", f"{name}.json"), encoding="utf-8"))
     rig["human_force"] = True
@@ -80,6 +80,8 @@ def build(name: str, v2_models: str, rigs: str, models: str) -> tuple:
     rig.pop("joint_kv", None)
     rig["ranges_deg"] = TRUNK_RANGE
     rig["segment_mass_frac"] = mass_frac(name)
+    if neck:
+        rig["neck"] = True
     rig.setdefault("notes", []).append(f"v3 (tools/build_v3.py): human force each way, per-joint action scale, head "
                                        f"{rig['radii']['head']:.3f} m ({HEAD_FILL:.0%} of its half-width), joint_kv standing, trunk bend 60 fwd / 30 back, "
                                        f"de Leva segment masses")
@@ -108,6 +110,7 @@ def main() -> None:
     ap.add_argument("--only", action="append", default=[])
     ap.add_argument("--models", default=os.path.join(HERE, "models", "v3"))
     ap.add_argument("--rigs", default=os.path.join(HERE, "rigs", "v3"))
+    ap.add_argument("--neck", action="store_true", help="enable G15 passive spring-damper neck")
     args = ap.parse_args()
     v2_models = os.path.join(HERE, "models", "v2")
     os.makedirs(args.models, exist_ok=True)
@@ -121,7 +124,7 @@ def main() -> None:
             built[n] = (rig, float(cfg["stand_height"]), cfg)
         else:
             print(f"\n==== {n}", flush=True)
-            built[n] = build(n, v2_models, args.rigs, args.models)
+            built[n] = build(n, v2_models, args.rigs, args.models, neck=args.neck)
     print("\n==== pairs", flush=True)
     for i, a in enumerate(NAMES):
         for b in NAMES[i + 1:]:
