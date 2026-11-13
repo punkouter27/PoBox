@@ -12,6 +12,10 @@ namespace PoBox.Tests
     /// <summary>The free-for-all (Melee scene): every boxer in one MuJoCo ring, each measured against its own opponent.</summary>
     public class FreeForAllTests
     {
+        /// <summary>An empty scene after every test, so nothing of this one is in the next fixture's way (TestScenes).</summary>
+        [UnityEngine.TestTools.UnityTearDown]
+        public System.Collections.IEnumerator LeaveNothingBehind() => TestScenes.Leave();
+
         [UnityTest]
         public IEnumerator EveryBoxerFightsAndASlipIsCounted()
         {

@@ -22,6 +22,10 @@ namespace PoBox.Tests
     /// </summary>
     public class MjGateTests
     {
+        /// <summary>An empty scene after every test, so nothing of this one is in the next fixture's way (TestScenes).</summary>
+        [UnityEngine.TestTools.UnityTearDown]
+        public System.Collections.IEnumerator LeaveNothingBehind() => TestScenes.Leave();
+
         const string Scene = "Assets/Scenes/Testbed.unity";
 
         /// <summary>Every boxer with recordings from C MuJoCo beside it (MjRetrofit.Promote puts them there).</summary>

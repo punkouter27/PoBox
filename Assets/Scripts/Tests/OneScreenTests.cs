@@ -25,6 +25,10 @@ namespace PoBox.Tests
     /// </summary>
     public class OneScreenTests
     {
+        /// <summary>An empty scene after every test, so nothing of this one is in the next fixture's way (TestScenes).</summary>
+        [UnityEngine.TestTools.UnityTearDown]
+        public System.Collections.IEnumerator LeaveNothingBehind() => TestScenes.Leave();
+
         [Test]
         public void TabShortcutTogglesAndPersistsDetailedStats()
         {
@@ -178,6 +182,7 @@ namespace PoBox.Tests
                 Assert.AreEqual(BoutPhase.RoundBreak, bout.Phase, "the first round never ended");
                 Check(hud.Root, phone, at + "round break");
 
+                bout.breakSeconds = 0.5f;           // real-time break: 12 s leaves Until's 20 s budget no room for Round 2
                 yield return Until(() => bout.Phase == BoutPhase.Results);
                 yield return Settle();
                 Assert.AreEqual(BoutPhase.Results, bout.Phase, "the bout never reached a result");

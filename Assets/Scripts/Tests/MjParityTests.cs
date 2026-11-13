@@ -18,6 +18,10 @@ namespace PoBox.Tests
     /// </summary>
     public class MjParityTests
     {
+        /// <summary>An empty scene after every test, so nothing of this one is in the next fixture's way (TestScenes).</summary>
+        [UnityEngine.TestTools.UnityTearDown]
+        public System.Collections.IEnumerator LeaveNothingBehind() => TestScenes.Leave();
+
         const string Scene = "Assets/Scenes/Testbed.unity", Boxer = "Assets/Boxers/Matt";
 
         static IEnumerator Load()

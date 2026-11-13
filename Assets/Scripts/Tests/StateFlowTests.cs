@@ -24,6 +24,10 @@ namespace PoBox.Tests
     /// </summary>
     public class StateFlowTests
     {
+        /// <summary>An empty scene after every test, so nothing of this one is in the next fixture's way (TestScenes).</summary>
+        [UnityEngine.TestTools.UnityTearDown]
+        public System.Collections.IEnumerator LeaveNothingBehind() => TestScenes.Leave();
+
         const float Budget = 90f;
 
         [UnityTest]

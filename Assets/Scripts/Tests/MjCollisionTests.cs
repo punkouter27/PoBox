@@ -22,6 +22,10 @@ namespace PoBox.Tests
     /// </summary>
     public class MjCollisionTests
     {
+        /// <summary>An empty scene after every test, so nothing of this one is in the next fixture's way (TestScenes).</summary>
+        [UnityEngine.TestTools.UnityTearDown]
+        public System.Collections.IEnumerator LeaveNothingBehind() => TestScenes.Leave();
+
         const double OnTheirFeet = 0.10, OneDown = 0.20;     // metres: half a trunk, and a trunk
         const int Steps = 2500;
 

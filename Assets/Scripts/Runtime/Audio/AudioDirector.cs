@@ -52,7 +52,7 @@ namespace PoBox.Audio
     /// can be set by hand), and otherwise plain gains here. <see cref="AudioMeter"/> on the listener
     /// measures and limits the sum.
     /// </summary>
-    public class AudioDirector : MonoBehaviour
+    public partial class AudioDirector : MonoBehaviour
     {
         public Bout bout;
         public AudioListener listener;
@@ -220,7 +220,7 @@ namespace PoBox.Audio
                 _pool[i] = s;
             }
 
-            AudioClip scrape = ScrapeLoop();
+            AudioClip scrape = ProceduralClips.ScrapeLoop();
             for (int i = 0; i < 2; i++)
             {
                 _scrape[i] = Instantiate(_pool[0], transform);
@@ -229,7 +229,7 @@ namespace PoBox.Audio
                 _scrape[i].loop = true;
                 _scrape[i].volume = 0f;
             }
-            AudioClip air = AirLoop();
+            AudioClip air = ProceduralClips.AirLoop();
             for (int i = 0; i < _air.Length; i++)
             {
                 _air[i] = Instantiate(_scrape[0], transform);
@@ -237,15 +237,15 @@ namespace PoBox.Audio
                 _air[i].clip = air;
                 _air[i].timeSamples = i * air.samples / _air.Length;   // four gloves, four places in the loop
             }
-            _squeak = SqueakClip();
+            _squeak = ProceduralClips.SqueakClip();
             _creak = Instantiate(_scrape[0], transform);
             _creak.name = "Ropes";
-            _creak.clip = CreakLoop();
-            _twang = Twang();
-            _clack = Clack();
+            _creak.clip = ProceduralClips.CreakLoop();
+            _twang = ProceduralClips.Twang();
+            _clack = ProceduralClips.Clack();
 
             _heart = Source2D(null);
-            _heart.clip = Heartbeat();
+            _heart.clip = ProceduralClips.Heartbeat();
             _heart.loop = true;
             _breath = Source2D(hits);
             _breath.clip = breath;
@@ -295,160 +295,6 @@ namespace PoBox.Audio
             if (mixer == null) return null;
             AudioMixerGroup[] found = mixer.FindMatchingGroups(name);
             return found != null && found.Length > 0 ? found[0] : null;
-        }
-
-        /// <summary>A second of cloth being rubbed: white noise with the top and the bottom taken off, its end faded into its beginning.</summary>
-        static AudioClip ScrapeLoop()
-        {
-            const int rate = 22050, fade = 2048;
-            var rng = new System.Random(7);
-            var raw = new float[rate + fade];
-            float low = 0f, slow = 0f;
-            for (int i = 0; i < raw.Length; i++)
-            {
-                float white = (float)rng.NextDouble() * 2f - 1f;
-                low += 0.35f * (white - low);           // off above about 2 kHz
-                slow += 0.02f * (low - slow);           // what is under about 70 Hz
-                raw[i] = (low - slow) * 1.6f;
-            }
-            return Loop("Scrape", raw, rate, fade);
-        }
-
-        /// <summary>A second of moving air: noise with its lows and its highs taken off (a breathy band round 1 kHz), slowly swelling.</summary>
-        static AudioClip AirLoop()
-        {
-            const int rate = 22050, fade = 2048;
-            var rng = new System.Random(13);
-            var raw = new float[rate + fade];
-            float a = 0f, b = 0f;
-            for (int i = 0; i < raw.Length; i++)
-            {
-                float white = (float)rng.NextDouble() * 2f - 1f;
-                a += 0.28f * (white - a);               // off above about 1.5 kHz
-                b += 0.06f * (a - b);                   // what is under about 200 Hz
-                raw[i] = (a - b) * 2.2f * (0.8f + 0.2f * Mathf.Sin(i * 2f * Mathf.PI * 3f / rate));
-            }
-            return Loop("Air", raw, rate, fade);
-        }
-
-        /// <summary>A rubber sole squeaking on the canvas: a chirp from 1.7 to 2.6 kHz, stuttered by stick-slip, an eighth of a second.</summary>
-        static AudioClip SqueakClip()
-        {
-            const int rate = 22050;
-            int n = rate / 8;
-            var data = new float[n];
-            var rng = new System.Random(17);
-            double phase = 0.0;
-            for (int i = 0; i < n; i++)
-            {
-                float t = i / (float)n;
-                double hz = 1700.0 + 900.0 * t;
-                phase += 2.0 * System.Math.PI * hz / rate;
-                float stick = 0.6f + 0.4f * Mathf.Sign(Mathf.Sin(i * 2f * Mathf.PI * 70f / rate));
-                float env = Mathf.Sin(Mathf.PI * t) * (1f - 0.5f * t);
-                data[i] = (float)(System.Math.Sin(phase) + 0.35 * System.Math.Sin(2.0 * phase) + 0.15 * (rng.NextDouble() - 0.5)) * stick * env * 0.5f;
-            }
-            AudioClip clip = AudioClip.Create("Squeak", n, 1, rate, false);
-            clip.SetData(data, 0);
-            return clip;
-        }
-
-        /// <summary>A second of rope being stretched: stick-slip, a ragged train of little knocks each ringing at its own pitch, swelling and falling.</summary>
-        static AudioClip CreakLoop()
-        {
-            const int rate = 22050, fade = 2048;
-            var rng = new System.Random(11);
-            var raw = new float[rate + fade];
-            float ring = 0f, ringV = 0f, w = 0.1f, next = 0f;
-            for (int i = 0; i < raw.Length; i++)
-            {
-                if (i >= next)
-                {
-                    // A slip: a knock, and the next one a fortieth of a second or so later.
-                    ringV += 0.03f + (float)rng.NextDouble() * 0.02f;
-                    w = 2f * Mathf.PI * (260f + (float)rng.NextDouble() * 220f) / rate;
-                    next = i + rate / (28f + (float)rng.NextDouble() * 24f);
-                }
-                // A damped resonator: the rope's own ring under each knock.
-                ringV -= w * w * ring + 0.004f * ringV;
-                ring += ringV;
-                raw[i] = ring * (0.55f + 0.45f * Mathf.Sin(2f * Mathf.PI * 3f * i / rate));
-            }
-            return Loop("Creak", raw, rate, fade);
-        }
-
-        /// <summary>The timekeeper's sticks: two pieces of hardwood struck together, a bright knock that is gone in a few hundredths of a second.</summary>
-        static AudioClip Clack()
-        {
-            const int rate = 22050, n = rate / 8;
-            var rng = new System.Random(17);
-            var data = new float[n];
-            float a = 0f, av = 0f, b = 0f, bv = 0f;
-            float wa = 2f * Mathf.PI * 1850f / rate, wb = 2f * Mathf.PI * 2930f / rate;
-            for (int i = 0; i < n; i++)
-            {
-                float t = i / (float)rate;
-                // The strike: a two-millisecond burst of noise into two wooden resonances.
-                float hit = t < 0.002f ? (float)rng.NextDouble() * 2f - 1f : 0f;
-                av += hit * 0.5f - wa * wa * a - 0.02f * av; a += av;
-                bv += hit * 0.4f - wb * wb * b - 0.03f * bv; b += bv;
-                data[i] = (a + 0.6f * b) * Mathf.Exp(-t * 55f) * 0.9f;
-            }
-            AudioClip clip = AudioClip.Create("Clack", n, 1, rate, false);
-            clip.SetData(data, 0);
-            return clip;
-        }
-
-        /// <summary>A rope hit hard: a low thrum that sags in pitch as it dies, with the slap of the body on it at the front.</summary>
-        static AudioClip Twang()
-        {
-            const int rate = 22050, n = rate * 7 / 10;
-            var rng = new System.Random(5);
-            var data = new float[n];
-            float phase = 0f;
-            for (int i = 0; i < n; i++)
-            {
-                float t = i / (float)rate;
-                phase += 2f * Mathf.PI * 78f * (1f + 0.06f * Mathf.Exp(-t * 8f)) / rate;
-                float tone = Mathf.Sin(phase) + 0.5f * Mathf.Sin(2f * phase) + 0.25f * Mathf.Sin(3f * phase + 0.4f);
-                float slap = t < 0.03f ? ((float)rng.NextDouble() * 2f - 1f) * (1f - t / 0.03f) * 0.45f : 0f;
-                data[i] = tone * Mathf.Exp(-t * 5f) * Mathf.Min(1f, t * 400f) * 0.4f + slap;
-            }
-            AudioClip clip = AudioClip.Create("Rope Twang", n, 1, rate, false);
-            clip.SetData(data, 0);
-            return clip;
-        }
-
-        /// <summary>A heartbeat at 75 a minute, looped: lub, dub, rest; each beat a low sine that drops as it dies.</summary>
-        static AudioClip Heartbeat()
-        {
-            const int rate = 22050, n = rate * 4 / 5;
-            var data = new float[n];
-            for (int i = 0; i < n; i++)
-            {
-                float t = i / (float)rate;
-                data[i] = Beat(t, 52f, 0.9f) + Beat(t - 0.28f, 64f, 0.6f);
-            }
-            AudioClip clip = AudioClip.Create("Heartbeat", n, 1, rate, false);
-            clip.SetData(data, 0);
-            return clip;
-        }
-
-        static float Beat(float t, float hz, float level)
-        {
-            if (t < 0f || t > 0.2f) return 0f;
-            float pitch = hz * (1f + 0.4f * Mathf.Exp(-t * 30f));
-            return Mathf.Sin(2f * Mathf.PI * pitch * t) * Mathf.Min(1f, t / 0.006f) * Mathf.Exp(-t * 22f) * level;
-        }
-
-        /// <summary>The first <paramref name="rate"/> samples as a one-second loop: the samples after them are faded into its beginning.</summary>
-        static AudioClip Loop(string name, float[] raw, int rate, int fade)
-        {
-            var data = new float[rate];
-            for (int i = 0; i < rate; i++) data[i] = i < fade ? Mathf.Lerp(raw[rate + i], raw[i], i / (float)fade) : raw[i];
-            AudioClip clip = AudioClip.Create(name, rate, 1, rate, false);
-            clip.SetData(data, 0);
-            return clip;
         }
 
         AudioSource Source2D(AudioMixerGroup group)
@@ -684,212 +530,6 @@ namespace PoBox.Audio
             ActiveVoices = active;
         }
 
-        void Scrape(float dt)
-        {
-            if (_ring == null) _ring = FindAnyObjectByType<MjRing>();
-            for (int i = 0; i < 2; i++)
-            {
-                AudioSource s = _scrape[i];
-                MjBoxer b = _ring == null ? null : i == 0 ? _ring.red : _ring.blue;
-                float k = 0f;
-                if (b != null && Bout.SimRunning)
-                {
-                    k = Mathf.InverseLerp(scrapeSpeed.x, scrapeSpeed.y, _ring.FootSlide(b, out Vector3 at));
-                    if (k > 0f) s.transform.position = at;
-                }
-                // Up at once, away over a fifth of a second: a scrape is short.
-                float level = k * scrapeVolume * _hitsK;
-                s.volume = level > s.volume ? level : Mathf.MoveTowards(s.volume, level, dt * 5f * scrapeVolume);
-                s.pitch = Mathf.Lerp(0.75f, 1.35f, k);
-                if (s.volume > 0.001f && !s.isPlaying) s.Play();
-                else if (s.volume <= 0.001f && s.isPlaying) s.Pause();
-
-                // A pivot: one squeak per turn, not a stream of them.
-                if (b == null || !Bout.SimRunning) continue;
-                float spin = _ring.FootSpin(b, out Vector3 foot);
-                if (spin > squeakSpin && Time.time - _squeakAt[i] > 0.35f)
-                {
-                    _squeakAt[i] = Time.time;
-                    PlayAt(_squeak, foot, squeakVolume * Mathf.Lerp(0.4f, 1f, Mathf.InverseLerp(squeakSpin, 3f * squeakSpin, spin)) * _hitsK,
-                           Mathf.Lerp(0.9f, 1.2f, Mathf.InverseLerp(squeakSpin, 3f * squeakSpin, spin)));
-                }
-            }
-            Air(dt);
-        }
-
-        /// <summary>
-        /// The eight sections: together the other half of the bed (eight uncorrelated places in the loop add up to
-        /// about the square root of eight, and the distance takes about a third off), each leaning with the scorer.
-        /// </summary>
-        void Sections(float level)
-        {
-            float side = ArenaMood.Side;                 // -1 red, +1 blue; blue's half is towards +x +z
-            for (int k = 0; k < _sections.Length; k++)
-            {
-                if (_sections[k] == null) continue;
-                float behind = Vector2.Dot(_sectionDir[k], new Vector2(0.7071f, 0.7071f)) * side;   // +1 behind the scorer
-                float lean = behind > 0f ? 1f + sectionLean * behind : 1f + 0.5f * sectionLean * behind;
-                _sections[k].volume = level * 0.5f * 1.5f / Mathf.Sqrt(_sections.Length) * lean;
-            }
-        }
-
-        /// <summary>Each glove's air: level and pitch from the speed MuJoCo measures, placed at the glove.</summary>
-        void Air(float dt)
-        {
-            for (int i = 0; i < _air.Length; i++)
-            {
-                AudioSource s = _air[i];
-                if (s == null) continue;
-                MjBoxer b = _ring == null ? null : i < 2 ? _ring.red : _ring.blue;
-                float k = 0f;
-                if (b != null && Bout.SimRunning)
-                {
-                    Vector3 v = _ring.GloveVelocity(b, i % 2);
-                    k = Mathf.InverseLerp(whooshSpeed.x, whooshSpeed.y, v.magnitude);
-                    if (k > 0f) s.transform.position = b.GlovePosition(i % 2);
-                }
-                float level = k * k * whooshVolume * _hitsK;
-                // Up at once, away over a tenth of a second: the air stops when the glove does.
-                s.volume = level > s.volume ? level : Mathf.MoveTowards(s.volume, level, dt * 10f * whooshVolume);
-                s.pitch = Mathf.Lerp(0.8f, 1.5f, k);
-                if (s.volume > 0.001f && !s.isPlaying) s.Play();
-                else if (s.volume <= 0.001f && s.isPlaying) s.Pause();
-            }
-        }
-
-        void Ropes(float dt)
-        {
-            // The creak: the ropes as drawn, from the most bowed one.
-            if (_ropes == null) _ropes = FindAnyObjectByType<RopeFlex>();
-            float k = _ropes != null && Bout.SimRunning ? Mathf.InverseLerp(ropeBow.x, ropeBow.y, _ropes.Strain) : 0f;
-            if (k > 0f) _creak.transform.position = _ropes.StrainAt;
-            _creak.pitch = Mathf.Lerp(0.8f, 1.25f, k);
-            Fade(_creak, k * ropeVolume * _hitsK, dt * 3f * ropeVolume);
-
-            // The twang: any boxer arriving hard, not leaning harder (the load has jumped past it from well under it).
-            if (_ring == null || !_ring.Ready || !Bout.SimRunning) return;
-            MjBoxer[] boxers = _ring.boxers;
-            if (boxers == null || boxers.Length == 0) { _pair[0] = _ring.red; _pair[1] = _ring.blue; boxers = _pair; }
-            if (_lastRope.Length != boxers.Length)
-            {
-                _lastRope = new float[boxers.Length];
-                _lastTwang = new float[boxers.Length];
-                for (int i = 0; i < boxers.Length; i++) _lastTwang[i] = -99f;
-            }
-            for (int i = 0; i < boxers.Length; i++)
-            {
-                if (boxers[i] == null) continue;
-                float load = _ring.RopeLoad(boxers[i], out Vector3 at);
-                if (load >= ropeTwang && _lastRope[i] < ropeTwang * 0.5f && Time.unscaledTime - _lastTwang[i] > 0.4f)
-                {
-                    _lastTwang[i] = Time.unscaledTime;
-                    PlayAt(_twang, at, Mathf.Lerp(0.4f, 1f, Mathf.InverseLerp(ropeTwang, ropeTwang * 3f, load)) * ropeVolume * 2f, Random.Range(0.9f, 1.1f));
-                }
-                _lastRope[i] = load;
-            }
-        }
-
-        /// <summary>1 for the close shots, -1 for the wide ones, 0 for the rest.</summary>
-        static float Closeness(Shot shot)
-        {
-            switch (shot)
-            {
-                case Shot.Impact: case Shot.ShoulderRed: case Shot.ShoulderBlue: case Shot.LowRopes: return 1f;
-                case Shot.Wide: case Shot.Overhead: case Shot.HighCorner: return -1f;
-                default: return 0f;
-            }
-        }
-
-        void Rocked(Shot shot, float dt)
-        {
-            // The boxer the picture is about: the close-up's, the far one over a shoulder, or with both in it
-            // the worse of the two, felt at half.
-            float share = 1f;
-            Fighter f = null;
-            if (bout != null)
-            {
-                int focused = BroadcastDirector.Instance != null ? BroadcastDirector.Instance.Focused : -1;
-                if (shot == Shot.Impact) f = focused == 1 ? bout.blue : focused == 0 ? bout.red : _victim;
-                else if (shot == Shot.ShoulderRed) f = bout.blue;
-                else if (shot == Shot.ShoulderBlue) f = bout.red;
-                else
-                {
-                    share = 0.5f;
-                    f = bout.red == null || (bout.blue != null && bout.blue.Daze01 > bout.red.Daze01) ? bout.blue : bout.red;
-                }
-            }
-            float target = f != null && f.Staggered ? f.Daze01 * share : 0f;
-            // In fast, out with the daze.
-            _rock = Mathf.MoveTowards(_rock, target, dt * (target > _rock ? 4f : 0.6f));
-            if (_lowPass != null)
-            {
-                _lowPass.enabled = _rock > 0.01f;
-                _lowPass.cutoffFrequency = 22000f * Mathf.Pow(rockedCutoff / 22000f, _rock);
-            }
-            _heart.pitch = 1f + 0.3f * _rock;
-            Fade(_heart, _rock * heartbeatVolume, dt);
-        }
-
-        /// <summary>Takes a looping source towards a level, playing it only while it can be heard.</summary>
-        void Reactions()
-        {
-            if (!synth || ImpactSynth.CrowdOoh == null) return;
-            Bout b = Bout.Instance;
-            float now = Time.unscaledTime;
-            if (b == null || b.Phase != BoutPhase.Fight) { _lastLanded = now; _clinchFor = 0f; return; }
-            // A big one thrown, nothing touched for 0.35 s: it whistled past.
-            if (_swinger != null && now - _swungAt > 0.35f)
-            {
-                _swinger = null;
-                float e = Mathf.Clamp01(Excitement.Value);
-                if (now - _lastOoh > 4f && Random.value < Mathf.Lerp(0.25f, 0.7f, e))
-                {
-                    _lastOoh = now;
-                    PlayCrowd(ImpactSynth.CrowdOoh, Mathf.Lerp(0.25f, 0.6f, e));
-                }
-            }
-            // Chest to chest, or nothing landing: the room lets them know.
-            if (b.red != null && b.blue != null && b.red.pelvis != null && b.blue.pelvis != null)
-            {
-                bool close = (b.red.pelvis.transform.position - b.blue.pelvis.transform.position).magnitude < 0.55f;
-                _clinchFor = close ? _clinchFor + Time.unscaledDeltaTime : 0f;
-            }
-            bool stalled = _clinchFor > 4f || now - _lastLanded > 14f;
-            if (stalled && now - _lastBoo > 12f)
-            {
-                _lastBoo = now;
-                _lastLanded = now - 7f;     // again in a while if it goes on
-                PlayCrowd(ImpactSynth.CrowdBoo, 0.45f);
-            }
-        }
-
-        AudioReverbZone _hall;
-        bool _hallLooked;
-
-        /// <summary>
-        /// The arena's reverb follows the shot (2026-10-31): an indoor arena of a few thousand seats, about 2.3 s, its
-        /// first reflections 35 ms late; drier on the close-ups (we are at the ropes), wetter out wide (we hear the room).
-        /// The zone over the ring was Unity's Auditorium preset whatever the camera did.
-        /// </summary>
-        void Hall(float close)
-        {
-            if (!_hallLooked) { _hallLooked = true; _hall = FindAnyObjectByType<AudioReverbZone>(); }
-            if (_hall == null) return;
-            if (_hall.reverbPreset != AudioReverbPreset.User) _hall.reverbPreset = AudioReverbPreset.User;
-            float wide = Mathf.InverseLerp(1f, -1f, close);                    // 0 close, 1 wide
-            _hall.room = (int)Mathf.Lerp(-1500f, -650f, wide);
-            _hall.roomHF = (int)Mathf.Lerp(-1200f, -700f, wide);
-            _hall.roomLF = 0;
-            _hall.decayTime = Mathf.Lerp(1.9f, 2.5f, wide);
-            _hall.decayHFRatio = 0.62f;
-            _hall.reflections = (int)Mathf.Lerp(-1600f, -900f, wide);
-            _hall.reflectionsDelay = 0.035f;
-            _hall.reverb = (int)Mathf.Lerp(-900f, -250f, wide);
-            _hall.reverbDelay = 0.03f;
-            _hall.diffusion = 100f;
-            _hall.density = 100f;
-        }
-
         static void Fade(AudioSource s, float level, float rate)
         {
             if (s.clip == null) return;
@@ -899,73 +539,6 @@ namespace PoBox.Audio
         }
 
         static float Db(float linear) => linear > 1e-4f ? 20f * Mathf.Log10(linear) : -80f;
-
-        // ------------------------------------------------------------ helpers
-
-        // ------------------------------------------------------------ voices
-
-        VoiceSet Of(Fighter f) => System.Array.IndexOf(highVoices, f.displayName) >= 0 ? highVoice : lowVoice;
-
-        /// <summary>
-        /// A boxer's voice, from its head. One sound at a time a boxer (a new one waits out <paramref name="hold"/>
-        /// seconds of the last, unless it must be heard). Heavier boxers sound a little lower, and no two alike.
-        /// </summary>
-        void Voice(Fighter f, AudioClip[] takes, float volume, float hold, bool must = false)
-        {
-            if (f == null || takes == null || takes.Length == 0) return;
-            float now = Time.time;
-            if (!must && _voiceFree.TryGetValue(f, out float free) && now < free) return;
-            _voiceFree[f] = now + hold;
-            float pitch = Mathf.Clamp(Mathf.Sqrt(80f / Mathf.Max(40f, f.totalMass)), 0.85f, 1.15f)
-                          * (1f + 0.04f * ((f.displayName.GetHashCode() & 0xff) / 127.5f - 1f)) * Random.Range(0.96f, 1.04f);
-            PlayAt(Pick(takes), f.HeadPosition, volume, pitch);
-        }
-
-        /// <summary>How spent a boxer sounds, 0 to 1: out of energy (its reserve, if it tires, or its stamina), or dazed.</summary>
-        static float Tiredness(Fighter f)
-        {
-            float spent = 1f - f.Stamina;
-            if (f.boxer != null && f.boxer.Config != null && f.boxer.Config.fatigue_j > 0.0) spent = Mathf.Max(spent, 1f - (float)f.boxer.Reserve);
-            return Mathf.Max(spent, 0.8f * f.Daze01);
-        }
-
-        /// <summary>
-        /// Heard between the punches: a boxer down groans for a while; one on its feet but tired pants, oftener and
-        /// louder the more spent it is, and groans now and then when it is nearly done.
-        /// </summary>
-        void Breathing()
-        {
-            if (!Bout.SimRunning) return;
-            float now = Time.time;
-            foreach (Fighter f in _all)
-            {
-                if (f == null || !f.isActiveAndEnabled) continue;
-                AudioClip[] takes;
-                float interval, volume;
-                if (f.IsDown)
-                {
-                    if (!_downAt.TryGetValue(f, out float since)) _downAt[f] = since = now;
-                    if (now - since > groanSeconds) continue;
-                    takes = Of(f).groan;
-                    interval = Random.Range(2.2f, 3.8f);
-                    volume = groanVolume * 0.75f;
-                }
-                else
-                {
-                    _downAt.Remove(f);
-                    float tired = Tiredness(f);
-                    if (tired < tiredFrom) { _nextBreath.Remove(f); continue; }
-                    float k = Mathf.InverseLerp(tiredFrom, 1f, tired);
-                    takes = k > 0.5f && Random.value < 0.25f ? Of(f).groan : Of(f).pant;
-                    interval = Mathf.Lerp(2.4f, 0.8f, k) * Random.Range(0.8f, 1.2f);
-                    volume = Mathf.Lerp(0.15f, pantVolume, k);
-                }
-                if (!_nextBreath.TryGetValue(f, out float next)) { _nextBreath[f] = now + interval * Random.value; continue; }
-                if (now < next) continue;
-                _nextBreath[f] = now + interval;
-                Voice(f, takes, volume, 0.4f);
-            }
-        }
 
         static AudioClip Pick(AudioClip[] set) =>set != null && set.Length > 0 ? set[Random.Range(0, set.Length)] : null;
 
@@ -984,21 +557,6 @@ namespace PoBox.Audio
         void PlayCrowd(AudioClip clip, float volume)
         {
             if (clip != null && _crowdSource != null) _crowdSource.PlayOneShot(clip, volume);
-        }
-
-        /// <summary>Ten seconds left in the round: the timekeeper knocks his sticks three times.</summary>
-        void TenSeconds()
-        {
-            Bout b = bout != null ? bout : Bout.Instance;
-            if (b == null || _clack == null) return;
-            bool ten = b.Phase == BoutPhase.Fight && b.RoundTimeLeft <= 10f && b.RoundTimeLeft > 0f;
-            if (!ten) { if (b.Phase != BoutPhase.Fight && b.Phase != BoutPhase.Count) _clacksAt = -1f; return; }
-            if (_clacksAt < 0f) { _clacksAt = Time.unscaledTime; _clacks = 0; }
-            if (_clacks < 3 && Time.unscaledTime >= _clacksAt + _clacks * 0.22f)
-            {
-                PlayRing(_clack, 0.8f);
-                _clacks++;
-            }
         }
 
         void PlayRing(AudioClip clip, float volume)

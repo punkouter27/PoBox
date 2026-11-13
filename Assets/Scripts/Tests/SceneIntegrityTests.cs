@@ -17,6 +17,10 @@ namespace PoBox.Tests
     /// </summary>
     public class SceneIntegrityTests
     {
+        /// <summary>An empty scene after every test, so nothing of this one is in the next fixture's way (TestScenes).</summary>
+        [UnityEngine.TestTools.UnityTearDown]
+        public System.Collections.IEnumerator LeaveNothingBehind() => TestScenes.Leave();
+
         static readonly string[] Scenes = { "Menu", "Arena", "Melee", "Testbed" };
 
         [UnityTest]

@@ -67,7 +67,8 @@ public class MjcfGenerationContext {
 
   public string GenerateName(Component comp) {
     var settings = MjGlobalSettings.Instance;
-    if (settings?.UseRawGameObjectNames ?? false) {
+    // PoBox: use Unity lifetime check (!= null), not C# ?. which reads destroyed objects.
+    if (settings != null && settings.UseRawGameObjectNames) {
       return comp.gameObject.name;
     } else {
       var name = $"{comp.gameObject.name}_{_numGeneratedNames}";

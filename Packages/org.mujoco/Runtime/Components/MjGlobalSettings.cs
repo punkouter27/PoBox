@@ -342,8 +342,9 @@ public class MjGlobalSettings : MonoBehaviour {
         if (instances.Length > 1) {
           throw new InvalidOperationException(
               "Only one MjGlobalSettings instance is allowed - please resolve manually.");
-        } else if (instances.Length == 1) {
-          _instance = instances[0];
+        } else {
+          // PoBox: clear stale destroyed references so Instance does not outlive an unloaded scene.
+          _instance = instances.Length == 1 ? instances[0] : null;
         }
      }
      return _instance;
