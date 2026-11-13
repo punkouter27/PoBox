@@ -119,6 +119,13 @@ namespace PoBox.EditorTools
         [MenuItem("PoBox/Android/Build APK", priority = 61)]
         public static void Build()
         {
+            // A cross-target build from another platform can strip URP and glTFast shaders (PlayAab.cs).
+            if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android &&
+                !EditorUserBuildSettings.SwitchActiveBuildTarget(BuildTargetGroup.Android, BuildTarget.Android))
+            {
+                Debug.LogError("[PoBox] Android build aborted — failed to switch active build target to Android.");
+                return;
+            }
             string report = Report(true);
             if (report.StartsWith("NOT ready")) { Debug.LogError("[PoBox] Android build not started. " + report); return; }
             Directory.CreateDirectory("Build/Android");
@@ -137,6 +144,126 @@ namespace PoBox.EditorTools
             };
             BuildSummary summary = BuildPipeline.BuildPlayer(options).summary;
             Debug.Log($"[PoBox] Android build {summary.result}: {summary.totalSize / (1024 * 1024)} MB in {summary.totalTime.TotalMinutes:0.0} min, {summary.totalErrors} error(s). {summary.outputPath}");
+        }
+
+        /// <summary>Applies safe, lossless-to-eye/ear texture (ASTC 6x6, UI mipmaps off) and audio (Vorbis quality, mono SFX/voice, CompressedInMemory for long clips) import settings.</summary>
+        [MenuItem("PoBox/Android/Optimize Assets", priority = 62)]
+        public static void OptimizeAssets()
+        {
+            int texCount = 0, audioCount = 0;
+            AssetDatabase.StartAssetEditing();
+            try
+            {
+                foreach (string p in Directory.GetFiles("Assets/UI/Icons", "*.png"))
+                    if (SetTexture(p, mipmap: false, npotNone: true, androidMax: 128, TextureImporterFormat.ASTC_6x6)) texCount++;
+
+                foreach (string p in Directory.GetFiles("Assets/UI/Portraits", "*.png"))
+                    if (SetTexture(p, mipmap: false, npotNone: true, androidMax: 1024, TextureImporterFormat.ASTC_6x6)) texCount++;
+
+                foreach (string dir in new[] { "Assets/Textures/Generated", "Assets/Textures/Kenney" })
+                {
+                    if (!Directory.Exists(dir)) continue;
+                    foreach (string p in Directory.GetFiles(dir, "*.png"))
+                        if (SetTexture(p, mipmap: null, npotNone: false, androidMax: 1024, TextureImporterFormat.ASTC_6x6)) texCount++;
+                }
+                if (File.Exists("Assets/Textures/AmbientCG/Fabric030_Normal.jpg"))
+                    if (SetTexture("Assets/Textures/AmbientCG/Fabric030_Normal.jpg", mipmap: null, npotNone: false, androidMax: 1024, TextureImporterFormat.ASTC_6x6)) texCount++;
+
+                // Announcer clips call AudioClip.GetData() for jaw animation, so they must stay DecompressOnLoad.
+                foreach (string p in Directory.GetFiles("Assets/Announcer/Voice", "*.wav"))
+                    if (SetAudio(p, AudioClipLoadType.DecompressOnLoad, 0.6f, forceMono: true)) audioCount++;
+
+                if (File.Exists("Assets/Audio/Real/crowdBed.wav") && SetAudio("Assets/Audio/Real/crowdBed.wav", AudioClipLoadType.Streaming, 0.5f, forceMono: false)) audioCount++;
+                if (File.Exists("Assets/Audio/Real/crowdApplause.wav") && SetAudio("Assets/Audio/Real/crowdApplause.wav", AudioClipLoadType.CompressedInMemory, 0.55f, forceMono: true)) audioCount++;
+                foreach (string p in new[] { "Assets/Audio/Real/crowdSwell.wav", "Assets/Audio/Real/crowdGroan.wav" })
+                    if (File.Exists(p) && SetAudio(p, AudioClipLoadType.CompressedInMemory, 0.55f, forceMono: false)) audioCount++;
+                foreach (string p in new[] { "Assets/Audio/Real/breath.wav", "Assets/Audio/Real/lapBell.wav" })
+                    if (File.Exists(p) && SetAudio(p, AudioClipLoadType.CompressedInMemory, 0.65f, forceMono: true)) audioCount++;
+                if (File.Exists("Assets/Audio/Real/sting.wav") && SetAudio("Assets/Audio/Real/sting.wav", AudioClipLoadType.DecompressOnLoad, 0.65f, forceMono: false)) audioCount++;
+
+                if (Directory.Exists("Assets/Audio/Synth"))
+                    foreach (string p in Directory.GetFiles("Assets/Audio/Synth", "*.wav"))
+                        if (SetAudio(p, AudioClipLoadType.DecompressOnLoad, 0.7f, forceMono: true)) audioCount++;
+
+                if (Directory.Exists("Assets/Audio/Kenney"))
+                    foreach (string p in Directory.GetFiles("Assets/Audio/Kenney", "*.ogg"))
+                        if (SetAudio(p, AudioClipLoadType.DecompressOnLoad, 0.7f, forceMono: true)) audioCount++;
+            }
+            finally
+            {
+                AssetDatabase.StopAssetEditing();
+                AssetDatabase.SaveAssets();
+                AssetDatabase.Refresh();
+            }
+            Debug.Log($"[PoBox] Optimized {texCount} texture(s) and {audioCount} audio clip(s).");
+        }
+
+        [MenuItem("PoBox/Android/Last Build Breakdown", priority = 63)]
+        public static void LastBuildBreakdown()
+        {
+            if (!File.Exists("Library/LastBuild.buildreport")) { Debug.LogWarning("[PoBox] No Library/LastBuild.buildreport found."); return; }
+            var objs = UnityEditorInternal.InternalEditorUtility.LoadSerializedFileAndForget("Library/LastBuild.buildreport");
+            var br = objs != null && objs.Length > 0 ? objs[0] as BuildReport : null;
+            if (br == null) return;
+            var byFolder = new System.Collections.Generic.Dictionary<string, ulong>();
+            var items = new System.Collections.Generic.List<(ulong size, string type, string path)>();
+            foreach (PackedAssets pa in br.packedAssets)
+                foreach (PackedAssetInfo c in pa.contents)
+                {
+                    items.Add((c.packedSize, c.type.ToString(), c.sourceAssetPath));
+                    string[] parts = (c.sourceAssetPath ?? "").Split('/');
+                    string key = parts.Length >= 2 ? parts[0] + "/" + parts[1] : (string.IsNullOrEmpty(c.sourceAssetPath) ? "(builtin)" : c.sourceAssetPath);
+                    byFolder[key] = (byFolder.TryGetValue(key, out ulong v) ? v : 0) + c.packedSize;
+                }
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("[PoBox] BuildReport folders (uncompressed packedSize):");
+            foreach (var kv in System.Linq.Enumerable.OrderByDescending(byFolder, x => x.Value))
+                if (kv.Value >= 512 * 1024) sb.AppendLine($"  {kv.Value / (1024.0 * 1024.0):F2} MB  {kv.Key}");
+            sb.AppendLine("[PoBox] Top 20 packed assets:");
+            foreach (var it in System.Linq.Enumerable.Take(System.Linq.Enumerable.OrderByDescending(items, x => x.size), 20))
+                sb.AppendLine($"  {it.size / (1024.0 * 1024.0):F2} MB | {it.type} | {it.path}");
+            Debug.Log(sb.ToString());
+        }
+
+        static bool SetTexture(string path, bool? mipmap, bool npotNone, int androidMax, TextureImporterFormat androidFormat)
+        {
+            var ti = AssetImporter.GetAtPath(path.Replace('\\', '/')) as TextureImporter;
+            if (ti == null) return false;
+            bool dirty = false;
+            if (mipmap.HasValue && ti.mipmapEnabled != mipmap.Value) { ti.mipmapEnabled = mipmap.Value; dirty = true; }
+            if (npotNone && ti.npotScale != TextureImporterNPOTScale.None) { ti.npotScale = TextureImporterNPOTScale.None; dirty = true; }
+            TextureImporterPlatformSettings def = ti.GetDefaultPlatformTextureSettings();
+            int cap = Mathf.Min(def.maxTextureSize, androidMax);
+            TextureImporterPlatformSettings ps = ti.GetPlatformTextureSettings("Android");
+            if (!ps.overridden || ps.maxTextureSize != cap || ps.format != androidFormat)
+            {
+                ps.overridden = true;
+                ps.maxTextureSize = cap;
+                ps.format = androidFormat;
+                ti.SetPlatformTextureSettings(ps);
+                dirty = true;
+            }
+            if (dirty) ti.SaveAndReimport();
+            return dirty;
+        }
+
+        static bool SetAudio(string path, AudioClipLoadType loadType, float quality, bool forceMono)
+        {
+            var ai = AssetImporter.GetAtPath(path.Replace('\\', '/')) as AudioImporter;
+            if (ai == null) return false;
+            bool dirty = false;
+            if (ai.forceToMono != forceMono) { ai.forceToMono = forceMono; dirty = true; }
+            AudioImporterSampleSettings s = ai.defaultSampleSettings;
+            if (s.loadType != loadType || s.compressionFormat != AudioCompressionFormat.Vorbis || !Mathf.Approximately(s.quality, quality))
+            {
+                s.loadType = loadType;
+                s.compressionFormat = AudioCompressionFormat.Vorbis;
+                s.quality = quality;
+                ai.defaultSampleSettings = s;
+                dirty = true;
+            }
+            if (dirty) ai.SaveAndReimport();
+            return dirty;
         }
     }
 }
