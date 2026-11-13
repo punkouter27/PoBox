@@ -17,7 +17,7 @@ import sys
 import numpy as np
 import torch
 
-HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+HERE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))     # training/ (this file is in tools/archive)
 sys.path.insert(0, HERE)
 from envs.footwork import FootworkEnv  # noqa: E402
 from envs.match import GetUpMatchEnv, MatchEnv  # noqa: E402
