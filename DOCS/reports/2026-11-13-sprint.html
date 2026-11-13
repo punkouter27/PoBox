@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PoBox sprint report, 2026-11-13</title>
+<style>
+body { font-family: system-ui, sans-serif; max-width: 960px; margin: 24px auto; padding: 0 16px; color: #222; line-height: 1.45; }
+h1, h2 { margin-top: 28px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 12px 0; }
+td, th { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+th { background: #f6f6f6; }
+.ok { background: #e7f6ec; }
+.no { background: #fbeaea; }
+.charts img { max-width: 100%; border: 1px solid #e5e5e5; margin: 8px 0 18px; }
+code { background: #f4f4f4; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>PoBox sprint report, 2026-11-13</h1>
+<p><strong>Summary:</strong> Both grandparents now pass all 4 v3 footwork checks (<code>v3f_grandma</code> and <code>v3f2_grandpa</code>), Grandma passes v3 get-up (54/60 in 3.6 s via <code>v3u6_grandma</code>), new realism/FFA/neck/archive/Elo tooling is wired and tested, Blender fixes shipped for <code>Grandma.glb</code>, <code>Kim.glb</code>, and <code>Sokol.glb</code>, Unity Play-mode tests stand at 124/125, and the Android APK built (340,460,565 bytes; hardware install blocked with no ADB device attached).</p>
+
+<h2>Training runs and exams</h2>
+<table>
+<tr><th>Run</th><th>Scope / It</th><th>Result</th><th>Archive tag</th></tr>
+<tr class="ok"><td><code>v3f_grandma</code></td><td>footwork, 550 it (0.5 h)</td><td>PASS 4/4: stand 1.00, walk err 0.0121 / falls 0.0, turn 0.90, elbow_r 0.423</td><td><code>pass-v3f-grandma</code></td></tr>
+<tr class="no"><td><code>v3f_grandpa</code></td><td>footwork, 468 it (0.5 h)</td><td>3/4: stand 1.00, walk err 0.0106 / falls 0.0, turn 0.833 (fail), knee_l 0.503</td><td><code>v3f-grandpa-turn83</code></td></tr>
+<tr class="ok"><td><code>v3f2_grandpa</code></td><td>footwork resume, 565 it (+0.1 h)</td><td>PASS 4/4: stand 0.967, walk err 0.0180 / falls 0.0, turn 0.967, knee_l 0.520</td><td><code>pass-v3f2-grandpa</code></td></tr>
+<tr class="no"><td><code>v3u6_grandma</code></td><td>getup no-drain share 0.5, 1753 it (1.50 h)</td><td>Getting up PASS (54/60 in 3.6 s); carrying on FAIL (25/54) with old match policy</td><td><code>v3u6-grandma-getup90</code></td></tr>
+<tr class="no"><td><code>v3u6_grandpa</code></td><td>getup no-drain share 0.5, stopped 293 it (0.23 h)</td><td>Time-boxed stop: partial 1/60 in 3.3 s (needs full resume)</td><td><code>v3u6-grandpa-it293</code></td></tr>
+<tr class="no"><td><code>v3c2_trump</code></td><td>closing-distance probe, 43 it (0.07 h)</td><td>Attack 0.11/s at 3.0 m/s, head share 64% (was 43%), pressure 0.02/s; footing 1.33/m (kept v3c1)</td><td><code>probe-v3c2-trump</code></td></tr>
+<tr class="no"><td><code>v3m_grandma</code></td><td>match + handover + 15-step blend, 31 it (0.07 h)</td><td>Getup 27/30 (4.2 s) PASS, guard 29% PASS; 0.00/s hits, 12.0/m falls (too short from footwork)</td><td><code>sprint-v3m-grandma</code></td></tr>
+</table>
+
+<h2>Training curves (TensorBoard CSVs)</h2>
+<div class="charts">
+<img src="2026-11-13-sprint-charts/tb_turn.png" alt="Footwork turn rate">
+<img src="2026-11-13-sprint-charts/tb_getup.png" alt="Get-up unaided rate">
+<img src="2026-11-13-sprint-charts/tb_match.png" alt="Match sprint hits per second">
+</div>
+
+<h2>Free-for-all and Bradley-Terry Elo (2026-11-13)</h2>
+<p><strong>FFA (<code>ffa_exam.py</code>, 3 bouts x 1 round, <code>models/v3</code>, 49.0 s):</strong> 7.46 slips/boxer/min, 31.29 hits/boxer/min, 40 knockdowns (50% beat count). Per boxer hits/min &amp; slips/min: Nick 92.0 / 4.23, Zombie 42.9 / 6.86, Sokol 18.4 / 3.08, Trump 12.2 / 12.25, Matt 12.0 / 4.62, Kim 0.0 / 16.26, Grandma 0.0 / 27.36, Grandpa 0.0 / 28.39.</p>
+<p><strong>Elo (<code>elo.py</code>, 56 bouts, 2/pair, <code>models/v3</code>, written to <code>Assets/Resources/cpu_elo.json</code>):</strong> Nick 1242 (11-2-1), Grandma 1154 (10-4-0, v2-rescaled checkpoint), Kim 1127 (9-4-1), Sokol 1075 (7-4-3), Matt 976 (6-7-1), Zombie 847 (4-10-0), Grandpa 789 (2-10-2), Trump 789 (3-11-0).</p>
+
+<h2>Unity, Android APK, and Art</h2>
+<ul>
+<li><strong>Tests (<code>Tools/run_tests.ps1</code>):</strong> 124/125 passed (OneScreenTests 74/74, MjGateTests 24/24, MjParityTests 3/3, MjCollisionTests 2/2, StateFlowTests 2/2, SceneIntegrityTests 5/5, FeatureTests 3/3, Mujoco 11/11; FreeForAllTests 0/1 at 3/8 vs &gt;=4 scrum punches).</li>
+<li><strong>APK audit:</strong> <code>PoBox/Build/Android/PoBox.apk</code> = 340,460,565 bytes; top unpacked consumer is embedded GLB textures in <code>Assets/Models</code> (889.27 MB raw packed across GLBs). Device deploy blocked (no ADB device connected).</li>
+<li><strong>Art:</strong> Updated <code>Assets/Models/{Grandma,Kim,Sokol}.glb</code> (hands, Kim arms, Grandma bun) with 0 weight errors; renders in <code>SCREENSHOTS/2026-11-13-hands-hair/report.html</code>.</li>
+</ul>
+</body>
+</html>

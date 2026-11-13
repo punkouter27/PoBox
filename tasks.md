@@ -54,22 +54,32 @@ Every rung also has to keep each joint's 99th-percentile speed under its human l
 - [ ] V1 Grandma and Grandpa on v3. Get-up: 5/60 and 14/60 with `v3u5` (2026-11-03); the helping hand stuck at
       22-24% and 0% unaided. More of the same will not do it: strength (their "age") or getting up off the ropes
       is the owner's call. Attack and footing also fail for both on v3.
+      2026-11-13: `v3u7_grandpa` get-up passes 59/60 in 2.7 s against Grandma (Match still fails: 48/59 up at 3 s);
+      `v3u6_grandma` get-up 27/30 in 4.2 s in `exam_v3m_grandma`. Attack and match still need work.
 - [ ] V2 Trump's attack: 0.11/s with `v3c1_trump` (mark 0.5). His reach is the roster's shortest (0.44 m shoulder
       to wrist); the punching recipe did not work with or without a fresh critic.
 - [ ] V3 Kim: footing about 2 falls a minute, attack 0.39/s, carrying on 49/60 on `v3m3_kim`. `v3p1`, `v3p2` and
       `v3f2` were worse.
 - [ ] V4 Under pressure: 0 of 8 passed on 2026-11-03. Matt and Zombie land 0.02/s on each other (a stand-off).
-- [ ] V5 Nick, Sokol, Matt, Zombie: re-run the CPU Elo (`tools/elo.py`) after the November promotions.
+- [x] V5 Nick, Sokol, Matt, Zombie: re-run the CPU Elo (`tools/elo.py`) after the November promotions.
+      2026-11-13: 112-bout `tools/elo.py` run written to `Assets/Resources/cpu_elo.json` (`Nick 1448`, `Kim 1334`,
+      `Sokol 1334`, `Matt 1075`, `Zombie 830`, `Grandpa 773`, `Trump 734`, `Grandma 471`; `Grandma/match.onnx`
+      currently holds `v3m_grandma` which scored `1-26-1`).
 
 These replace the October items they grew out of: C6, C7, C8, D7, D8, D9, G8, G13, K11, K12, H8, R11.
 Their notes are in the archive.
 
 ## Phase D: on a phone
 
-- [ ] D6 Android build with the 3.5.0 arm64 library; run on a phone; frame pacing and inference cost measured.
+- [x] D6 Android build with the 3.5.0 arm64 library; run on a phone; frame pacing and inference cost measured.
       2026-10-04: runs on a Pixel 9 Pro (Android 17): 60 FPS, frame 16.7 ms, physics 0.46 ms, 1.2 GB. Open: a
       longer session on the phone, and heat.
+      2026-11-13: Pixel 9 Pro `261113` 1v1 + 8-way Melee run verified: `60 FPS`, frame `16.7 ms` (worst `16.8 ms`),
+      physics `0.64-1.05 ms`, brains `2.90-3.20 ms`, GPU `8.3-8.6 ms`, `SETPASS 45`, `TRIS 83.9k`, `GC 0.0 kB`,
+      memory `1556-1640 MB`, `SCALE 0.80`; `dumpsys thermalservice` `Thermal Status: 0`.
 - [ ] G10 A device run of SHARE and Twitch chat (the Android paths are not compiled in the editor).
+      2026-11-13: SHARE verified on Pixel 9 Pro (KO card saved via MediaStore to `Pictures/PoBox` and opened
+      native Android Sharesheet). Twitch chat still untested on device.
 - [ ] I8 A phone run of the new effects (the ripple's full-screen copy and the replay's depth of field cost most),
       and of the beams' look in the overhead shot.
 - [ ] J10 A phone run of every state (back button, cutouts, frame pacing, heat). Goes with D6, G10, I8.
@@ -122,4 +132,6 @@ the closest opponent is and move forward to attack.**
 
 - [ ] L2 Training disk clean-up. Moot on this PC (no checkpoints on disk); still open on the PC that holds the runs.
 - [ ] L11 Play-mode tests (OneScreen, StateFlow, SceneIntegrity, FreeForAll, MjParity, MjGate) after any change.
-      Last counts on record (2026-11-04): MjParity 3/3, MjGate 24/24, StateFlow 2/2, OneScreen 74/74.
+      Last counts on record (2026-11-13, 124/125 PlayMode passed): MjParity 3/3, MjGate 24/24,
+      OneScreen 74/74, SceneIntegrity 5/5, StateFlow 2/2, Feature 3/3, MjCollision 2/2, Mujoco 11/11,
+      FreeForAll 0/1 (failed: only 2 boxers landed a punch in 20 s, Expected >= 4).
