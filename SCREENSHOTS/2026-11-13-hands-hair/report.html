@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PoBox R14 Asset Report — Hands/Fingers, Kim Arms, Grandma Hair (2026-11-13)</title>
+<style>
+  :root {
+    --bg: #0f1319;
+    --card: #171d26;
+    --border: #2a3342;
+    --text: #e6edf3;
+    --muted: #9aa7b8;
+    --accent: #58a6ff;
+    --ok: #3fb950;
+    --warn: #d29922;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 28px 36px 60px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+  }
+  h1, h2, h3 { margin: 0 0 12px; font-weight: 600; }
+  h1 { font-size: 24px; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 20px; }
+  h2 { font-size: 19px; margin-top: 32px; color: var(--accent); }
+  h3 { font-size: 15px; margin-top: 18px; color: #c9d1d9; }
+  p, li { color: #d0d7de; font-size: 14px; }
+  code {
+    background: #212834;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12.5px;
+    color: #a5d6ff;
+  }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .badge-fixed { background: rgba(63, 185, 80, 0.16); color: var(--ok); border: 1px solid rgba(63, 185, 80, 0.4); }
+  .badge-kept { background: rgba(210, 153, 34, 0.16); color: var(--warn); border: 1px solid rgba(210, 153, 34, 0.4); }
+  .badge-ok { background: rgba(88, 166, 255, 0.16); color: var(--accent); border: 1px solid rgba(88, 166, 255, 0.4); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 13px;
+  }
+  th, td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #1e2632; color: #f0f6fc; font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+  .section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px 22px;
+    margin-top: 20px;
+  }
+  .compare-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+    gap: 16px;
+    margin-top: 14px;
+  }
+  .pair {
+    background: #121720;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .pair-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #f0f6fc;
+    margin-bottom: 8px;
+  }
+  .pair-imgs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .shot {
+    text-align: center;
+  }
+  .shot img {
+    width: 100%;
+    border-radius: 6px;
+    border: 1px solid #2b3545;
+    display: block;
+    background: #2c313c;
+  }
+  .shot span {
+    display: block;
+    margin-top: 4px;
+    font-size: 11.5px;
+    color: var(--muted);
+  }
+  .single-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .single-card {
+    background: #121720;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+  }
+  .single-card img {
+    width: 100%;
+    border-radius: 6px;
+    border: 1px solid #2b3545;
+    display: block;
+  }
+  .single-card span {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #c9d1d9;
+  }
+</style>
+</head>
+<body>
+
+<h1>PoBox Task R14 — Visual Mesh &amp; Rig Cleanup Report (2026-11-13)</h1>
+<p>
+  Scope: headless Blender 5.2 inspection and fixes for <strong>Grandma's pale hair</strong>, <strong>Kim's stretching arms</strong> (examined, not changed), and <strong>open hands / fingers</strong> across all 8 playable boxers, preserving bone names, hierarchy, rest pose, inverse bind matrices, material slots, and prefab GUIDs.
+</p>
+
+<h2>1. Roster Summary (All 8 Boxers)</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Boxer</th>
+      <th>Model &amp; Prefab GUID</th>
+      <th>Original Hand State</th>
+      <th>Target Issue / Action</th>
+      <th>Status &amp; Archive</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Grandma</strong></td>
+      <td><code>Assets/Models/Grandma.glb</code><br><code>1dba878b7f3783542bdf988d916c316a</code><br>Mesh: <code>char1</code> (1 mat: <code>Material_1</code>, 24 bones)</td>
+      <td>Photogrammetry scan (<code>char1</code>, unwelded triangle soup, auto-atlas UVs); fused notched paddle weighted to <code>LeftHand</code> / <code>RightHand</code>.</td>
+      <td><strong>Pale hair fixed:</strong> <code>Material_1</code> had <code>emissiveFactor=[1,1,1]</code>, omitted <code>metallicFactor</code> (default 1.0), <code>specularColorFactor=[2,2,2]</code>, and pale straw hair in <code>texture_0</code>. Darkened hair pixels in <code>texture_0</code> to warm chestnut and fixed PBR material parameters directly on GLB.<br><strong>Hands kept:</strong> slicing unwelded auto-atlas triangles produces jagged holes worse than original.</td>
+      <td><span class="badge badge-fixed">REPLACED IN-PLACE</span><br>Orig: <code>BLENDER/2026-11-13_grandma/Grandma_orig.glb</code><br>Blend: <code>Grandma.blend</code></td>
+    </tr>
+    <tr>
+      <td><strong>Kim</strong></td>
+      <td><code>Assets/Models/Kim.glb</code><br><code>47ccf5ae2ad8ffc4e94bddb07af7d32</code><br>Mesh: <code>node_0</code> (Rig: 21 bones)</td>
+      <td>Already has 5 cleanly sculpted, separated fingers weighted to <code>Hand.L</code> / <code>Hand.R</code>. No finger geometry change needed.</td>
+      <td><strong>Stretching arms: not fixed, file put back.</strong> A reweight (4,719 vertices, clavicle weight moved to the upper arm) was tried and, rendered from the same camera as the original, makes the sleeves stand out as square pads with the arms down and in the guard. The committed weights deform better. See section 3 for the likely cause, which is in <code>SkinBinder</code>, not the mesh.</td>
+      <td><span class="badge badge-ok">UNMODIFIED</span> (equal to the committed file)<br>Staged, not used: <code>BLENDER/2026-11-13_kim/Kim_reweight_staged.glb</code>, <code>Kim.blend</code></td>
+    </tr>
+    <tr>
+      <td><strong>Sokol</strong></td>
+      <td><code>Assets/Models/Sokol.glb</code><br><code>5a04ca9d56878434998571936c74dd05</code><br>Mesh: <code>Character_LOD0</code> (19 bones, 2 mats: <code>Character_Mat</code>, <code>Hair_Mat</code>)</td>
+      <td>Smooth low-poly stylized oven-mitt hands weighted 100% to <code>hand.L</code> / <code>hand.R</code>.</td>
+      <td><strong>Fingers added:</strong> Sculpted 4 separated fingers + refined thumb per hand, smoothly rooted into the knuckle ridge, UV-mapped to Sokol's solid skin swatch <code>(0.648, 0.307)</code> on <code>Character_Mat</code>, and weighted <code>1.0</code> to existing <code>hand.L</code> / <code>hand.R</code> bones.</td>
+      <td><span class="badge badge-fixed">REPLACED IN-PLACE</span><br>Orig: <code>BLENDER/2026-11-13_sokol/Sokol_orig.glb</code><br>Blend: <code>Sokol.blend</code></td>
+    </tr>
+    <tr>
+      <td><strong>Matt</strong></td>
+      <td><code>Assets/Models/Matt.glb</code><br><code>b13adf7d3e820874794f65e44f06ff64</code><br>Meshes: <code>avaturn_body</code>, <code>avaturn_hair_0</code>, <code>avaturn_look_0</code> (52 bones)</td>
+      <td>5 fully separated articulated fingers + 15 finger bones per hand.</td>
+      <td>Already clean open hands; no changes needed.</td>
+      <td><span class="badge badge-ok">UNMODIFIED</span></td>
+    </tr>
+    <tr>
+      <td><strong>Zombie</strong></td>
+      <td><code>Assets/Models/Zombie.glb</code><br><code>4992be9817c5a7442ba9644f35bbbef8</code><br>Mesh: <code>node_0</code> (Armature: 71 bones)</td>
+      <td>5 cleanly sculpted, separated curled fingers weighted to <code>CC_Base_L_Hand</code> / <code>CC_Base_R_Hand</code>.</td>
+      <td>Already has separated curled fingers; no changes needed.</td>
+      <td><span class="badge badge-ok">UNMODIFIED</span></td>
+    </tr>
+    <tr>
+      <td><strong>Trump</strong></td>
+      <td><code>Assets/Models/Trump.glb</code><br><code>e91c83e3cdc9fc241a93f1148b379067</code><br>Mesh: <code>Trump</code> (Armature_Trump: 24 bones)</td>
+      <td>Thumb separated; 4 fingers sculpted with clear grooves touching side-by-side; weighted across both <code>Left/RightHand</code> and <code>Left/RightHandMiddle1</code> (1,412 / 1,324 verts).</td>
+      <td>Kept original: fingers are already individually shaped with clear definition, and splitting touching finger tips risks breaking <code>HandMiddle1</code> skinning without visible gain.</td>
+      <td><span class="badge badge-ok">UNMODIFIED</span></td>
+    </tr>
+    <tr>
+      <td><strong>Grandpa</strong></td>
+      <td><code>Assets/Models/Grandpa.glb</code><br><code>6acd4bc6cf2e2f04bbaea333f9c310cc</code><br>Mesh: <code>char1</code> (24 bones)</td>
+      <td>Unwelded triangle-soup photogrammetry scan (<code>1,715</code> verts / <code>639</code> unique positions), fused curled 4-finger paddle with fragmented auto-atlas UVs.</td>
+      <td>Kept original: procedural separation of unwelded, fragmented-UV scan triangles produces jagged gaps and broken textures worse than the original scan hand. Needs manual artist retopo if open fingers are desired.</td>
+      <td><span class="badge badge-kept">KEPT ORIGINAL</span></td>
+    </tr>
+    <tr>
+      <td><strong>Nick</strong></td>
+      <td><code>Assets/Models/Nick.glb</code><br><code>cd19d2802a4254b40a08b5b3c7c</code><br>Mesh: <code>char1</code> (24 bones)</td>
+      <td>Unwelded triangle-soup photogrammetry scan (<code>1,418</code> verts / <code>576</code> unique positions), fused curved 4-finger paddle with fragmented auto-atlas UVs.</td>
+      <td>Kept original: same unwelded scan + auto-atlas UV constraint as Grandpa/Grandma; clean finger separation requires artist sculpting/re-UVing.</td>
+      <td><span class="badge badge-kept">KEPT ORIGINAL</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>2. Grandma — Pale Hair Fix (Before vs After)</h2>
+<div class="section">
+  <p>
+    <strong>Diagnosis:</strong> Inspection of <code>Grandma.glb</code> revealed two compounded causes:
+    (1) <code>Material_1</code> used <code>emissiveFactor=[1,1,1]</code> with <code>emissiveTexture: texture_0</code>, omitted <code>metallicFactor</code> (defaulting to <code>1.0</code> in glTF PBR), and set <code>KHR_materials_specular.specularColorFactor=[2,2,2]</code>, blowing out highlights under lighting;
+    (2) <code>texture_0</code> (2048&times;2048) hair texels were washed-out pale blonde/tan.
+  </p>
+  <p>
+    <strong>Fix &amp; Verification:</strong> Adjusted hair regions in <code>texture_0</code> to rich warm chestnut while preserving face, teeth, ears, sweater, and trousers, and patched <code>Material_1</code> (<code>metallicFactor=0.0</code>, <code>roughnessFactor=0.88</code>, <code>emissiveFactor=[0.78,0.78,0.78]</code>, <code>specularFactor=0.35</code>, <code>specularColorFactor=[1,1,1]</code>) directly onto <code>Grandma_orig.glb</code> so all geometry, nodes, bones, and IBMs remain 100% identical (<code>0.000000</code> IBM diff).
+  </p>
+  <div class="compare-grid">
+    <div class="pair">
+      <div class="pair-title">Head — Front</div>
+      <div class="pair-imgs">
+        <div class="shot"><img src="before/Grandma_head_front.png" alt="Grandma Front Before"><span>Before</span></div>
+        <div class="shot"><img src="after/Grandma_head_front.png" alt="Grandma Front After"><span>After</span></div>
+      </div>
+    </div>
+    <div class="pair">
+      <div class="pair-title">Head — 3/4 View</div>
+      <div class="pair-imgs">
+        <div class="shot"><img src="before/Grandma_head_34.png" alt="Grandma 3/4 Before"><span>Before</span></div>
+        <div class="shot"><img src="after/Grandma_head_34.png" alt="Grandma 3/4 After"><span>After</span></div>
+      </div>
+    </div>
+    <div class="pair">
+      <div class="pair-title">Head — Back</div>
+      <div class="pair-imgs">
+        <div class="shot"><img src="before/Grandma_head_back.png" alt="Grandma Back Before"><span>Before</span></div>
+        <div class="shot"><img src="after/Grandma_head_back.png" alt="Grandma Back After"><span>After</span></div>
+      </div>
+    </div>
+    <div class="pair">
+      <div class="pair-title">Full Body</div>
+      <div class="pair-imgs">
+        <div class="shot"><img src="before/Grandma_body.png" alt="Grandma Body Before"><span>Before</span></div>
+        <div class="shot"><img src="after/Grandma_body.png" alt="Grandma Body After"><span>After</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>3. Kim: stretching arms (tried, not kept)</h2>
+<div class="section">
+  <p>
+    <strong>What was measured.</strong> Kim's clavicle bones (<code>Shoulder.L/R</code>) hold 20 to 40% of the weight on the first third of each upper arm, and <code>SkinBinder</code> does not drive the clavicles: they ride on the torso. Two reweights that hand that weight to <code>UpperArm.L/R</code> were rendered against the committed file, same poses, same cameras.
+  </p>
+  <p>
+    <strong>Result.</strong> Both reweights are worse. With more of the loose sleeve following the arm rigidly, its top outer corner swings out into a square shoulder pad. The committed weights give the narrowest, most natural sleeve in all three poses, so <code>Assets/Models/Kim.glb</code> was put back and is byte-identical to the committed file. The wider reweight is kept only as <code>BLENDER/2026-11-13_kim/Kim_reweight_staged.glb</code>.
+  </p>
+  <p>
+    <strong>Likely cause, outside the mesh.</strong> <code>SkinBinder</code> sizes the skin from the summed limb lengths, and its forearm aim measures the rig's elbow-to-glove distance (0.27 m on Kim) against the mesh's elbow-to-wrist distance. That makes the fitted scale about 6% too large for every boxer (Kim 1.652 where her height gives 1.554), and each bone is then placed on the rig's joint, so every limb segment is squeezed to 0.93 to 0.95 of its skinned length while the undriven clavicle and hand keep the larger scale. This was computed from the rig files and the meshes, not seen in Unity. It applies to all eight boxers, so it does not by itself explain why only Kim was reported; her loose T-shirt sleeves are the part of her mesh most sensitive to it. Not fixable in Blender without changing the skeleton.
+  </p>
+  <div class="compare-grid">
+    <div class="pair">
+      <div class="pair-title">Arms down. Left: committed. Middle: wide reweight (staged). Right: narrow reweight.</div>
+      <div class="shot"><img src="kim_compare/cmp_down_front.png" alt="Kim arms down, three variants"></div>
+    </div>
+    <div class="pair">
+      <div class="pair-title">Guard. Same order.</div>
+      <div class="shot"><img src="kim_compare/cmp_guard_front.png" alt="Kim guard, three variants"></div>
+    </div>
+    <div class="pair">
+      <div class="pair-title">Straight left. Same order.</div>
+      <div class="shot"><img src="kim_compare/cmp_punch_side.png" alt="Kim straight left, three variants"></div>
+    </div>
+    <div class="pair">
+      <div class="pair-title">Option, not applied: closed fists by bending the finger geometry (no new bones)</div>
+      <div class="pair-imgs">
+        <div class="shot"><img src="kim_compare/open_hands_guard_side.png" alt="Kim open hands"><span>Committed: open hands</span></div>
+        <div class="shot"><img src="kim_compare/fist_option_guard_side.png" alt="Kim fists"><span>Test: fingers curled 235 degrees</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<h2>4. Sokol — Open Hands &amp; Separated Fingers (Before vs After)</h2>
+<div class="section">
+  <p>
+    <strong>Fix &amp; Verification:</strong> Replaced Sokol's smooth oven-mitt blocks on <code>Character_LOD0</code> with 4 individually sculpted fingers per hand plus refined thumbs, rooted cleanly into the knuckle ridge, UV-mapped to the <code>Character_Mat</code> skin swatch, and bound <code>1.0</code> to existing <code>hand.L</code> / <code>hand.R</code> bones. Note: a tiny pre-existing dark quad near the right thumb tip UV seam is already present in the archived original mesh.
+  </p>
+  <div class="compare-grid">
+    <div class="pair">
+      <div class="pair-title">Left Hand — Top</div>
+      <div class="pair-imgs">
+        <div class="shot"><img src="before/Sokol_hand_L_top.png" alt="Sokol L Top Before"><span>Before</span></div>
+        <div class="shot"><img src="after/Sokol_hand_L_top.png" alt="Sokol L Top After"><span>After</span></div>
+      </div>
+    </div>
+    <div class="pair">
+      <div class="pair-title">Left Hand — Palm / Side</div>
+      <div class="pair-imgs">
+        <div class="shot"><img src="before/Sokol_hand_L_palm.png" alt="Sokol L Palm Before"><span>Before</span></div>
+        <div class="shot"><img src="after/Sokol_hand_L_palm.png" alt="Sokol L Palm After"><span>After</span></div>
+      </div>
+    </div>
+    <div class="pair">
+      <div class="pair-title">Left Hand — Dorsal Profile</div>
+      <div class="pair-imgs">
+        <div class="shot"><img src="before/Sokol_hand_L_dorsal.png" alt="Sokol L Dorsal Before"><span>Before</span></div>
+        <div class="shot"><img src="after/Sokol_hand_L_dorsal.png" alt="Sokol L Dorsal After"><span>After</span></div>
+      </div>
+    </div>
+    <div class="pair">
+      <div class="pair-title">Right Hand — Top</div>
+      <div class="pair-imgs">
+        <div class="shot"><img src="before/Sokol_hand_R_top.png" alt="Sokol R Top Before"><span>Before</span></div>
+        <div class="shot"><img src="after/Sokol_hand_R_top.png" alt="Sokol R Top After"><span>After</span></div>
+      </div>
+    </div>
+    <div class="pair">
+      <div class="pair-title">Right Hand — Palm / Side</div>
+      <div class="pair-imgs">
+        <div class="shot"><img src="before/Sokol_hand_R_palm.png" alt="Sokol R Palm Before"><span>Before</span></div>
+        <div class="shot"><img src="after/Sokol_hand_R_palm.png" alt="Sokol R Palm After"><span>After</span></div>
+      </div>
+    </div>
+    <div class="pair">
+      <div class="pair-title">Right Hand — Dorsal Profile</div>
+      <div class="pair-imgs">
+        <div class="shot"><img src="before/Sokol_hand_R_dorsal.png" alt="Sokol R Dorsal Before"><span>Before</span></div>
+        <div class="shot"><img src="after/Sokol_hand_R_dorsal.png" alt="Sokol R Dorsal After"><span>After</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<h2>5. Reference — Other Boxers' Existing Hands (Before / Unmodified)</h2>
+<div class="section">
+  <div class="single-grid">
+    <div class="single-card"><img src="before/Matt_hand_L_top.png" alt="Matt L Hand"><span><strong>Matt</strong> — 5 articulated fingers + finger bones</span></div>
+    <div class="single-card"><img src="before/Kim_hand_L_top.png" alt="Kim L Hand"><span><strong>Kim</strong> — 5 sculpted fingers (kept)</span></div>
+    <div class="single-card"><img src="before/Zombie_hand_L_top.png" alt="Zombie L Hand"><span><strong>Zombie</strong> — 5 curled fingers (kept)</span></div>
+    <div class="single-card"><img src="before/Trump_hand_L_top.png" alt="Trump L Hand"><span><strong>Trump</strong> — defined fingers w/ Middle1 rig</span></div>
+    <div class="single-card"><img src="before/Grandpa_hand_L_top.png" alt="Grandpa L Hand"><span><strong>Grandpa</strong> — scan soup paddle (kept)</span></div>
+    <div class="single-card"><img src="before/Nick_hand_L_top.png" alt="Nick L Hand"><span><strong>Nick</strong> — scan soup paddle (kept)</span></div>
+    <div class="single-card"><img src="before/Grandma_hand_L_top.png" alt="Grandma L Hand"><span><strong>Grandma</strong> — scan soup paddle (kept)</span></div>
+  </div>
+</div>
+
+<h2>6. Unity Follow-Up Checklist</h2>
+<div class="section">
+  <ul>
+    <li><strong>Reimport:</strong> let Unity reimport <code>Assets/Models/Grandma.glb</code> and <code>Sokol.glb</code> (the <code>.meta</code> files are untouched). <code>Kim.glb</code> is the committed file. None of this has been opened in Unity.</li>
+    <li><strong>Prefabs:</strong> open <code>Grandma</code> and <code>Sokol</code> (and their Red and Blue corners) in play mode and check that <code>SkinBinder</code> binds with no warning. Sokol's body mesh went from 8,059 to 9,506 vertices and its hands are 1.4 cm longer; node names, bones, bind matrices (difference under 1e-6) and material slots are the same.</li><li><strong>Sokol's tangents:</strong> the re-export dropped the <code>TANGENT</code> attribute from both of his sub-meshes. glTFast computes tangents when a normal map is present, so check his normal-mapped shirt and jeans look as before.</li><li><strong>Kim:</strong> to test the scale cause above, leave the forearm-to-glove aim out of the size sum in <code>SkinBinder.Bind</code> and look at her sleeves and at every boxer's limb length.</li>
+    <li><strong>Grandma Texture / Material Check:</strong> confirm the importer shows the darkened hair and the new <code>Material_1</code> under the arena lights. Her menu portrait shows the whole figure blown out, not only the hair: the material was fully self-lit (emission 1 over a metallic base). Emission is now 0.78 over a non-metallic base, which was not seen in Unity; if she is still washed out, lower <code>emissiveFactor</code> further. Nick and Grandpa have the same self-lit material and were not changed. The strands beside her face kept their pale colour, so the hair is two-tone from the front.</li>
+    <li><strong>Menu Portraits &amp; Artist Review:</strong> Retake the menu portraits of Grandma and Sokol (<code>Assets/UI/Portraits</code>), and review whether Grandpa/Nick/Grandma's fused photogrammetry hands warrant dedicated artist retopology in a later pass.</li>
+  </ul>
+</div>
+
+</body>
+</html>
