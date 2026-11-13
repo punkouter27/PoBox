@@ -2,10 +2,10 @@
 # convention as glTFast will see it in Unity, poses the figure (right arm overhead, seated legs) and renders
 # rest + pose previews to SCREENSHOTS/2026-11-03-figures/.
 # Run:  blender.exe --background --python validate_figures.py
-import bpy, json, struct, math, os
+import bpy, json, struct, math, os, sys
 from mathutils import Vector, Quaternion, Matrix
 
-ROOT = r"C:\Users\punko\Downloads\PoBox"
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 GLB_DIR = os.path.join(ROOT, "Assets", "Art", "Exports", "GLB")
 SHOT = os.path.join(ROOT, "SCREENSHOTS", "2026-11-03-figures")
 os.makedirs(SHOT, exist_ok=True)
@@ -92,8 +92,9 @@ def world_rot_to_local(pb, R):
 
 
 def main():
+    only = [a for a in sys.argv[sys.argv.index("--") + 1:] if not a.startswith("-")] if "--" in sys.argv else []
     report = []
-    for kind in ("Referee", "Cornerman", "RingCardWalker"):
+    for kind in (only or ("Referee", "Cornerman", "RingCardWalker")):
         name = "SK_" + kind
         path = os.path.join(GLB_DIR, name + ".glb")
         bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -134,8 +135,9 @@ def main():
         unity_axes(js, report)
 
         setup_render(scene)
-        for o in meshes:   # flat look
-            for p in o.data.polygons: p.use_smooth = False
+        for o in meshes:   # keep Referee smooth normals, flat look for other low-poly figures
+            if kind != "Referee":
+                for p in o.data.polygons: p.use_smooth = False
         bpy.context.view_layer.objects.active = arm
         rest = os.path.join(SHOT, name + "_rest.png")
         scene.render.filepath = rest; bpy.ops.render.render(write_still=True)

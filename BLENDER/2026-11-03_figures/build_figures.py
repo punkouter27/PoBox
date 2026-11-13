@@ -7,10 +7,10 @@
 # figure's front (-Y) for every bone (Head/Neck/Spine too), so in Blender: rotating a leg bone about local X bends
 # it forward/back, rotating an arm bone about local Z swings it out to the side and up (abduction).
 # The glTF exporter's Y-up conversion turns Blender -Y forward into glTF +Z forward (Unity +Z after glTFast).
-import bpy, bmesh, math, os
+import bpy, bmesh, math, os, sys
 from mathutils import Vector, Matrix
 
-ROOT = r"C:\Users\punko\Downloads\PoBox"
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 GLB_DIR = os.path.join(ROOT, "Assets", "Art", "Exports", "GLB")
 RAW_DIR = os.path.join(ROOT, "Assets", "Art", "Raw", "Figures")
 os.makedirs(GLB_DIR, exist_ok=True)
@@ -97,12 +97,19 @@ def zr(z, rx, ry, w, m, cy=0.0, cx=0.0, **kw):
 def spec(kind):
     s = dict(kind=kind, height=1.75, female=False)
     if kind == "Referee":
-        s.update(skin=(0.80, 0.60, 0.47), hair=(0.12, 0.09, 0.07),
-                 cols=dict(M_Shirt=((0.93, 0.93, 0.92), 0.7), M_Trousers=((0.03, 0.03, 0.035), 0.85),
-                           M_Shoes=((0.02, 0.02, 0.02), 0.3), M_BowTie=((0.01, 0.01, 0.01), 0.4),
-                           M_Belt=((0.02, 0.02, 0.02), 0.35)),
-                 top="M_Shirt", bottom="M_Trousers", shoes="M_Shoes", sole="M_Shoes", sleeve=0.14,
-                 bow_tie=True, legs_covered=True)
+        s.update(skin=(0.80, 0.60, 0.47), hair=(0.14, 0.13, 0.12),
+                 cols=dict(M_Shirt=((0.62, 0.80, 0.96), 0.68), M_Collar=((0.72, 0.87, 0.99), 0.62),
+                           M_Trousers=((0.032, 0.032, 0.038), 0.78),
+                           M_Shoes=((0.022, 0.022, 0.025), 0.28), M_Sole=((0.08, 0.08, 0.09), 0.70),
+                           M_BowTie=((0.015, 0.015, 0.018), 0.38),
+                           M_Belt=((0.025, 0.022, 0.020), 0.32),
+                           M_Metal=((0.76, 0.78, 0.82), 0.22, 0.90),
+                           M_Badge=((0.88, 0.68, 0.18), 0.28, 0.75),
+                           M_BadgeTrim=((0.05, 0.10, 0.24), 0.50),
+                           M_Button=((0.03, 0.03, 0.035), 0.25),
+                           M_Sclera=((0.94, 0.94, 0.92), 0.25)),
+                 top="M_Shirt", bottom="M_Trousers", shoes="M_Shoes", sole="M_Sole", sleeve=0.14,
+                 bow_tie=True, legs_covered=True, smooth=True)
     elif kind == "Cornerman":
         s.update(skin=(0.55, 0.38, 0.27), hair=(0.05, 0.04, 0.035),
                  cols=dict(M_Team=((1.0, 1.0, 1.0), 0.75), M_Trousers=((0.35, 0.35, 0.36), 0.8),
@@ -176,8 +183,239 @@ def make_armature(name, J):
     return arm
 
 
+def build_referee(s, J):
+    """Tailored higher-detail championship boxing referee: powder-blue collared shirt, black bow tie,
+    button placket, chest pockets, gold commission shield crest, black belt + silver buckle, watch,
+    tailored trousers, dress shoes, and smooth sculpted head/face/hair/hands."""
+    B = Builder()
+    k = J['k']
+    SK, HR = "M_Skin", "M_Hair"
+    SHIRT, COLLAR, TROU = "M_Shirt", "M_Collar", "M_Trousers"
+    H, SP, CH, NK, HD = {"Hips": 1}, {"Spine": 1}, {"Chest": 1}, {"Neck": 1}, {"Head": 1}
+
+    def mix(a, b, t=0.5):
+        out = {}
+        for kk, v in a.items(): out[kk] = out.get(kk, 0) + v * (1 - t)
+        for kk, v in b.items(): out[kk] = out.get(kk, 0) + v * t
+        return out
+
+    # Torso & pelvis (24 sides for clean athletic referee silhouette, tucked shirt into belted slacks)
+    T = [
+        (0.79, 0.095, 0.072, 0.0, H, TROU),
+        (0.86, 0.162, 0.112, 0.0, H, TROU),
+        (0.94, 0.172, 0.120, 0.0, H, TROU),
+        (0.995, 0.165, 0.115, 0.0, mix(H, SP, 0.25), "M_Belt"),
+        (1.035, 0.166, 0.115, 0.0, mix(H, SP, 0.35), SHIRT),
+        (1.040, 0.158, 0.106, -0.002, mix(H, SP, 0.45), SHIRT),
+        (1.11, 0.155, 0.104, -0.004, SP, SHIRT),
+        (1.20, 0.172, 0.116, -0.008, mix(SP, CH, 0.6), SHIRT),
+        (1.29, 0.194, 0.125, -0.012, CH, SHIRT),
+        (1.36, 0.192, 0.120, -0.008, CH, SHIRT),
+        (1.405, 0.182, 0.108, -0.003, CH, SHIRT),
+        (1.445, 0.082, 0.072, 0.004, CH, SHIRT),
+    ]
+    B.loft([zr(z * k, rx * k, ry * k, w, m, cy=cy * k) for z, rx, ry, cy, w, m in T], 24)
+
+    # Belt buckle & belt loops (front center & around waist at z = 1.015)
+    B.box((0, -0.117 * k, 1.015 * k), (0.025 * k, 0.008 * k, 0.020 * k), mix(H, SP, 0.3), "M_Metal")
+    B.box((0, -0.121 * k, 1.015 * k), (0.014 * k, 0.006 * k, 0.012 * k), mix(H, SP, 0.3), "M_Belt")
+    for ang in (-0.45, -1.15, 0.45, 1.15, 2.5, -2.5):
+        lx, ly = math.sin(ang) * 0.166, -math.cos(ang) * 0.116
+        rot = Matrix.Rotation(-ang, 3, 'Z')
+        B.box((lx * k, ly * k, 1.015 * k), (0.007 * k, 0.006 * k, 0.022 * k), mix(H, SP, 0.3), "M_Belt", rot=rot)
+
+    # Shirt placket & 5 front buttons
+    for bz in (1.08, 1.155, 1.23, 1.305, 1.375):
+        # Sample chest front surface Y at bz (interpolate from T)
+        t_rows = [(t[0], t[2], t[3]) for t in T if t[0] >= 1.04]
+        by = -0.115
+        for i in range(len(t_rows) - 1):
+            z0, r0, cy0 = t_rows[i]; z1, r1, cy1 = t_rows[i + 1]
+            if z0 <= bz <= z1:
+                u = (bz - z0) / (z1 - z0)
+                by = (cy0 * (1 - u) + cy1 * u) - (r0 * (1 - u) + r1 * u)
+                break
+        B.box((0, (by - 0.003) * k, bz * k), (0.015 * k, 0.004 * k, 0.036 * k), CH if bz > 1.18 else SP, COLLAR)
+        B.sphere((0, (by - 0.007) * k, bz * k), 0.0065 * k, CH if bz > 1.18 else SP, "M_Button", seg=8, rings=4, scale=(1, 0.45, 1))
+
+    # Two chest pockets with pocket flaps & buttons + left-chest official gold/navy referee badge crest
+    for sx in (1, -1):
+        px, py, pz = sx * 0.088, -0.112, 1.275
+        tilt = Matrix.Rotation(sx * 0.36, 3, 'Z') @ Matrix.Rotation(-0.08, 3, 'X')
+        B.box((px * k, py * k, pz * k), (0.042 * k, 0.005 * k, 0.046 * k), CH, COLLAR, rot=tilt)
+        B.box((px * k, (py - 0.003) * k, (pz + 0.032) * k), (0.044 * k, 0.005 * k, 0.016 * k), CH, SHIRT, rot=tilt)
+        B.sphere((px * k, (py - 0.007) * k, (pz + 0.030) * k), 0.0055 * k, CH, "M_Button", seg=8, rings=4, scale=(1, 0.45, 1))
+    # Official Referee Shield Patch on left chest (+X side above pocket)
+    bx, by, bz = 0.092, -0.118, 1.350
+    btilt = Matrix.Rotation(0.38, 3, 'Z') @ Matrix.Rotation(-0.08, 3, 'X')
+    B.box((bx * k, by * k, bz * k), (0.025 * k, 0.006 * k, 0.030 * k), CH, "M_BadgeTrim", rot=btilt)
+    B.box((bx * k, (by - 0.005) * k, bz * k), (0.019 * k, 0.005 * k, 0.023 * k), CH, "M_Badge", rot=btilt)
+
+    # Folded shirt collar & pointed lapels + crisp visible black butterfly bow tie
+    B.loft([zr(1.418 * k, 0.072 * k, 0.070 * k, CH, COLLAR, cy=0.004 * k),
+            zr(1.448 * k, 0.068 * k, 0.065 * k, mix(CH, NK, 0.5), COLLAR, cy=0.005 * k),
+            zr(1.464 * k, 0.062 * k, 0.060 * k, mix(CH, NK, 0.7), COLLAR, cy=0.006 * k)], 16, cap_start=False, cap_end=False)
+    for sx in (1, -1):
+        # Collar point / folded lapel sitting forward on upper chest
+        c_pts = [Vector((sx * 0.012, -0.066, 1.446)) * k,
+                 Vector((sx * 0.064, -0.072, 1.440)) * k,
+                 Vector((sx * 0.076, -0.094, 1.384)) * k,
+                 Vector((sx * 0.020, -0.104, 1.382)) * k]
+        # Build front & thickness back of collar tip
+        off = Vector((0, 0.010, 0.004)) * k
+        f_idx = [B.add_vert(p, mix(CH, NK, 0.3)) for p in c_pts]
+        b_idx = [B.add_vert(p + off, mix(CH, NK, 0.3)) for p in c_pts]
+        B.add_face(f_idx if sx == 1 else list(reversed(f_idx)), COLLAR)
+        B.add_face(list(reversed(b_idx)) if sx == 1 else b_idx, COLLAR)
+        for i in range(4):
+            j = (i + 1) % 4
+            quad = [f_idx[i], f_idx[j], b_idx[j], b_idx[i]] if sx == 1 else [f_idx[j], f_idx[i], b_idx[i], b_idx[j]]
+            B.add_face(quad, COLLAR)
+
+    # Sculpted prominent black butterfly bow tie (well clear in front of collar)
+    bt_c = Vector((0, -0.086, 1.425)) * k
+    B.box(bt_c, (0.014 * k, 0.010 * k, 0.015 * k), mix(CH, NK, 0.5), "M_BowTie")
+    for sx in (1, -1):
+        tilt_bt = Matrix.Rotation(sx * 0.16, 3, 'Z')
+        wing = [Vector((sx * 0.010, -0.006, 0.009)), Vector((sx * 0.056, -0.008, 0.025)),
+                Vector((sx * 0.060, -0.008, -0.025)), Vector((sx * 0.010, -0.006, -0.009))]
+        wf = [B.add_vert(bt_c + (tilt_bt @ p) * k, mix(CH, NK, 0.5)) for p in wing]
+        wb = [B.add_vert(bt_c + (tilt_bt @ (p + Vector((0, 0.012, 0)))) * k, mix(CH, NK, 0.5)) for p in wing]
+        B.add_face(wf if sx == 1 else list(reversed(wf)), "M_BowTie")
+        B.add_face(list(reversed(wb)) if sx == 1 else wb, "M_BowTie")
+        for i in range(4):
+            j = (i + 1) % 4
+            q = [wf[i], wf[j], wb[j], wb[i]] if sx == 1 else [wf[j], wf[i], wb[i], wb[j]]
+            B.add_face(q, "M_BowTie")
+
+    # Neck (16 sides)
+    nk = [(1.41, 0.060, CH), (1.47, 0.056, mix(CH, NK)), (1.52, 0.054, NK), (1.575, 0.051, HD)]
+    B.loft([zr(z * k, r * k, r * k, w, SK, cy=0.005 * k) for z, r, w in nk], 16, cap_start=False, cap_end=False)
+
+    # Head (24 sides, anatomical jaw/cheekbones/brow, smooth shaded)
+    HDR = [
+        (1.532, 0.036, 0.032, -0.038),
+        (1.556, 0.058, 0.068, -0.022),
+        (1.592, 0.072, 0.092, -0.004),
+        (1.635, 0.079, 0.098, 0.001),
+        (1.675, 0.078, 0.096, 0.004),
+        (1.712, 0.071, 0.090, 0.007),
+        (1.742, 0.050, 0.064, 0.010),
+        (1.758, 0.018, 0.022, 0.010),
+    ]
+    B.loft([zr(z * k, rx * k, ry * k, HD, SK, cy=cy * k) for z, rx, ry, cy in HDR], 24)
+
+    # Veteran swept-back hairstyle + temples + sideburns + clean back nape (replaces flat bowl cap)
+    HC = [
+        (1.670, 0.083, 0.096, 0.016),
+        (1.708, 0.084, 0.101, 0.012),
+        (1.736, 0.072, 0.089, 0.012),
+        (1.758, 0.048, 0.062, 0.012),
+        (1.770, 0.018, 0.024, 0.012),
+    ]
+    B.loft([zr(z * k, rx * k, ry * k, HD, HR, cy=cy * k) for z, rx, ry, cy in HC], 24, cap_start=False)
+    B.loft([zr(z * k, rx * k, ry * k, HD, HR, cy=cy * k) for z, rx, ry, cy in
+            [(1.578, 0.071, 0.048, 0.050), (1.622, 0.080, 0.066, 0.042), (1.674, 0.084, 0.082, 0.030)]], 20)
+    # Sideburns (cleanly tucked at temples in front of ears)
+    for sx in (1, -1):
+        B.box((sx * 0.073 * k, -0.006 * k, 1.648 * k), (0.004 * k, 0.010 * k, 0.022 * k), HD, HR)
+
+    # Sculpted nose, brows, sclera+iris eyes, ears, mouth
+    fy = -0.098 * k
+    nz = 1.622 * k
+    B.add_face([B.add_vert((0, fy - 0.022 * k, nz - 0.004 * k), HD), B.add_vert((0.013 * k, fy + 0.004 * k, nz - 0.016 * k), HD),
+                B.add_vert((0, fy + 0.004 * k, nz + 0.026 * k), HD)], SK)
+    B.add_face([B.add_vert((0, fy - 0.022 * k, nz - 0.004 * k), HD), B.add_vert((0, fy + 0.004 * k, nz + 0.026 * k), HD),
+                B.add_vert((-0.013 * k, fy + 0.004 * k, nz - 0.016 * k), HD)], SK)
+    B.add_face([B.add_vert((0, fy - 0.022 * k, nz - 0.004 * k), HD), B.add_vert((-0.013 * k, fy + 0.004 * k, nz - 0.016 * k), HD),
+                B.add_vert((0.013 * k, fy + 0.004 * k, nz - 0.016 * k), HD)], SK)
+    for sx in (1, -1):
+        # Eye sclera + dark pupil/iris + brow
+        B.box((sx * 0.031 * k, fy + 0.009 * k, 1.652 * k), (0.011 * k, 0.004 * k, 0.0045 * k), HD, "M_Sclera")
+        B.box((sx * 0.031 * k, fy + 0.007 * k, 1.652 * k), (0.005 * k, 0.004 * k, 0.0045 * k), HD, "M_Eyes")
+        B.box((sx * 0.031 * k, fy + 0.005 * k, 1.666 * k), (0.015 * k, 0.005 * k, 0.0028 * k), HD, HR)
+        B.sphere((sx * 0.079 * k, 0.006 * k, 1.632 * k), 0.022 * k, HD, SK, seg=10, rings=6, scale=(0.38, 0.78, 1.18))
+    B.box((0, fy + 0.010 * k, 1.584 * k), (0.020 * k, 0.005 * k, 0.0032 * k), HD, "M_Lips")
+
+    # Arms: clean short-sleeve shirt cap smoothly tucked into shoulder (NO protruding shoulder ball), watch on left wrist, sculpted bare hands
+    for sd, sx in (("L", 1), ("R", -1)):
+        ua, fa, ha = J['arm_len' + sd]; ua *= k; fa *= k; ha *= k
+        S = J['sh' + sd]; d = J['ad' + sd]
+        u = Vector((A45, 0, sx * A45)); v = Vector((0, 1, 0))
+        UA, FA, HN = {"UpperArm." + sd: 1}, {"ForeArm." + sd: 1}, {"Hand." + sd: 1}
+        sl = s['sleeve']
+        upr = 0.054
+
+        def ar(t, r, w, m, ry=None, **kw):
+            dd = dict(c=S + d * (t * k), u=u, v=v, rx=r * k, ry=(ry or r) * k, w=w, m=m); dd.update(kw); return dd
+        R = [
+            ar(-0.045, 0.032, mix(CH, UA, 0.3), SHIRT, ry=0.038),
+            ar(0.008, 0.045, mix(CH, UA, 0.75), SHIRT, ry=0.048),
+            ar(0.055, upr - 0.002, UA, SHIRT, ry=0.053),
+            ar(sl - 0.015, upr - 0.002, UA, COLLAR, ry=0.052),
+            ar(sl, upr - 0.003, UA, COLLAR, ry=0.051),
+            ar(sl, 0.041, UA, SK),
+            ar(ua / k - 0.05, 0.039, UA, SK),
+            ar(ua / k, 0.036, mix(UA, FA), SK),
+            ar(ua / k + 0.05, 0.036, FA, SK),
+            ar(ua / k + 0.14, 0.031, FA, SK),
+            ar(ua / k + fa / k - 0.01, 0.024, mix(FA, HN, 0.3), SK, ry=0.029),
+        ]
+        B.loft(R, 14)
+
+        # Left-wrist referee timepiece/watch
+        if sd == "L":
+            wt = ua / k + fa / k - 0.042
+            B.loft([ar(wt - 0.010, 0.028, FA, "M_Belt", ry=0.033),
+                    ar(wt + 0.010, 0.028, FA, "M_Belt", ry=0.033)], 14)
+            B.box(S + d * (wt * k) + v * (-0.031 * k), (0.008 * k, 0.004 * k, 0.012 * k), FA, "M_Metal")
+
+        # Sculpted bare hand (palm + finger taper + thumb)
+        t0 = ua / k + fa / k
+        H_ = [
+            ar(t0 - 0.012, 0.019, HN, SK, ry=0.031),
+            ar(t0 + 0.050, 0.020, HN, SK, ry=0.044),
+            ar(t0 + 0.095, 0.017, HN, SK, ry=0.042),
+            ar(t0 + 0.145, 0.013, HN, SK, ry=0.035),
+            ar(t0 + ha / k, 0.007, HN, SK, ry=0.020),
+        ]
+        B.loft(H_, 12)
+        tb = S + d * ((t0 + 0.036) * k) + v * (-0.034 * k) + u * (0.006 * k)
+        B.loft([dict(c=tb, u=u, v=d, rx=0.012 * k, ry=0.012 * k, w=HN, m=SK),
+                dict(c=tb + (d * 0.030 + v * -0.012) * k, u=u, v=d, rx=0.010 * k, ry=0.010 * k, w=HN, m=SK),
+                dict(c=tb + (d * 0.056 + v * -0.020) * k, u=u, v=d, rx=0.008 * k, ry=0.008 * k, w=HN, m=SK)], 8)
+
+    # Legs: smooth tailored black trousers down over shoe ankles + ring shoes with distinct sole
+    for sd, sx in (("L", 1), ("R", -1)):
+        TH, SN, FT = {"Thigh." + sd: 1}, {"Shin." + sd: 1}, {"Foot." + sd: 1}
+        x = J['hip' + sd].x
+        L = [
+            (0.955, 0.088, mix(H, TH, 0.6), TROU),
+            (0.87, 0.086, TH, TROU),
+            (0.74, 0.076, TH, TROU),
+            (0.60, 0.066, TH, TROU),
+            (0.50, 0.058, mix(TH, SN), TROU),
+            (0.44, 0.058, SN, TROU),
+            (0.32, 0.058, SN, TROU),
+            (0.18, 0.052, SN, TROU),
+            (0.088, 0.048, SN, TROU),
+        ]
+        B.loft([zr(z * k, r * k, r * k, w, m, cx=x, cy=(-0.006 if 0.42 < z < 0.58 else 0.0) * k) for z, r, w, m in L], 14)
+
+        SH, SOL = s['shoes'], s['sole']
+        S_ = [(0.072, 0.040, 0.040, 0.050), (0.020, 0.047, 0.056, 0.058), (-0.060, 0.049, 0.044, 0.044),
+              (-0.150, 0.045, 0.032, 0.032), (-0.198, 0.028, 0.020, 0.022)]
+        B.loft([dict(c=(x, y * k, cz * k), u=(1, 0, 0), v=(0, 0, 1), rx=rx * k, ry=rz * k, w=FT, m=SH)
+                for y, rx, rz, cz in S_], 14, zmin=0.0)
+        B.loft([dict(c=(x, y * k, 0.0), u=(1, 0, 0), v=(0, 0, 1), rx=rx * 1.05 * k, ry=0.015 * k, w=FT, m=SOL)
+                for y, rx, rz, cz in S_], 14, zmin=0.0)
+    return B
+
+
 # ------------------------------------------------------------------ body
 def build_body(s, J):
+    if s.get('kind') == 'Referee':
+        return build_referee(s, J)
     B = Builder()
     k = J['k']; f = s['female']
     SK, HR, TOP, BOT = "M_Skin", "M_Hair", s['top'], s['bottom']
@@ -348,24 +586,27 @@ def materials(s):
     return out
 
 
-def make_material(name, col, rough):
+def make_material(name, col, rough, metallic=0.0):
     m = bpy.data.materials.get(name) or bpy.data.materials.new(name)
     m.use_nodes = True
     bsdf = m.node_tree.nodes.get("Principled BSDF")
     lin = tuple(c ** 2.2 for c in col)  # authored in sRGB-ish; base colour is linear
     bsdf.inputs["Base Color"].default_value = (*lin, 1)
     bsdf.inputs["Roughness"].default_value = rough
-    bsdf.inputs["Metallic"].default_value = 0.0
+    bsdf.inputs["Metallic"].default_value = metallic
     m.diffuse_color = (*lin, 1)
     return m
 
 
-def to_mesh(B, name, matdefs):
+def to_mesh(B, name, matdefs, smooth=False):
     me = bpy.data.meshes.new(name)
     me.from_pydata([tuple(v) for v in B.verts], [], B.faces)
     me.update()
     for mn in B.mats:
-        col, r = matdefs[mn]; me.materials.append(make_material(mn, col, r))
+        md = matdefs[mn]
+        col, r = md[0], md[1]
+        met = md[2] if len(md) > 2 else 0.0
+        me.materials.append(make_material(mn, col, r, met))
     for p, mi in zip(me.polygons, B.fmat): p.material_index = mi
     ob = bpy.data.objects.new(name, me)
     bpy.context.scene.collection.objects.link(ob)
@@ -374,12 +615,16 @@ def to_mesh(B, name, matdefs):
             if val <= 0: continue
             vg = ob.vertex_groups.get(bn) or ob.vertex_groups.new(name=bn)
             vg.add([i], val, 'ADD')
-    # weld coincident verts inside each island, make normals consistent, flat shade
+    # weld coincident verts inside each island, make normals consistent
     bm = bmesh.new(); bm.from_mesh(me)
     bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    if smooth:
+        # Keep razor-sharp seams at material transitions (collar, bow tie, cuffs, belt, badge, hair line) while smoothing skin & cloth
+        seam = [e for e in bm.edges if len({f.material_index for f in e.link_faces}) > 1]
+        if seam: bmesh.ops.split_edges(bm, edges=seam)
     bm.to_mesh(me); bm.free()
-    for p in me.polygons: p.use_smooth = False
+    for p in me.polygons: p.use_smooth = bool(smooth)
     return ob
 
 
@@ -434,7 +679,7 @@ def build(kind):
     name = "SK_" + kind
     arm = make_armature(name, J)
     B = build_body(s, J)
-    body = to_mesh(B, "Body", materials(s))
+    body = to_mesh(B, "Body", materials(s), smooth=bool(s.get('smooth')))
     body.parent = arm
     mod = body.modifiers.new("Armature", 'ARMATURE'); mod.object = arm
     card = make_card(arm, J) if s.get('card') else None
@@ -453,5 +698,6 @@ def build(kind):
     print("BUILT %s tris=%d verts=%d -> %s" % (name, tris, len(body.data.vertices), glb))
 
 
-for kind in ("Referee", "Cornerman", "RingCardWalker"):
+only = [a for a in sys.argv[sys.argv.index("--") + 1:] if not a.startswith("-")] if "--" in sys.argv else []
+for kind in (only or ("Referee", "Cornerman", "RingCardWalker")):
     build(kind)

@@ -1004,7 +1004,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjGeom
   ShapeType: 0
   Sphere:
-    Radius: 0.075
+    Radius: 0.042
   Capsule:
     Radius: 0.5
     HalfHeight: 0.5
@@ -5028,7 +5028,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjGeom
   ShapeType: 0
   Sphere:
-    Radius: 0.075
+    Radius: 0.042
   Capsule:
     Radius: 0.5
     HalfHeight: 0.5
@@ -5687,7 +5687,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Mujoco.Runtime::Mujoco.MjGeom
   ShapeType: 0
   Sphere:
-    Radius: 0.116
+    Radius: 0.1
   Capsule:
     Radius: 0.5
     HalfHeight: 0.5

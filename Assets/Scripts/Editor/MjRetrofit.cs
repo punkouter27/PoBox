@@ -399,7 +399,7 @@ namespace PoBox.EditorTools
                 var r = go.transform.FindDeep(prefix + hand)?.GetComponent<MeshRenderer>();
                 if (r != null) r.enabled = false;
             }
-            if (name == "referee") go.AddComponent<Referee>().crew = crew;
+            if (name == "referee") { crew.collideWithBoxers = true; go.AddComponent<Referee>().crew = crew; }
             else go.AddComponent<RingCardWalker>().crew = crew;
             string path = $"{dir}/{title} Ring.prefab";
             PrefabUtility.SaveAsPrefabAsset(go, path);

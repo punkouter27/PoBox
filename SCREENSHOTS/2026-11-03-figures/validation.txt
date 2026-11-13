@@ -1,9 +1,9 @@
 == SK_Referee
   armatures=1 (['Rig'])
   bones=17 missing=[] extra=[] roots=['Hips']
-  mesh Body   tris=2265 verts=4509 mats=['M_Trousers', 'M_Belt', 'M_Shirt', 'M_Skin', 'M_Hair', 'M_Eyes', 'M_Lips', 'M_Shoes', 'M_BowTie'] parent=Rig parent_type=OBJECT parent_bone= skinned=True unweighted=0
-  total tris=2265
-  bounds x[-0.713,0.713] y[-0.195,0.114] z[0.000,1.762]
+  mesh Body   tris=4409 verts=2474 mats=['M_Trousers', 'M_Belt', 'M_Shirt', 'M_Metal', 'M_Collar', 'M_Button', 'M_BadgeTrim', 'M_Badge', 'M_BowTie', 'M_Skin', 'M_Hair', 'M_Sclera', 'M_Eyes', 'M_Lips', 'M_Shoes', 'M_Sole'] parent=Rig parent_type=OBJECT parent_bone= skinned=True unweighted=0
+  total tris=4409
+  bounds x[-0.711,0.711] y[-0.198,0.119] z[0.000,1.770]
   Unity rest Hips       pos=(0.000,0.950,0.000)  localX->(+1.00,+0.00,+0.00) localY->(+0.00,+1.00,+0.00) localZ->(+0.00,+0.00,+1.00)
   Unity rest UpperArm.R pos=(0.190,1.390,0.000)  localX->(-0.71,-0.71,-0.00) localY->(+0.71,-0.71,+0.00) localZ->(-0.00,-0.00,+1.00)
   Unity rest UpperArm.L pos=(-0.190,1.390,0.000)  localX->(-0.71,+0.71,+0.00) localY->(-0.71,-0.71,+0.00) localZ->(+0.00,-0.00,+1.00)
@@ -18,54 +18,4 @@
   Blender pose UpperArm.R = 135 deg about local (-0.00,+0.00,-1.00)
   Blender pose Thigh.R = 90 deg about local (+1.00,-0.00,+0.00)
   Blender pose Shin.R = 90 deg about local (-1.00,-0.00,+0.00)
-  previews: C:\Users\punko\Downloads\PoBox\SCREENSHOTS\2026-11-03-figures\SK_Referee_rest.png, C:\Users\punko\Downloads\PoBox\SCREENSHOTS\2026-11-03-figures\SK_Referee_pose.png
-== SK_Cornerman
-  armatures=1 (['Rig'])
-  bones=17 missing=[] extra=[] roots=['Hips']
-  mesh Body   tris=2513 verts=4863 mats=['M_Trousers', 'M_Belt', 'M_Team', 'M_Skin', 'M_Hair', 'M_Eyes', 'M_Lips', 'M_Shoes', 'M_Sole', 'M_Towel'] parent=Rig parent_type=OBJECT parent_bone= skinned=True unweighted=0
-  total tris=2513
-  bounds x[-0.713,0.713] y[-0.195,0.137] z[0.000,1.762]
-  Unity rest Hips       pos=(0.000,0.950,0.000)  localX->(+1.00,+0.00,+0.00) localY->(+0.00,+1.00,+0.00) localZ->(+0.00,+0.00,+1.00)
-  Unity rest UpperArm.R pos=(0.190,1.390,0.000)  localX->(-0.71,-0.71,-0.00) localY->(+0.71,-0.71,+0.00) localZ->(-0.00,-0.00,+1.00)
-  Unity rest UpperArm.L pos=(-0.190,1.390,0.000)  localX->(-0.71,+0.71,+0.00) localY->(-0.71,-0.71,+0.00) localZ->(+0.00,-0.00,+1.00)
-  Unity rest Thigh.R    pos=(0.095,0.930,0.000)  localX->(-1.00,+0.00,+0.00) localY->(+0.00,-1.00,+0.02) localZ->(+0.00,+0.02,+1.00)
-  Unity rest Shin.R     pos=(0.095,0.500,0.010)  localX->(-1.00,+0.00,-0.00) localY->(+0.00,-1.00,-0.02) localZ->(-0.00,-0.02,+1.00)
-  Unity rest Head       pos=(0.000,1.530,0.000)  localX->(+1.00,+0.00,+0.00) localY->(+0.00,+1.00,+0.00) localZ->(+0.00,+0.00,+1.00)
-  Unity rest Hand.R     pos=(0.579,1.001,0.000)  localX->(-0.71,-0.71,-0.00) localY->(+0.71,-0.71,-0.00) localZ->(-0.00,-0.00,+1.00)
-  UpperArm.R: best local rotation toward (+0.00,+1.00,+0.00) = AngleAxis(+135, Z)  -> dir (-0.00,+1.00,+0.00)
-  UpperArm.L: best local rotation toward (+0.00,+1.00,+0.00) = AngleAxis(-135, Z)  -> dir (+0.00,+1.00,+0.00)
-  Thigh.R: best local rotation toward (+0.00,+0.00,+1.00) = AngleAxis(+90, X)  -> dir (+0.00,+0.02,+1.00)
-  Shin.R: best local rotation toward (+0.00,+0.00,-1.00) = AngleAxis(-90, X)  -> dir (+0.00,+0.02,-1.00)
-  Blender pose UpperArm.R = 135 deg about local (-0.00,+0.00,-1.00)
-  Blender pose Thigh.R = 90 deg about local (+1.00,-0.00,+0.00)
-  Blender pose Shin.R = 90 deg about local (-1.00,-0.00,+0.00)
-  previews: C:\Users\punko\Downloads\PoBox\SCREENSHOTS\2026-11-03-figures\SK_Cornerman_rest.png, C:\Users\punko\Downloads\PoBox\SCREENSHOTS\2026-11-03-figures\SK_Cornerman_pose.png
-== SK_RingCardWalker
-  armatures=1 (['Rig'])
-  bones=17 missing=[] extra=[] roots=['Hips']
-  mesh Body   tris=2449 verts=4759 mats=['M_Shorts', 'M_Belt', 'M_Top', 'M_Skin', 'M_Hair', 'M_Eyes', 'M_Lips', 'M_Shoes', 'M_Sole'] parent=Rig parent_type=OBJECT parent_bone= skinned=True unweighted=0
-  mesh Card   tris=12 verts=24 mats=['M_Card', 'M_CardBack'] parent=Rig parent_type=BONE parent_bone=Hand.R skinned=False unweighted=-1
-  total tris=2461
-  bounds x[-0.664,0.664] y[-0.176,0.170] z[0.000,1.732]
-  glTF Card node parent=['Hand.R'] mesh=Card
-  glTF materials=['M_Shorts', 'M_Belt', 'M_Top', 'M_Skin', 'M_Hair', 'M_Eyes', 'M_Lips', 'M_Shoes', 'M_Sole', 'M_Card', 'M_CardBack']
-  Unity rest Hips       pos=(0.000,0.934,0.000)  localX->(+1.00,+0.00,+0.00) localY->(+0.00,+1.00,-0.00) localZ->(-0.00,+0.00,+1.00)
-  Unity rest UpperArm.R pos=(0.172,1.366,-0.000)  localX->(-0.71,-0.71,-0.00) localY->(+0.71,-0.71,+0.00) localZ->(-0.00,-0.00,+1.00)
-  Unity rest UpperArm.L pos=(-0.172,1.366,-0.000)  localX->(-0.71,+0.71,+0.00) localY->(-0.71,-0.71,+0.00) localZ->(+0.00,-0.00,+1.00)
-  Unity rest Thigh.R    pos=(0.093,0.914,0.000)  localX->(-1.00,+0.00,+0.00) localY->(-0.00,-1.00,+0.02) localZ->(+0.00,+0.02,+1.00)
-  Unity rest Shin.R     pos=(0.093,0.491,0.010)  localX->(-1.00,+0.00,-0.00) localY->(-0.00,-1.00,-0.02) localZ->(-0.00,-0.02,+1.00)
-  Unity rest Head       pos=(0.000,1.504,-0.000)  localX->(+1.00,+0.00,+0.00) localY->(+0.00,+1.00,-0.00) localZ->(-0.00,+0.00,+1.00)
-  Unity rest Hand.R     pos=(0.540,0.998,-0.000)  localX->(-0.71,-0.71,+0.00) localY->(+0.71,-0.71,+0.00) localZ->(-0.00,+0.00,+1.00)
-  UpperArm.R: best local rotation toward (+0.00,+1.00,+0.00) = AngleAxis(+135, Z)  -> dir (-0.00,+1.00,+0.00)
-  UpperArm.L: best local rotation toward (+0.00,+1.00,+0.00) = AngleAxis(-135, Z)  -> dir (-0.00,+1.00,+0.00)
-  Thigh.R: best local rotation toward (+0.00,+0.00,+1.00) = AngleAxis(+90, X)  -> dir (+0.00,+0.02,+1.00)
-  Shin.R: best local rotation toward (+0.00,+0.00,-1.00) = AngleAxis(-90, X)  -> dir (+0.00,+0.02,-1.00)
-  Blender pose UpperArm.R = 135 deg about local (-0.00,+0.00,-1.00)
-  Blender pose Thigh.R = 90 deg about local (+1.00,-0.00,+0.00)
-  Blender pose Shin.R = 90 deg about local (-1.00,+0.00,+0.00)
-  posed Card world centre=(-0.17,+0.00,+2.18) (head top ~1.73)
-  card-up pose: Card centre=(-0.45,+0.00,+1.93), front normal=(+0.00,-1.00,+0.00) (Blender, -Y = figure front)
-  card-up UpperArm.R = 52 deg about Blender local (-0.00,+0.00,-1.00)
-  card-up ForeArm.R = 83 deg about Blender local (-0.00,+0.00,-1.00)
-  preview: C:\Users\punko\Downloads\PoBox\SCREENSHOTS\2026-11-03-figures\SK_RingCardWalker_cardup.png
-  previews: C:\Users\punko\Downloads\PoBox\SCREENSHOTS\2026-11-03-figures\SK_RingCardWalker_rest.png, C:\Users\punko\Downloads\PoBox\SCREENSHOTS\2026-11-03-figures\SK_RingCardWalker_pose.png
+  previews: C:\Users\punko\Downloads\_CODEMATT\PoBox\SCREENSHOTS\2026-11-03-figures\SK_Referee_rest.png, C:\Users\punko\Downloads\_CODEMATT\PoBox\SCREENSHOTS\2026-11-03-figures\SK_Referee_pose.png

@@ -71,6 +71,7 @@ namespace PoBox.Mj
         bool _bound;
         int _sub, _decimation = 4;
         MjCubePool _cubes;
+        MjCrew[] _crew;
         long _policyTicks;
         double _dt;
         // Per boxer (the first index), and per hand or foot.
@@ -161,6 +162,7 @@ namespace PoBox.Mj
             // The ring's 8 cubes (the trainer's pool), parked where the trainer parks them until something throws one.
             _cubes = FindAnyObjectByType<MjCubePool>();
             if (_cubes != null) { _cubes.Bind(_m, _d); _cubes.ParkAll(); }
+            _crew = FindObjectsByType<MjCrew>(FindObjectsInactive.Exclude);
             if (!many)
             {
                 red.opponent = blue;
@@ -389,19 +391,28 @@ namespace PoBox.Mj
         static int LayerAffinity(int state) => state == 0 ? 1 : state == 1 ? 3 : 5;
         static bool Touch(int a, int b) => (LayerType(a) & LayerAffinity(b)) != 0 || (LayerType(b) & LayerAffinity(a)) != 0;
 
+        bool GeomsOverlap(int[] aGeoms, int[] bGeoms)
+        {
+            if (aGeoms == null || bGeoms == null) return false;
+            foreach (int g in aGeoms)
+                foreach (int h in bGeoms)
+                {
+                    double* a = Geom(g), b = Geom(h);
+                    double dx = a[0] - b[0], dy = a[1] - b[1], dz = a[2] - b[2], reach = _m->geom_rbound[g] + _m->geom_rbound[h];
+                    if (dx * dx + dy * dy + dz * dz <= reach * reach && MujocoLib.mj_geomDistance(_m, _d, g, h, 0.0, null) < 0.0) return true;
+                }
+            return false;
+        }
+
+        bool CrewInside(int k, int[] crewGeoms) => GeomsOverlap(_geoms[k], crewGeoms);
+
         /// <summary>On layer <paramref name="state"/>, boxer k would touch a boxer it does not touch now and is inside of.</summary>
         bool SolidInside(int k, int state)
         {
             for (int j = 0; j < _b.Length; j++)
             {
                 if (j == k || _body[j] < 0 || Touch(_body[k], _body[j]) || !Touch(state, _body[j])) continue;
-                foreach (int g in _geoms[k])
-                    foreach (int h in _geoms[j])
-                    {
-                        double* a = Geom(g), b = Geom(h);
-                        double dx = a[0] - b[0], dy = a[1] - b[1], dz = a[2] - b[2], reach = _m->geom_rbound[g] + _m->geom_rbound[h];
-                        if (dx * dx + dy * dy + dz * dz <= reach * reach && MujocoLib.mj_geomDistance(_m, _d, g, h, 0.0, null) < 0.0) return true;
-                    }
+                if (GeomsOverlap(_geoms[k], _geoms[j])) return true;
             }
             return false;
         }
@@ -456,7 +467,17 @@ namespace PoBox.Mj
                         apart.y = 0f;
                         nearest = Mathf.Min(nearest, apart.magnitude);
                     }
-                    if (nearest < 0.6f && _ghostFor[k] < 3.0) ghost = true;
+                    bool insideCrew = false;
+                    if (_crew != null)
+                        foreach (MjCrew c in _crew)
+                        {
+                            if (c == null || !c.Ready || !c.collideWithBoxers) continue;
+                            Vector3 apart = _pelvis[k].position - c.Position;
+                            apart.y = 0f;
+                            nearest = Mathf.Min(nearest, apart.magnitude);
+                            if (nearest < 0.65f || CrewInside(k, c.GeomIds)) insideCrew = true;
+                        }
+                    if ((nearest < 0.6f || insideCrew) && _ghostFor[k] < 3.0) ghost = true;
                 }
                 if (!ghost) _ghostFor[k] = 0.0;
                 SetGhost(k, ghost);

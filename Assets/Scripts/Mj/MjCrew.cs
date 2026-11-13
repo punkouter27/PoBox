@@ -18,17 +18,21 @@ namespace PoBox.Mj
     public unsafe class MjCrew : MonoBehaviour
     {
         public MjBoxer body;
-        /// <summary>The collision bit the crew is on (the boxers are on 1 and 2, the world on both).</summary>
-        public const int Layer = 4;
+        [Tooltip("True for officials who physically interact with standing boxers (e.g. the referee); false for non-bout crew like ring card walkers.")]
+        public bool collideWithBoxers;
+        /// <summary>The collision bit reserved for crew (boxers are on 1 and 2, FreeForAll states on 1..5, the world on both 1 and 2 plus crew).</summary>
+        public const int Layer = 8;
 
         MujocoLib.mjModel_* _m;
         MujocoLib.mjData_* _d;
         int _sub, _decimation = 4;
         double _dt;
         bool _bound, _layered;
+        int[] _geoms;
         readonly Dictionary<int, double> _override = new Dictionary<int, double>();
 
         public bool Ready => _bound;
+        public int[] GeomIds => _geoms;
 
         void Awake()
         {
@@ -59,21 +63,26 @@ namespace PoBox.Mj
             _dt = _m->opt.timestep * _decimation;
             _sub = 0;
             _layered = false;
+            var geoms = new List<int>();
+            foreach (MjGeom g in body.GetComponentsInChildren<MjGeom>()) if (g.MujocoId >= 0) geoms.Add(g.MujocoId);
+            _geoms = geoms.ToArray();
             body.SetEpisodeAt(MjBoxer.Stand, 0, 0, 0, body.transform.position.x, body.transform.position.z + 1.3);
             _bound = true;
         }
 
         /// <summary>
-        /// Its own layer: its shapes on bit 4, and the world (everything MjRing put on both boxer layers) made to meet bit
-        /// 4 as well. A boxer is on 1 or 2 alone, so it and the crew never touch. Done once the ring has set its layers.
+        /// Crew layers: every crew geom sits on bit 8 (or 1 | 8 when collideWithBoxers is true so standing boxers meet it while
+        /// downed ghost boxers on bit 2 pass clear), and world geoms (contype & 3 == 3) accept bit 8 as well.
         /// </summary>
         void SetLayers()
         {
             var mine = new HashSet<int>();
-            foreach (MjGeom g in body.GetComponentsInChildren<MjGeom>()) if (g.MujocoId >= 0) mine.Add(g.MujocoId);
+            if (_geoms != null) foreach (int g in _geoms) mine.Add(g);
+            else foreach (MjGeom g in body.GetComponentsInChildren<MjGeom>()) if (g.MujocoId >= 0) mine.Add(g.MujocoId);
+            int bits = collideWithBoxers ? (1 | Layer) : Layer;
             for (int g = 0; g < _m->ngeom; g++)
             {
-                if (mine.Contains(g)) { _m->geom_contype[g] = Layer; _m->geom_conaffinity[g] = Layer; }
+                if (mine.Contains(g)) { _m->geom_contype[g] = bits; _m->geom_conaffinity[g] = bits; }
                 else if ((_m->geom_contype[g] & 3) == 3) _m->geom_conaffinity[g] |= Layer;
             }
             _layered = true;
@@ -130,7 +139,7 @@ namespace PoBox.Mj
         /// training, from standing: it turns to the spot, walks while the spot stays ahead, and stops (stands) before it turns
         /// again; a walk is never turned out of mid-stride (seen 2026-11-03: the referee fell every time it was). True once there.
         /// </summary>
-        public bool GoTo(Vector3 spot, Vector3 face, double speed, float near = 0.35f)
+        public bool GoTo(Vector3 spot, Vector3 face, double speed, float near = 0.35f, float settleDelay = 0.6f, float stopAngle = 1.0f)
         {
             Vector3 to = spot - Position;
             to.y = 0f;
@@ -140,7 +149,7 @@ namespace PoBox.Mj
             {
                 case MjBoxer.Walk:
                     // Arrived, or the spot has gone off to the side: stop, and decide from standing.
-                    if (dist < near || off > 1.0f) { Stand(Ahead(face)); _stoppedAt = Time.time; }
+                    if (dist < near || off > stopAngle) { Stand(Ahead(face)); _stoppedAt = Time.time; }
                     return false;
                 case MjBoxer.Turn:
                     if (dist < near * 2f) { Stand(Ahead(face)); return true; }
@@ -150,7 +159,7 @@ namespace PoBox.Mj
                 default:
                     // Standing: still near enough, face the point; otherwise, once settled from a walk, turn to the spot.
                     if (dist < near * 2f) { Stand(Ahead(face)); return true; }
-                    if (Time.time - _stoppedAt > 0.6f) Turn(spot);
+                    if (Time.time - _stoppedAt > settleDelay) Turn(spot);
                     return false;
             }
         }

@@ -425,6 +425,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: PoBox.Mj::PoBox.Mj.MjCrew
   body: {fileID: 2957141435692692784}
+  collideWithBoxers: 1
 --- !u!114 &6637621549813273718
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -438,9 +439,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: PoBox.Runtime::PoBox.Fx.Referee
   crew: {fileID: 6593670989855256768}
-  offLine: 1.5
-  keepClear: 1
-  speed: 0.6
+  offLine: 2.15
+  keepClear: 1.85
+  speed: 0.65
+  settle: 0.45
 --- !u!114 &2957141435692692784 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4592054376816606608, guid: af0b9cc49e14c9e4ab43f636c1e27766, type: 3}
