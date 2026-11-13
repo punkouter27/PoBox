@@ -12,9 +12,14 @@
 Teaches a fighter to box in MuJoCo (MuJoCo Warp, on the GPU) and exports the result as ONNX for Unity.
 Built 2026-10-01 on the pattern of `../../PoDecath/training`; `ppo.py` is PoDecath's, unchanged.
 
-Python is PoDecath's virtual environment, used in place (torch 2.5 + CUDA, mujoco 3.14, mujoco-warp, warp 1.17):
+Python is a sibling project's virtual environment, used in place. Which sibling has one differs by PC: check
+which sibling venv exists before a run. `../../PoDecath` is gone. On the PC of 2026-11-13 (RTX 2060, 6 GB) the
+only one is PoOlympic's (Python 3.11.17, mujoco 3.11.0, mujoco_warp 3.11.0, warp 1.17.0, torch 2.14.0+cu130, CUDA):
 
-    $py = "..\..\PoDecath\training\.venv\Scripts\python.exe"
+    $py = "..\..\PoOlympic\training\.venv\Scripts\python.exe"
+
+MuJoCo 3.5.0 for the exams lives in `.mj350` (not versioned). On a fresh clone:
+`uv pip install --python $py --target .mj350 mujoco==3.5.0`, then `$env:PYTHONPATH=".mj350"` in front of an exam.
 
 ## From a rigged mesh to a trained policy
 

@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 House rules (git, training, physics, reports, TL;DR) are in `AGENTS.md`; follow them. Read before starting:
 `git log -8`, the top of `DOCS/README.md` (running history) and `tasks.md` (live plan). `rl_optimization_log.md`
-is the run-by-run training log; log training decisions there. The owner often runs several Claude sessions on
+is the run-by-run training log; log training decisions there. October 2026 of all three is in `DOCS/archive/`. The owner often runs several Claude sessions on
 this repo at once.
 
 ## What this is
@@ -82,13 +82,17 @@ unity command menu --path "PoBox/Dev/Run Script"   # runs Temp/pobox-dev.txt, ou
   only by renaming the file.
 - An unfocused editor runs a few frames a second: `delayCall` may never fire, and play-mode intros take longer.
 
-Training (Python 3.11 venv borrowed from a sibling project, no pip). `../PoDecath` and `../PoOlympic` are gone;
-since 2026-10-30 runs use `../PoHillKing/training/.venv` (Python 3.11, MuJoCo 3.15 + Warp, torch 2.9; no matplotlib: run
-chart tools with `uv run --python 3.12 --with matplotlib python ...`). Retrofit-era checkpoints are not on
+Training (Python 3.11 venv borrowed from a sibling project, no pip). Which sibling has one differs by PC and
+by date: check which sibling venv exists (`Get-ChildItem .. -Directory | ? { Test-Path "$($_.FullName)\training\.venv" }`)
+before a run. On the PC of 2026-11-13 (RTX 2060, 6 GB) `../PoHillKing/training/.venv` does not exist; the only one is
+`../PoOlympic/training/.venv` (Python 3.11.17, mujoco 3.11.0, mujoco_warp 3.11.0, warp 1.17.0, torch 2.14.0+cu130,
+CUDA works). No matplotlib: run chart tools with `uv run --python 3.12 --with matplotlib python ...`.
+`training/.mj350` is not versioned; on a fresh clone make it with
+`uv pip install --python <that python> --target training/.mj350 mujoco==3.5.0`. Retrofit-era checkpoints are not on
 disk: warm starts are rebuilt from shipped ONNX brains with `tools/onnx_to_pt.py` (into `checkpoints/onnx/`).
 
 ```
-$py = "..\..\PoHillKing	raining\.venv\Scripts\python.exe"     # from training/
+$py = "..\..\PoOlympic\training\.venv\Scripts\python.exe"     # from training/; use the sibling venv that exists
 & $py train_box.py --stage footwork --xml models/v2/matt_solo.xml --resume checkpoints/<run>/latest_matt.pt
 $env:PYTHONPATH=".mj350"; & $py tools/footwork_c.py --exam     # ladder exam R0-R2 in C MuJoCo 3.5.0
 $env:PYTHONPATH=".mj350"; & $py tools/exam_v2.py --only matt   # boxing exam R3-R7
@@ -99,7 +103,7 @@ Moved-not-deleted files from cleanups live in `../PoBox_quarantine_<date>/` (MAN
 jobs are `training/queues/queue_*_staged.json`; copy entries into `logs/queue.json` to run them. `logs/queue.hold` pauses the
 runner; it also waits while the GPU is over 25% busy (Unity in play mode).
 
-`PYTHONPATH=training/.mj350` selects MuJoCo 3.5.0 (the version Unity runs); without it the venv's 3.11 is
+`PYTHONPATH=training/.mj350` selects MuJoCo 3.5.0 (the version Unity runs); without it the venv's own MuJoCo is
 used. Exams and references must use 3.5.0. One GPU job at a time: before training, check `nvidia-smi`, running
 `train_*.py` processes and `training/logs/queue.log`. Unity in play mode on the same GPU cuts Warp from ~60k to
 ~12k samples a second.
