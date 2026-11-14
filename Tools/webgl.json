@@ -1,0 +1,6 @@
+{
+  "buildMethod": "PoBox.EditorTools.WebGLBuild.Build",
+  "staticWebApp": "pobox",
+  "resourceGroup": "PoBox",
+  "subscription": "14d963a2-badc-4a1f-9900-553bf01f8de2"
+}
