@@ -338,13 +338,47 @@ namespace PoBox.UI
             _ringMap?.Clear();
         }
 
+        public enum AppMode { Watch, Play, Testbed }
+        public static AppMode CurrentMode { get; private set; } = AppMode.Watch;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetModeStatics() => CurrentMode = AppMode.Watch;
+
         void Update()
         {
             BuildIfNew();
             if (_root == null) return;
             _safeArea.Fit(_root, _safe);
             if (Input.GetKeyDown(KeyCode.Escape)) Back();
-            if (Input.GetKeyDown(KeyCode.Tab)) SettingsPage.ToggleStats();
+            if (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.F3)) ToggleDebug();
+            if (Input.GetKeyDown(KeyCode.F1))
+            {
+                CurrentMode = (AppMode)(((int)CurrentMode + 1) % 3);
+                if (DebugOpen) RefreshDebug();
+            }
+            if (Input.GetKeyDown(KeyCode.F2) && director != null)
+            {
+                director.CycleCameraMode();
+                RefreshMenu();
+            }
+            if (Input.GetKeyDown(KeyCode.F4) && bout != null && bout.red != null && bout.red.boxer != null)
+            {
+                MjBoxer b = bout.red.boxer;
+                var next = b.Running == b.matchPolicy && b.policy != null ? b.policy : (b.matchPolicy != null ? b.matchPolicy : b.policy);
+                if (next != null) b.SetPolicy(next);
+            }
+            if (Input.GetKeyDown(KeyCode.Space) && bout != null) bout.TogglePause();
+            if (Input.GetKeyDown(KeyCode.R) && bout != null) { StopReplay(); bout.Restart(); }
+            if (director != null && director.Mode == CameraMode.Free)
+            {
+                float step = 3.5f * Mathf.Max(Time.unscaledDeltaTime, 0.005f);
+                Vector3 delta = Vector3.zero;
+                if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) delta += Vector3.forward * step;
+                if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) delta -= Vector3.forward * step;
+                if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) delta += Vector3.right * step;
+                if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) delta -= Vector3.right * step;
+                if (delta != Vector3.zero) director.AddFreeOffset(delta);
+            }
             float now = Time.unscaledTime;
             if (_statsTap.Poll(now)) SettingsPage.ToggleStats();
             if (_leaving)

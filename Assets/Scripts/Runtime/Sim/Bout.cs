@@ -85,6 +85,21 @@ namespace PoBox.Sim
         /// </summary>
         public float PhaseAge => _phaseAge;
         public float ResultsTimeLeft => Mathf.Max(0f, resultsSeconds - PhaseAge);
+        public int ActiveSeed { get; private set; } = 42;
+        public bool Paused { get; private set; }
+        public bool TogglePause() { Paused = !Paused; ApplyTime(); return Paused; }
+
+        void ApplyConfiguredSeed()
+        {
+            int seed = 42;
+            string env = Environment.GetEnvironmentVariable("POBOX_SEED");
+            if (!string.IsNullOrEmpty(env) && int.TryParse(env, out int envSeed)) seed = envSeed;
+            string[] args = Environment.GetCommandLineArgs();
+            for (int i = 0; i < args.Length - 1; i++)
+                if (args[i] == "-seed" && int.TryParse(args[i + 1], out int cliSeed)) seed = cliSeed;
+            ActiveSeed = seed;
+            UnityEngine.Random.InitState(ActiveSeed);
+        }
 
         float _phaseTimer, _countTimer, _phaseAge, _checkTimer;
         readonly int[] _roundDowns = new int[2];
@@ -95,6 +110,7 @@ namespace PoBox.Sim
             Instance = this;
             SimRunning = false;
             Clock = 0f;
+            ApplyConfiguredSeed();
         }
 
         void OnEnable()
@@ -297,7 +313,7 @@ namespace PoBox.Sim
         void ApplyTime()
         {
             // ArenaMood's share is the bullet time after a clean knockout (1 the rest of the time).
-            float scale = Mathf.Max(1f, userTimeScale) * Fx.ArenaMood.TimeScaleK;
+            float scale = Paused ? 0f : Mathf.Max(1f, userTimeScale) * Fx.ArenaMood.TimeScaleK;
             if (!Mathf.Approximately(Time.timeScale, scale)) Time.timeScale = scale;
             // The step never changes with the speed: a trained policy was taught at one step length and one
             // control rate, and a different step is a different body.

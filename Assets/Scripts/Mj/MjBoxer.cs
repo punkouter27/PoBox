@@ -99,6 +99,18 @@ namespace PoBox.Mj
         public readonly double[] Obs = new double[WideObservationSize];
         public double[] Action { get; private set; }
         public float Value { get; private set; }
+        /// <summary>Count of non-finite (NaN/Inf) observation or policy output values sanitized since load/reset.</summary>
+        public int NanInfCount { get; private set; }
+        public void ResetTelemetry() => NanInfCount = 0;
+
+        /// <summary>Appends zero-initialized trailing observation features at <paramref name="dst"/>[<paramref name="baseCount"/>..] without reordering <paramref name="src"/>.</summary>
+        public static void AppendZeroInitInputs(float[] src, int baseCount, float[] dst)
+        {
+            if (dst == null) return;
+            int copy = src != null ? Math.Min(Math.Min(baseCount, src.Length), dst.Length) : 0;
+            for (int i = 0; i < copy; i++) dst[i] = float.IsFinite(src[i]) ? src[i] : 0f;
+            for (int i = copy; i < dst.Length; i++) dst[i] = 0f;
+        }
         /// <summary>Seconds every boxer's policy has spent thinking since the last <see cref="TakeInferSeconds"/>: for the telemetry.</summary>
         static double _inferSeconds;
         public static double TakeInferSeconds() { double s = _inferSeconds; _inferSeconds = 0; return s; }
@@ -489,7 +501,11 @@ namespace PoBox.Mj
             // In a bout the command is zeros; a policy trained with obs_state reads its own state there (envs/match.py).
             bool state = Kind == Match && Config.obs_state;
             o[at++] = state ? Reserve : Cmd[0]; o[at++] = state ? DazeShare : Cmd[1]; o[at++] = state ? OpponentDazeShare : Cmd[2];
-            for (int i = 0; i < ObservationSize; i++) o[i] = Clamp(o[i], -100.0, 100.0);
+            for (int i = 0; i < ObservationSize; i++)
+            {
+                if (!double.IsFinite(o[i])) { NanInfCount++; o[i] = 0.0; }
+                else o[i] = Clamp(o[i], -100.0, 100.0);
+            }
             Bodies(pos, yaw, o, ObservationSize);
             if (Rules.LagMax > 0) Delay();
         }
@@ -530,7 +546,11 @@ namespace PoBox.Mj
             {
                 output.CompleteAllPendingOperations();
                 ReadOnlySpan<float> span = output.AsReadOnlySpan();
-                for (int i = 0; i < Joints; i++) Action[i] = float.IsFinite(span[i]) ? span[i] : 0.0;
+                for (int i = 0; i < Joints; i++)
+                {
+                    if (float.IsFinite(span[i])) Action[i] = span[i];
+                    else { NanInfCount++; Action[i] = 0.0; }
+                }
             }
             _inferSeconds += (System.Diagnostics.Stopwatch.GetTimestamp() - start) / (double)System.Diagnostics.Stopwatch.Frequency;
         }

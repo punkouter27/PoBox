@@ -65,6 +65,10 @@
     --warn:           rgb(255, 198, 84);
     --red:            rgb(226, 62, 62);
     --blue:           rgb(52, 124, 240);
+    /* Shared RL policy-role palette tokens (Bot / Reference / Custom). */
+    --color-policy-bot:    rgb(226, 62, 62);
+    --color-policy-ref:    rgb(46, 191, 140);
+    --color-policy-custom: rgb(52, 124, 240);
     /* What a fighter has left in its muscles (MjBoxer.Reserve), beside the tank of joint work. */
     --reserve:        rgb(120, 196, 255);
     /* The pale chunk of a health bar that a hit has just taken, before it drains away. */

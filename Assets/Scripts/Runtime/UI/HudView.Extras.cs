@@ -20,7 +20,7 @@ namespace PoBox.UI
         static readonly string[] DebugKeys =
         {
             "FRAME", "WORST", "PHYSICS", "SETPASS", "TRIS", "GC", "MEMORY", "SCALE", "SHOT", "VOICES", "CLOSING", "STRESS",
-            "DAZE", "CRITIC", "SOUND", "USUAL", "BRAINS", "GPU",
+            "DAZE", "CRITIC", "SOUND", "USUAL", "BRAINS", "GPU", "MODE/SEED", "NAN/INF",
         };
 
         /// <summary>The pick before the first bell: either corner, at the ladder's odds (League/Prediction.cs).</summary>
@@ -153,6 +153,9 @@ namespace PoBox.UI
             _debugValues[15].text = ex != null ? $"{ex.UsualImpulse:0.0} N·s" : "-";
             _debugValues[16].text = $"{perf.InferMs:0.00} ms";
             _debugValues[17].text = perf.GpuMs > 0f ? $"{perf.GpuMs:0.0} ms" : "n/a";
+            int nans = (red != null && red.boxer != null ? red.boxer.NanInfCount : 0) + (blue != null && blue.boxer != null ? blue.boxer.NanInfCount : 0);
+            _debugValues[18].text = bout != null ? $"{CurrentMode} #{bout.ActiveSeed}" : CurrentMode.ToString();
+            _debugValues[19].text = nans.ToString();
         }
     }
 }

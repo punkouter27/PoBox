@@ -7,6 +7,7 @@ using PoBox.Sim;
 namespace PoBox.Broadcast
 {
     public enum Shot { Wide, Orbit, HighCorner, LowRopes, ShoulderRed, ShoulderBlue, Impact, Overhead, WalkRed, WalkBlue, Winner }
+    public enum CameraMode { Broadcast, Follow, Orbit, Free }
 
     /// <summary>
     /// The vision mixer. Eleven Cinemachine cameras live in the scene; this decides which one is on air and
@@ -89,6 +90,9 @@ namespace PoBox.Broadcast
         public float minShot = 0.8f;
 
         public Shot Current { get; private set; } = Shot.Wide;
+        /// <summary>Standard camera mode (Broadcast, Follow, Orbit, Free) controlled by F2.</summary>
+        public CameraMode Mode { get; private set; } = CameraMode.Broadcast;
+        Vector3 _freeOffset;
         /// <summary>A shot chosen by hand in the menu. Null hands the cameras back to the director.</summary>
         public Shot? Pinned { get; private set; }
         public int CutCount { get; private set; }
@@ -280,6 +284,41 @@ namespace PoBox.Broadcast
             _nextCut = 0f;
         }
 
+        public void SetCameraMode(CameraMode mode)
+        {
+            Mode = mode;
+            switch (mode)
+            {
+                case CameraMode.Broadcast:
+                    _freeOffset = Vector3.zero;
+                    Pin(null);
+                    break;
+                case CameraMode.Follow:
+                    _freeOffset = Vector3.zero;
+                    Pin(Shot.ShoulderRed);
+                    break;
+                case CameraMode.Orbit:
+                    _freeOffset = Vector3.zero;
+                    Pin(Shot.Orbit);
+                    break;
+                case CameraMode.Free:
+                    Pin(Shot.Wide);
+                    break;
+            }
+        }
+
+        public CameraMode CycleCameraMode()
+        {
+            SetCameraMode((CameraMode)(((int)Mode + 1) % 4));
+            return Mode;
+        }
+
+        public void AddFreeOffset(Vector3 worldDelta)
+        {
+            if (Mode != CameraMode.Free) SetCameraMode(CameraMode.Free);
+            _freeOffset += worldDelta;
+        }
+
         /// <summary>Locks the close-up on one boxer (0 red, 1 blue) until the cameras are given back.</summary>
         public void Focus(int corner)
         {
@@ -416,11 +455,12 @@ namespace PoBox.Broadcast
             float aspect = mainCamera != null ? mainCamera.aspect : 0.5625f;
             float halfWidth = _sepSmooth * 0.5f + sideRoom;
 
-            // Wide: side on, from above the top rope.
+            // Wide: side on, from above the top rope (plus Free offset when F2 is in Free mode).
             if (wideCam != null)
             {
                 float d = TwoShotDistance(wideCam, aspect, halfWidth, 1.25f);
-                Place(wideCam, Raise(_mid + _side * d, OverTheRopes(_side, d, 0f)), _mid);
+                Vector3 free = Mode == CameraMode.Free ? _freeOffset : Vector3.zero;
+                Place(wideCam, Raise(_mid + _side * d, OverTheRopes(_side, d, 0f)) + free, _mid + free * 0.5f);
             }
 
             // Orbit: the same framing, walking round the ring.
