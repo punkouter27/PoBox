@@ -35,6 +35,14 @@ namespace PoBox.Mj
         /// free-for-all). Off, a boxer down is passed through by the one standing, as in a pair's bout.
         /// </summary>
         [NonSerialized] public bool solidBodies;
+        /// <summary>
+        /// A pair's bout with the free-for-all's collision layers (2026-11-16, the owner: a boxer falling passed through the
+        /// other): a boxer down stays solid to the one standing, so a fall lands on or against the other instead of through
+        /// it; getting up it meets the one standing; a new layer waits until the two are clear (SolidInside). Only the
+        /// collisions: the pair's brains still decide on the same step, as in training (solidBodies staggers them).
+        /// </summary>
+        [Tooltip("A boxer down stays solid to the one standing (the free-for-all's layers). Off: it is passed through, as before 2026-11-16.")]
+        public bool solidDowned = true;
         [Tooltip("MuJoCo's step, seconds: the trainer's.")]
         public float physicsStep = 0.005f;
         [Tooltip("Physics runs only while this is set: the bout clears it between rounds and when the result is up.")]
@@ -441,11 +449,14 @@ namespace PoBox.Mj
             for (int k = 0; k < _b.Length; k++)
             {
                 // A pair's ring lets the one standing pass through the one down; a free-for-all's keeps every body solid.
-                if (solidBodies)
+                if (solidBodies || solidDowned)
                 {
                     // Held in its guard over a count it is put back on its spot every step, so it goes on the getting-up
                     // layer: put back inside a body lying across its feet, the contact would throw that body about.
-                    int state = !_down[k] ? (_held[k] ? 2 : 0) : _rising[k] ? 2 : 1;
+                    // A pair's bout keeps the one held over a count on the standing layer: it was standing when the other
+                    // went down, so nothing is put inside anything, and a fall onto it lands on it instead of through it
+                    // (measured 18 cm, pelvis in torso, on the getting-up layer, 2026-11-16).
+                    int state = !_down[k] ? (_held[k] && solidBodies ? 2 : 0) : _rising[k] ? 2 : 1;
                     // A new layer that would make it solid to a body it is still inside waits until they are clear (or three
                     // seconds have gone): given its body back inside another's, the contact throws them apart (seen 15 cm
                     // deep: two boxers getting up off the same pile, the getting-up layer solid to itself).

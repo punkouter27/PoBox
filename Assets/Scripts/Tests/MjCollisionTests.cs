@@ -48,6 +48,7 @@ namespace PoBox.Tests
             yield return SceneManager.LoadSceneAsync(MatchSelection.MeleeScene, LoadSceneMode.Single);
             for (float t = 0f; (FreeForAll.Instance == null || FreeForAll.Instance.Phase != FreeForAll.Stage.Fight) && t < 30f; t += Time.unscaledDeltaTime) yield return null;
             Assert.IsNotNull(FreeForAll.Instance, "the Melee scene has no FreeForAll");
+            FreeForAll.Instance.rated = false;      // a test's melee is not a result for the owner's ladder (FreeForAll.rated)
             yield return Measure(() => Time.timeScale = 4f);
             Assert.Less(MjRing.DeepestOverlap[0], OnTheirFeet, "two boxers on their feet went into each other: " + MjRing.DeepestWhere[0]);
             Assert.Less(MjRing.DeepestOverlap[3], OneDown, "a boxer went through one on the canvas: " + MjRing.DeepestWhere[3]);

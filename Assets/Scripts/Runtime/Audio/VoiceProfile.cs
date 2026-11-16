@@ -32,6 +32,8 @@ namespace PoBox.Audio
                 case "GRANDPA": return new VoiceProfile(98f, 0.96f, 0.38f, 0.30f, 0.45f);
                 case "GRANDMA": return new VoiceProfile(205f, 1.14f, 0.22f, 0.35f, 0.50f);
                 case "KIM": return new VoiceProfile(222f, 1.18f, 0.06f, 0.22f);
+                case "TIMMY": return new VoiceProfile(132f, 1.03f, 0.10f, 0.18f);       // young, a little higher and cleaner than Matt
+                case "SOLDAT": return new VoiceProfile(102f, 0.97f, 0.22f, 0.12f);      // low, clipped, a little gravel
             }
             float k = Mathf.Clamp(Mathf.Sqrt(80f / Mathf.Max(40f, mass)), 0.85f, 1.15f);
             float own = 1f + 0.06f * (((name ?? "").GetHashCode() & 0xff) / 127.5f - 1f);

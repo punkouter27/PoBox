@@ -459,3 +459,49 @@ Entries from 2 to 31 October 2026 are in [DOCS/archive/rl_optimization_log_2026-
   capping fist speed, and the hit counter's minimum speed. Check what fist speed the grandparents' arms can reach at all
   (a scripted max-effort jab in C MuJoCo) before training more for punching. No Grandma punch run queued for that reason.
 - **05:45 GPU left idle** for the last 45 minutes: no job worth starting would finish and be examined before 06:30.
+
+## 2026-11-16 10:05, ten more hours (to about 20:00)
+
+- **10:07 `v3m6_grandma` queued and started:** from v3m5_grandma (her footing pass), same recipe with the flag and a fresh
+  critic, `--handover-share` 0.5 -> 0.7 and `--recover-w` 1.0 -> 2.0, 1.5 h. Aimed at her weak spot: carrying on 10/27.
+  Exam on book_n6g.
+- **Why the grandparents don't punch, part 1: it is not the body.** New `tools/fist_speed.py` (C MuJoCo 3.5.0, pelvis held,
+  speed-limit damping on, right arm at every full-effort combination for 0.4 s, `logs/fist_speed.json`): peak glove speed
+  Matt 13.9, Kim 12.6, Trump 12.2, **Grandma 9.0, Grandpa 9.0 m/s**. Their arms have half the force and 3/4 the speed
+  limits, but they can still reach three times the 3.0 m/s mark (a hit counts above 1 m/s).
+- **Part 2: the recipe.** Their match recipe carries `--arms-w 0.01` (a pull of the shoulders and elbows to the guard) and
+  `--slow-v 4.0` (a punch slower than 4 m/s pays (v/4)^2: a first clumsy 1.5 m/s punch earns 14%). Kim's recipe, which
+  punches, has neither. Hypothesis: together they leave no gradient towards punching for a weak, slow arm.
+- **10:20 queued `v3m7_grandpa`:** from v3m6_grandpa (footing pass), same recipe without `--arms-w` and `--slow-v`, `--hit-w`
+  2.0, flag, fresh critic, 1.5 h. Exam on book_n7p.
+
+## 2026-11-16 15:35, Timmy, the ninth boxer: v3 body and the first queue (owner: "add timmy ... train and give unique fighting style")
+- Mesh: the owner's `TIMMY_unity_rigged.fbx` (AccuRig). Staged in `BLENDER/2026-11-16_timmy/stage.py`: its four clips
+  posed it into spikes (imported without them); in Blender the mesh did not sit on its skeleton (stood up while the bones
+  lay along -Y, and lower), so it was moved onto them by a similarity fit of each bone's centre to the weighted centre of
+  the vertices it drives (6 bones, residual 0.74 -> 0.034 m); legs straightened from 27 degrees apart; 1.76 m. A test pose
+  deforms cleanly. `Assets/Models/Timmy.glb`.
+- Body: `build_roster.py --only timmy` (73.1 kg, pelvis 0.877 m, no self-contact in 25 poses after one trunk slimming),
+  `build_v3.py --only timmy` (head 0.113 m from a half-width of 0.119, ankle -42/208 N m).
+- Style, persona **infighter** ("body-snatcher"), the roster's gap: range_m 0.56 (the shortest), body 2.0, head 0.7,
+  hand_l 1.3, power 1.5, pace 0.45, press 0.8, crowd 0, taken 0.7, counter 1.2, energy 0.9.
+- Warm starts: Sokol's shipped v3 brains (the nearest build, 1.83 m 83 kg), his per-joint action scale written into the
+  ONNX checkpoints and rescaled onto Timmy (`tools/warm_from_boxer.py`; ratio 0.991-1.000, targets moved under 2e-6 rad).
+- Queue `logs/queue_timmy.json` (its own state; the 58-job `logs/queue.json` of another session left alone; its runner had
+  died after starting v3m6_grandma at 10:07): v3f_timmy (footwork, 0.5 h) + exam, v3u_timmy (get-up against a frozen Matt,
+  1 h, done at 0.85) + hand-over bank, v3m_timmy (gauntlet against the eight shipped match brains, 1.5 h, the newest
+  recipe's terms) + exam on `logs/book_v3_timmy.json`. About 3.5 h of GPU.
+
+## 2026-11-16 15:50, Soldat, the tenth boxer, queued behind Timmy (owner: "also import soldat. rig him with blender / train him")
+- Mesh: `soldat_unity.fbx`, one mesh with no skeleton and no weights (A-pose). Rigged in `BLENDER/2026-11-16_soldat/rig.py`:
+  joints found from the mesh (leg and arm slices, the fingertip, the deltoid's edge), Mixamo names, Blender heat weights
+  (0 vertices left bare), 1.84 m. Two corrections from the build's own check: the crotch detector found 0.34 of height
+  (trouser legs touching), so hip and knee are set by proportion (0.48, 0.285); and the pelvis joint level with the hips
+  made the trunk slim 8 times (to 58% of the body) to clear the thighs: the pelvis joint 0.015 and the spine root 0.075
+  above the hips, as every other rig has them, and it builds with no slimming (trunk 0.128 m, 90%). Test pose clean.
+- Style, persona **marksman** ("the sniper"): hand_r 1.6 (no one else is paid for the rear hand), range_m 0.84, head 1.7,
+  body 0.6, power 1.4, pace 0.6, counter 1.3, crowd 0.4; Grandpa's lesson kept (taken 1.0, press 0.3).
+- Warm starts: Matt's shipped v3 brains (1.86 m 85 kg; ratios 1.000-1.032). Jobs v3f/v3u/v3m_soldat + exams appended to
+  `logs/queue_timmy.json`; his gauntlet includes Timmy's new match brain.
+- Also today: the phone-layout tests' free-for-alls were being rated (FreeForAll.rated, new today) and moved the owner's
+  ladder by up to 700 points; the tests now switch rating off and the ratings were put back.

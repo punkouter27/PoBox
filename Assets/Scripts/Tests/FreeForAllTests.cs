@@ -23,6 +23,7 @@ namespace PoBox.Tests
             yield return SceneManager.LoadSceneAsync(MatchSelection.MeleeScene, LoadSceneMode.Single);
             var rules = Object.FindAnyObjectByType<FreeForAll>();
             Assert.IsNotNull(rules, "the Melee scene has no FreeForAll");
+            rules.rated = false;        // a test's melee is not a result for the owner's ladder (FreeForAll.rated)
             for (float t = 0f; rules.Phase != FreeForAll.Stage.Fight && t < 20f; t += Time.unscaledDeltaTime) yield return null;
             Assert.AreEqual(FreeForAll.Stage.Fight, rules.Phase, "the free-for-all never started");
 

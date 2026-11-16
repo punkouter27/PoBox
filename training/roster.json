@@ -67,6 +67,30 @@
       "speed": 1.0,
       "style": {"head": 1.3, "body": 1.0, "power": 1.3, "pace_s": 0.5, "taken": 0.8, "block_w": 0.03, "range_m": 0.72, "press": 0.5, "energy": 1.0},
       "style_note": "2026-10-15, the owner's Sokol_TPose character (plaid shirt, jeans); in metres, 1.83 m. Mass 82 kg given: the mesh's volume reads 123 litres (BMI 36). Persona chosen to fill the roster's gap; Kim's lessons kept from the start: power and press up, taken under 1, so standing off does not pay."
+    },
+    "timmy": {
+      "display": "TIMMY",
+      "glb": "../Assets/Models/Timmy.glb",
+      "height": 1.76,
+      "mass": 72,
+      "persona": "infighter",
+      "says": "the body-snatcher: slips inside, lives at close range and digs hooks to the body off the lead hand",
+      "age": 1.0,
+      "speed": 1.0,
+      "style": {"head": 0.7, "body": 2.0, "hand_l": 1.3, "hand_r": 1.0, "power": 1.5, "pace_s": 0.45, "taken": 0.7, "block_w": 0.03, "counter": 1.2, "range_m": 0.56, "press": 0.8, "crowd": 0.0, "energy": 0.9},
+      "style_note": "2026-11-16, the owner's TIMMY_unity_rigged (AccuRig FBX, staged in BLENDER/2026-11-16_timmy/stage.py: animation dropped, mesh moved onto its skeleton by the skin weights, legs straightened from 27 degrees apart, 1.76 m). Persona chosen to fill the roster's gap: no one else lives inside (range 0.56 m, the shortest) or is paid most for the body (2.0) and the lead hand (1.3). Kim's and Grandpa's lessons kept from the start: taken 0.7 and press 0.8, so standing off does not pay."
+    },
+    "soldat": {
+      "display": "SOLDAT",
+      "glb": "../Assets/Models/Soldat.glb",
+      "height": 1.84,
+      "mass": 86,
+      "persona": "marksman",
+      "says": "the sniper: disciplined, long and upright, picks his shot and fires the straight right hand to the head",
+      "age": 1.0,
+      "speed": 1.0,
+      "style": {"head": 1.7, "body": 0.6, "hand_l": 0.8, "hand_r": 1.6, "power": 1.4, "pace_s": 0.6, "taken": 1.0, "block_w": 0.05, "counter": 1.3, "range_m": 0.84, "press": 0.3, "crowd": 0.4, "energy": 1.1},
+      "style_note": "2026-11-16, the owner's soldat_unity.fbx: no skeleton and no weights, rigged in BLENDER/2026-11-16_soldat/rig.py (joints found from the mesh, Mixamo names, heat weights; hip and knee at the usual fractions of height because the trouser legs touch high on the thigh), 1.84 m. Persona chosen to fill the roster's gap: no one else is paid for the rear hand (hand_r 1.6) or works from as far out with it (0.84 m). Grandpa's lesson kept: taken 1.0 and press 0.3, so standing off at a range nobody reaches does not pay."
     }
   }
 }

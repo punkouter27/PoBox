@@ -62,6 +62,27 @@ and "Things that cost time, worth knowing". The plan as it stood, with every tic
 - Tests: `CupTests` 7/7 (cup, fill, placings Elo, procedural voices, clip names). Not yet: the UI screenshot report,
   a listen to the procedural voices, the 16-boxer frame rate on a phone.
 
+## Timmy and Soldat, the referee's raise, solid falls, a 16-slot menu (2026-11-16, evening)
+
+- **Timmy (9th boxer)**: the owner's AccuRig FBX staged in `BLENDER/2026-11-16_timmy/stage.py` (its clips posed it into
+  spikes; the mesh did not sit on its skeleton and was fitted onto it by the skin weights; legs straightened from 27
+  degrees apart; 1.76 m, 73 kg). Persona **infighter**: range 0.56 m, body 2.0, lead hand 1.3. Warm start Sokol.
+- **Soldat (10th)**: an unrigged mesh, rigged in `BLENDER/2026-11-16_soldat/rig.py` (joints from the mesh's own slices,
+  Mixamo names, heat weights; 1.84 m, 87 kg). Persona **marksman**: the rear hand 1.6 to the head from 0.84 m. Warm start Matt.
+- Both: v3 bodies, 0 differences Unity against the trainer, corners in Arena, a slot each in the free-for-all (in place of
+  GRANDMA II and GRANDPA II), menu cards, ladder entrants, their own procedural voices. **Training is still running**
+  (`training/logs/queue_timmy.json`); until their brains are promoted they run the zero placeholder and fall if picked.
+  Timmy's footwork exam: stand, turn and joints pass, walking falls 0.203 a minute (mark 0.2).
+- **Referee raises the winner's hand**: at the result he stands at the winner's left facing the camera the result came up
+  on and lifts his right arm with the winner's left (`MjBoxer.RaisedLeft`, `MjBrain.HandRaisedByReferee`); within a metre of
+  his spot he is set on it and held (`MjCrew.PinPose`: his walking brain cannot balance an arm overhead). Measured: hands
+  1.74 and 1.90 m up, 0.19 m apart.
+- **Falls are solid in a pair's bout** (`MjRing.solidDowned`): a boxer down is no longer passed through; the free-for-all's
+  layers, the one held over a count kept on the standing layer. Pass-through overlap 18 cm -> 0 over several knockdowns.
+- **Menu**: a 4 x 4 grid of 16 slots, EMPTY cards for the unfilled ones (`MenuView.Grid`).
+- Tests: MjGate 24/24, StateFlow 2/2. **FreeForAllTests fails** (2 of 4 boxers land a punch in its first 20 s) while
+  training saturates the GPU; to re-run when it has finished.
+
 ## Play-through fixes: twins that could not be hurt, the 16-boxer pile-up (2026-11-16, later)
 
 - **Twins took no punch damage.** Their MjBrain had no `ring` (a scene override the Red instances had), so the ring's

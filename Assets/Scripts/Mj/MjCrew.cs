@@ -88,10 +88,32 @@ namespace PoBox.Mj
             _layered = true;
         }
 
+        // Pinned (PinPose): put back in a pose on a spot every step, its brain not run, as the ring holds a boxer.
+        bool _pinned;
+        double _pinX, _pinY, _pinYaw;
+        double[] _pinJoints;
+
+        /// <summary>
+        /// Held in a pose (MjBoxer.Pose) on a spot (Unity floor point), facing a way, every step until <see cref="Unpin"/>,
+        /// or Place: the referee raising the winner's hand, which his walking brain cannot balance (2026-11-16).
+        /// </summary>
+        public void PinPose(Vector3 floorPoint, Vector3 facing, double[] joints)
+        {
+            if (!_bound) return;
+            _pinned = true;
+            _pinX = floorPoint.x; _pinY = floorPoint.z; _pinYaw = System.Math.Atan2(facing.z, facing.x); _pinJoints = joints;
+            body.ResetToPose(_pinX, _pinY, _pinYaw, _pinJoints);
+            MjScene.Instance.SyncUnityToMjState();
+        }
+
+        public void Unpin() => _pinned = false;
+        public bool Pinned => _pinned;
+
         void BeforePhysics(object sender, MjStepArgs a)
         {
             if (!_bound) return;
             if (!_layered) SetLayers();
+            if (_pinned) { body.ResetToPose(_pinX, _pinY, _pinYaw, _pinJoints); return; }
             if (_sub == 0)
             {
                 body.Observe();
@@ -178,6 +200,7 @@ namespace PoBox.Mj
         public void Place(Vector3 floorPoint, Vector3 facing)
         {
             if (!_bound) return;
+            _pinned = false;
             body.ResetToGuard(floorPoint.x, floorPoint.z, System.Math.Atan2(facing.z, facing.x));
             body.SetEpisodeAt(MjBoxer.Stand, 0, 0, 0, floorPoint.x + facing.x, floorPoint.z + facing.z);
             MjScene.Instance.SyncUnityToMjState();

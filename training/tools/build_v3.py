@@ -32,10 +32,11 @@ sys.path.insert(0, os.path.join(HERE, "tools"))
 import rig_to_mjcf  # noqa: E402
 from check_self_collision import check  # noqa: E402
 
-NAMES = ("grandma", "grandpa", "kim", "matt", "nick", "sokol", "trump", "zombie")
+NAMES = ("grandma", "grandpa", "kim", "matt", "nick", "sokol", "trump", "zombie", "timmy", "soldat")
 # The head's half-width across, m, measured from each mesh by tools/fit_check.py on 2026-10-16.
 HEAD_HALF = {"grandma": 0.118, "grandpa": 0.091, "kim": 0.091, "matt": 0.086, "nick": 0.078, "sokol": 0.094,
-             "trump": 0.120, "zombie": 0.103}
+             "trump": 0.120, "zombie": 0.103,
+             "timmy": 0.1187, "soldat": 0.092}      # 2026-11-16, glb_to_rig.py --fit-report on Assets/Models/<Name>.glb
 HEAD_FILL = 0.95
 # abdomen_y: positive bends the trunk forward (tools/rom_audit.py reads the direction from the body).
 TRUNK_RANGE = {"abdomen_y": [-30, 60]}

@@ -241,6 +241,38 @@ namespace PoBox.UI
                 _cards[i] = card;
                 _tags[i] = tag;
             }
+            Grid();
+        }
+
+        /// <summary>Slots on the first screen: the roster is sixteen (owner, 2026-11-16), a slot nobody fills says EMPTY.</summary>
+        public const int Slots = 16;
+
+        /// <summary>
+        /// The cards' grid: four by four, sixteen slots (owner, 2026-11-16), the boxers first and then an EMPTY card for each
+        /// slot nobody fills yet; more than sixteen boxers add rows of four. Each card is sized from the grid with a gap of
+        /// 1.6% between, and the four-wide grid gets the shorter foot and smaller name (picker--dense).
+        /// </summary>
+        void Grid()
+        {
+            const int cols = 4;
+            int n = Mathf.Max(boxers.Length, Slots), rows = (n + cols - 1) / cols;
+            const float gap = 1.6f;
+            _picker.AddToClassList("picker--dense");
+            for (int i = boxers.Length; i < n; i++)
+            {
+                var empty = new VisualElement { name = "pick-empty-" + i, pickingMode = PickingMode.Ignore };
+                empty.AddToClassList("pick");
+                empty.AddToClassList("pick--empty");
+                var word = new Label("EMPTY") { pickingMode = PickingMode.Ignore };
+                word.AddToClassList("pick-empty");
+                empty.Add(word);
+                _picker.Add(empty);
+            }
+            foreach (VisualElement card in _picker.Children())
+            {
+                card.style.width = Length.Percent((100f - (cols - 1) * gap) / cols);
+                card.style.height = Length.Percent((100f - (rows - 1) * gap) / rows);
+            }
         }
 
         static string EloBadge(string name)

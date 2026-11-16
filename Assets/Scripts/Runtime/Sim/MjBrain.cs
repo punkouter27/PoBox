@@ -32,7 +32,25 @@ namespace PoBox.Sim
         public float Value => boxer != null ? boxer.Value : 0f;
         public bool HasValue => boxer != null && boxer.Running != null;
 
-        bool _holding, _releaseNext, _raised;
+        bool _holding, _releaseNext, _raised, _refRaised;
+        Vector3 _resultFacing;
+
+        /// <summary>
+        /// The way the winner faces for the result, flat: towards the camera that was live when the result came up, kept
+        /// through the cuts after it (the referee stands beside it facing the same way). Zero before a result.
+        /// </summary>
+        public Vector3 ResultFacing => _raised ? _resultFacing : Vector3.zero;
+
+        /// <summary>
+        /// The referee is at the winner's left and lifts its arm (Fx/Referee): from both gloves up to the left one held high
+        /// beside his, the right one in the guard. Once a result.
+        /// </summary>
+        public void HandRaisedByReferee()
+        {
+            if (!_raised || _refRaised || fighter.IsDown) return;
+            _refRaised = true;
+            ring.HoldPose(boxer, fighter.pelvis.transform.position, _resultFacing, boxer.Pose(MjBoxer.RaisedLeft));
+        }
         readonly float[] _punchNotedAt = { -9f, -9f };
         Transform[] _gloves;
 
@@ -229,6 +247,7 @@ namespace PoBox.Sim
         {
             GettingUp = false;
             _raised = false;
+            _refRaised = false;
             boxer.SetSpeedShare(1.0);
             _out = Out.None;
             // A boxer with no match policy boxes on its footwork policy (Sokol, until his boxing is trained).
@@ -262,8 +281,14 @@ namespace PoBox.Sim
                 if (fighter != bout.Winner) ring.Hold(boxer, facing);
                 else if (!_raised)
                 {
-                    ring.HoldPose(boxer, fighter.pelvis.transform.position, facing, boxer.Pose(MjBoxer.Victory));
+                    // Turned to the camera that is live now, the way the referee will stand with it.
+                    Camera cam = Camera.main;
+                    Vector3 toCam = cam != null ? cam.transform.position - fighter.pelvis.transform.position : facing;
+                    toCam.y = 0f;
+                    _resultFacing = toCam.sqrMagnitude > 0.01f ? toCam.normalized : facing.normalized;
+                    ring.HoldPose(boxer, fighter.pelvis.transform.position, _resultFacing, boxer.Pose(MjBoxer.Victory));
                     _raised = true;
+                    _refRaised = false;
                 }
                 return;
             }

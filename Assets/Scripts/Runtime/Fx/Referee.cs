@@ -9,7 +9,9 @@ namespace PoBox.Fx
     /// training/models/crew/referee, trained to stand, walk and turn on command as the boxers' footwork was). This part
     /// decides where he goes; his brain walks him there. He physically collides with active boxers and actively keeps
     /// clear of the boxing action in open ring space without crossing between the fighters or trapping himself on the
-    /// ropes. Over a boxer on the canvas he steps clear to count, his right arm coming down with every number.
+    /// ropes. Over a boxer on the canvas he steps clear to count, his right arm coming down with every number. At the
+    /// result he goes to the winner's left, shoulder to shoulder, both facing the camera the result came up on, and raises
+    /// his right arm with the winner's left (MjBrain.HandRaisedByReferee): the winner's hand raised.
     /// </summary>
     public class Referee : MonoBehaviour
     {
@@ -22,6 +24,18 @@ namespace PoBox.Fx
         public float speed = 0.65f;
         [Tooltip("His spot is moved only when the fight has moved it this far, metres: a brain asked somewhere new every frame never settles.")]
         public float settle = 0.45f;
+        [Tooltip("At the result: metres from the winner's pelvis to his, at the winner's left, shoulder to shoulder.")]
+        public float besideWinner = 0.62f;
+        [Tooltip("At the result: this near his spot, metres, he has arrived and raises the winner's hand.")]
+        public float arrived = 0.45f;
+        [Tooltip("At the result: this near his spot, metres, he is set on it and held there with the winner's hand up (his walking brain cannot balance with an arm overhead).")]
+        public float pinWithin = 1.0f;
+        /// <summary>The raise, on the referee's body: his right glove overhead and in towards the winner (see Gesture).</summary>
+        static readonly (string joint, double angle)[] RaisePose = { ("shoulder_x_r", 1.98), ("shoulder_z_r", 1.92), ("elbow_r", 1.61) };
+        [Tooltip("At the result: he raises the hand after this many seconds even if a body is in his way.")]
+        public float raiseAfter = 6f;
+        bool _raising;
+        float _resultAt = -1f;
 
         int _lastCount = -1;
         float _countAt;
@@ -80,10 +94,25 @@ namespace PoBox.Fx
                     break;
                 case BoutPhase.Results when bout.Winner != null:
                 {
+                    // At the winner's left (Cross(forward, up) is its left), facing the way it faces.
                     Vector3 win = Flat(bout.Winner.pelvis.transform.position);
-                    Vector3 toward = centre - win;
-                    target = ClampRing(win + Vector3.Cross(Vector3.up, toward.sqrMagnitude > 0.01f ? toward.normalized : Vector3.forward) * 0.9f, centre, half);
-                    look = Camera.main != null ? Flat(Camera.main.transform.position) : centre;
+                    MjBrain wb = bout.Winner.GetComponent<MjBrain>();
+                    Vector3 face = wb != null ? wb.ResultFacing : Vector3.zero;
+                    if (face.sqrMagnitude < 0.01f) face = Camera.main != null ? Flat(Camera.main.transform.position) - win : centre - win;
+                    face.y = 0f;
+                    face = face.sqrMagnitude > 0.01f ? face.normalized : Vector3.forward;
+                    Vector3 left = Vector3.Cross(face, Vector3.up);
+                    target = ClampRing(win + left * besideWinner, centre, half + 0.3f);
+                    look = me + face * 3f;
+                    // Shoulder to shoulder: the winner's left hand goes up with his right.
+                    if (_resultAt < 0f) _resultAt = Time.time;
+                    float away = FlatDist(me, target);
+                    _raising = _raising || away < arrived || Time.time - _resultAt > raiseAfter;
+                    if (_raising && wb != null) wb.HandRaisedByReferee();
+                    // Near enough: set on the spot, facing as the winner faces, his hand up with the winner's, and held.
+                    if (!crew.Pinned && (away < pinWithin || Time.time - _resultAt > raiseAfter))
+                        crew.PinPose(target, face, crew.body.Pose(RaisePose));
+                    if (crew.Pinned) return;
                     break;
                 }
                 default:
@@ -95,7 +124,7 @@ namespace PoBox.Fx
             }
             float nearestNow = Mathf.Min(FlatDist(me, r), FlatDist(me, b));
             bool crowded = bout.Phase == BoutPhase.Fight && nearestNow < 1.55f;
-            if (crowded || FlatDist(target, _goal) > settle) _goal = target;
+            if (crowded || bout.Phase == BoutPhase.Results || FlatDist(target, _goal) > settle) _goal = target;
             double moveSpeed = crowded ? System.Math.Max(speed, 0.85) : speed;
             crew.GoTo(_goal, look, moveSpeed, crowded ? 0.32f : 0.4f, crowded ? 0.12f : 0.25f, crowded ? 1.25f : 1.05f);
             Gesture(bout);
@@ -115,12 +144,15 @@ namespace PoBox.Fx
                 return;
             }
             _lastCount = -1;
-            if (bout.Phase == BoutPhase.Results && bout.Winner != null)
+            if (bout.Phase != BoutPhase.Results) { _raising = false; _resultAt = -1f; if (crew.Pinned) crew.Unpin(); }
+            if (bout.Phase == BoutPhase.Results && bout.Winner != null && _raising)
             {
-                // Up beside the winner: as high as the shoulder lets a hand go (the boxers' victory pose).
-                crew.Hold("shoulder_x_r", 1.51);
+                // Up beside the winner, holding the winner's raised hand: overhead and in towards it. Found on the
+                // referee's body in MuJoCo (2026-11-16): the glove 1.74 m up, 0.35 m to his right (the winner's side),
+                // 0.15 m forward; the drives hold it there (1.80 m with the boxers' victory angles, but straight up).
+                crew.Hold("shoulder_x_r", 1.98);
                 crew.Hold("shoulder_z_r", 1.92);
-                crew.Hold("elbow_r", 1.2);
+                crew.Hold("elbow_r", 1.61);
                 return;
             }
             crew.ReleaseAll();

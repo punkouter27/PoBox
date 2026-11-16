@@ -1,0 +1,372 @@
+{
+  "source": "C:/Users/punko/Downloads/_CODEMATT/PoBox/Assets/Models/Timmy.glb",
+  "frame": "blender_z_up (x = character left, -y = forward, z = up)",
+  "height_m": 1.76,
+  "mass_kg": 72.0,
+  "notes": [
+    "made symmetric: left and right differed by up to 5.1 cm",
+    "trunk slimmed to torso 0.122, pelvis 0.109: its own arms touched it",
+    "trunk slimmed to torso 0.114, pelvis 0.102: its own arms touched it",
+    "trunk slimmed to torso 0.107, pelvis 0.096: its own arms touched it",
+    "v3 (tools/build_v3.py): human force each way, per-joint action scale, head 0.113 m (95% of its half-width), joint_kv standing, trunk bend 60 fwd / 30 back, de Leva segment masses",
+    "joint_kv from tools/pd_sweep.py --loaded (target zeta 0.85)"
+  ],
+  "bones": [
+    {
+      "name": "CC_Base_Pelvis",
+      "parent": "CC_Base_Hip",
+      "head": [
+        0.0,
+        0.0822,
+        0.8703
+      ],
+      "tail": [
+        0.0,
+        0.0651,
+        0.8465
+      ]
+    },
+    {
+      "name": "CC_Base_L_Thigh",
+      "parent": "CC_Base_Pelvis",
+      "head": [
+        0.1342,
+        0.0636,
+        0.845
+      ],
+      "tail": [
+        0.1888,
+        -0.0069,
+        0.5155
+      ]
+    },
+    {
+      "name": "CC_Base_L_Calf",
+      "parent": "CC_Base_L_Thigh",
+      "head": [
+        0.1888,
+        -0.0069,
+        0.5155
+      ],
+      "tail": [
+        0.1344,
+        0.074,
+        0.1305
+      ]
+    },
+    {
+      "name": "CC_Base_L_Foot",
+      "parent": "CC_Base_L_Calf",
+      "head": [
+        0.1344,
+        0.074,
+        0.1305
+      ],
+      "tail": [
+        0.1175,
+        -0.0297,
+        0.0583
+      ]
+    },
+    {
+      "name": "CC_Base_L_ToeBase",
+      "parent": "CC_Base_L_Foot",
+      "head": [
+        0.1175,
+        -0.0297,
+        0.0583
+      ],
+      "tail": [
+        0.0886,
+        -0.0502,
+        0.0667
+      ]
+    },
+    {
+      "name": "CC_Base_R_Thigh",
+      "parent": "CC_Base_Pelvis",
+      "head": [
+        -0.1342,
+        0.0636,
+        0.845
+      ],
+      "tail": [
+        -0.1888,
+        -0.0069,
+        0.5155
+      ]
+    },
+    {
+      "name": "CC_Base_R_Calf",
+      "parent": "CC_Base_R_Thigh",
+      "head": [
+        -0.1888,
+        -0.0069,
+        0.5155
+      ],
+      "tail": [
+        -0.1344,
+        0.074,
+        0.1305
+      ]
+    },
+    {
+      "name": "CC_Base_R_Foot",
+      "parent": "CC_Base_R_Calf",
+      "head": [
+        -0.1344,
+        0.074,
+        0.1305
+      ],
+      "tail": [
+        -0.1175,
+        -0.0297,
+        0.0583
+      ]
+    },
+    {
+      "name": "CC_Base_R_ToeBase",
+      "parent": "CC_Base_R_Foot",
+      "head": [
+        -0.1175,
+        -0.0297,
+        0.0583
+      ],
+      "tail": [
+        -0.0886,
+        -0.0502,
+        0.0667
+      ]
+    },
+    {
+      "name": "CC_Base_Waist",
+      "parent": "CC_Base_Hip",
+      "head": [
+        0.0,
+        0.0588,
+        0.9709
+      ],
+      "tail": [
+        0.0,
+        0.0581,
+        1.0213
+      ]
+    },
+    {
+      "name": "CC_Base_Spine02",
+      "parent": "CC_Base_Spine01",
+      "head": [
+        0.0,
+        0.057,
+        1.1473
+      ],
+      "tail": [
+        0.0,
+        0.0939,
+        1.3994
+      ]
+    },
+    {
+      "name": "CC_Base_L_Upperarm",
+      "parent": "CC_Base_L_Clavicle",
+      "head": [
+        0.1765,
+        0.1039,
+        1.3491
+      ],
+      "tail": [
+        0.4814,
+        0.1039,
+        1.3491
+      ]
+    },
+    {
+      "name": "CC_Base_L_Forearm",
+      "parent": "CC_Base_L_Upperarm",
+      "head": [
+        0.4814,
+        0.1039,
+        1.3491
+      ],
+      "tail": [
+        0.7215,
+        0.1039,
+        1.3491
+      ]
+    },
+    {
+      "name": "CC_Base_L_Hand",
+      "parent": "CC_Base_L_Forearm",
+      "head": [
+        0.7215,
+        0.1039,
+        1.3491
+      ],
+      "tail": [
+        0.8393,
+        0.1039,
+        1.3491
+      ]
+    },
+    {
+      "name": "CC_Base_NeckTwist01",
+      "parent": "CC_Base_Spine02",
+      "head": [
+        0.0,
+        0.0939,
+        1.3994
+      ],
+      "tail": [
+        0.0,
+        0.0833,
+        1.4449
+      ]
+    },
+    {
+      "name": "CC_Base_Head",
+      "parent": "CC_Base_NeckTwist02",
+      "head": [
+        0.0,
+        0.0727,
+        1.4905
+      ],
+      "tail": [
+        0.0,
+        0.0727,
+        1.76
+      ]
+    },
+    {
+      "name": "CC_Base_R_Upperarm",
+      "parent": "CC_Base_R_Clavicle",
+      "head": [
+        -0.1765,
+        0.1039,
+        1.3491
+      ],
+      "tail": [
+        -0.4814,
+        0.1039,
+        1.3491
+      ]
+    },
+    {
+      "name": "CC_Base_R_Forearm",
+      "parent": "CC_Base_R_Upperarm",
+      "head": [
+        -0.4814,
+        0.1039,
+        1.3491
+      ],
+      "tail": [
+        -0.7215,
+        0.1039,
+        1.3491
+      ]
+    },
+    {
+      "name": "CC_Base_R_Hand",
+      "parent": "CC_Base_R_Forearm",
+      "head": [
+        -0.7215,
+        0.1039,
+        1.3491
+      ],
+      "tail": [
+        -0.8393,
+        0.1039,
+        1.3491
+      ]
+    }
+  ],
+  "map": {
+    "pelvis": "CC_Base_Pelvis",
+    "neck": "CC_Base_NeckTwist01",
+    "head": "CC_Base_Head",
+    "spine": "CC_Base_Waist",
+    "torso": "CC_Base_Spine02",
+    "thigh_l": "CC_Base_L_Thigh",
+    "shin_l": "CC_Base_L_Calf",
+    "foot_l": "CC_Base_L_Foot",
+    "toe_l": "CC_Base_L_ToeBase",
+    "upper_arm_l": "CC_Base_L_Upperarm",
+    "forearm_l": "CC_Base_L_Forearm",
+    "hand_l": "CC_Base_L_Hand",
+    "thigh_r": "CC_Base_R_Thigh",
+    "shin_r": "CC_Base_R_Calf",
+    "foot_r": "CC_Base_R_Foot",
+    "toe_r": "CC_Base_R_ToeBase",
+    "upper_arm_r": "CC_Base_R_Upperarm",
+    "forearm_r": "CC_Base_R_Forearm",
+    "hand_r": "CC_Base_R_Hand"
+  },
+  "all_bones": 101,
+  "radii": {
+    "thigh": 0.0868,
+    "shin": 0.062,
+    "upper_arm": 0.058,
+    "forearm": 0.0444,
+    "torso": 0.1075,
+    "pelvis": 0.0963,
+    "head": 0.1128
+  },
+  "mesh": {
+    "vertices": 31346,
+    "height_m": 1.76,
+    "volume_l": 115.0,
+    "bmi_from_volume": 36.6
+  },
+  "strength": 0.946,
+  "speed": 1.0,
+  "style": {
+    "head": 0.7,
+    "body": 2.0,
+    "hand_l": 1.3,
+    "hand_r": 1.0,
+    "power": 1.5,
+    "pace_s": 0.45,
+    "taken": 0.7,
+    "block_w": 0.03,
+    "counter": 1.2,
+    "range_m": 0.56,
+    "press": 0.8,
+    "crowd": 0.0,
+    "energy": 0.9
+  },
+  "display": "TIMMY",
+  "persona": "infighter",
+  "says": "the body-snatcher: slips inside, lives at close range and digs hooks to the body off the lead hand",
+  "human_force": true,
+  "per_joint_action": true,
+  "ranges_deg": {
+    "abdomen_y": [
+      -30,
+      60
+    ]
+  },
+  "segment_mass_frac": {
+    "pelvis": 0.1117,
+    "torso": 0.3229,
+    "head": 0.0694,
+    "upper_arm": 0.0271,
+    "forearm": 0.0162,
+    "hand": 0.0061,
+    "thigh": 0.1416,
+    "shin": 0.0433,
+    "foot": 0.0137
+  },
+  "joint_kv": {
+    "abdomen_z": 30.413,
+    "abdomen_y": 35.565,
+    "abdomen_x": 45.056,
+    "shoulder_x": 6.358,
+    "shoulder_z": 10.561,
+    "elbow": 5.271,
+    "hip_x": 58.962,
+    "hip_z": 11.352,
+    "hip_y": 59.278,
+    "knee": 16.086,
+    "ankle_y": 11.352,
+    "ankle_x": 2.505
+  }
+}

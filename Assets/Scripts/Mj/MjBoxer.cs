@@ -206,7 +206,8 @@ namespace PoBox.Mj
             int size = model.inputs[0].shape.Get(model.inputs[0].shape.rank - 1);
             _inputSizes[asset] = size == WideObservationSize ? WideObservationSize : ObservationSize;
             MlpPolicy mlp = MlpPolicy.TryBuild(model, out string why);
-            if (mlp == null) Debug.LogWarning($"[MjBoxer] {name}: {asset.name} stays on the Inference Engine ({why}).");
+            // The zero action's stand-in (an untrained boxer's placeholder, a single MatMul) is not a brain: no warning for it.
+            if (mlp == null && asset.name != "zero_policy") Debug.LogWarning($"[MjBoxer] {name}: {asset.name} stays on the Inference Engine ({why}).");
             _mlps[asset] = mlp;
         }
 
@@ -355,6 +356,11 @@ namespace PoBox.Mj
         public static readonly (string joint, double angle)[] Victory =
         {
             ("shoulder_x_l", -1.51), ("shoulder_z_l", -1.92), ("elbow_l", -1.2), ("shoulder_x_r", 1.51), ("shoulder_z_r", 1.92), ("elbow_r", 1.2),
+        };
+        /// <summary>The referee's raise (2026-11-16): the left glove as high as Victory's, the right one kept in the guard.</summary>
+        public static readonly (string joint, double angle)[] RaisedLeft =
+        {
+            ("shoulder_x_l", -1.51), ("shoulder_z_l", -1.92), ("elbow_l", -1.2),
         };
 
         /// <summary>The guard's joints with the ones named set otherwise, each inside its limits.</summary>

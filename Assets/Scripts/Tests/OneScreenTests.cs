@@ -233,6 +233,7 @@ namespace PoBox.Tests
                 // The result card, quickly: one half-second round at four times the speed.
                 FreeForAll rules = FreeForAll.Instance;
                 yield return Until(() => rules.Phase != FreeForAll.Stage.Waiting);
+                rules.rated = false;            // a test's melee is not a result for the owner's ladder (FreeForAll.rated)
                 rules.rounds = 1;
                 rules.roundSeconds = 0.5f;
                 rules.Restart();

@@ -834,6 +834,14 @@ Label { margin: 0; padding: 0; }
     background-position-y: 16%;
 }
 .pick-foot { height: 104px; padding: 0 16px; justify-content: center; background-color: var(--surface); }
+/* The four-by-four grid of sixteen slots (MenuView.Grid): the foot lower and the name smaller. */
+.picker--dense .pick-foot { height: 76px; padding: 0 10px; }
+.picker--dense .pick-name { font-size: var(--t-body); }
+.picker--dense .pick-detail { font-size: var(--t-micro); letter-spacing: 0; }
+.picker--dense .pick-elo { font-size: var(--t-micro); }
+/* A slot no boxer fills yet. */
+.pick--empty { opacity: 0.45; justify-content: center; align-items: center; background-color: var(--surface); }
+.pick-empty { font-size: var(--t-small); -unity-font-style: bold; letter-spacing: 2px; color: var(--ink-faint); }
 .pick-name { font-size: var(--t-title); -unity-font-style: bold; color: var(--ink); -unity-text-align: middle-left; }
 .pick-detail { font-size: var(--t-micro); letter-spacing: 1px; color: var(--ink-dim); -unity-text-align: middle-left; }
 /* RED or BLUE, on the portrait of a boxer that is in a corner. */
