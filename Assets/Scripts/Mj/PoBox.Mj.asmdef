@@ -3,7 +3,9 @@
     "rootNamespace": "PoBox.Mj",
     "references": [
         "Mujoco.Runtime",
-        "Unity.InferenceEngine"
+        "Unity.InferenceEngine",
+        "Unity.Burst",
+        "Unity.Mathematics"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

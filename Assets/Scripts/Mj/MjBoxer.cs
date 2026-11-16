@@ -148,6 +148,16 @@ namespace PoBox.Mj
         readonly System.Collections.Generic.Dictionary<ModelAsset, Worker> _workers = new System.Collections.Generic.Dictionary<ModelAsset, Worker>();
         readonly System.Collections.Generic.Dictionary<ModelAsset, int> _inputSizes = new System.Collections.Generic.Dictionary<ModelAsset, int>();
         readonly System.Collections.Generic.Dictionary<int, Tensor<float>> _inputs = new System.Collections.Generic.Dictionary<int, Tensor<float>>();
+        readonly System.Collections.Generic.Dictionary<ModelAsset, MlpPolicy> _mlps = new System.Collections.Generic.Dictionary<ModelAsset, MlpPolicy>();
+        MlpPolicy _mlp;
+        float[] _actF = new float[0];
+        /// <summary>
+        /// Brains run by <see cref="MlpPolicy"/> (plain C#, the same maths) instead of the Inference Engine, which spends
+        /// most of a call scheduling (2026-11-16). A brain whose graph it cannot run keeps the Inference Engine.
+        /// </summary>
+        public static bool DirectBrains = true;
+        /// <summary>The running brain is being run by <see cref="MlpPolicy"/>.</summary>
+        public bool RunningDirect => DirectBrains && _mlp != null;
         int _inputSize = ObservationSize;
         /// <summary>How many numbers the running policy reads: 103, or 106 for one that sees bodies.</summary>
         public int InputSize => _inputSize;
@@ -172,6 +182,7 @@ namespace PoBox.Mj
                     for (int i = 0; i < Joints; i++) _blendFrom[i] = _d->qpos[_jq[i]];
             }
             _worker = null;
+            _mlp = null;
             if (asset == null) return;
             if (!_workers.TryGetValue(asset, out _worker))
             {
@@ -180,7 +191,12 @@ namespace PoBox.Mj
                 _workers[asset] = _worker;
                 int size = model.inputs[0].shape.Get(model.inputs[0].shape.rank - 1);
                 _inputSizes[asset] = size == WideObservationSize ? WideObservationSize : ObservationSize;
+                MlpPolicy mlp = MlpPolicy.TryBuild(model, out string why);
+                if (mlp == null) Debug.LogWarning($"[MjBoxer] {name}: {asset.name} stays on the Inference Engine ({why}).");
+                _mlps[asset] = mlp;
             }
+            _mlp = _mlps[asset];
+            if (_actF.Length < Joints) _actF = new float[Joints];
             _inputSize = _inputSizes[asset];
             if (!_inputs.TryGetValue(_inputSize, out _input)) _inputs[_inputSize] = _input = new Tensor<float>(new TensorShape(1, _inputSize), false);
         }
@@ -242,6 +258,9 @@ namespace PoBox.Mj
             _inputs.Clear();
             foreach (var w in _workers.Values) w.Dispose();
             _workers.Clear();
+            foreach (var m in _mlps.Values) m?.Dispose();
+            _mlps.Clear();
+            _mlp = null;
         }
 
         int Id(MujocoLib.mjtObj kind, string name)
@@ -535,6 +554,17 @@ namespace PoBox.Mj
             long start = System.Diagnostics.Stopwatch.GetTimestamp();
             float[] buffer = _inputSize == WideObservationSize ? _obsWide : _obsF;
             for (int i = 0; i < _inputSize; i++) buffer[i] = (float)Obs[i];
+            if (DirectBrains && _mlp != null)
+            {
+                Value = _mlp.Run(buffer, _actF);
+                for (int i = 0; i < Joints; i++)
+                {
+                    if (float.IsFinite(_actF[i])) Action[i] = _actF[i];
+                    else { NanInfCount++; Action[i] = 0.0; }
+                }
+                _inferSeconds += (System.Diagnostics.Stopwatch.GetTimestamp() - start) / (double)System.Diagnostics.Stopwatch.Frequency;
+                return;
+            }
             _input.Upload(buffer);
             _worker.Schedule(_input);
             if (_worker.PeekOutput("value") is Tensor<float> value)
@@ -558,6 +588,7 @@ namespace PoBox.Mj
         /// <summary>The policy's answer to any 103 numbers, without touching the body: for checking it against the trainer's.</summary>
         public void Infer(float[] observation, float[] actionsOut)
         {
+            if (DirectBrains && _mlp != null && _mlp.InputSize == ObservationSize) { _mlp.Run(observation, actionsOut); return; }
             using var input = new Tensor<float>(new TensorShape(1, ObservationSize), observation);
             _worker.Schedule(input);
             var output = _worker.PeekOutput("actions") as Tensor<float>;

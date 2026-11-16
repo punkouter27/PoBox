@@ -52,7 +52,13 @@ and "Things that cost time, worth knowing". The plan as it stood, with every tic
   the winner, a sigh for the loser and for each boxer counted out of a free-for-all.
 - **Measured, 16 in the melee (editor, desktop):** a brain call is 0.28-0.36 ms, almost all Inference Engine overhead
   (a batch of 16 on one network costs 0.33 ms); 16 brains are 5.5-8 ms per 20 ms control step. Batching helps only
-  twins on the same brain (14 distinct networks of 16 in a sample), so the next step is a direct C# MLP evaluator.
+  twins on the same brain (14 distinct networks of 16 in a sample).
+- **Direct brains (Mj/MlpPolicy.cs):** every brain's graph (Sub, Div, Clip, Dense, Elu) is read once into a flat
+  buffer and run as one Burst job on the calling thread, safety checks off, `[NoAlias]` Dense. Plain C# was 1.3 ms, the
+  Burst job 0.048 ms against the Inference Engine's 0.35 ms; in the live 16-boxer melee the brains went from about 8
+  to 2.8 ms a control step. `MjBoxer.DirectBrains` (on) switches it; a graph it cannot run stays on the Inference
+  Engine with a warning. `MlpPolicyTests` 2/2 (every shipped brain within 1e-4 of the Inference Engine, and faster),
+  MjParityTests 3/3, MjGateTests 24/24.
 - Tests: `CupTests` 7/7 (cup, fill, placings Elo, procedural voices, clip names). Not yet: the UI screenshot report,
   a listen to the procedural voices, the 16-boxer frame rate on a phone.
 
