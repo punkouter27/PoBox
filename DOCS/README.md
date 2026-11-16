@@ -62,6 +62,23 @@ and "Things that cost time, worth knowing". The plan as it stood, with every tic
 - Tests: `CupTests` 7/7 (cup, fill, placings Elo, procedural voices, clip names). Not yet: the UI screenshot report,
   a listen to the procedural voices, the 16-boxer frame rate on a phone.
 
+## Play-through fixes: twins that could not be hurt, the 16-boxer pile-up (2026-11-16, later)
+
+- **Twins took no punch damage.** Their MjBrain had no `ring` (a scene override the Red instances had), so the ring's
+  punches never reached them; they took the top seven places of a melee on 0 punches landed. FreeForAll now wires
+  every boxer's brain and `ringHalf` before switching it on; FreeForAllTests checks it. The ladder moves of that
+  melee were reversed exactly. The scene's `colours` held 8 (twins wore their boxer's): 16 now.
+- **Pile-up:** sixteen in the six-metre ring lost fourteen inside half a round. Now `maxInRing` 8: the rest wait off
+  stage (held, hidden, brains skipped: `MjRing.SetIdle`) and tag in, one per boxer counted out and one every 12 s
+  while fewer than 10 are in; the counted out are carried off at the break; nobody wins while anybody waits; those
+  who never got in are not rated. Board rows show NEXT.
+- Smaller: the compact board's text spilled (rows 66 px); the call sat on the fourth row (under-board variables
+  moved for sixteen); the cup's byes line ran off ("R16 8 BYES · ALL THROUGH"); AUTO showed OFF before any cup;
+  ReportPlacings would have dropped every record after a CPU-ratings change (it now keeps them, as Load does);
+  every procedural voice is made before the bell; all three brains load at Awake (the first knockdown loaded the
+  get-up brain mid-fight); the HUD debug key MODE/SEED was clipped on every phone (OneScreenTests red since cf8c28a).
+- Open: the grandparents still go down from light punches and cannot get up (V1, a training question).
+
 ## Overnight 2: the referee and card walker walk on their own, Matt punches (2026-11-04)
 
 - Report `DOCS/reports/2026-11-04-overnight.html`; best weights `DOCS/reports/2026-11-04-overnight-weights.json`.

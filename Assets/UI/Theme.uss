@@ -919,12 +919,18 @@ Label { margin: 0; padding: 0; }
     border-top-width: 6px;
     padding: 0 10px;
 }
-/* Sixteen in the ring: four rows of four, lower, the colour bar thinner. */
-.ffa-board--many .ffa-row { height: 52px; margin-bottom: 4px; border-top-width: 4px; padding: 0 8px; }
+/* Sixteen in the ring: four rows of four, lower, the colour bar thinner; chat and the call under all four. */
+.melee--many {
+    --ffa-under-board: 388px;        /* frame-clear + four rows of (66 + 4) + gap-1 */
+    --ffa-call-top:    436px;        /* ffa-under-board + chat 40 + gap-2 */
+}
+.ffa-board--many .ffa-row { height: 66px; margin-bottom: 4px; border-top-width: 4px; padding: 0 8px; }
 .ffa-name { font-size: var(--t-micro); -unity-font-style: bold; color: var(--ink); -unity-text-align: middle-left; }
 .ffa-state { font-size: var(--t-micro); -unity-font-style: bold; color: var(--ink-dim); -unity-text-align: middle-left; }
 .ffa-state--count { color: var(--warn); }
 .ffa-row--out { opacity: 0.4; }
+/* Waiting off stage to tag in: dimmed less than the counted out. */
+.ffa-row--waiting { opacity: 0.6; }
 .ffa-row--out .ffa-name { color: var(--ink-faint); }
 .ffa-row--win { background-color: var(--accent-tint); }
 .ffa-row--win .ffa-state { color: var(--accent); }

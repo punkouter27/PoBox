@@ -20,7 +20,7 @@ namespace PoBox.UI
         static readonly string[] DebugKeys =
         {
             "FRAME", "WORST", "PHYSICS", "SETPASS", "TRIS", "GC", "MEMORY", "SCALE", "SHOT", "VOICES", "CLOSING", "STRESS",
-            "DAZE", "CRITIC", "SOUND", "USUAL", "BRAINS", "GPU", "MODE/SEED", "NAN/INF",
+            "DAZE", "CRITIC", "SOUND", "USUAL", "BRAINS", "GPU", "MODE", "NAN/INF",   // MODE reads "Mode #seed"
         };
 
         /// <summary>The pick before the first bell: either corner, at the ladder's odds (League/Prediction.cs).</summary>

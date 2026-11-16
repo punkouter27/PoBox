@@ -127,6 +127,8 @@ namespace PoBox.UI
             int n = rules.fighters.Length;
             // Sixteen (the boxers and their twins): four rows of four, each lower, so the board leaves the ring in sight.
             board.EnableInClassList("ffa-board--many", n > 8);
+            // And what sits under the board (chat's line, the referee's call) moves down with its four rows.
+            root.EnableInClassList("melee--many", n > 8);
             _rows = new VisualElement[n];
             _states = new Label[n];
             for (int i = 0; i < n; i++)
@@ -201,15 +203,16 @@ namespace PoBox.UI
             {
                 Fighter f = rules.fighters[i];
                 if (f == null) continue;
-                bool isOut = rules.IsOut(f), won = over && f == rules.Winner;
+                bool isOut = rules.IsOut(f), waiting = rules.IsWaiting(f), won = over && f == rules.Winner;
                 int count = rules.CountOf(f);
                 // At the end the board is the result's table: each row's punches landed of thrown, beside WIN or OUT.
                 string text = over ? $"{(won ? "WIN · " : isOut ? "OUT · " : "")}{f.stats.landed}/{f.stats.thrown}"
-                            : isOut ? "OUT" : count >= 0 ? (count == 0 ? "DOWN" : $"COUNT {count}") : rules.Slipped(f) ? "SLIP" : f == fav ? "AI FAV" : "";
+                            : isOut ? "OUT" : waiting ? "NEXT" : count >= 0 ? (count == 0 ? "DOWN" : $"COUNT {count}") : rules.Slipped(f) ? "SLIP" : f == fav ? "AI FAV" : "";
                 Set(_states[i], text);
                 _rows[i].EnableInClassList("ffa-row--fav", f == fav);
                 _states[i].EnableInClassList("ffa-state--count", count >= 0 && !isOut && !won);
                 _rows[i].EnableInClassList("ffa-row--out", isOut);
+                _rows[i].EnableInClassList("ffa-row--waiting", waiting && !over);
                 _rows[i].EnableInClassList("ffa-row--win", won);
             }
             ShowResult();
@@ -244,7 +247,7 @@ namespace PoBox.UI
             Fighter best = null;
             foreach (Fighter f in rules.fighters)
             {
-                if (f == null || f.boxer == null || f.boxer.Running == null || f.IsDown || rules.IsOut(f)) continue;
+                if (f == null || f.boxer == null || f.boxer.Running == null || f.IsDown || !rules.InRing(f)) continue;
                 if (best == null || f.boxer.Value > best.boxer.Value) best = f;
             }
             return best;
@@ -289,7 +292,7 @@ namespace PoBox.UI
             Fighter at = null;
             int seen = 0;
             foreach (Fighter f in rules.fighters)
-                if (f != null && !f.IsDown && !rules.IsOut(f) && Random.Range(0, ++seen) == 0) at = f;
+                if (f != null && !f.IsDown && rules.InRing(f) && Random.Range(0, ++seen) == 0) at = f;
             if (TwitchChat.ThrowCube(at)) SimBus.Say($"Chat throws a cube at {at.displayName}!", 1);
         }
 

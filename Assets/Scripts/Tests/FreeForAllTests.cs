@@ -30,6 +30,9 @@ namespace PoBox.Tests
             Assert.GreaterOrEqual(all.Length, 7, "fewer than seven boxers in the ring");
             Assert.AreEqual(all.Length, all.Select(f => f.boxer.prefix).Distinct().Count(), "two boxers share a prefix: their MuJoCo names collide");
             Assert.IsTrue(all.All(f => f.boxer.Bound), "a boxer was not bound to the compiled model");
+            // Every brain hears the ring's punches, or the punches on that boxer are never counted (the twins, 2026-11-16).
+            foreach (Fighter f in all)
+                Assert.AreEqual(rules.ring, f.GetComponent<MjBrain>().ring, $"{f.displayName}'s brain is not wired to the ring: its punches are not counted");
 
             Time.timeScale = 4f;
             try

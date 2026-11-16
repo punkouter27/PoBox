@@ -117,7 +117,7 @@ namespace PoBox.Broadcast
             Fighter hottest = null;
             float most = quiet;
             foreach (Fighter f in rules.fighters)
-                if (f != null && f.pelvis != null && !rules.IsOut(f) && _heat.TryGetValue(f, out float h) && h > most) { most = h; hottest = f; }
+                if (f != null && f.pelvis != null && rules.InRing(f) && _heat.TryGetValue(f, out float h) && h > most) { most = h; hottest = f; }
             if (hottest != null)
             {
                 _framed.Add(hottest);
@@ -125,7 +125,7 @@ namespace PoBox.Broadcast
                 return;
             }
             foreach (Fighter f in rules.fighters)
-                if (f != null && f.pelvis != null && !rules.IsOut(f)) _framed.Add(f);
+                if (f != null && f.pelvis != null && rules.InRing(f)) _framed.Add(f);
         }
     }
 }

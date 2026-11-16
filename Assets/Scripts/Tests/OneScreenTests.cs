@@ -237,7 +237,8 @@ namespace PoBox.Tests
                 rules.roundSeconds = 0.5f;
                 rules.Restart();
                 Time.timeScale = 4f;
-                yield return Until(() => hud.ResultOpen);
+                // Sixteen in the ring (2026-11-16): an unfocused editor steps them slowly, and the bell waits out any count.
+                yield return Until(() => hud.ResultOpen, 60f);
                 yield return Settle();
                 Assert.IsTrue(hud.ResultOpen, "the free-for-all never reached its result");
                 Check(hud.Root, phone, "free-for-all, result");
@@ -517,9 +518,9 @@ namespace PoBox.Tests
         }
 
         /// <summary>Waits for something, for twenty seconds at most.</summary>
-        static IEnumerator Until(System.Func<bool> done)
+        static IEnumerator Until(System.Func<bool> done, float seconds = 20f)
         {
-            float deadline = Time.realtimeSinceStartup + 20f;
+            float deadline = Time.realtimeSinceStartup + seconds;
             while (Time.realtimeSinceStartup < deadline && !done()) yield return null;
         }
 

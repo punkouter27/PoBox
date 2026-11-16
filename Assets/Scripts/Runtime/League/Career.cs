@@ -211,13 +211,17 @@ namespace PoBox.League
             return s.ToString();
         }
 
-        /// <summary>The round of 16's walkovers in one line, "R16  BYES: MATT, KIM, ..."; empty when there are none.</summary>
+        /// <summary>The round of 16's walkovers in one line, "R16  8 BYES · ALL THROUGH" (or "3 BYES"); empty when there are none.</summary>
         public string ByesLine()
         {
-            var through = new List<string>();
+            int through = 0, real = 0;
             for (int m = 0; m < FirstRound; m++)
-                if (IsWalkover(m) && !string.IsNullOrEmpty(Known(won[m]))) through.Add(Shown(Known(won[m])));
-            return through.Count == 0 ? "" : "R16  BYES: " + string.Join(", ", through);
+            {
+                if (IsWalkover(m)) { if (!string.IsNullOrEmpty(Known(won[m]))) through++; }
+                else real++;
+            }
+            if (through == 0) return "";
+            return $"R16  {through} BYE{(through == 1 ? "" : "S")}" + (real == 0 ? " · ALL THROUGH" : "");
         }
 
         // ------------------------------------------------------------ titles

@@ -75,7 +75,7 @@ namespace PoBox.Mj
         long _policyTicks;
         double _dt;
         // Per boxer (the first index), and per hand or foot.
-        bool[] _held, _ghost, _down, _has, _rising;
+        bool[] _held, _ghost, _down, _has, _rising, _idle;
         int[] _body;                        // solid bodies: 0 standing, 1 lying, 2 getting up (-1 not yet set)
         float[] _bodyAt;                    // when each one's last changed (the overlap measurement reads it)
         double[] _holdX, _holdY, _holdYaw, _ghostFor;
@@ -100,7 +100,7 @@ namespace PoBox.Mj
 
         void Allocate(int n)
         {
-            _held = new bool[n]; _ghost = new bool[n]; _down = new bool[n]; _has = new bool[n]; _rising = new bool[n];
+            _held = new bool[n]; _ghost = new bool[n]; _down = new bool[n]; _has = new bool[n]; _rising = new bool[n]; _idle = new bool[n];
             _body = new int[n];
             _bodyAt = new float[n];
             for (int k = 0; k < n; k++) _body[k] = -1;
@@ -294,6 +294,12 @@ namespace PoBox.Mj
         }
 
         public bool Held(MjBoxer b) => _held[Slot(b)];
+
+        /// <summary>
+        /// A boxer parked off stage (a free-for-all's boxer waiting to come in, or one counted out and cleared): held in
+        /// its pose every step, so its brain is not run at all.
+        /// </summary>
+        public void SetIdle(MjBoxer b, bool idle) { if (_idle != null) _idle[Slot(b)] = idle; }
 
         /// <summary>The bout says whether a boxer is down: one that is down is passed through by the other.</summary>
         public void SetDown(MjBoxer b, bool down) => _down[Slot(b)] = down;
@@ -494,7 +500,7 @@ namespace PoBox.Mj
                 MarkBodies();
                 for (int k = 0; k < _b.Length; k++)
                 {
-                    if (k % _decimation != _sub) { _b[k].HoldTargets(); continue; }
+                    if (k % _decimation != _sub || _idle[k]) { _b[k].HoldTargets(); continue; }
                     _b[k].Observe();
                     _b[k].Infer();
                     _b[k].Drive();

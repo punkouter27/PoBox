@@ -77,7 +77,7 @@ namespace PoBox.Tests
             for (int m = 0; m < Career.FirstRound; m++) Assert.IsTrue(c.IsWalkover(m), $"R16 match {m} is not a walkover");
             Assert.IsTrue(c.Next(out int first, out _, out _));
             Assert.AreEqual("QF", Career.RoundName(first), "the first bout fought should be a quarter-final");
-            StringAssert.StartsWith("R16  BYES: ", c.ByesLine());
+            Assert.AreEqual("R16  8 BYES · ALL THROUGH", c.ByesLine());
             Assert.AreEqual(7, PlayOut(c), "eight boxers is seven bouts");
             Assert.IsNotNull(c.Champion);
             Assert.AreEqual(1, Career.Titles(c.Shown(c.Champion)), "the champion's cup was not counted");

@@ -442,7 +442,7 @@ namespace PoBox.UI
             if (_cupAuto != null)
             {
                 _cupAuto.SetEnabled(_cup != null && more);
-                _cupAuto.text = _cup != null && _cup.auto ? "AUTO ON" : "AUTO OFF";
+                _cupAuto.text = _cup == null || _cup.auto ? "AUTO ON" : "AUTO OFF";
             }
             SetFightWord();
             if (_cup == null) return;

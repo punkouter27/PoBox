@@ -243,8 +243,18 @@ namespace PoBox.League
             Save save = null;
             try { save = JsonUtility.FromJson<Save>(PlayerPrefs.GetString(Key, "")); }
             catch (Exception) { }
-            // No ladder yet, or one rated against older CPU ratings (the arena would start it again from them): from the CPU's.
-            if (save == null || (save.cpuWhen ?? "") != (CpuRatings.when ?? "")) save = new Save { cpuWhen = CpuRatings.when };
+            if (save == null) save = new Save { cpuWhen = CpuRatings.when };
+            else if ((save.cpuWhen ?? "") != (CpuRatings.when ?? ""))
+            {
+                // Rated against older CPU ratings: the records stay, the ratings start again from the CPU's, as Load does.
+                foreach (Row r in save.rows)
+                {
+                    float c = CpuElo(r.name);
+                    r.cpuElo = c;
+                    r.elo = c > 0f ? c : 1000f;
+                }
+                save.cpuWhen = CpuRatings.when;
+            }
             var rows = new List<Row>();
             foreach (string n in names)
             {

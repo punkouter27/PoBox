@@ -142,6 +142,11 @@ namespace PoBox.Mj
             Action = new double[Joints];
             _obsF = new float[ObservationSize];
             _obsWide = new float[WideObservationSize];
+            // All three brains loaded now, not the first time each is needed: the first knockdown loaded the get-up
+            // brain mid-fight (28 kB and a hitch, 2026-11-16).
+            Load(policy);
+            Load(matchPolicy);
+            Load(getUpPolicy);
             SetPolicy(policy);
         }
 
@@ -184,21 +189,25 @@ namespace PoBox.Mj
             _worker = null;
             _mlp = null;
             if (asset == null) return;
-            if (!_workers.TryGetValue(asset, out _worker))
-            {
-                Model model = ModelLoader.Load(asset);
-                _worker = new Worker(model, BackendType.CPU);
-                _workers[asset] = _worker;
-                int size = model.inputs[0].shape.Get(model.inputs[0].shape.rank - 1);
-                _inputSizes[asset] = size == WideObservationSize ? WideObservationSize : ObservationSize;
-                MlpPolicy mlp = MlpPolicy.TryBuild(model, out string why);
-                if (mlp == null) Debug.LogWarning($"[MjBoxer] {name}: {asset.name} stays on the Inference Engine ({why}).");
-                _mlps[asset] = mlp;
-            }
+            Load(asset);
+            _worker = _workers[asset];
             _mlp = _mlps[asset];
             if (_actF.Length < Joints) _actF = new float[Joints];
             _inputSize = _inputSizes[asset];
             if (!_inputs.TryGetValue(_inputSize, out _input)) _inputs[_inputSize] = _input = new Tensor<float>(new TensorShape(1, _inputSize), false);
+        }
+
+        /// <summary>A brain's worker and direct evaluator, made once and kept.</summary>
+        void Load(ModelAsset asset)
+        {
+            if (asset == null || _workers.ContainsKey(asset)) return;
+            Model model = ModelLoader.Load(asset);
+            _workers[asset] = new Worker(model, BackendType.CPU);
+            int size = model.inputs[0].shape.Get(model.inputs[0].shape.rank - 1);
+            _inputSizes[asset] = size == WideObservationSize ? WideObservationSize : ObservationSize;
+            MlpPolicy mlp = MlpPolicy.TryBuild(model, out string why);
+            if (mlp == null) Debug.LogWarning($"[MjBoxer] {name}: {asset.name} stays on the Inference Engine ({why}).");
+            _mlps[asset] = mlp;
         }
 
         /// <summary>The policy the boxer now runs.</summary>

@@ -52,13 +52,13 @@ namespace PoBox.Audio
             }
         }
 
-        /// <summary>The procedural cells this scene's boxers are most likely to need, made before the bell.</summary>
+        /// <summary>Every procedural cell for this scene's boxers, made before the bell: made mid-fight, the first laugh or roar would hitch a frame.</summary>
         void WarmVoices()
         {
             var done = new HashSet<string>();
             foreach (Fighter f in _all)
                 if (f != null && done.Add(Base(f)))
-                    matrix.Warm(Base(f), ProfileOf(f), Emotion.Exhale, Emotion.Effort, Emotion.Pain, Emotion.Groan);
+                    matrix.Warm(Base(f), ProfileOf(f), (Emotion[])System.Enum.GetValues(typeof(Emotion)));
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace PoBox.Audio
             foreach (Fighter f in _all)
             {
                 if (f == null || !f.isActiveAndEnabled) continue;
-                if (FreeForAll.Instance != null && FreeForAll.Instance.IsOut(f)) continue;
+                if (FreeForAll.Instance != null && !FreeForAll.Instance.InRing(f)) continue;
                 Emotion e;
                 float interval, volume;
                 if (f.IsDown)
