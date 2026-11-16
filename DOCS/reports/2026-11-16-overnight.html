@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PoBox overnight report, 2026-11-16</title>
+<style>
+body { font-family: system-ui, sans-serif; max-width: 960px; margin: 24px auto; padding: 0 16px; color: #222; line-height: 1.45; }
+h1, h2, h3 { margin-top: 28px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 12px 0; }
+td, th { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+th { background: #f6f6f6; }
+.ok { background: #e7f6ec; }
+.no { background: #fbeaea; }
+.mid { background: #fff7e0; }
+img { max-width: 100%; border: 1px solid #e5e5e5; margin: 8px 0 6px; }
+.lvl { font-size: 14px; margin: 4px 0 22px; }
+.lvl p { margin: 4px 0; }
+code { background: #f4f4f4; padding: 1px 4px; border-radius: 3px; font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>PoBox overnight report, 2026-11-15 18:00 to 2026-11-16 06:00</h1>
+<p><strong>Summary:</strong> We found why every match run's critic blew up this week, and the fix works.</p>
+<ul>
+<li><strong>The cause:</strong> the trainer bootstrapped <code>V(s_t)</code> at time-outs and survivor cuts.</li>
+<li><strong>The evidence:</strong>
+  <ul>
+  <li>An A/B on Trump with the same command blew up at iteration 159 without the fix. With the new opt-in flag <code>--no-cut-bootstrap</code>, it ran all 938 iterations.</li>
+  <li>5 of 5 runs with the flag stayed stable. The 6 most recent runs without it all blew up.</li>
+  </ul></li>
+<li><strong>The boxers:</strong> with stable critics, both grandparents now pass the footing line of the boxing exam for the first time. Grandma went from 11.3 falls a minute to 0.00, Grandpa from 2.7 to 0.00.</li>
+<li><strong>What is still broken:</strong> neither grandparent punches.</li>
+<li><strong>Nothing was promoted;</strong> the candidates are listed below for the owner.</li>
+</ul>
+
+<h2>What changed in the trainer</h2>
+<ul>
+<li><code>training/ppo.py</code> has two opt-in options; the defaults are unchanged:
+  <ul>
+  <li><code>value_huber</code>: a Huber critic loss. The logged <code>value_loss</code> stays plain MSE, so CSVs remain comparable.</li>
+  <li><code>bootstrap_cuts</code>: when False, time-outs and survivor cuts are valued as terminal.</li>
+  </ul></li>
+<li><code>training/train_gauntlet.py</code>:
+  <ul>
+  <li>New flags <code>--value-huber</code>, <code>--no-cut-bootstrap</code>, <code>--vloss-guard</code> and <code>--vloss-window</code>.</li>
+  <li>The divergence guard stops a run without saving once value loss stays above 10× its baseline for 10 iterations. The baseline is the median of iterations 50–150. The last periodic save is then the brain to keep.</li>
+  </ul></li>
+<li><strong>Why the old setting diverged:</strong> the bootstrap <code>rew + γ·V(s_t)</code> at a cut is self-referential. Any error in <code>V</code> feeds straight back into its own target. The ruined critics predicted values of −2,000 to −43,000 when real returns were about +200.</li>
+<li><strong>The proper fix:</strong> bootstrap from the true next state. That needs <code>envs/boxing.py</code> to observe before it resets.</li>
+</ul>
+
+<h2>Runs and exams (boxing exam, C MuJoCo 3.5.0, 30 trials)</h2>
+<table>
+<tr><th>Run</th><th>Setting</th><th>Iterations</th><th>Critic</th><th>Footing (falls a minute)</th><th>Attack</th><th>Guard</th><th>Getting up</th><th>Carrying on</th><th>Verdict</th></tr>
+<tr class="no"><td><code>v3c3_trump</code></td><td>old (control)</td><td>159 (guard stop)</td><td>391 → 42,913</td><td>0.00</td><td>0.05/s</td><td>50%</td><td>28/30</td><td>24/28</td><td>diverged</td></tr>
+<tr class="mid"><td><code>v3c4_trump</code></td><td>same + flag</td><td>938 (1.5 h)</td><td>300–730</td><td>1.33</td><td>0.11/s at 2.0 m/s</td><td>46%</td><td>28/30</td><td>24/28</td><td>critic fixed; boxer not better than shipped (0.00, 0.11/s, 63%, 27/29)</td></tr>
+<tr class="mid"><td><code>v3m4_kim</code></td><td>flag</td><td>886 (1.5 h)</td><td>50–60</td><td>1.33 (shipped 3.33)</td><td>0.35/s (0.44)</td><td>61% (72%)</td><td>30/30</td><td>24/30 (26/30)</td><td>kept on file: falls less, punches less</td></tr>
+<tr class="no"><td><code>v3m4_grandpa</code></td><td>old</td><td>410 (guard stop)</td><td>diverged</td><td>4.00</td><td>0.03/s</td><td>64%</td><td>30/30</td><td>25/30</td><td>superseded</td></tr>
+<tr class="mid"><td><code>v3m5_grandpa</code></td><td>flag</td><td>501 (1 h)</td><td>35–48</td><td>1.33</td><td>0.01/s</td><td>69%</td><td>29/30</td><td>24/29</td><td>superseded by v3m6</td></tr>
+<tr class="ok"><td><code>v3m6_grandpa</code></td><td>flag, hit-w 3.0, seek-w 0.6</td><td>503 (1 h)</td><td>35–47</td><td><strong>0.00 PASS</strong> (baseline 2.7)</td><td>0.01/s at 0.8 m/s</td><td>66%</td><td>30/30</td><td>26/30</td><td><strong>candidate</strong></td></tr>
+<tr class="no"><td><code>v3m4_grandma</code></td><td>old</td><td>274 (guard stop)</td><td>diverged</td><td>6.67</td><td>—</td><td>—</td><td>—</td><td>8/27</td><td>superseded</td></tr>
+<tr class="ok"><td><code>v3m5_grandma</code></td><td>flag, fresh critic</td><td>761 (1.5 h)</td><td>24–31</td><td><strong>0.00 PASS</strong> (baseline 11.3)</td><td>0.00</td><td>29%</td><td>27/30</td><td>10/27</td><td><strong>candidate</strong></td></tr>
+</table>
+<p>Earlier in the evening, <code>v3m2_grandma</code>, <code>v3m2_grandpa</code> and <code>v3m3_grandma</code> are where the divergence was first measured. They are in <code>rl_optimization_log.md</code>.</p>
+
+<h2>Compared with previous runs</h2>
+<ul>
+<li><strong>Better:</strong>
+  <ul>
+  <li>Critic stability: 5 of 5 runs, against 0 of 6.</li>
+  <li>Grandparents' footing in a bout.</li>
+  <li>Grandpa's get-up and carrying on (30/30 and 26/30).</li>
+  <li>Kim's footing (3.33 → 1.33).</li>
+  </ul>
+  The reason: with a stable critic, the run lasts long enough for the fall penalty to work. Before, runs were cut short or poisoned at iterations 150–410.</li>
+<li><strong>Not better:</strong>
+  <ul>
+  <li>Punching. The grandparents land 0.00–0.01 a second, at 0.4–0.8 m/s against a mark of 3.0. Doubling the hit reward changed nothing, because with almost no landed hits there is nothing to reinforce.</li>
+  <li>Trump and Kim did not beat their shipped brains as boxers.</li>
+  <li>Grandma is still weak in the 3 s after a get-up (10/27).</li>
+  </ul></li>
+</ul>
+
+<h2>Charts</h2>
+
+<h3>1. Critic value loss</h3>
+<img src="2026-11-16-overnight-charts/value_loss.png" alt="Critic value loss per run, log scale">
+<div class="lvl">
+<p><strong>Toddler:</strong> The dashed lines shoot up to the sky; that is the helper going wrong. The solid lines stay flat; the helper is fine now.</p>
+<p><strong>Child:</strong> Each boxer has a coach in its head that guesses how well things will go. The old way, the coach copied its own guesses whenever a practice round was stopped early, so its mistakes got bigger and bigger until they exploded (dashed lines). The new way, it treats a stopped round as finished, and its guesses stay calm for the whole night (solid lines).</p>
+<p><strong>Adult:</strong>
+  The plot shows plain-MSE value loss on a log scale.
+  <ul>
+  <li><strong>The control:</strong> <code>v3c3_trump</code> grows geometrically to 4.3e4 by iteration 159. <code>v3c4_trump</code> is the identical command plus <code>--no-cut-bootstrap</code>, and stays at 300–730 for 938 iterations. Its slow drift tracks rising returns as its hit rate grew from 0.11 to 0.19 a second.</li>
+  <li><strong>The other runs:</strong> the grandparents' and Kim's runs show the same split.</li>
+  <li><strong>What it means:</strong> the time-out/cut bootstrap target <code>rew + γ·V(s_t)</code> is the source of the instability.</li>
+  </ul></p>
+</div>
+
+<h3>2. Share of episodes ending in the boxer's own fall</h3>
+<img src="2026-11-16-overnight-charts/falls.png" alt="Fall share per run">
+<div class="lvl">
+<p><strong>Toddler:</strong> Lines going down means falling down less. Down is good!</p>
+<p><strong>Child:</strong> This is how often a practice round ended with the boxer on the floor. With the calm coach, every boxer kept getting better for the whole night. The old runs (dashed) stopped early, before they could learn it. In the real test, both grandparents now stay on their feet for whole rounds.</p>
+<p><strong>Adult:</strong>
+  <ul>
+  <li><strong>The trend:</strong> the training fall share falls steadily in every run with the flag. Trump goes 0.6 → 0.08, Kim 0.44 → 0.22, Grandpa 0.62 → 0.30 and Grandma 0.88 → 0.48.</li>
+  <li><strong>Why it stays high for the grandparents:</strong> half their episodes start from a get-up hand-over, and the old bodies are frail.</li>
+  <li><strong>The exams:</strong> 0.00 falls a minute for both <code>v3m5_grandma</code> and <code>v3m6_grandpa</code> against all seven opponents.</li>
+  </ul></p>
+</div>
+
+<h3>3. Punches landed a second (training)</h3>
+<img src="2026-11-16-overnight-charts/hits.png" alt="Hits per second per run">
+<div class="lvl">
+<p><strong>Toddler:</strong> Grandma and Grandpa are not punching yet. Trump is punching a bit more.</p>
+<p><strong>Child:</strong> Staying up worked, but the grandparents almost never land a punch. Even when we gave Grandpa twice the prize for hitting, he still didn't, because you can't win a prize you never get to try for.</p>
+<p><strong>Adult:</strong>
+  <ul>
+  <li><strong>Trump and Kim:</strong> with the flag, both rise steadily in training. Trump goes from 0.11 to 0.19 hits a second and Kim from 0.22 to 0.38. Neither gain shows in the exam (Trump 0.11, Kim 0.35, both against frozen opponents and slower). The training gains may come from the training opponents rather than better punching.</li>
+  <li><strong>The grandparents:</strong> they stay at 0.00–0.04 a second, even with <code>--hit-w 3.0</code>.</li>
+  <li><strong>The problem:</strong> exploration, not weighting. In the exam, fist speed is 0.4–0.8 m/s against a mark of 3.0.</li>
+  <li><strong>Suspects:</strong> the muscle speed limit and fatigue on the old bodies may cap fist speed, and the hit counter has a minimum speed.</li>
+  <li><strong>Next step:</strong> measure reachable fist speed with a scripted maximum-effort jab in C MuJoCo before training more for punching.</li>
+  </ul></p>
+</div>
+
+<h2>For the owner</h2>
+<ul>
+<li><strong>Promotion candidates</strong> (your call):
+  <ul>
+  <li><code>checkpoints/v3m5_grandma/latest_grandma.pt</code>: footing pass, no punches, weak after a get-up.</li>
+  <li><code>checkpoints/v3m6_grandpa/latest_grandpa.pt</code>: footing pass, getting up 30/30, carrying on 26/30, no punches.</li>
+  </ul></li>
+<li><strong>Proposal:</strong> make <code>--no-cut-bootstrap</code> the default for match runs. Later, replace it with a true next-state bootstrap in <code>envs/boxing.py</code>.</li>
+<li><strong>Next problem:</strong> the grandparents' punch speed. Check whether their arms can reach a counted punch at all.</li>
+</ul>
+</body>
+</html>

@@ -125,6 +125,15 @@ class PPOConfig:
     # under a ceiling; lr_max stops the KL-adaptive rate from running up to where it undoes what is known.
     max_std: float = 0.0
     lr_max: float = 1e-2
+    # 2026-11-15: both v3m2 grandparent runs (fresh critic, --handover-share 0.5) had their value loss grow
+    # geometrically from about iteration 275 (30 -> 1.5M) while the episode return stayed bounded, and the policies
+    # fell apart from there. value_huber > 0 trains the critic on a Huber loss with this delta (in return units), so a
+    # few far-off targets cannot drag it. Off by default; the logged value_loss stays the plain MSE either way.
+    value_huber: float = 0.0
+    # The diverged critics of 2026-11-15 predicted -2,000 to -43,000 where returns are about +200. bootstrap_cuts=False
+    # drops the gamma*V(s_t) added at time-outs and survivor cuts (a step ending that way is then valued as terminal),
+    # to test whether that self-referential target is what feeds the runaway. On by default (unchanged behaviour).
+    bootstrap_cuts: bool = True
 
 
 class PPO:
@@ -176,7 +185,7 @@ class PPO:
         b, c = self.buf, self.cfg
         T = c.steps_per_env
         adv = torch.zeros_like(b["rew"])
-        rew = b["rew"] + c.gamma * b["val"] * b["timeout"]   # bootstrap through time-outs
+        rew = b["rew"] + c.gamma * b["val"] * b["timeout"] if c.bootstrap_cuts else b["rew"]   # bootstrap through time-outs
         gae = torch.zeros(self.num_envs, device=self.device)
         for t in reversed(range(T)):
             next_val = last_val if t == T - 1 else b["val"][t + 1]
@@ -222,7 +231,8 @@ class PPO:
                 # No clipped value loss: rewards here are about one a step, so a state is worth 50 to 100, and a
                 # critic held within `clip` (0.2) of its last answer cannot follow a change of stage.
                 v_loss = (v - ret_f[idx]).pow(2).mean()
-                loss = surr + c.value_coef * v_loss - c.entropy_coef * ent.mean()
+                v_train = (nn.functional.huber_loss(v, ret_f[idx], delta=c.value_huber) * 2.0 if c.value_huber > 0.0 else v_loss)
+                loss = surr + c.value_coef * v_train - c.entropy_coef * ent.mean()
                 self.opt.zero_grad(set_to_none=True)
                 loss.backward()
                 # The actor and the critic share no weights: clipped together, a large value gradient shrinks

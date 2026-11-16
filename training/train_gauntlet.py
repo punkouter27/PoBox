@@ -181,6 +181,14 @@ def main() -> None:
     ap.add_argument("--done-when", default="", help="stop once these hold for --done-window iterations in a row, e.g. "
                                                     "'hits_per_s>=1.5,falls<=0.03,repeat_share<=0.5' (the learner's numbers, as logged under env/)")
     ap.add_argument("--done-window", type=int, default=40)
+    ap.add_argument("--value-huber", type=float, default=0.0, help="train the critic on a Huber loss with this delta "
+                    "(ppo.py PPOConfig.value_huber; 0 = plain MSE)")
+    ap.add_argument("--vloss-guard", type=float, default=10.0, help="stop, without saving, once the value loss has stayed above "
+                    "this many times its baseline (median of the run's iterations 50-150) for --vloss-window iterations: "
+                    "the critic is diverging and the last save is the good one (2026-11-15, v3m2_grandma/grandpa). 0 = off")
+    ap.add_argument("--vloss-window", type=int, default=10)
+    ap.add_argument("--no-cut-bootstrap", action="store_true", help="value time-outs and survivor cuts as terminal "
+                    "(ppo.py PPOConfig.bootstrap_cuts; a test of the critic runaway, 2026-11-15)")
     args = ap.parse_args()
 
     torch.manual_seed(args.seed)
@@ -230,7 +238,8 @@ def main() -> None:
     total_n = int(sum(e.N for e in envs))
     minibatches = max(1, round(args.steps * total_n / 24576))
     cfg = PPOConfig(steps_per_env=args.steps, lr=args.lr, entropy_coef=args.entropy_coef, minibatches=minibatches, lr_adapt=1.2,
-                    init_std=0.5, max_std=args.max_std, lr_max=args.lr_max, gamma=args.gamma)
+                    init_std=0.5, max_std=args.max_std, lr_max=args.lr_max, gamma=args.gamma, value_huber=args.value_huber,
+                    bootstrap_cuts=not args.no_cut_bootstrap)
     ppo = PPO(D, A, total_n, dev, cfg)
     extra = ppo.load(args.resume if os.path.isabs(args.resume) else os.path.join(HERE, args.resume), widen=args.obs_bodies)
     cfg.lr = min(args.lr, args.lr_max)
@@ -293,6 +302,7 @@ def main() -> None:
            "repeat_share", "combos_per_s", "self_cm", "escape", "flail")
     done_when = [done_rule(c) for c in args.done_when.split(",") if c.strip()]
     good_for = 0
+    vl_base, vl_bad = [], 0
     t_start = time.time()
     total = 0
     for it in range(start, iters):
@@ -341,6 +351,18 @@ def main() -> None:
         csv_w.writerow([it, f"{hours:.4f}", total, int(sps), f"{stats['kl']:.5f}", f"{stats['lr']:.2e}", f"{stats['action_std']:.4f}",
                         f"{stats['value_loss']:.4f}"] + [f"{mean[k]:.5f}" for k in keys] + [f"{rows[o][k]:.5f}" for o in rows for k in keys])
         csv_f.flush()
+        if args.vloss_guard > 0.0:
+            rel = it - start
+            if 50 <= rel < 150:
+                vl_base.append(stats["value_loss"])
+            elif rel >= 150 and vl_base:
+                base = float(np.median(vl_base))
+                vl_bad = vl_bad + 1 if stats["value_loss"] > args.vloss_guard * base else 0
+                if vl_bad >= args.vloss_window:
+                    print(f"[abort] critic diverging at iteration {it}: value loss {stats['value_loss']:.1f}, over "
+                          f"{args.vloss_guard:g}x its baseline {base:.1f} for {vl_bad} iterations; not saved, the last "
+                          f"checkpoint is the one to keep", flush=True)
+                    break
         for k, v in mean.items():
             writer.add_scalar(f"env/{k}", v, it)
         for o in rows:

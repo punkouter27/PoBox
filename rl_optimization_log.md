@@ -330,3 +330,132 @@ Entries from 2 to 31 October 2026 are in [DOCS/archive/rl_optimization_log_2026-
   `bank_v3b_grandma` (hand-over bank from v3u6_grandma); `v3m2_grandma` (the staged v3m recipe from her rescaled match brain,
   against the six shipped v3 brains and Grandpa's rescaled one, 2304 rings, `--lr 3e-5 --lr-max 6e-5 --handover-share 0.5
   --handover-yaw 3.14 --recover-w 1.0 --blend-steps 15`, 1.5 h) + full exam on `logs/book_b3m.json`.
+
+## 2026-11-15 18:20, three hours on the grandparents' boxing brains (owner: "training as needed next 3 hours", PoBox)
+- **Why:** V1 is the front. Both grandparents now have v3 get-ups that pass (`v3u6_grandma` 54/60, `v3u7_grandpa` 59/60), but
+  their boxing brains are the rescaled v2 ones (carrying on 25/54 and 48/59; footing 11.3 and 2.7 falls a minute). Batch 3's
+  `v3m2_grandma` was queued on 2026-11-13 but never ran (no checkpoint, not in queue.state).
+- **Queued (`logs/queue.json`):** `bank_v3_grandpa` (hand-over bank from `v3u7_grandpa`, 800 states; Grandma's bank from
+  `v3u6_grandma` already exists, so `bank_v3b_grandma` was dropped); `v3m2_grandma` (the batch-3 recipe: from her rescaled
+  match brain, `--obs-state`, fresh critic, `--lr 3e-5 --lr-max 6e-5`, `--handover-share 0.5 --handover-yaw 3.14 --recover-w 1.0
+  --blend-steps 15`, `--fall-penalty 12`, 2304 rings, against the six shipped v3 brains + Grandpa's rescaled one) cut from 1.5 h to
+  **1.1 h** to fit both in the window; its exam (30 knockdowns, `logs/book_b3m.json`); `set_rules_grandpa` (blend-steps 15);
+  `v3m2_grandpa`, the same recipe against the six + the new `v3m2_grandma`, 1.1 h, and its exam (`logs/book_b3p.json`).
+- Machine: RTX 2060 6 GB, Unity closed, no other session on the GPU at 18:20.
+- **19:33 `v3m2_grandma` (1.1 h, 554 it, ~7.9k samples/s) exam, 30 knockdowns:** footing 10.67 falls/min FAIL (base 11.3), attack
+  0.01/s at 1.1 m/s FAIL, under pressure 0.00 FAIL, guard PASS (46% stopped), chin PASS (0.19/min), getting up 26/30 in 3.7 s PASS,
+  carrying on 12/26 FAIL (base 25/54, same 46%). Training: falls 24% -> 86% when hand-over episodes began, best 42% at it 350, back to
+  61% at the end; she learned to block (0.03 -> 0.75/s) and stopped punching. **Not promoted.** Reading: the rescaled v2 match brain
+  falls over by itself on v3 and 1.1 h does not mend it. Her `v3f_grandma` footwork passes (stand 100%, no falls).
+- **Queued 19:35 `v3m3_grandma`** (0.5 h probe, after Grandpa's run): same recipe, warm start from `v3f_grandma/latest.pt` instead,
+  no `--obs-state` (her v3 config has none), `--fall-penalty 20`, Grandpa's new `v3m2_grandpa` as the 7th opponent; exam on `logs/book_b3g.json`.
+- **20:42 `v3m2_grandpa` (1.1 h, 549 it, ~8k samples/s) exam, 30 knockdowns:** footing **16.0** falls/min FAIL (base 2.7: worse),
+  attack 0.01/s at 0.5 m/s FAIL, under pressure 0.00 vs Kim FAIL, guard PASS (57% stopped, 0.14 head shots/s), chin PASS,
+  getting up 30/30 in 2.9 s PASS, carrying on 21/30 FAIL (base 48/59). **Not promoted.** Training: falls 9% -> 90% (hand-over
+  episodes) -> best 44% at it 250, then back to 82% at the end; return 210 -> 63.
+- **Why both v3m2 runs fell apart: the critic diverged.** `value_loss` in both CSVs climbs geometrically from about it 275 while
+  the episode return stays bounded: grandma 30 (it 220) -> 148 -> 3.7k -> 32k -> 101k -> 442k -> **1.49M** (it 550); grandpa
+  170 (it 250) -> 810 -> 3.4k -> 11k -> 32k -> 96k -> 221k -> **741k** (it 410). Both policies peak at it 250-350 and degrade
+  from there. kl stays 0.006-0.009 and lr sits at lr-max 6e-5, so the actor's steps are not the cause. `v3c2_trump` (11-13,
+  43 it) was already rising 29 -> 272. Suspect: the time-out / survivor bootstrap in `ppo.py` `_gae` (`rew + gamma*val[t]*timeout`
+  feeds V(s_t) into its own target) with a fresh critic, `--handover-share 0.5` (many short bank episodes ending in falls or cuts)
+  and `--recover-w 1.0`. **Not fixed tonight (core trainer change; owner's call).** Rule until then: in a gauntlet run with
+  `--reset-critic`, watch value_loss; anything over ~10x its it-100 value means stop and keep the last good save.
+  Saves on disk only from it 450/500, already past the turn: none are worth examining.
+- **20:55 trainer change (owner: "do recommended"):** `ppo.py` `PPOConfig.value_huber` (opt-in Huber critic loss, delta in return
+  units; the logged `value_loss` stays the plain MSE so CSVs compare) and `train_gauntlet.py --value-huber`, plus a divergence guard
+  on by default: `--vloss-guard 10 --vloss-window 10` stops the run *without saving* once the value loss stays over 10x its baseline
+  (median of the run's iterations 50-150), so the last periodic save is the pre-divergence brain. On reading `_gae` again, the
+  time-out bootstrap `rew + gamma*V(s_t)*timeout` is the rsl_rl convention (the env auto-resets, so the true terminal state's value is
+  not available); bootstrapping from the terminal observation would need `envs/boxing.py` to observe before reset (an extra
+  observe a step). Not done: the Huber loss and the guard come first, and the next runs will show whether that is enough.
+- **Queued:** `v3m4_grandpa` (the v3m2 recipe + `--value-huber 10 --save-every 25`, against the six shipped v3 brains + Grandma's
+  rescaled match brain, 1.1 h) + exam on `logs/book_b4p.json`. Grandma's re-run is decided on the `v3m3_grandma` probe's exam.
+- **21:14 `v3m3_grandma` probe (0.5 h, 249 it, from `v3f_grandma`, fall penalty 20, no obs-state) exam:** footing **6.67**
+  falls/min (v3m2 10.67), attack 0.00, under pressure 0.00, guard PASS (36%), chin PASS (0.00), getting up 26/30 PASS, carrying on
+  13/26. Training falls stayed 74-87% (the hand-over episodes) and value_loss began to climb at it 240 (35 -> 149): the critic
+  turn comes at ~250 with or without obs-state and at fall penalty 20, so it is not the recipe's reward terms.
+
+## 2026-11-15 21:15, ten hours overnight (owner: "training as needed for next 10 hours")
+- Every gauntlet run from here: `--value-huber 10 --save-every 25`, guard on (default). Queue, about 21:15 -> 02:45:
+  `v3m4_grandpa` (1.1 h) + exam; `v3m4_grandma` (resumes `v3m3_grandma` with its critic, 1.1 h) + exam; `v3c3_trump` (V2: the
+  v3c2 recipe, which in 0.07 h lifted head share 43 -> 64% and pressure 0 -> 0.02, now 1.5 h; style already range 0.48 / press 1.5)
+  + exam; `bank_v3c_kim` (from her shipped v3 get-up) and `v3m4_kim` (V3: from her shipped `v3m3_kim`, fresh critic, lr 1e-4..2e-4,
+  hand-over 0.5, recover-w 1, blend 15, 1.5 h) + exam. Note: on 11-01 `v3p2_kim`'s value loss also ran away (1.3e5), so "Kim and
+  Trump do not learn from this recipe" may have been the critic too.
+- Exam books `logs/book_n4g|n3t|n4k.json`: the grandparents' opponents are their rescaled v3 match brains (the v3m2 brains are broken).
+- 02:45 -> ~06:30: follow-ups chosen on these exams; report and commit by ~07:00.
+- **22:05 `v3m4_grandpa`** (Huber 10, guard): **the guard stopped it at it 410** (value loss 571 vs baseline 42.5); the save at it 400
+  is the brain. The Huber loss put the turn off from ~275 to ~350 but did not remove it. Training: falls 89% -> 45%, carry-on 0.26 ->
+  0.52, return 73 -> 250. Exam (30 KDs, `book_b4p`): footing 4.00/min FAIL (old brain 2.7, v3m2 16.0), attack 0.03/s FAIL, under
+  pressure 0.00 FAIL, guard PASS 64%, chin PASS, getting up 30/30 in 2.5 s PASS, carrying on 25/30 (83%; old 81%, v3m2 70%) FAIL.
+  Best v3 Grandpa match brain so far; not promoted (footing). Queued `v3m5_grandpa`: from its it-400 save with a *fresh critic*
+  (restarts the critic's clock), 1.0 h, + exam on `book_n5p`.
+- **22:41 `v3m4_grandma`** (resumed `v3m3_grandma` with its 249-it critic, Huber 10): **guard stop at it 274** (value loss 1176 vs
+  66.6). Exam (`book_n4g`): footing 6.67 FAIL, attack 0.00 FAIL, guard PASS 43% (0.07 blocks/s), chin PASS, getting up 27/30 in
+  4.2 s PASS, carrying on **8/27** FAIL (probe 13/26). No gain; `v3m3_grandma` stays her best v3 match brain. Across five runs the
+  critic turns ~250-350 iterations after it was made, whatever the recipe: it is the critic's age, not the lesson. Grandma gets no
+  more GPU tonight: her body (strength 0.53, speed 0.75 on v3) may be the limit, which is the owner's call (tasks.md V1).
+- **23:00 diagnosis (CPU, while Trump trains):** the observation normaliser is not it (count ~1e9 from the ONNX rebuilds, so it is
+  effectively frozen; smallest variance 6e-4, none near zero). The critics are: on the same 4096 random inputs, the diverged ones
+  predict V mean -1319 / -2216 (v3m2_grandma it 500 / 554, min -18k) and -4730 (v3m2_grandpa it 549, min -43k), last-layer
+  weight norms growing 2.9 -> 3.7; the guarded v3m4_grandpa it 400: mean -31, min -312. Returns are ~+200: the critic runs away
+  *downward*. Rewards are bounded, so the suspect is the self-referential `gamma*V(s_t)` added at time-outs and survivor cuts.
+  New opt-in `PPOConfig.bootstrap_cuts` / `train_gauntlet.py --no-cut-bootstrap` (such steps valued as terminal). **Test:**
+  `v3m5_grandpa` now runs with it (fresh critic, guard on). If its critic stays sane past it ~350, that is the cause.
+  Kim's `v3m4_kim` also gets `--no-cut-bootstrap`; `v3c3_trump` (running, bootstrap on) is the control.
+- **22:57 `v3c3_trump`** (control, bootstrap on, lr 3e-4..5e-4, gamma 0.995): **guard stop at it 159** (value loss 42,913 vs 493),
+  the fastest runaway yet (highest lr and gamma of the night). Training: falls 0 -> 55% -> 31%, hits 0.01 -> 0.11/s, head share
+  22 -> 59%. Exam (it 150, `book_n3t`): footing PASS 0.00, attack 0.05/s at 1.4 m/s FAIL (v3c1 0.11 at 3.3), under pressure 0.00,
+  guard PASS 50%, chin PASS, getting up 28/30 PASS, carrying on 24/28 FAIL (v3c1 55/59). Not better than the shipped v3c1.
+  Queued the clean A/B: **`v3c4_trump` = the same command + `--no-cut-bootstrap`** (1.5 h) + exam on `book_n4t`.
+- **00:33 `v3m4_kim` (`--no-cut-bootstrap`, Huber 10, fresh critic, 1.5 h, ran the full 886 iterations):** the critic
+  stayed sane for the whole run: value loss 50-60 from iteration 25 to 885, no trend and no guard stop. Every critic
+  that bootstrapped at cuts this week blew up between iterations 150 and 410 (v3m2 x2, v3m4_grandma, v3c3_trump, and
+  v3p2_kim on 11-01). This is the first strong evidence that the time-out/survivor-cut bootstrap causes the divergence.
+  Trump's A/B (`v3c4_trump`) will confirm it on one boxer. Training falls went from 0.44 to 0.20-0.24. Exam (book_n4k)
+  against the shipped `v3m3_kim` (exam_base_1113):
+  footing 1.33 vs 3.33 falls a minute (better, still FAIL: mark 0.2), attack 0.35/s at 2.9 m/s vs 0.44 at 3.6 (worse),
+  under pressure 0.00 vs Zombie (0.02 before), guard 61% vs 72% (PASS both), chin PASS, getting up 30/30 in 1.9 s,
+  carrying on 24/30 vs 26/30. Verdict: kept on file, not proposed; she trades punch for footing. The critic result is
+  what matters here.
+- **01:35 `v3m5_grandpa` (from v3m4_grandpa it 400, fresh critic, `--no-cut-bootstrap`, Huber 10, 1 h, 501 iterations, no guard
+  stop):** critic sane again: value loss 47 at iteration 40, settling to 34-37 from iteration 200 to 500. Training falls
+  0.62 -> 0.28. Exam (book_n5p) against v3m4_grandpa: footing **1.33** vs 4.00 falls a minute (baseline rescaled v2: 2.7;
+  best Grandpa yet, still FAIL), attack 0.01/s at 0.4 m/s (still about nothing), guard 69% vs 64% (0.77 blocks/s), chin
+  0.00 legs/min, getting up 29/30 in 3.0 s, carrying on 24/29 vs 25/30. Verdict: the best Grandpa on footing and guard,
+  proposed to the owner as a candidate (not promoted). He still does not punch; that is a reward problem, not a critic one.
+- **01:40 queued `v3m5_grandma`:** the v3m4_grandma command (from v3m3_grandma, fall penalty 20) plus `--reset-critic`
+  (v3m4 kept the critic and had diverged by iteration 274) and `--no-cut-bootstrap`, 1.5 h, exam on book_n5g. Grandma got the
+  flag because her two earlier runs were cut short by the divergence before they could show anything.
+- **03:08 A/B result, `v3c4_trump` = exactly the `v3c3_trump` command + `--no-cut-bootstrap`:** v3c3 (bootstrap on) value
+  loss 391 -> 940 (it 120) -> 42,913 and guard stop at iteration 159. v3c4 (flag) ran the full 1.5 h, 938 iterations, no
+  guard stop: value loss 300-550 to iteration 760, then 600-730 to the end. That is a slow rise (about x1.7 over 900
+  iterations) as the hit rate grew 0.11 -> 0.19/s and returns with it, not the geometric runaway. **Confirmed: bootstrapping
+  V(s_t) at time-outs and survivor cuts makes this critic diverge.** Same result on Kim and Grandpa (3 of 3 runs sane with
+  the flag; 6 of 6 recent runs without it diverged). The proper fix is to bootstrap from the true next state (needs
+  `envs/boxing.py` to observe before reset); until then `--no-cut-bootstrap` is the safe setting. Making it the default is
+  the owner's call. Exam (book_n4t) against shipped v3c1: attack 0.11/s at 2.0 m/s (0.11 at 2.3), footing 1.33 falls a minute
+  (FAIL; 0.00), guard 46% (63%), carrying on 24/28 (27/29). Not better as a boxer; kept on file, not proposed.
+- **03:10 queued `v3m6_grandpa`** (last training slot, about 04:40-05:45): from v3m5_grandpa (his best footing), the same
+  recipe with the flag and a fresh critic, `--hit-w` 1.5 -> 3.0 and `--seek-w` 0.3 -> 0.6, 1 h. Tests whether he starts
+  punching now that he stays up. Exam on book_n6p.
+- **04:40 `v3m5_grandma` (from v3m3_grandma, fresh critic, `--no-cut-bootstrap`, Huber 10, fall penalty 20, 1.5 h, 761
+  iterations, no guard stop):** critic sane (value loss 59 at iteration 50, falling to 24-31 from iteration 250 on; v3m4_grandma
+  diverged at 274). That makes it 4 of 4 runs sane with the flag. Training: falls share 0.86 -> 0.43-0.54 (half the episodes start from
+  a hand-over), carry_on 0.20 -> 0.39-0.44. Exam (book_n5g) against v3m3_grandma: **footing PASS, 0.00 falls a minute against
+  all seven** (6.67 before; the rescaled v2 baseline was 11.3; also 0 dazed falls except 1.33/min against Zombie), guard 29% vs
+  36% (PASS), chin PASS, getting up 27/30 in 4.2 s, carrying on 10/27 vs 13/26 (FAIL), attack 0.00 (as before). Verdict:
+  Grandma's first footing pass in a bout and her best boxing brain; proposed to the owner as a candidate (not promoted).
+  She does not punch at all, and the first seconds after a get-up are her weak spot. Next for her: the punch-reward recipe
+  if v3m6_grandpa shows it works.
+- **05:42 `v3m6_grandpa` (from v3m5_grandpa, fresh critic, flag, `--hit-w` 3.0, `--seek-w` 0.6, 1 h, 503 iterations, no guard
+  stop):** critic sane (value loss 35-47; 5 of 5 runs with the flag). Exam (book_n6p) against v3m5_grandpa: **footing PASS 0.00
+  falls a minute** (1.33), guard 66% (PASS), chin PASS, getting up 30/30 in 2.5 s, carrying on 26/30 (24/29), attack 0.01/s
+  at 0.8 m/s (unchanged). Verdict: Grandpa's best brain (footing, get-up and carry-on all at their best), proposed as a
+  candidate, not promoted. **Doubling the hit reward did not make him punch:** training hits stayed at 0.02-0.04/s the whole
+  run. Punch speed is 0.4-0.8 m/s against a mark of 3.0, so the weight is not the limit: with almost no landed hits there is
+  nothing for the reward to reinforce. Suspects for the next session: the muscle speed limit and fatigue on the old bodies
+  capping fist speed, and the hit counter's minimum speed. Check what fist speed the grandparents' arms can reach at all
+  (a scripted max-effort jab in C MuJoCo) before training more for punching. No Grandma punch run queued for that reason.
+- **05:45 GPU left idle** for the last 45 minutes: no job worth starting would finish and be examined before 06:30.
