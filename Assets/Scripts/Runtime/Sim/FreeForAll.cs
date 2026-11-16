@@ -27,6 +27,10 @@ namespace PoBox.Sim
     ///     gets a minute on the stool (Fighter.Respawn) and goes back to the ropes.
     ///   * The last boxer standing wins. If more than one is in after the last round, the judges give it to the one
     ///     who did the most damage, a knockdown worth a clean round (<see cref="Bout.Score"/>).
+    ///   * Sixteen in the ring (2026-11-16): the eight boxers and a twin of each ("MATT II", the boxer's Blue
+    ///     prefab), until there are sixteen boxers of their own. The placings (winner, the rest still in by the
+    ///     judges' score, then the eliminated, last out first) move the ladder's ratings
+    ///     (<see cref="PoBox.League.LeagueTable.ReportPlacings"/>); a twin is rated as its boxer, by its better placing.
     /// </summary>
     [DefaultExecutionOrder(-1000)]
     public class FreeForAll : MonoBehaviour
@@ -69,7 +73,19 @@ namespace PoBox.Sim
         {
             new Color(0.89f, 0.24f, 0.24f), new Color(0.20f, 0.49f, 0.94f), new Color(0.98f, 0.76f, 0.18f), new Color(0.22f, 0.78f, 0.45f),
             new Color(0.66f, 0.36f, 0.92f), new Color(0.98f, 0.52f, 0.16f), new Color(0.20f, 0.80f, 0.86f), new Color(0.95f, 0.45f, 0.72f),
+            new Color(0.60f, 0.12f, 0.12f), new Color(0.10f, 0.25f, 0.55f), new Color(0.62f, 0.50f, 0.10f), new Color(0.10f, 0.45f, 0.25f),
+            new Color(0.40f, 0.20f, 0.58f), new Color(0.62f, 0.32f, 0.08f), new Color(0.08f, 0.48f, 0.52f), new Color(0.92f, 0.92f, 0.92f),
         };
+        [Tooltip("Move the ladder's ratings by the placings at the end (League/LeagueTable.ReportPlacings).")]
+        public bool rated = true;
+        [Tooltip("The Elo K a free-for-all is worth in all, shared out over the pairs it decides.")]
+        public float ratingK = 32f;
+
+        /// <summary>What a twin's name carries after its boxer's ("MATT II").</summary>
+        public const string TwinSuffix = " II";
+        /// <summary>The boxer a name belongs to: a twin's name without its suffix.</summary>
+        public static string BaseName(string displayName) =>
+            displayName != null && displayName.EndsWith(TwinSuffix) ? displayName.Substring(0, displayName.Length - TwinSuffix.Length) : displayName;
 
         public static FreeForAll Instance { get; private set; }
         public Stage Phase { get; private set; } = Stage.Waiting;
@@ -83,6 +99,9 @@ namespace PoBox.Sim
         readonly HashSet<Fighter> _out = new HashSet<Fighter>(), _counted = new HashSet<Fighter>();
         readonly Dictionary<Fighter, MjBrain> _brain = new Dictionary<Fighter, MjBrain>();
         readonly Dictionary<Fighter, int> _on = new Dictionary<Fighter, int>();
+        readonly List<Fighter> _outOrder = new List<Fighter>();
+        /// <summary>The placings of the last finished free-for-all, best first; empty while one runs.</summary>
+        public readonly List<Fighter> Placings = new List<Fighter>();
         float _roundAge;
 
         public bool IsOut(Fighter f) => _out.Contains(f);
@@ -162,6 +181,8 @@ namespace PoBox.Sim
         {
             if (!ring.Ready) return;
             _out.Clear();
+            _outOrder.Clear();
+            Placings.Clear();
             Winner = null;
             Method = "";
             Bout.Clock = 0f;
@@ -339,6 +360,7 @@ namespace PoBox.Sim
                 bool knockedDown = _counted.Contains(f);
                 if (knockedDown ? Mathf.FloorToInt(t / countInterval) < 10 : t < slipSeconds) continue;
                 _out.Add(f);
+                _outOrder.Add(f);
                 f.Eliminate();
                 SimBus.Say(knockedDown ? $"{f.displayName} is counted out. {Left} left." : $"{f.displayName} cannot go on. {Left} left.", 2);
             }
@@ -381,6 +403,23 @@ namespace PoBox.Sim
             Method = method;
             SetPhase(Stage.Over, BoutPhase.Results);
             SimBus.Say(winner != null ? $"{winner.displayName} wins: {method}" : method, 3);
+            Place(winner);
+        }
+
+        /// <summary>The placings, best first: the winner, the others still in by the judges' score, then the eliminated, last out first. Rated once.</summary>
+        void Place(Fighter winner)
+        {
+            Placings.Clear();
+            if (winner != null) Placings.Add(winner);
+            var still = new List<Fighter>();
+            foreach (Fighter f in fighters) if (f != null && f != winner && !_out.Contains(f)) still.Add(f);
+            still.Sort((a, b) => Bout.Score(b).CompareTo(Bout.Score(a)));
+            Placings.AddRange(still);
+            for (int i = _outOrder.Count - 1; i >= 0; i--) if (_outOrder[i] != null && !Placings.Contains(_outOrder[i])) Placings.Add(_outOrder[i]);
+            if (!rated || winner == null) return;
+            var names = new List<string>();
+            foreach (Fighter f in Placings) names.Add(BaseName(f.displayName));
+            PoBox.League.LeagueTable.ReportPlacings(names, ratingK);
         }
 
         // ------------------------------------------------------------ who fights whom

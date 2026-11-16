@@ -144,6 +144,9 @@ namespace PoBox.UI
         bool _replaying, _autoReplayed;
         [Tooltip("After a knockout the punch that did it is replayed by itself, once, this many seconds into the result (the winner's moment first).")]
         public float autoReplayAfter = 4f;
+        [Tooltip("Seconds the result card of an auto-running cup's bout stays up (any replay is waited out too) before the bracket comes back.")]
+        public float cupBackSeconds = 10f;
+        bool _cupBack;
         TwitchChat _twitch;
         /// <summary>A joint's brain cam group by its name (<see cref="BrainCamPanel.GroupOf"/>).</summary>
         internal static int GroupOf(string joint) => BrainCamPanel.GroupOf(joint);
@@ -330,6 +333,7 @@ namespace PoBox.UI
         {
             if (MjReplay.Instance != null) MjReplay.Instance.Clear();
             _autoReplayed = false;
+            _cupBack = false;
             Prediction.Reset();
             _twitch?.ClearVotes();
             _winRecord.Clear();
@@ -412,6 +416,13 @@ namespace PoBox.UI
                 PlayReplay();
             }
             if (MjReplay.Playing && (bout.Phase != BoutPhase.Results || (bout.autoAdvance && bout.ResultsTimeLeft < 0.5f))) StopReplay();
+            // An auto-running cup (League/Career.cs): the bracket again once the card has been up a while and any replay is over.
+            if (_cupBack && !_leaving && bout.Phase == BoutPhase.Results && bout.PhaseAge > cupBackSeconds && !MjReplay.Playing && !_replaying)
+            {
+                _cupBack = false;
+                MenuView.CupReturning = true;
+                ToBoxers();
+            }
             bool brain = _brainCam != null && _brainCam.On;
             if (brain) _brainCam.Refresh(bout, false, null);
 

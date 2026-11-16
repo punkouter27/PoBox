@@ -140,6 +140,9 @@ namespace PoBox.UI
                     Career.Live = true;
                     cup = "CUP · A DRAW: FIGHT IT AGAIN";
                 }
+                // A cup that runs itself: back to the bracket once the result (and its replay) has been seen.
+                _cupBack = c != null && c.auto && MatchSelection.HasMenu;
+                if (_cupBack) cup += " · BACK TO THE BRACKET";
             }
             string line = pick != null && cup != null ? pick + "  ·  " + cup : pick ?? cup ?? "";
             if (_resExtra == null) return;

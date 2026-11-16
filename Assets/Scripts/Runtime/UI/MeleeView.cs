@@ -125,6 +125,8 @@ namespace PoBox.UI
             VisualElement board = root.Q<VisualElement>("board");
             board.Clear();
             int n = rules.fighters.Length;
+            // Sixteen (the boxers and their twins): four rows of four, each lower, so the board leaves the ring in sight.
+            board.EnableInClassList("ffa-board--many", n > 8);
             _rows = new VisualElement[n];
             _states = new Label[n];
             for (int i = 0; i < n; i++)

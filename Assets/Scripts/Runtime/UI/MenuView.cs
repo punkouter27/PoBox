@@ -24,8 +24,11 @@ namespace PoBox.UI
     /// FIGHT and ALL. FIGHT loads the arena in the background; while it does the button is dimmed with its
     /// word trailing dots and the cards are locked.
     ///
-    /// CUP opens the cup (League/Career.cs) as a sheet in the same place: its bracket, one line a match,
-    /// NEW CUP (seeded by the ladder's ratings) and FIGHT, which fights the cup's next bout.
+    /// CUP opens the cup (League/Career.cs) as a sheet in the same place: its bracket, one line a match (the
+    /// round of 16's walkovers on one line), NEW CUP (sixteen slots seeded by the ladder's ratings, BYEs for the
+    /// rest), AUTO and FIGHT, which fights the cup's next bout. With AUTO on, the sheet counts down on FIGHT and
+    /// fights the next bout by itself; the arena comes back here after each cup result (<see cref="CupReturning"/>),
+    /// so the cup runs itself to its final.
     ///
     /// It runs in the editor too, so the cards are in the Game view without pressing Play; the buttons
     /// only do anything while the game is running.
@@ -63,8 +66,14 @@ namespace PoBox.UI
         UIDocument _doc;
         VisualElement _root, _safe, _picker, _sheet, _debugPanel, _cupSheet, _cupBracket;
         Label _cupTitle;
-        Button _cupFight;
+        Button _cupFight, _cupAuto;
         Career _cup;
+        float _cupCountdown = -1f;
+        [Tooltip("Seconds the bracket is shown, counting down, before AUTO fights the cup's next bout.")]
+        public float cupAutoSeconds = 6f;
+
+        /// <summary>Set by the arena when it comes back here after a cup bout's result: the bracket opens and, with AUTO, counts down.</summary>
+        public static bool CupReturning;
         Label _versus, _fightWord;
         // The word on the button that was pressed (FIGHT or ALL's MELEE), which trails dots while its scene loads
         Label _busyWord;
@@ -136,6 +145,8 @@ namespace PoBox.UI
             Button cupNew = _root.Q<Button>("cup-new");
             if (cupNew != null) cupNew.clicked += NewCup;
             if (_cupFight != null) _cupFight.clicked += FightCup;
+            _cupAuto = _root.Q<Button>("cup-auto");
+            if (_cupAuto != null) _cupAuto.clicked += ToggleCupAuto;
             // A tap on what is left of the screen puts away whatever is open, as on the HUD.
             VisualElement picture = _root.Q<VisualElement>("picture");
             if (picture != null) picture.RegisterCallback<PointerDownEvent>(_ => CloseAll());
@@ -151,6 +162,11 @@ namespace PoBox.UI
             if (Blue == Red && boxers.Length > 1) Blue = (Red + 1) % boxers.Length;
             Refresh();
             _safeArea.Fit(_root, _safe);
+            if (Application.isPlaying && CupReturning)
+            {
+                CupReturning = false;
+                if (!CupOpen) ToggleCup();
+            }
         }
 
         void Update()
@@ -167,6 +183,7 @@ namespace PoBox.UI
             if (Input.GetKeyDown(KeyCode.Escape)) Back();
             if (Input.GetKeyDown(KeyCode.Tab)) SettingsPage.ToggleStats();
             if (_leaving) Set(_busyWord, _busyBase + BusyDots[(int)(Time.unscaledTime * 3f) % BusyDots.Length]);
+            CupCountdown();
             _smoothed = Mathf.Lerp(_smoothed, Time.unscaledDeltaTime, 0.05f);
             if (Time.unscaledTime < _nextText) return;
             _nextText = Time.unscaledTime + 0.25f;      // four times a second: text made every frame is garbage every frame
@@ -339,30 +356,65 @@ namespace PoBox.UI
 
         // ------------------------------------------------------------ the cup
 
+        System.Collections.Generic.List<(string, string)> Entrants()
+        {
+            var entrants = new System.Collections.Generic.List<(string, string)>();
+            foreach (Boxer b in boxers) if (b != null && !string.IsNullOrEmpty(b.name)) entrants.Add((b.name, b.displayName));
+            return entrants;
+        }
+
         public void ToggleCup()
         {
             bool open = !CupOpen;
             if (open)
             {
                 if (_cup == null) _cup = Career.Load();
+                // A boxer added since the draw takes a BYE whose walkover has not been used yet.
+                if (Application.isPlaying && _cup != null) _cup.Fill(Entrants());
                 RefreshCup();
             }
             Open(_cupSheet, open);
+            _cupCountdown = open && _cup != null && _cup.auto && _cup.Next(out _, out _, out _) ? cupAutoSeconds : -1f;
         }
 
-        /// <summary>A new cup from every boxer on this screen, best rated first (the first eight are in it).</summary>
+        /// <summary>A new cup from every boxer on this screen, best rated first: sixteen slots, BYEs for the ones nobody fills.</summary>
         public void NewCup()
         {
             if (!Application.isPlaying || _leaving) return;
-            var entrants = new System.Collections.Generic.List<(string, string)>();
-            foreach (Boxer b in boxers) entrants.Add((b.name, b.displayName));
-            _cup = Career.New(entrants);
+            _cup = Career.New(Entrants());
+            _cupCountdown = -1f;        // a fresh draw is looked at first; AUTO or FIGHT starts it
             RefreshCup();
+        }
+
+        /// <summary>AUTO: the cup runs itself (on) or waits for FIGHT (off). Kept with the cup.</summary>
+        public void ToggleCupAuto()
+        {
+            if (_cup == null) return;
+            _cup.auto = !_cup.auto;
+            _cup.Save();
+            _cupCountdown = _cup.auto && _cup.Next(out _, out _, out _) ? cupAutoSeconds : -1f;
+            RefreshCup();
+        }
+
+        void CupCountdown()
+        {
+            if (_cupCountdown < 0f || _leaving) return;
+            if (!CupOpen || _cup == null || !_cup.auto) { _cupCountdown = -1f; SetFightWord(); return; }
+            int before = Mathf.CeilToInt(_cupCountdown);
+            _cupCountdown -= Time.unscaledDeltaTime;
+            if (_cupCountdown <= 0f) { _cupCountdown = -1f; FightCup(); return; }
+            if (Mathf.CeilToInt(_cupCountdown) != before) SetFightWord();
+        }
+
+        void SetFightWord()
+        {
+            if (_cupFight != null) _cupFight.text = _cupCountdown > 0f ? $"FIGHT {Mathf.CeilToInt(_cupCountdown)}" : "FIGHT";
         }
 
         /// <summary>The cup's next bout, in the corners the bracket gives, fought as FIGHT fights; its result goes back to the cup.</summary>
         public void FightCup()
         {
+            _cupCountdown = -1f;
             if (_cup == null || !_cup.Next(out _, out string red, out string blue)) return;
             int r = IndexOf(red), b = IndexOf(blue);
             if (r < 0 || b < 0) return;
@@ -379,18 +431,37 @@ namespace PoBox.UI
             _cupBracket.Clear();
             int next = -1;
             bool more = _cup != null && _cup.Next(out next, out _, out _);
-            if (_cup == null) Set(_cupTitle, "NO CUP YET · NEW CUP SEEDS THEM BY RATING");
-            else if (_cup.Champion != null) Set(_cupTitle, "CUP WON BY " + _cup.Shown(_cup.Champion));
-            else Set(_cupTitle, "THE CUP");
+            if (_cup == null) Set(_cupTitle, "NO CUP YET · NEW CUP SEEDS 16 BY RATING");
+            else if (_cup.Champion != null)
+            {
+                int titles = Career.Titles(_cup.Shown(_cup.Champion));
+                Set(_cupTitle, "CUP WON BY " + _cup.Shown(_cup.Champion) + (titles > 1 ? $" · {titles} CUPS" : ""));
+            }
+            else Set(_cupTitle, next >= 0 ? "THE CUP · " + Career.RoundName(next) : "THE CUP");
             if (_cupFight != null) _cupFight.SetEnabled(more);
+            if (_cupAuto != null)
+            {
+                _cupAuto.SetEnabled(_cup != null && more);
+                _cupAuto.text = _cup != null && _cup.auto ? "AUTO ON" : "AUTO OFF";
+            }
+            SetFightWord();
             if (_cup == null) return;
+            // The round of 16's walkovers on one line: with eight boxers that is the whole round.
+            string byes = _cup.ByesLine();
+            if (byes.Length > 0) AddCupLine(byes, false);
             for (int m = 0; m < Career.Matches; m++)
             {
-                var line = new Label(_cup.Line(m)) { pickingMode = PickingMode.Ignore };
-                line.AddToClassList("cup-line");
-                line.EnableInClassList("cup-line--next", m == next);
-                _cupBracket.Add(line);
+                if (_cup.IsWalkover(m)) continue;
+                AddCupLine(_cup.Line(m), m == next);
             }
+        }
+
+        void AddCupLine(string text, bool next)
+        {
+            var line = new Label(text) { pickingMode = PickingMode.Ignore };
+            line.AddToClassList("cup-line");
+            line.EnableInClassList("cup-line--next", next);
+            _cupBracket.Add(line);
         }
     }
 }

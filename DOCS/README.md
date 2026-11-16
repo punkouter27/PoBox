@@ -33,6 +33,29 @@ and "Things that cost time, worth knowing". The plan as it stood, with every tic
 [archive/tasks_2026-10.md](archive/tasks_2026-10.md). The October training log is
 [archive/rl_optimization_log_2026-10.md](archive/rl_optimization_log_2026-10.md).
 
+## Sixteen: the cup, the free-for-all and the voice matrix (2026-11-16)
+
+- **Cup (League/Career.cs):** sixteen slots seeded by the ladder (1 v 16, 8 v 9, ...), BYEs for empty slots; with
+  the eight boxers the round of 16 is all walkovers (one "R16 BYES" line on the sheet). A boxer added later takes a
+  BYE whose walkover is not used yet (`Career.Fill`). AUTO (on for a new cup): the bracket counts down and fights the
+  next bout; the arena goes back to the bracket 10 s after a cup result (`HudView.cupBackSeconds`,
+  `MenuView.CupReturning`). Cups won per boxer in PlayerPrefs `pobox.cup.titles`. An old eight-slot `career.json`
+  is dropped (NEW CUP).
+- **Free-for-all:** Melee.unity holds sixteen: the eight and a twin each ("MATT II", the boxer's Blue prefab, authored
+  in the scene), prefixes a_..p_, sixteen colours, a compact board. Placings (winner, the rest by the judges' score,
+  then the eliminated, last out first) move the ladder's Elo (`LeagueTable.ReportPlacings`, K 32 shared over pairs; a
+  twin counts as its boxer at its better place).
+- **Voice matrix (Audio/VoiceMatrix.cs):** boxer x emotion (exhale, effort, pain, groan, pant, dazed, taunt, triumph,
+  defeat), from the first tier that has it: recorded clips `A_Voice_<Boxer>_<Emotion>_<n>` under any
+  `Resources/Voices` folder; the shared low/high takes (half the picks, five emotions); a procedural source-filter
+  voice per boxer (`VoiceSynth`, `VoiceProfile`). New calls: a dazed moan, a laugh after a knockdown scored, a roar for
+  the winner, a sigh for the loser and for each boxer counted out of a free-for-all.
+- **Measured, 16 in the melee (editor, desktop):** a brain call is 0.28-0.36 ms, almost all Inference Engine overhead
+  (a batch of 16 on one network costs 0.33 ms); 16 brains are 5.5-8 ms per 20 ms control step. Batching helps only
+  twins on the same brain (14 distinct networks of 16 in a sample), so the next step is a direct C# MLP evaluator.
+- Tests: `CupTests` 7/7 (cup, fill, placings Elo, procedural voices, clip names). Not yet: the UI screenshot report,
+  a listen to the procedural voices, the 16-boxer frame rate on a phone.
+
 ## Overnight 2: the referee and card walker walk on their own, Matt punches (2026-11-04)
 
 - Report `DOCS/reports/2026-11-04-overnight.html`; best weights `DOCS/reports/2026-11-04-overnight-weights.json`.

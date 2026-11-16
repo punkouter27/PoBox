@@ -227,6 +227,53 @@ namespace PoBox.League
             return delta;
         }
 
+        /// <summary>
+        /// A free-for-all's placings, best first (shown names; a name twice counts once, at its better place), on
+        /// the saved ladder, without the arena's table: every pair is a game the better-placed one won, worth
+        /// <paramref name="k"/> / (n - 1), so the whole field moves about as much as one bout would. Ratings only:
+        /// the win-loss records are the one-on-one bouts'. Returns each name's change.
+        /// </summary>
+        public static Dictionary<string, float> ReportPlacings(IList<string> bestFirst, float k = 32f)
+        {
+            var changes = new Dictionary<string, float>();
+            var names = new List<string>();
+            foreach (string n in bestFirst) if (!string.IsNullOrEmpty(n) && !names.Contains(n)) names.Add(n);
+            if (names.Count < 2) return changes;
+
+            Save save = null;
+            try { save = JsonUtility.FromJson<Save>(PlayerPrefs.GetString(Key, "")); }
+            catch (Exception) { }
+            // No ladder yet, or one rated against older CPU ratings (the arena would start it again from them): from the CPU's.
+            if (save == null || (save.cpuWhen ?? "") != (CpuRatings.when ?? "")) save = new Save { cpuWhen = CpuRatings.when };
+            var rows = new List<Row>();
+            foreach (string n in names)
+            {
+                Row r = null;
+                foreach (Row x in save.rows) if (x.name == n) { r = x; break; }
+                if (r == null)
+                {
+                    float c = CpuElo(n);
+                    r = new Row { name = n, elo = c > 0f ? c : 1000f, cpuElo = c };
+                    save.rows.Add(r);
+                }
+                rows.Add(r);
+            }
+            var before = new float[rows.Count];
+            for (int i = 0; i < rows.Count; i++) before[i] = rows[i].elo;
+            float kPair = k / (rows.Count - 1);
+            for (int i = 0; i < rows.Count; i++)
+                for (int j = i + 1; j < rows.Count; j++)
+                {
+                    float d = kPair * (1f - Expected(before[i], before[j]));
+                    rows[i].elo += d;
+                    rows[j].elo -= d;
+                }
+            for (int i = 0; i < rows.Count; i++) changes[rows[i].name] = rows[i].elo - before[i];
+            PlayerPrefs.SetString(Key, JsonUtility.ToJson(save));
+            PlayerPrefs.Save();
+            return changes;
+        }
+
         public static void Streak(Row winner, Row loser)
         {
             winner.streak = winner.streak > 0 ? winner.streak + 1 : 1;

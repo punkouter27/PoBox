@@ -317,6 +317,7 @@ namespace PoBox.Audio
             }
             // Whoever the scene switched on: the two of a bout, or everybody in a free-for-all.
             _all = FindObjectsByType<Fighter>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            WarmVoices();
         }
 
         void OnEnable()
@@ -352,8 +353,8 @@ namespace PoBox.Audio
             bool big = type == PunchType.Hook || type == PunchType.Uppercut || type == PunchType.Cross;
             if (big) { _swinger = f; _swungAt = Time.unscaledTime; }
             bool heavy = type == PunchType.Hook || type == PunchType.Uppercut || type == PunchType.Body;
-            if (heavy && Random.value < effortChance) Voice(f, Of(f).effort, effortVolume * Random.Range(0.8f, 1f), 0.3f);
-            else if (Random.value < exhaleChance) Voice(f, Of(f).exhale, exhaleVolume * Random.Range(0.8f, 1f), 0.15f);
+            if (heavy && Random.value < effortChance) Voice(f, Emotion.Effort, effortVolume * Random.Range(0.8f, 1f), 0.3f);
+            else if (Random.value < exhaleChance) Voice(f, Emotion.Exhale, exhaleVolume * Random.Range(0.8f, 1f), 0.15f);
         }
 
         void OnBlock(Fighter defender, Vector3 at, float speed)
@@ -394,7 +395,7 @@ namespace PoBox.Audio
             if (synth) PlayAt(ImpactSynth.Pick(e.zone == PartKind.Head ? ImpactSynth.Head : ImpactSynth.Body, k), e.point, Mathf.Lerp(0.4f, 1f, k), Mathf.Lerp(0.97f, 1.04f, Mathf.Clamp01(e.gloveSpeed / 9f)));
             PlayAt(Pick(heavy ? punchHeavy : punchLight), e.point, clips * Mathf.Lerp(0.35f, 0.95f, k), snap * where);
             // The air knocked out of whoever took it, a beat after the glove.
-            if (e.victim != null) Voice(e.victim, Of(e.victim).pain, Mathf.Lerp(0.35f, painVolume, k), 0.25f, true);
+            if (e.victim != null) Voice(e.victim, Emotion.Pain, Mathf.Lerp(0.35f, painVolume, k), 0.25f, true);
             if (e.impulse >= thudImpulse)
             {
                 // The thud grows faster than the slap, and sinks as it grows.
@@ -413,6 +414,8 @@ namespace PoBox.Audio
                 _gaspAt = Time.unscaledTime + 0.12f;
                 _gaspVolume = Mathf.Max(_gaspVolume, Mathf.Lerp(0.25f, 0.8f, surprise));
             }
+            // A punch far harder than these two usually land: now and then its thrower laughs at it.
+            if (surprise > 0.6f && e.attacker != null && Random.value < bigHitTauntChance) Later(0.7f, e.attacker, Emotion.Taunt, tauntVolume);
             if (surprise > 0.6f && Time.unscaledTime - _lastSwell > 3f)
             {
                 _lastSwell = Time.unscaledTime;
@@ -427,7 +430,9 @@ namespace PoBox.Audio
             _victim = f;
             PlayCrowd(crowdSwell, 0.95f);
             PlayCrowd(crowdGroan, 0.5f);
-            if (f != null) Voice(f, Of(f).groan, groanVolume, 0.5f, true);
+            if (f != null) Voice(f, Emotion.Groan, groanVolume, 0.5f, true);
+            // The one who put them there laughs at it, a beat after the fall.
+            if (cause.attacker != null && cause.attacker != f && Random.value < tauntChance) Later(1.1f, cause.attacker, Emotion.Taunt, tauntVolume);
         }
 
         void OnFloor(Vector3 point, float impulse)
@@ -455,9 +460,10 @@ namespace PoBox.Audio
             AudioClip end = synth && ImpactSynth.BellEnd != null ? ImpactSynth.BellEnd : bell;
             if (to == BoutPhase.Fight && from == BoutPhase.Intro) PlayRing(start, 0.8f);
             else if (to == BoutPhase.RoundBreak) PlayRing(end, 0.8f);
-            else if (to == BoutPhase.WalkOn) PlayRing(sting, 0.5f);
+            else if (to == BoutPhase.WalkOn) { PlayRing(sting, 0.5f); _heardOut.Clear(); _later.Clear(); }
             else if (to == BoutPhase.Results)
             {
+                ResultVoices();
                 PlayRing(end, 0.7f);
                 PlayRing(sting, 0.45f);
                 PlayCrowd(crowdApplause, 0.6f);
@@ -511,6 +517,7 @@ namespace PoBox.Audio
             Scrape(dt);
             Ropes(dt);
             Breathing();
+            Feelings();
             Rocked(shot, dt);
             Fade(_breath, Mathf.Max(0f, _close) * breathVolume * _hitsK, dt);
 

@@ -919,6 +919,8 @@ Label { margin: 0; padding: 0; }
     border-top-width: 6px;
     padding: 0 10px;
 }
+/* Sixteen in the ring: four rows of four, lower, the colour bar thinner. */
+.ffa-board--many .ffa-row { height: 52px; margin-bottom: 4px; border-top-width: 4px; padding: 0 8px; }
 .ffa-name { font-size: var(--t-micro); -unity-font-style: bold; color: var(--ink); -unity-text-align: middle-left; }
 .ffa-state { font-size: var(--t-micro); -unity-font-style: bold; color: var(--ink-dim); -unity-text-align: middle-left; }
 .ffa-state--count { color: var(--warn); }
