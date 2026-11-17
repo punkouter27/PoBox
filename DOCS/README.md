@@ -33,6 +33,20 @@ and "Things that cost time, worth knowing". The plan as it stood, with every tic
 [archive/tasks_2026-10.md](archive/tasks_2026-10.md). The October training log is
 [archive/rl_optimization_log_2026-10.md](archive/rl_optimization_log_2026-10.md).
 
+## Back to the dressing room; round-2 brains for Timmy and Soldat (2026-11-17)
+
+- **The walk-off.** Eight seconds into the result (`MjBrain.leaveAfter`), after the referee has raised the winner's
+  hand, both boxers walk slowly (0.35 m/s, footwork policy) to their own corner, turn, and go out over the side
+  beside it. A leaving boxer is on its own collision bit (`MjRing.SetLeaving`, bit 16; 8 is the crew's) that only
+  the floor shares, so it passes through the ropes; past the apron edge it is hidden and parked until the next
+  bout places it. The referee lets go of the hand when they leave; the broadcast holds a still wide shot on the
+  ring centre (`BroadcastDirector.WalkingOff`) instead of framing the gap between the two, which had sent the
+  camera into the dark hall. Arena: `resultsSeconds` 26, `cupBackSeconds` 24, so the cup shows the walk.
+  The ring is 1.3 m above the hall floor and MuJoCo's floor is a plane at canvas height, so they vanish at the
+  apron rather than climb down.
+- **Brains:** Timmy 6/7 exam lines (was 3), Soldat 5/7 (was 3), Soldat on his own footwork. Testbed now holds
+  Timmy and Soldat, so MjGateTests covers them (30/30).
+
 ## Sixteen: the cup, the free-for-all and the voice matrix (2026-11-16)
 
 - **Cup (League/Career.cs):** sixteen slots seeded by the ladder (1 v 16, 8 v 9, ...), BYEs for empty slots; with

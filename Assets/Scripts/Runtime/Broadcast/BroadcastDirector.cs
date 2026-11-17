@@ -62,6 +62,13 @@ namespace PoBox.Broadcast
         [Header("Framing")]
         public Vector3 ringCentre;
         public float ringHalf = 3.05f;
+        [Tooltip("The walk back to the dressing room: the gap between the boxers the shots frame at most, m.")]
+        public float walkOffWidth = 3.5f;
+
+        /// <summary>Either boxer is walking back to the dressing room after the result, or has gone (MjBrain.LeaveRing).</summary>
+        bool WalkingOff => bout != null && bout.Phase == BoutPhase.Results && (LeftRing(bout.red) || LeftRing(bout.blue));
+
+        static bool LeftRing(Fighter f) => f != null && f.TryGetComponent(out MjBrain brain) && brain.LeftRing;
         [Tooltip("Height of the outside cameras: above the top rope's sight line.")]
         public float broadcastHeight = 3.0f;
         public float orbitDegreesPerSecond = 9f;
@@ -360,7 +367,8 @@ namespace PoBox.Broadcast
             // there is no Timeline, the two corner shots, a half each.
             else if (bout.Phase == BoutPhase.WalkOn) want = bout.PhaseAge < bout.walkOnSeconds * 0.5f ? Shot.WalkRed : Shot.WalkBlue;
             // The instant replay (Mj/MjReplay.cs) is watched wide: the whole ring, both boxers.
-            else if (bout.Phase == BoutPhase.Results) want = Mj.MjReplay.Playing ? Shot.Wide : bout.Winner != null ? Shot.Winner : Shot.Orbit;
+            // Then the winner, and once they walk back to the dressing room (MjBrain.LeaveRing) the ring, wide and still.
+            else if (bout.Phase == BoutPhase.Results) want = Mj.MjReplay.Playing || WalkingOff ? Shot.Wide : bout.Winner != null ? Shot.Winner : Shot.Orbit;
             // The minute between rounds: each corner in turn, its boxer on the stool, from the ring.
             else if (bout.Phase == BoutPhase.RoundBreak) want = bout.PhaseAge < bout.breakSeconds * 0.5f ? Shot.WalkRed : Shot.WalkBlue;
             else if (now < _forcedUntil) want = _forced;
@@ -437,6 +445,13 @@ namespace PoBox.Broadcast
             Vector3 line = bc - rc;
             line.y = 0f;
             float sep = line.magnitude;
+            // The walk back to the dressing room: the two go apart, out over the ropes, and are then set aside far off,
+            // so the shots frame the middle of the ring at a fixed width and watch them go, not the gap between them.
+            if (WalkingOff)
+            {
+                mid = new Vector3(ringCentre.x, Mathf.Max(0.55f, mid.y), ringCentre.z);
+                sep = Mathf.Min(sep, walkOffWidth);
+            }
             Vector3 dir = sep > 0.05f ? line / sep : Vector3.right;
 
             float dt = Time.unscaledDeltaTime;

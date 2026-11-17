@@ -74,7 +74,20 @@ namespace PoBox.Sim
 
         /// <summary>Coming out of the corner on the footwork policy (a free-for-all's opening): walking, or squaring up. Not yet boxing.</summary>
         public bool Walking => _out != Out.None;
-        enum Out { None, Walk, Square, Corner, Seated }
+        enum Out { None, Walk, Square, Corner, Seated, Leaving, Gone }
+
+        /// <summary>Walking out of the ring after the result, or gone from it (LeaveRing): the referee lets go of its hand.</summary>
+        public bool LeftRing => _out == Out.Leaving || _out == Out.Gone;
+        [Tooltip("After the result: how long the boxers stay for the referee's raised hand before both walk back to the dressing room, seconds into the result.")]
+        public float leaveAfter = 8f;
+        [Tooltip("The walk back to the dressing room, m/s: slow (the footwork policy walks 0.3 to 1.0).")]
+        public float leaveSpeed = 0.35f;
+        [Tooltip("Past the ring's edge by this much (m, beyond the ropes, at the apron's edge) the boxer has gone: hidden and set aside.")]
+        public float goneBeyondRopes = 0.5f;
+        Vector3 _exit, _via;
+        bool _leaveStart, _pastVia;
+        Vector3 Heading => _pastVia ? _exit : _via;
+        System.Collections.Generic.Dictionary<Renderer, bool> _shown;
         Out _out;
         float _squareFor;
         Fighter _aimedAt;
@@ -243,8 +256,118 @@ namespace PoBox.Sim
             _out = Out.Seated;
         }
 
+        /// <summary>
+        /// The bout is over: back to the dressing room, slowly, on the footwork policy, out over the side of the ring
+        /// behind its own corner. It turns to the exit, walks, goes out through the ropes (MjRing.SetLeaving: the floor
+        /// is all it meets), and once past the apron's edge it is hidden and set aside until the next bout places it.
+        /// </summary>
+        public void LeaveRing(Vector3 corner)
+        {
+            if (LeftRing || fighter.IsDown) return;
+            if (_footwork == null) { Gone(); return; }
+            Vector3 c = new Vector3(ring.centre.x, 0f, ring.centre.y);
+            Vector3 side = corner - c;
+            side.y = 0f;
+            // First to its own corner (a metre in from the post), then out over the side beside it (the one the corner's
+            // longer offset points at), aiming well past the ropes.
+            float inside = Mathf.Max(0.5f, ring.ringHalf - 1.0f);
+            _via = c + new Vector3(Mathf.Clamp(side.x, -inside, inside), 0f, Mathf.Clamp(side.z, -inside, inside));
+            Vector3 exit = Mathf.Abs(side.z) >= Mathf.Abs(side.x)
+                ? new Vector3(Mathf.Clamp(side.x, -inside, inside), 0f, Mathf.Sign(side.z) * (ring.ringHalf + 3f))
+                : new Vector3(Mathf.Sign(side.x) * (ring.ringHalf + 3f), 0f, Mathf.Clamp(side.z, -inside, inside));
+            _exit = c + exit;
+            Vector3 fromVia = fighter.pelvis.transform.position - _via;
+            fromVia.y = 0f;
+            _pastVia = fromVia.magnitude < 0.6f;
+            _out = Out.Leaving;
+            _toCorner = 0f;
+            GettingUp = false;
+            _holding = _releaseNext = false;
+            // From the victory pose or the guard it was held in: stood in its guard for a step, turned to the exit,
+            // then let go on the footwork policy, as the walk to the stool starts.
+            Vector3 to = _exit - fighter.pelvis.transform.position;
+            to.y = 0f;
+            ring.Release(boxer);
+            ring.Hold(boxer, to);
+            _leaveStart = true;
+            ring.SetLeaving(boxer, true);
+            boxer.SetPolicy(_footwork);
+            boxer.SetSpeedShare(1.0);
+        }
+
+        void Leaving()
+        {
+            if (_leaveStart)
+            {
+                _leaveStart = false;
+                ring.Release(boxer);
+                boxer.SetEpisodeAt(MjBoxer.Turn, 0, 0, 0, Heading.x, Heading.z);
+                return;
+            }
+            _toCorner += Time.fixedDeltaTime;
+            Vector3 at = fighter.pelvis.transform.position;
+            float out_ = Mathf.Max(Mathf.Abs(at.x - ring.centre.x), Mathf.Abs(at.z - ring.centre.y));
+            bool stumbling = fighter.PelvisHeight < fighter.standingPelvisHeight * 0.6f || fighter.Upright < 0.5f;
+            // Out past the apron, or still not there after a minute: gone.
+            if (out_ > ring.ringHalf + goneBeyondRopes || _toCorner > 60f) { Gone(); return; }
+            // Down on the way out (the legs of a beaten boxer): stood up in its guard where it is, and on again.
+            if (stumbling && _toCorner > 1f)
+            {
+                // Already at the ropes, it would be stood back inside the ring (MjRing.Hold keeps a step in): gone instead.
+                if (out_ > ring.ringHalf - 0.6f) { Gone(); return; }
+                Vector3 face = Heading - at;
+                face.y = 0f;
+                ring.Hold(boxer, face);
+                _leaveStart = true;
+                return;
+            }
+            boxer.DriveScale = 1.0;
+            Vector3 to = Heading - at;
+            to.y = 0f;
+            // At its corner: turned out to the side, and on.
+            if (!_pastVia && to.magnitude < 0.45f)
+            {
+                _pastVia = true;
+                boxer.SetEpisodeAt(MjBoxer.Turn, 0, 0, 0, _exit.x, _exit.z);
+                return;
+            }
+            float error = Mathf.Abs(Vector3.SignedAngle(boxer.Forward, to, Vector3.up)) * Mathf.Deg2Rad;
+            if (boxer.Kind == MjBoxer.Turn)
+            {
+                boxer.Opp[0] = Heading.x;
+                boxer.Opp[1] = Heading.z;
+                if (error < 0.25f) boxer.SetEpisodeAt(MjBoxer.Walk, leaveSpeed, 0, 0, 0, 0);
+            }
+            else if (error > 0.6f) boxer.SetEpisodeAt(MjBoxer.Turn, 0, 0, 0, Heading.x, Heading.z);
+        }
+
+        /// <summary>In the dressing room: hidden, its brain stopped, held far off the canvas until the next bout.</summary>
+        void Gone()
+        {
+            _out = Out.Gone;
+            ring.HoldPose(boxer, new Vector3(ring.centre.x + 60f + 2f * transform.GetSiblingIndex(), 0f, ring.centre.y), Vector3.forward, null);
+            ring.SetIdle(boxer, true);
+            _shown ??= new System.Collections.Generic.Dictionary<Renderer, bool>();
+            foreach (Renderer r in fighter.GetComponentsInChildren<Renderer>(true))
+            {
+                if (!_shown.ContainsKey(r)) _shown[r] = r.enabled;
+                r.enabled = false;
+            }
+        }
+
+        /// <summary>Back from the dressing room (the next bout placing it): shown, run, solid again.</summary>
+        void Returned()
+        {
+            ring.SetLeaving(boxer, false);
+            ring.SetIdle(boxer, false);
+            if (_shown == null) return;
+            foreach (var kv in _shown) if (kv.Key != null) kv.Key.enabled = kv.Value;
+            _shown.Clear();
+        }
+
         void BackToTheBout()
         {
+            if (LeftRing) Returned();
             GettingUp = false;
             _raised = false;
             _refRaised = false;
@@ -267,7 +390,8 @@ namespace PoBox.Sim
             ring.SetRising(boxer, fighter.IsDown && fighter.IsRising);
             if (!Bout.SimRunning) return;
             if (_out == Out.Corner) { Cornering(); return; }
-            if (_out == Out.Seated) return;
+            if (_out == Out.Seated || _out == Out.Gone) return;
+            if (_out == Out.Leaving) { Leaving(); return; }
             if (_out == Out.Square) Squaring();
 
             Fighter them = fighter.opponent;
@@ -277,6 +401,13 @@ namespace PoBox.Sim
             if (bout != null && bout.Phase == BoutPhase.Results)
             {
                 if (fighter.IsDown) return;
+                // The hand has been up long enough: both go back to the dressing room, each out behind its own corner.
+                if (bout.PhaseAge > leaveAfter)
+                {
+                    Transform corner = fighter == bout.red ? bout.redCorner : bout.blueCorner;
+                    LeaveRing(corner != null ? corner.position : fighter.pelvis.transform.position);
+                    return;
+                }
                 Vector3 facing = them != null ? them.pelvis.transform.position - fighter.pelvis.transform.position : boxer.Forward;
                 if (fighter != bout.Winner) ring.Hold(boxer, facing);
                 else if (!_raised)

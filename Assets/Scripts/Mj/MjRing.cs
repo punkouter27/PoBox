@@ -83,7 +83,7 @@ namespace PoBox.Mj
         long _policyTicks;
         double _dt;
         // Per boxer (the first index), and per hand or foot.
-        bool[] _held, _ghost, _down, _has, _rising, _idle;
+        bool[] _held, _ghost, _down, _has, _rising, _idle, _leaving;
         int[] _body;                        // solid bodies: 0 standing, 1 lying, 2 getting up (-1 not yet set)
         float[] _bodyAt;                    // when each one's last changed (the overlap measurement reads it)
         double[] _holdX, _holdY, _holdYaw, _ghostFor;
@@ -108,7 +108,7 @@ namespace PoBox.Mj
 
         void Allocate(int n)
         {
-            _held = new bool[n]; _ghost = new bool[n]; _down = new bool[n]; _has = new bool[n]; _rising = new bool[n]; _idle = new bool[n];
+            _held = new bool[n]; _ghost = new bool[n]; _down = new bool[n]; _has = new bool[n]; _rising = new bool[n]; _idle = new bool[n]; _leaving = new bool[n];
             _body = new int[n];
             _bodyAt = new float[n];
             for (int k = 0; k < n; k++) _body[k] = -1;
@@ -200,8 +200,18 @@ namespace PoBox.Mj
             // layer 2 while it is down still lies on the canvas, and only the boxers standing pass through it.
             var mine = new System.Collections.Generic.HashSet<int>();
             for (int k = 0; k < n; k++) mine.UnionWith(_geoms[k]);
+            // The floor alone is on the leaving layer too (8): a boxer walking out after the result goes through the
+            // ropes, the other boxer and the cubes, but still stands on the canvas.
+            var floors = new System.Collections.Generic.HashSet<int>();
+            foreach (MjGeom s in FindObjectsByType<MjGeom>(FindObjectsInactive.Exclude))
+                if (s.name == "floor" && s.MujocoId >= 0) floors.Add(s.MujocoId);
             for (int g = 0; g < _m->ngeom; g++)
-                if (!mine.Contains(g)) { _m->geom_contype[g] = 3; _m->geom_conaffinity[g] = 3; }
+                if (!mine.Contains(g))
+                {
+                    int layers = floors.Contains(g) ? 3 | Leaving : 3;
+                    _m->geom_contype[g] = layers;
+                    _m->geom_conaffinity[g] = layers;
+                }
             _bound = true;
         }
 
@@ -308,6 +318,28 @@ namespace PoBox.Mj
         /// its pose every step, so its brain is not run at all.
         /// </summary>
         public void SetIdle(MjBoxer b, bool idle) { if (_idle != null) _idle[Slot(b)] = idle; }
+
+        /// <summary>The contype/conaffinity bit only the floor shares: a leaving boxer is on it alone. 1, 2 and 4 are the
+        /// boxers' layers (SetBody), 8 the ring crew's (MjCrew.Layer, which it adds to the ropes and the floor).</summary>
+        const int Leaving = 16;
+
+        /// <summary>
+        /// Walking out after the result (MjBrain.LeaveRing): the boxer meets the floor and nothing else, so it goes out
+        /// through the ropes and past anybody in its way. Off again when the bout places it.
+        /// </summary>
+        public void SetLeaving(MjBoxer b, bool on)
+        {
+            if (_leaving == null) return;
+            int k = Slot(b);
+            if (_leaving[k] == on) return;
+            _leaving[k] = on;
+            if (_geoms[k] == null) return;
+            // Back off it: layer 1 is the standing, not-a-ghost layer of a pair, and _body -1 has SetBody write its own.
+            _body[k] = -1;
+            _ghost[k] = false;
+            int layer = on ? Leaving : 1;
+            foreach (int g in _geoms[k]) { _m->geom_contype[g] = layer; _m->geom_conaffinity[g] = layer; }
+        }
 
         /// <summary>The bout says whether a boxer is down: one that is down is passed through by the other.</summary>
         public void SetDown(MjBoxer b, bool down) => _down[Slot(b)] = down;
@@ -448,6 +480,8 @@ namespace PoBox.Mj
             if (!Ready) return;
             for (int k = 0; k < _b.Length; k++)
             {
+                // Walking out: on the floor's layer alone (SetLeaving), whatever else it is.
+                if (_leaving[k]) { if (_held[k]) Rehold(k); continue; }
                 // A pair's ring lets the one standing pass through the one down; a free-for-all's keeps every body solid.
                 if (solidBodies || solidDowned)
                 {

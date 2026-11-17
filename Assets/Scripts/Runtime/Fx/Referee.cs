@@ -92,6 +92,13 @@ namespace PoBox.Fx
                     target = neutral;
                     look = centre;
                     break;
+                case BoutPhase.Results when bout.Winner != null && bout.Winner.TryGetComponent(out MjBrain leaving) && leaving.LeftRing:
+                    // The boxers are walking back to the dressing room: the hand is let go and he steps back to a neutral spot.
+                    _raising = false;
+                    if (crew.Pinned) crew.Unpin();
+                    target = neutral;
+                    look = centre;
+                    break;
                 case BoutPhase.Results when bout.Winner != null:
                 {
                     // At the winner's left (Cross(forward, up) is its left), facing the way it faces.
