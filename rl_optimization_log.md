@@ -505,3 +505,25 @@ Entries from 2 to 31 October 2026 are in [DOCS/archive/rl_optimization_log_2026-
   `logs/queue_timmy.json`; his gauntlet includes Timmy's new match brain.
 - Also today: the phone-layout tests' free-for-alls were being rated (FreeForAll.rated, new today) and moved the owner's
   ladder by up to 700 points; the tests now switch rating off and the ratings were put back.
+- 18:07 (owner: "continue training for next 3 hours"): v3m_soldat cut to 1.0 h so Soldat's whole set ends about 21:15;
+  Timmy's game brain is v3m_timmy at about iteration 460 (17:59), promoted uncommitted; Soldat runs Matt's until his own.
+- 18:39 **exam_v3m_timmy** (iteration 654, 1.5 h): footing, guard (41%), chin pass; attack 0.46/s at 5.6 m/s (mark 0.5,
+  1% to the head: the body-snatcher's style), under pressure 0.04/s v Matt, getting up 41/60, carrying on 17/41 fail.
+  Promoted into Assets (uncommitted) in place of the 17:59 snapshot. Soldat's queue started 18:39.
+
+### 2026-11-16 20:00 — round 2 for Timmy and Soldat queued (owner: "training for another 10 hours")
+Appended to `training/logs/queue_timmy.json` after Soldat's first set (ends ~21:00), about 8 h, finishing ~05:00:
+- `v3u2_timmy` get-up top-up from v3u_timmy (1.5 h, done-when 0.9): his exam got up only 68%. Then `bank_v3b_timmy`.
+- `v3m2_timmy` match from v3m_timmy (2 h, new hand-over bank, Soldat added to the gauntlet), `exam_v3m2_timmy` (`book_v3b_timmy.json`).
+- `v3u2_soldat` (1 h), `bank_v3b_soldat`, `v3m2_soldat` from v3m_soldat (2.5 h, faces v3m2_timmy), `exam_v3m2_soldat`.
+Nothing is promoted automatically; promote after comparing the exams against round 1.
+
+### 2026-11-17 — round 2 results, promoted
+Exam (exam_v2, 60 trials, 12 rounds), round 1 -> round 2:
+- **Timmy 3/7 -> 6/7.** Attack 0.46 -> 0.54/s (pass), getting up 41/60 -> 60/60 in 2.2 s, carrying on 17/41 -> 57/60, chin worst 0.44 -> 0.
+  Still failing: under pressure, 0.02/s against Matt (mark 0.25).
+- **Soldat 3/7 -> 5/7.** Getting up 31/60 -> 57/60, carrying on 22/31 -> 55/57, guard 34% -> 59%, now 38% to the head (his marksman style).
+  Still failing: attack 0.10/s at 2.0 m/s (marks 0.5, 4.0), under pressure 0 against Zombie.
+- Promoted (uncommitted): `PromoteBoxing` timmy v3m2/v3u2, soldat v3m2/v3u2 (get-up ONNX via `tools/export_getup_v2.py`), and Soldat's own
+  footwork `Promote("soldat","v3f_soldat")` (stand 100%, walk pass, turn 83% vs mark 90%) replacing Matt's.
+- Timmy and Soldat were missing from `Testbed.unity`'s roster ("the model has no a_root" in MjGateTests); added. MjGateTests 30/30.
