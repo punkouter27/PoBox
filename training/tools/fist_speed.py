@@ -1,4 +1,4 @@
-play s"""How fast can a boxer's glove go at all? A full-effort probe of the arm, in C MuJoCo, no brain (2026-11-16).
+"""How fast can a boxer's glove go at all? A full-effort probe of the arm, in C MuJoCo, no brain (2026-11-16).
 
     PYTHONPATH=.mj350 python tools/fist_speed.py --names matt kim trump grandma grandpa
 
