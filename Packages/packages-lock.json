@@ -59,8 +59,8 @@
       }
     },
     "com.unity.dt.app-ui": {
-      "version": "2.3.0",
-      "depth": 1,
+      "version": "2.1.11",
+      "depth": 0,
       "source": "registry",
       "dependencies": {
         "com.unity.modules.physics": "1.0.0",
