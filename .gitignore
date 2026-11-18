@@ -95,3 +95,6 @@ Tools/MuJoCo/*.err
 
 # WebGL build: Burst output Unity writes beside the project
 /Data/
+
+# Generated Unity C# project files
+/*.csproj

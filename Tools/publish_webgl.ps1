@@ -3,7 +3,7 @@
 # game's Azure Static Web App on a GitHub-hosted runner. No Unity licence is needed in CI.
 #
 # SAME FILE IN EVERY PO UNITY GAME (reference copy: PoBox; copy it with
-# PoPunkouterSoftware/scripts/sync-ci.ps1).
+# this repository).
 #
 #   pwsh -File Tools\publish_webgl.ps1               # build, zip, publish release, prune old ones
 #   pwsh -File Tools\publish_webgl.ps1 -SkipBuild    # publish the existing Builds/WebGL

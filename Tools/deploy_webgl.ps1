@@ -4,7 +4,7 @@
 # bare `az login` finds no subscription).
 #
 # SAME FILE IN EVERY PO UNITY GAME (reference copy: PoBox; copy it with
-# PoPunkouterSoftware/scripts/sync-ci.ps1).
+# this repository).
 #
 #   pwsh -File Tools\deploy_webgl.ps1
 #
