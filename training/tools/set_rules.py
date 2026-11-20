@@ -7,6 +7,7 @@ boxer's own config that promoting it makes. A policy must have been trained unde
 
 The last five are the punch's rules of 2026-10-16 (envs/boxing.py); 0 turns one off.
 """
+
 import argparse
 import glob
 import json
@@ -22,10 +23,19 @@ ap.add_argument("--stagger-v", type=float)
 ap.add_argument("--hurt-full", type=float)
 ap.add_argument("--body-drain", type=float)
 ap.add_argument("--obs-state", type=int, choices=[0, 1])
-ap.add_argument("--getup-speed-share", type=float,
-                help="share of the speed limit's damping on while the get-up brain has the body (Grandma on v2: 0.5); 1 takes the key out")
-ap.add_argument("--style", nargs="*", default=[], help="style keys as key=val (writes into e['style'], e.g. range_m=0.48 press=1.5)")
-ap.add_argument("--models", default=os.path.join("models", "v2"), help="the folder of configs to change (models/v3 for the v3 bodies)")
+ap.add_argument(
+    "--getup-speed-share",
+    type=float,
+    help="share of the speed limit's damping on while the get-up brain has the body (Grandma on v2: 0.5); 1 takes the key out",
+)
+ap.add_argument(
+    "--style", nargs="*", default=[], help="style keys as key=val (writes into e['style'], e.g. range_m=0.48 press=1.5)"
+)
+ap.add_argument(
+    "--models",
+    default=os.path.join("models", "v2"),
+    help="the folder of configs to change (models/v3 for the v3 bodies)",
+)
 args = ap.parse_args()
 style_updates = {}
 for item in args.style:

@@ -10,9 +10,9 @@
   The editor must be open on this project (unity open .). Results as JSON: Temp/pobox-tests.json.
 
 .EXAMPLE
-  ./Tools/run_tests.ps1                              # every PoBox fixture
-  ./Tools/run_tests.ps1 -Only MjGateTests,MjParityTests
-  ./Tools/run_tests.ps1 -Plugin                      # then the MuJoCo plugin's own play-mode tests, to prove nothing is left behind
+  ./scripts/run_tests.ps1                            # every PoBox fixture
+  ./scripts/run_tests.ps1 -Only MjGateTests,MjParityTests
+  ./scripts/run_tests.ps1 -Plugin                    # then the MuJoCo plugin's own play-mode tests, to prove nothing is left behind
 #>
 param(
     [string[]]$Only = @(),

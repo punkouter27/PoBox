@@ -11,12 +11,13 @@ Blender is the converter; the scans are not touched. What it does:
     lower jaw opens by turning about its own X axis;
   * thins each scan to `faces_each` triangles and keeps the scanner's vertex colours.
 """
+
 import sys
 
 import bpy
 import numpy as np
 
-args = sys.argv[sys.argv.index("--") + 1:]
+args = sys.argv[sys.argv.index("--") + 1 :]
 upper_path, lower_path, out_path = args[0], args[1], args[2]
 faces_each = int(args[3]) if len(args) > 3 else 30000
 if len(args) > 4:
@@ -74,20 +75,24 @@ front_spread = float(np.abs(lr[ap > np.percentile(ap, 92)]).mean())
 back_spread = float(np.abs(lr[ap < np.percentile(ap, 8)]).mean())
 if front_spread > back_spread:
     fwd = -fwd
-side = np.cross(fwd, up)          # x = forward x up, so that (x, -forward, up) is right-handed with -Y forward
-print(f"mirror score {best[0]:.3f}; spread at the front {min(front_spread, back_spread):.1f}, at the back {max(front_spread, back_spread):.1f} (scanner units)")
+side = np.cross(fwd, up)  # x = forward x up, so that (x, -forward, up) is right-handed with -Y forward
+print(
+    f"mirror score {best[0]:.3f}; spread at the front {min(front_spread, back_spread):.1f}, at the back {max(front_spread, back_spread):.1f} (scanner units)"
+)
 
 # Units: a dental arch is about 60 mm across. Anything near that is millimetres.
 width = float(np.ptp((both - centre) @ side))
 scale = 0.001 if width > 5.0 else 1.0
 ap = (both - centre) @ fwd
 z = (both - centre) @ up
-bite = 0.5 * (float(((U - centre) @ up).min()) + float(((L - centre) @ up).max()))     # where the teeth meet
+bite = 0.5 * (float(((U - centre) @ up).min()) + float(((L - centre) @ up).max()))  # where the teeth meet
 hinge = centre + fwd * (float(ap.min()) - 0.20 * float(np.ptp(ap))) + up * (bite + 0.35 * float(np.ptp(z)))
-print(f"arch {width * scale * 1000:.0f} mm across, {np.ptp(ap) * scale * 1000:.0f} mm deep, {np.ptp(z) * scale * 1000:.0f} mm tall; "
-      f"hinge {0.20 * np.ptp(ap) * scale * 1000:.0f} mm behind the back teeth")
+print(
+    f"arch {width * scale * 1000:.0f} mm across, {np.ptp(ap) * scale * 1000:.0f} mm deep, {np.ptp(z) * scale * 1000:.0f} mm tall; "
+    f"hinge {0.20 * np.ptp(ap) * scale * 1000:.0f} mm behind the back teeth"
+)
 
-R = np.stack([side, -fwd, up], 0)     # rows: new x, new y (back), new z (up)
+R = np.stack([side, -fwd, up], 0)  # rows: new x, new y (back), new z (up)
 
 mat = bpy.data.materials.new("Teeth")
 mat.use_nodes = True

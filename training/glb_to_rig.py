@@ -15,6 +15,7 @@ Two things are normalised on the way through, and both are reported:
     shoulder line at rest; an A-pose rig would put every arm joint's zero in the wrong place. Segment
     lengths are kept, only the direction is straightened.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -38,7 +39,7 @@ def read_glb(path: str) -> dict:
         chunk_len, chunk_type = struct.unpack_from("<I4s", data, offset)
         offset += 8
         if chunk_type == b"JSON":
-            return json.loads(data[offset:offset + chunk_len].decode("utf-8"))
+            return json.loads(data[offset : offset + chunk_len].decode("utf-8"))
         offset += chunk_len
     raise ValueError(f"{path} has no JSON chunk")
 
@@ -52,7 +53,7 @@ def read_glb_bin(path: str) -> Optional[bytes]:
         chunk_len, chunk_type = struct.unpack_from("<I4s", data, offset)
         offset += 8
         if chunk_type == b"BIN\x00":
-            return data[offset:offset + chunk_len]
+            return data[offset : offset + chunk_len]
         offset += chunk_len
     return None
 
@@ -68,8 +69,9 @@ def accessor(gltf: dict, blob: bytes, index: int) -> np.ndarray:
     width = WIDTH[a["type"]]
     start = view.get("byteOffset", 0) + a.get("byteOffset", 0)
     stride = view.get("byteStride", 0) or dtype.itemsize * width
-    return np.ndarray((a["count"], width), dtype=dtype, buffer=blob, offset=start,
-                      strides=(stride, dtype.itemsize)).copy()
+    return np.ndarray(
+        (a["count"], width), dtype=dtype, buffer=blob, offset=start, strides=(stride, dtype.itemsize)
+    ).copy()
 
 
 def bind_matrices(gltf: dict, blob: Optional[bytes], skin: dict) -> Optional[Dict[int, np.ndarray]]:
@@ -109,16 +111,18 @@ def skinned_mesh(gltf: dict, blob: Optional[bytes], skin_index: int):
 
 def quat_to_mat(q) -> np.ndarray:
     x, y, z, w = q
-    return np.array([
-        [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
-        [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
-        [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)],
-    ])
+    return np.array(
+        [
+            [1 - 2 * (y * y + z * z), 2 * (x * y - z * w), 2 * (x * z + y * w)],
+            [2 * (x * y + z * w), 1 - 2 * (x * x + z * z), 2 * (y * z - x * w)],
+            [2 * (x * z - y * w), 2 * (y * z + x * w), 1 - 2 * (x * x + y * y)],
+        ]
+    )
 
 
 def local_matrix(node: dict) -> np.ndarray:
     if "matrix" in node:
-        return np.array(node["matrix"], dtype=float).reshape(4, 4).T   # glTF is column-major
+        return np.array(node["matrix"], dtype=float).reshape(4, 4).T  # glTF is column-major
     m = np.eye(4)
     r = quat_to_mat(node.get("rotation", [0, 0, 0, 1]))
     s = np.array(node.get("scale", [1, 1, 1]), dtype=float)
@@ -153,7 +157,13 @@ def clean(name: str) -> str:
 def side_of(name: str) -> str:
     raw = name.lower()
     c = clean(name)
-    if c.startswith("left") or re.search(r"(^|[_.\- ])l([_.\- ]|$)", raw) or raw.endswith((".l", "_l")) or c.startswith("l") and c[1:2].isupper():
+    if (
+        c.startswith("left")
+        or re.search(r"(^|[_.\- ])l([_.\- ]|$)", raw)
+        or raw.endswith((".l", "_l"))
+        or c.startswith("l")
+        and c[1:2].isupper()
+    ):
         return "l"
     if c.startswith("right") or re.search(r"(^|[_.\- ])r([_.\- ]|$)", raw) or raw.endswith((".r", "_r")):
         return "r"
@@ -163,7 +173,7 @@ def side_of(name: str) -> str:
 def strip_side(c: str) -> str:
     for p in ("left", "right"):
         if c.startswith(p):
-            return c[len(p):]
+            return c[len(p) :]
     return re.sub(r"^(l|r)(?=(thigh|calf|foot|toe|upperarm|forearm|hand|clavicle|shoulder|arm|leg|upleg))", "", c)
 
 
@@ -179,15 +189,26 @@ PATTERNS = {
     "upper_arm": ["arm", "upperarm"],
     "forearm": ["forearm", "lowerarm"],
     "hand": ["hand"],
-    "hand_tip": ["handmiddle3", "middle3", "handmiddle2", "middle2", "handmiddle1", "middle1", "middle03", "middle02", "mid3"],
+    "hand_tip": [
+        "handmiddle3",
+        "middle3",
+        "handmiddle2",
+        "middle2",
+        "handmiddle1",
+        "middle1",
+        "middle03",
+        "middle02",
+        "mid3",
+    ],
 }
 
 
 def build_map(bones: List[dict]) -> Dict[str, str]:
     by_key: Dict[str, str] = {}
     # A side given as a suffix (Blender's "thigh.L") is dropped before cleaning; strip_side takes prefixes.
-    cleaned = [(b["name"], strip_side(clean(re.sub(r"[._\- ][lrLR]$", "", b["name"]))), side_of(b["name"]))
-               for b in bones]
+    cleaned = [
+        (b["name"], strip_side(clean(re.sub(r"[._\- ][lrLR]$", "", b["name"]))), side_of(b["name"])) for b in bones
+    ]
 
     def find(key: str, side: str) -> Optional[str]:
         for want in PATTERNS[key]:
@@ -203,9 +224,10 @@ def build_map(bones: List[dict]) -> Dict[str, str]:
     # Lowest spine bone and highest, by where they are rather than by how they are numbered: rigs count
     # the spine upwards, downwards, or call the top one just "Spine".
     height_of = {b["name"]: float(b["head"][2]) for b in bones}
-    spines = sorted((name for name, c, s in cleaned
-                     if re.fullmatch(r"(spine|chest|upperchest|waist)\d*", c) and s == ""),
-                    key=lambda n: height_of[n])
+    spines = sorted(
+        (name for name, c, s in cleaned if re.fullmatch(r"(spine|chest|upperchest|waist)\d*", c) and s == ""),
+        key=lambda n: height_of[n],
+    )
     if spines:
         by_key["spine"] = spines[0]
         by_key["torso"] = spines[-1]
@@ -253,21 +275,29 @@ def build_map_by_shape(bones: List[dict]) -> Dict[str, str]:
     reach = {n: max(abs(x[k]) for k in subtree(n)) for n in by_name}
 
     order = [b["name"] for b in bones]
-    pelvis = next((n for n in order
-                   if sum(1 for c in kids[n] if low[c] < lo + 0.25 * h and high[c] < lo + 0.65 * h) >= 2
-                   and any(high[c] > lo + 0.8 * h for c in kids[n])), None)
+    pelvis = next(
+        (
+            n
+            for n in order
+            if sum(1 for c in kids[n] if low[c] < lo + 0.25 * h and high[c] < lo + 0.65 * h) >= 2
+            and any(high[c] > lo + 0.8 * h for c in kids[n])
+        ),
+        None,
+    )
     if pelvis is None:
         return {}
     out = {"pelvis": pelvis}
 
-    legs = sorted((c for c in kids[pelvis] if low[c] < lo + 0.25 * h and high[c] < lo + 0.65 * h), key=lambda c: low[c])[:2]
+    legs = sorted(
+        (c for c in kids[pelvis] if low[c] < lo + 0.25 * h and high[c] < lo + 0.65 * h), key=lambda c: low[c]
+    )[:2]
     for leg in legs:
         side = "l" if np.mean([x[k] for k in subtree(leg)]) > 0 else "r"
         path = [leg]
         while kids[path[-1]]:
             path.append(min(kids[path[-1]], key=lambda c: low[c]))
         ankle = min((n for n in path if z[n] > lo + 0.03 * h), key=lambda n: abs(z[n] - (lo + 0.05 * h)))
-        knee = min(path[:path.index(ankle)] or [leg], key=lambda n: abs(z[n] - (z[leg] + z[ankle]) * 0.5))
+        knee = min(path[: path.index(ankle)] or [leg], key=lambda n: abs(z[n] - (z[leg] + z[ankle]) * 0.5))
         out[f"thigh_{side}"], out[f"shin_{side}"], out[f"foot_{side}"] = leg, knee, ankle
         if path.index(ankle) + 1 < len(path):
             out[f"toe_{side}"] = path[path.index(ankle) + 1]
@@ -317,18 +347,42 @@ def build_map_by_shape(bones: List[dict]) -> Dict[str, str]:
     return out
 
 
-REQUIRED = ["pelvis", "spine", "torso", "head",
-            "thigh_l", "shin_l", "foot_l", "thigh_r", "shin_r", "foot_r",
-            "upper_arm_l", "forearm_l", "hand_l", "upper_arm_r", "forearm_r", "hand_r"]
+REQUIRED = [
+    "pelvis",
+    "spine",
+    "torso",
+    "head",
+    "thigh_l",
+    "shin_l",
+    "foot_l",
+    "thigh_r",
+    "shin_r",
+    "foot_r",
+    "upper_arm_l",
+    "forearm_l",
+    "hand_l",
+    "upper_arm_r",
+    "forearm_r",
+    "hand_r",
+]
 
 # House rule: a fighter's collision shapes are fitted inside its own skinned mesh. The band each
 # radius is held to [m], so that a mesh in a coat or with a bad weight map cannot produce a body no
 # person has.
-RADIUS_BAND = {"pelvis": (0.070, 0.135), "torso": (0.070, 0.135), "head": (0.085, 0.125), "thigh": (0.045, 0.090),
-               "shin": (0.035, 0.062), "upper_arm": (0.030, 0.058), "forearm": (0.028, 0.048)}
+RADIUS_BAND = {
+    "pelvis": (0.070, 0.135),
+    "torso": (0.070, 0.135),
+    "head": (0.085, 0.125),
+    "thigh": (0.045, 0.090),
+    "shin": (0.035, 0.062),
+    "upper_arm": (0.030, 0.058),
+    "forearm": (0.028, 0.048),
+}
 
 
-def fit_radii(verts: np.ndarray, dom: np.ndarray, bones: List[dict], mapping: Dict[str, str]) -> Tuple[Dict[str, float], float]:
+def fit_radii(
+    verts: np.ndarray, dom: np.ndarray, bones: List[dict], mapping: Dict[str, str]
+) -> Tuple[Dict[str, float], float]:
     """Capsule radii that sit inside the mesh, and the height of the crown above the head joint.
 
     Measured from the outline, not from how far the skin is from the bone: generated meshes carry
@@ -336,6 +390,7 @@ def fit_radii(verts: np.ndarray, dom: np.ndarray, bones: List[dict], mapping: Di
     little under half its thickness the thin way, over the middle half of its length (so not the bulge
     of a joint). The trunk is wider than it is deep and a capsule has to fit the depth.
     """
+
     def half_extent(x: np.ndarray) -> float:
         return 0.5 * float(np.percentile(x, 96) - np.percentile(x, 4))
 
@@ -389,13 +444,19 @@ def fit_radii(verts: np.ndarray, dom: np.ndarray, bones: List[dict], mapping: Di
         return 0.9 * min(half_extent(v[:, 0]), half_extent(v[:, 1]))
 
     fit: Dict[str, Optional[float]] = {
-        "thigh": limb("thigh", "shin"), "shin": limb("shin", "foot"),
-        "upper_arm": limb("upper_arm", "forearm"), "forearm": limb("forearm", "hand"),
+        "thigh": limb("thigh", "shin"),
+        "shin": limb("shin", "foot"),
+        "upper_arm": limb("upper_arm", "forearm"),
+        "forearm": limb("forearm", "hand"),
     }
     pelvis_z = float(by_name[mapping["pelvis"]]["head"][2])
     spine_z = float(by_name[mapping["spine"]]["head"][2])
-    neck_z = float(by_name[mapping["neck"]]["head"][2]) if "neck" in mapping else float(by_name[mapping["torso"]]["tail"][2])
-    shoulder_x = 0.5 * (abs(by_name[mapping["upper_arm_l"]]["head"][0]) + abs(by_name[mapping["upper_arm_r"]]["head"][0]))
+    neck_z = (
+        float(by_name[mapping["neck"]]["head"][2]) if "neck" in mapping else float(by_name[mapping["torso"]]["tail"][2])
+    )
+    shoulder_x = 0.5 * (
+        abs(by_name[mapping["upper_arm_l"]]["head"][0]) + abs(by_name[mapping["upper_arm_r"]]["head"][0])
+    )
     fit["torso"] = trunk(("spine", "torso"), spine_z, neck_z, shoulder_x)
     fit["pelvis"] = trunk(("pelvis", "spine"), pelvis_z - 0.10, max(spine_z, pelvis_z + 0.08), shoulder_x)
 
@@ -408,7 +469,11 @@ def fit_radii(verts: np.ndarray, dom: np.ndarray, bones: List[dict], mapping: Di
 
     # What each radius was fitted to: half the part's thickness the thin way, before the margin (0.92 a limb, 0.9 the
     # trunk) and the clamps. tools/fit_check.py puts the final radii against it (--fit-report).
-    thick = {k: (r / (0.92 if k in ("thigh", "shin", "upper_arm", "forearm") else 0.9)) for k, r in fit.items() if r is not None and k != "head"}
+    thick = {
+        k: (r / (0.92 if k in ("thigh", "shin", "upper_arm", "forearm") else 0.9))
+        for k, r in fit.items()
+        if r is not None and k != "head"
+    }
     hv = skin_of("head")
     hv = hv[hv[:, 2] > head["head"][2]]
     if len(hv) >= 40:
@@ -429,18 +494,30 @@ def fit_radii(verts: np.ndarray, dom: np.ndarray, bones: List[dict], mapping: Di
     return radii, crown
 
 
-def plot_fit(path: str, verts: np.ndarray, by_name: Dict[str, dict], mapping: Dict[str, str],
-             radii: Dict[str, float], crown: float) -> None:
+def plot_fit(
+    path: str,
+    verts: np.ndarray,
+    by_name: Dict[str, dict],
+    mapping: Dict[str, str],
+    radii: Dict[str, float],
+    crown: float,
+) -> None:
     """The mesh as dots, front and side, with the skeleton and the fitted shapes drawn over it."""
     from PIL import Image, ImageDraw
 
     head = lambda k: by_name[mapping[k]]["head"]
-    segs = [("torso", head("spine"), head("neck") if "neck" in mapping else by_name[mapping["torso"]]["tail"]),
-            ("pelvis", head("pelvis"), head("spine"))]
+    segs = [
+        ("torso", head("spine"), head("neck") if "neck" in mapping else by_name[mapping["torso"]]["tail"]),
+        ("pelvis", head("pelvis"), head("spine")),
+    ]
     for s in "lr":
-        segs += [("thigh", head(f"thigh_{s}"), head(f"shin_{s}")), ("shin", head(f"shin_{s}"), head(f"foot_{s}")),
-                 ("upper_arm", head(f"upper_arm_{s}"), head(f"forearm_{s}")), ("forearm", head(f"forearm_{s}"), head(f"hand_{s}"))]
-    px = 360.0                                   # pixels to the metre
+        segs += [
+            ("thigh", head(f"thigh_{s}"), head(f"shin_{s}")),
+            ("shin", head(f"shin_{s}"), head(f"foot_{s}")),
+            ("upper_arm", head(f"upper_arm_{s}"), head(f"forearm_{s}")),
+            ("forearm", head(f"forearm_{s}"), head(f"hand_{s}")),
+        ]
+    px = 360.0  # pixels to the metre
     top = float(verts[:, 2].max()) + 0.08
     panel_w, panel_h = int(2.1 * px), int((top + 0.06) * px)
     img = Image.new("RGB", (2 * panel_w, panel_h), (16, 18, 24))
@@ -460,13 +537,21 @@ def plot_fit(path: str, verts: np.ndarray, by_name: Dict[str, dict], mapping: Di
                 d = np.array([bx - ax, by - ay])
                 nrm = np.array([-d[1], d[0]]) / max(1e-9, float(np.linalg.norm(d))) * r * px
                 for sign in (1.0, -1.0):
-                    draw.line([(ax + sign * nrm[0], ay + sign * nrm[1]), (bx + sign * nrm[0], by + sign * nrm[1])], fill=(90, 170, 255), width=2)
+                    draw.line(
+                        [(ax + sign * nrm[0], ay + sign * nrm[1]), (bx + sign * nrm[0], by + sign * nrm[1])],
+                        fill=(90, 170, 255),
+                        width=2,
+                    )
         if crown > 0.0 and "head" in radii:
             cx, cy = at(head("head") + np.array([0.0, 0.0, 0.5 * crown]))
             r = radii["head"] * px
             draw.ellipse([cx - r, cy - r, cx + r, cy + r], outline=(90, 170, 255), width=2)
         draw.text((n * panel_w + 10, 8), label, fill=(230, 230, 230))
-    draw.text((10, panel_h - 18), "red: bones   blue: fitted shapes   grey: the mesh   lines: every metre", fill=(230, 230, 230))
+    draw.text(
+        (10, panel_h - 18),
+        "red: bones   blue: fitted shapes   grey: the mesh   lines: every metre",
+        fill=(230, 230, 230),
+    )
     img.save(path)
 
 
@@ -478,21 +563,49 @@ def mesh_volume(verts: np.ndarray, tris: np.ndarray) -> float:
     return float(abs(np.einsum("ij,ij->i", a, np.cross(b, c)).sum()) / 6.0)
 
 
+def repo_relative(path: str) -> str:
+    """The mesh's path from the repo root (forward slashes), or its file name when it lives outside the repo."""
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    full = os.path.abspath(path)
+    try:
+        rel = os.path.relpath(full, root)
+    except ValueError:  # another drive
+        return os.path.basename(full)
+    return os.path.basename(full) if rel.startswith("..") else rel.replace("\\", "/")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--glb", required=True)
     ap.add_argument("--out", required=True)
-    ap.add_argument("--mass", type=float, default=0.0,
-                    help="body mass in kg. 0 works it out from the height at a body-mass index of 24, "
-                         "so a bigger fighter is a heavier one (house rule: mass according to size).")
-    ap.add_argument("--height", type=float, default=0.0,
-                    help="force this height in metres. 0 keeps the file's own size if it is plausibly "
-                         "a person in metres (1.2 to 2.3 m), and otherwise fixes the unit.")
-    ap.add_argument("--plot", default="", help="write a picture of the mesh with the fitted shapes over it, front and side")
-    ap.add_argument("--fit-report", default="", help="write each part's half-thickness the thin way (what its radius was fitted to) as JSON")
-    ap.add_argument("--skeleton-only", action="store_true",
-                    help="read the node transforms and nothing else, as this did before 2026-10-01: no bind pose, "
-                         "no sizes from the mesh, no symmetry. For regenerating a rig exactly as it was")
+    ap.add_argument(
+        "--mass",
+        type=float,
+        default=0.0,
+        help="body mass in kg. 0 works it out from the height at a body-mass index of 24, "
+        "so a bigger fighter is a heavier one (house rule: mass according to size).",
+    )
+    ap.add_argument(
+        "--height",
+        type=float,
+        default=0.0,
+        help="force this height in metres. 0 keeps the file's own size if it is plausibly "
+        "a person in metres (1.2 to 2.3 m), and otherwise fixes the unit.",
+    )
+    ap.add_argument(
+        "--plot", default="", help="write a picture of the mesh with the fitted shapes over it, front and side"
+    )
+    ap.add_argument(
+        "--fit-report",
+        default="",
+        help="write each part's half-thickness the thin way (what its radius was fitted to) as JSON",
+    )
+    ap.add_argument(
+        "--skeleton-only",
+        action="store_true",
+        help="read the node transforms and nothing else, as this did before 2026-10-01: no bind pose, "
+        "no sizes from the mesh, no symmetry. For regenerating a rig exactly as it was",
+    )
     args = ap.parse_args()
 
     gltf = read_glb(args.glb)
@@ -509,8 +622,10 @@ def main() -> None:
         span = max(1e-6, float(np.ptp([bind[j][1, 3] for j in joints])))
         drift = max(float(np.linalg.norm(bind[j][:3, 3] - world[j][:3, 3])) for j in joints) / span
         if drift > 0.01:
-            notes.append(f"the file stores its skeleton in a pose (a joint is {drift:.0%} of the figure's height from where "
-                         f"the mesh was modelled); read the bind pose from the skin instead")
+            notes.append(
+                f"the file stores its skeleton in a pose (a joint is {drift:.0%} of the figure's height from where "
+                f"the mesh was modelled); read the bind pose from the skin instead"
+            )
         world = [bind.get(i, w) for i, w in enumerate(world)]
     mesh = skinned_mesh(gltf, blob, gltf["skins"].index(skin))
     joint_set = set(joints)
@@ -542,8 +657,14 @@ def main() -> None:
             tail = heads[j] + d * 0.3
         else:
             tail = heads[j] + np.array([0, 0, 0.1])
-        bones.append({"name": name, "parent": nodes[p].get("name") if p is not None else None,
-                      "head": heads[j].copy(), "tail": np.array(tail, dtype=float)})
+        bones.append(
+            {
+                "name": name,
+                "parent": nodes[p].get("name") if p is not None else None,
+                "head": heads[j].copy(),
+                "tail": np.array(tail, dtype=float),
+            }
+        )
 
     mapping = build_map(bones)
     missing = [k for k in REQUIRED if k not in mapping]
@@ -555,8 +676,10 @@ def main() -> None:
         missing = [k for k in REQUIRED if k not in mapping]
     if missing:
         names = ", ".join(b["name"] for b in bones)
-        raise SystemExit(f"could not find bones for: {', '.join(missing)}.\nBones in the file: {names}\n"
-                         f"Add the names to PATTERNS in glb_to_rig.py.")
+        raise SystemExit(
+            f"could not find bones for: {', '.join(missing)}.\nBones in the file: {names}\n"
+            f"Add the names to PATTERNS in glb_to_rig.py."
+        )
     by_name = {b["name"]: b for b in bones}
 
     # ---- orientation: feet at z = 0, toes pointing -y, the character's left at +x
@@ -573,7 +696,9 @@ def main() -> None:
         verts = np.stack([mesh[0][:, 0], -mesh[0][:, 2], mesh[0][:, 1]], 1)
         floor, top = float(verts[:, 2].min()), float(verts[:, 2].max())
     if by_shape:
-        notes.append("bone names were not recognisable; limbs were identified from the skeleton's shape. Check the list below")
+        notes.append(
+            "bone names were not recognisable; limbs were identified from the skeleton's shape. Check the list below"
+        )
     if flip:
         notes.append("turned 180 degrees about the vertical: the file's toes pointed along +y")
     if mirror:
@@ -589,7 +714,9 @@ def main() -> None:
         scale = 1.0
     else:
         scale = 1.74 / figure
-        notes.append(f"rescaled x{scale:.4g}: the {'figure' if verts is not None else 'skeleton'} was {skeleton_height:.3g} units tall, which is not metres")
+        notes.append(
+            f"rescaled x{scale:.4g}: the {'figure' if verts is not None else 'skeleton'} was {skeleton_height:.3g} units tall, which is not metres"
+        )
 
     def fix(p: np.ndarray) -> np.ndarray:
         q = np.array([p[0], p[1], p[2] - floor]) * scale
@@ -624,7 +751,11 @@ def main() -> None:
         if args.plot:
             plot_fit(args.plot, verts, by_name, mapping, radii, crown)
         litres = mesh_volume(verts, mesh[2]) * 1000.0
-        mesh_info = {"vertices": int(len(verts)), "height_m": round(float(verts[:, 2].max()), 3), "volume_l": round(litres, 1)}
+        mesh_info = {
+            "vertices": int(len(verts)),
+            "height_m": round(float(verts[:, 2].max()), 3),
+            "volume_l": round(litres, 1),
+        }
 
     # ---- a person is the same on both sides. A rig placed by an automatic rigger is often not, by a
     # few centimetres, and a body with one leg longer than the other stands crooked.
@@ -686,25 +817,34 @@ def main() -> None:
         notes.append("head bone had no crown end; its top was placed 7.5% of the figure's height above the neck")
 
     keep = set(mapping.values())
-    out_bones = [{"name": b["name"], "parent": b["parent"],
-                  "head": [round(float(x), 4) for x in b["head"]],
-                  "tail": [round(float(x), 4) for x in b["tail"]]} for b in bones if b["name"] in keep]
+    out_bones = [
+        {
+            "name": b["name"],
+            "parent": b["parent"],
+            "head": [round(float(x), 4) for x in b["head"]],
+            "tail": [round(float(x), 4) for x in b["tail"]],
+        }
+        for b in bones
+        if b["name"] in keep
+    ]
     height = float(max(b["tail"][2] for b in out_bones))
     height_m = mesh_info["height_m"] if mesh_info else height * 1.02
     # House rule: mass according to size. A closed mesh has a volume, and a body is about as dense as
     # water. Clothes, hair and surfaces inside the mesh all add to it, so the figure is held to what a
     # person can be: a body-mass index between 18.5 and 30. With no mesh it is the height at an index of 24.
-    mass = round(24.0 * height_m ** 2, 1)
+    mass = round(24.0 * height_m**2, 1)
     if mesh_info and mesh_info["volume_l"] > 0.0:
-        bmi = 0.985 * mesh_info["volume_l"] / height_m ** 2
+        bmi = 0.985 * mesh_info["volume_l"] / height_m**2
         mesh_info["bmi_from_volume"] = round(bmi, 1)
         used = float(np.clip(bmi, 18.5, 30.0))
-        mass = round(used * height_m ** 2, 1)
+        mass = round(used * height_m**2, 1)
         if args.mass <= 0.0:
-            notes.append(f"mass from the mesh's volume: {mesh_info['volume_l']:.0f} litres is a body-mass index of {bmi:.1f}"
-                         + ("" if used == bmi else f", held to {used:g}"))
+            notes.append(
+                f"mass from the mesh's volume: {mesh_info['volume_l']:.0f} litres is a body-mass index of {bmi:.1f}"
+                + ("" if used == bmi else f", held to {used:g}")
+            )
     rig = {
-        "source": os.path.abspath(args.glb).replace("\\", "/"),
+        "source": repo_relative(args.glb),  # never an absolute local path in a committed file
         "frame": "blender_z_up (x = character left, -y = forward, z = up)",
         "height_m": round(height_m, 3),
         "mass_kg": args.mass if args.mass > 0.0 else mass,

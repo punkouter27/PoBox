@@ -9,6 +9,7 @@ Examples:
     python tools/archive_checkpoints.py --run v3f_grandma --exam logs/exam_v3f_grandma.json
     python tools/archive_checkpoints.py --promote Grandma footwork --run v3f_grandma
 """
+
 from __future__ import annotations
 
 import argparse
@@ -79,8 +80,13 @@ def archive_from_onnx(dest: Path, tag: str) -> Path:
             fp = bdir / fn
             if fp.is_file():
                 _copy_entry(fp, out / "Assets_Boxers" / bdir.name, records)
-    meta = {"written": time.strftime("%Y-%m-%d %H:%M:%S"), "tag": tag or "shipped", "kind": "shipped_onnx_snapshot",
-            "folder": folder_name, "files": records}
+    meta = {
+        "written": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "tag": tag or "shipped",
+        "kind": "shipped_onnx_snapshot",
+        "folder": folder_name,
+        "files": records,
+    }
     (out / "manifest.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
     idx = _load_index(dest)
     idx.append(meta)
@@ -88,8 +94,14 @@ def archive_from_onnx(dest: Path, tag: str) -> Path:
     return out
 
 
-def archive_run(dest: Path, run: str, tag: str, ckpt: Optional[str] = None,
-                extra_files: Iterable[Path] = (), promote: Optional[tuple] = None) -> Path:
+def archive_run(
+    dest: Path,
+    run: str,
+    tag: str,
+    ckpt: Optional[str] = None,
+    extra_files: Iterable[Path] = (),
+    promote: Optional[tuple] = None,
+) -> Path:
     run_dir = Path(run)
     if not run_dir.is_dir():
         run_dir = TRAINING_DIR / "checkpoints" / run
@@ -121,9 +133,14 @@ def archive_run(dest: Path, run: str, tag: str, ckpt: Optional[str] = None,
             if p.is_file():
                 _copy_entry(p, out / "promoted_assets", records)
 
-    meta = {"written": time.strftime("%Y-%m-%d %H:%M:%S"), "tag": label,
-            "kind": "promoted" if promote else "run", "run": run_dir.name,
-            "folder": folder_name, "files": records}
+    meta = {
+        "written": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "tag": label,
+        "kind": "promoted" if promote else "run",
+        "run": run_dir.name,
+        "folder": folder_name,
+        "files": records,
+    }
     (out / "manifest.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
     idx = _load_index(dest)
     idx.append(meta)
@@ -139,15 +156,23 @@ def main() -> None:
     ap.add_argument("--run", default="", help="Run name under checkpoints/ or full path")
     ap.add_argument("--ckpt", default="", help="Specific .pt path (default: latest in --run)")
     ap.add_argument("--exam", nargs="*", default=[], help="Extra exam/log JSON files to archive with --run")
-    ap.add_argument("--promote", nargs=2, metavar=("BOXER", "BRAIN"), help="Also archive Assets/Boxers/BOXER/BRAIN.onnx")
+    ap.add_argument(
+        "--promote", nargs=2, metavar=("BOXER", "BRAIN"), help="Also archive Assets/Boxers/BOXER/BRAIN.onnx"
+    )
     args = ap.parse_args()
 
     if args.from_onnx:
         out = archive_from_onnx(args.dest, args.tag)
         print(f"archived onnx snapshot -> {out}")
     if args.run:
-        out = archive_run(args.dest, args.run, args.tag, args.ckpt or None,
-                          [Path(x) for x in args.exam], tuple(args.promote) if args.promote else None)
+        out = archive_run(
+            args.dest,
+            args.run,
+            args.tag,
+            args.ckpt or None,
+            [Path(x) for x in args.exam],
+            tuple(args.promote) if args.promote else None,
+        )
         print(f"archived run -> {out}")
     if not args.from_onnx and not args.run:
         ap.error("Specify --from-onnx and/or --run")

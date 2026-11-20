@@ -13,6 +13,7 @@ one phone (LeagueTable) moves bout by bout from the CPU's ratings; this one pool
 --out writes the table as JSON (what Assets/WebGLTemplates/Po/leaderboard.html shows when it is given no table to read).
 Standard library only: runs on any Python 3.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -35,8 +36,16 @@ def bouts_from_log(path: str) -> list[dict]:
                 r = json.loads(line)
             except json.JSONDecodeError:
                 continue
-            out.append({"red": r["red"]["name"], "blue": r["blue"]["name"], "winner": r.get("winner", ""),
-                        "knockout": bool(r.get("knockout")), "when": r.get("when", ""), "device": "log"})
+            out.append(
+                {
+                    "red": r["red"]["name"],
+                    "blue": r["blue"]["name"],
+                    "winner": r.get("winner", ""),
+                    "knockout": bool(r.get("knockout")),
+                    "when": r.get("when", ""),
+                    "device": "log",
+                }
+            )
     return out
 
 
@@ -46,14 +55,27 @@ def bouts_from_table(url: str) -> list[dict]:
     base = urllib.parse.urlsplit(url)
     while True:
         query = base.query + ("&" + urllib.parse.urlencode(extra) if extra else "")
-        req = urllib.request.Request(urllib.parse.urlunsplit(base._replace(query=query)),
-                                     headers={"Accept": "application/json;odata=nometadata", "x-ms-version": "2019-02-02"})
+        req = urllib.request.Request(
+            urllib.parse.urlunsplit(base._replace(query=query)),
+            headers={"Accept": "application/json;odata=nometadata", "x-ms-version": "2019-02-02"},
+        )
         with urllib.request.urlopen(req, timeout=30) as resp:
             data = json.load(resp)
-            np_, nr = resp.headers.get("x-ms-continuation-NextPartitionKey"), resp.headers.get("x-ms-continuation-NextRowKey")
+            np_, nr = (
+                resp.headers.get("x-ms-continuation-NextPartitionKey"),
+                resp.headers.get("x-ms-continuation-NextRowKey"),
+            )
         for r in data.get("value", []):
-            out.append({"red": r["Red"], "blue": r["Blue"], "winner": r.get("Winner", ""), "knockout": bool(r.get("Knockout")),
-                        "when": r.get("When", ""), "device": r.get("Device", "")})
+            out.append(
+                {
+                    "red": r["Red"],
+                    "blue": r["Blue"],
+                    "winner": r.get("Winner", ""),
+                    "knockout": bool(r.get("Knockout")),
+                    "when": r.get("When", ""),
+                    "device": r.get("Device", ""),
+                }
+            )
         if not np_:
             return out
         extra = {"NextPartitionKey": np_, "NextRowKey": nr or ""}
@@ -88,7 +110,10 @@ def table(bouts: list[dict]) -> list[dict]:
     if not names:
         return []
     elo = bradley_terry(names, bouts)
-    rows = {n: {"name": n, "elo": round(elo[n], 1), "wins": 0, "losses": 0, "draws": 0, "knockouts": 0, "bouts": 0} for n in names}
+    rows = {
+        n: {"name": n, "elo": round(elo[n], 1), "wins": 0, "losses": 0, "draws": 0, "knockouts": 0, "bouts": 0}
+        for n in names
+    }
     for b in bouts:
         for me, other in ((b["red"], b["blue"]), (b["blue"], b["red"])):
             r = rows[me]
@@ -119,7 +144,9 @@ def main() -> None:
     print(f"{len(bouts)} bouts, {len(rows)} fighters, {devices} source(s)")
     print(f"{'#':>2}  {'FIGHTER':<10} {'ELO':>6}  {'W-L-D':<9} {'KO':>3}")
     for i, r in enumerate(rows, 1):
-        print(f"{i:>2}  {r['name']:<10} {r['elo']:>6.0f}  {r['wins']}-{r['losses']}-{r['draws']:<5} {r['knockouts']:>3}")
+        print(
+            f"{i:>2}  {r['name']:<10} {r['elo']:>6.0f}  {r['wins']}-{r['losses']}-{r['draws']:<5} {r['knockouts']:>3}"
+        )
     if args.out:
         with open(args.out, "w", encoding="utf-8") as f:
             json.dump({"bouts": len(bouts), "rows": rows}, f, indent=1)

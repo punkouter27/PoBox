@@ -7,10 +7,10 @@ body) at punching speed; how far the head was when a punch landed on the body (g
 further the head is); how many fast gloves came within 10 cm of the head and what became of them (landed, blocked, nothing);
 and the glove's height at a body landing against the head's.
 """
+
 from __future__ import annotations
 
 import json
-import math
 import os
 import sys
 
@@ -28,15 +28,31 @@ def main() -> None:
     book_path = os.path.join(HERE, "logs", "book_night_mix.json")
     rounds = 2
     if "--book" in args:
-        i = args.index("--book"); book_path = args[i + 1]; del args[i:i + 2]
+        i = args.index("--book")
+        book_path = args[i + 1]
+        del args[i : i + 2]
     if "--rounds" in args:
-        i = args.index("--rounds"); rounds = int(args[i + 1]); del args[i:i + 2]
+        i = args.index("--rounds")
+        rounds = int(args[i + 1])
+        del args[i : i + 2]
     book = json.load(open(book_path, encoding="utf-8"))
     E.act = V.act
     out = {}
     for me in args:
-        acc = dict(steps=0, dist=[], body_land=0, head_land=0, head_extra=[], dz=[], near_head=0, near_body=0, att_land=0, att_blocked=0,
-                   reach_head=[], reach_body=[])
+        acc = dict(
+            steps=0,
+            dist=[],
+            body_land=0,
+            head_land=0,
+            head_extra=[],
+            dz=[],
+            near_head=0,
+            near_body=0,
+            att_land=0,
+            att_blocked=0,
+            reach_head=[],
+            reach_body=[],
+        )
         for opp in book:
             if opp == me:
                 continue
@@ -48,7 +64,7 @@ def main() -> None:
             pols = [V.load_policy(os.path.join(HERE, book[n]["match"]), ring.A) for n in (x, y)]
             for i, p in enumerate(pols):
                 if p.obs_state:
-                    p.state = (lambda i=i: ring.state(i))
+                    p.state = lambda i=i: ring.state(i)
             d = ring.d
             for _ in range(rounds):
                 ring.at_marks()
@@ -90,12 +106,20 @@ def main() -> None:
             print(f"  {me} v {opp} done", flush=True)
         n = max(1, acc["head_land"] + acc["body_land"])
         q = lambda a, p: float(np.percentile(a, p)) if a else float("nan")
-        row = {"dist_median": q(acc["dist"], 50), "dist_p10": q(acc["dist"], 10), "dist_p90": q(acc["dist"], 90),
-               "landed": n, "head_share": acc["head_land"] / n,
-               "body_land_head_extra_median_m": q(acc["head_extra"], 50), "body_land_head_above_glove_median_m": q(acc["dz"], 50),
-               "fast_glove_near_head_per_s": acc["near_head"] / (acc["steps"] * ring.dt), "fast_glove_near_body_per_s": acc["near_body"] / (acc["steps"] * ring.dt),
-               "fast_glove_min_gap_head_p10": q(acc["reach_head"], 10), "fast_glove_min_gap_body_p10": q(acc["reach_body"], 10),
-               "its_head_attempts_blocked_per_s": acc["att_blocked"] / (acc["steps"] * ring.dt)}
+        row = {
+            "dist_median": q(acc["dist"], 50),
+            "dist_p10": q(acc["dist"], 10),
+            "dist_p90": q(acc["dist"], 90),
+            "landed": n,
+            "head_share": acc["head_land"] / n,
+            "body_land_head_extra_median_m": q(acc["head_extra"], 50),
+            "body_land_head_above_glove_median_m": q(acc["dz"], 50),
+            "fast_glove_near_head_per_s": acc["near_head"] / (acc["steps"] * ring.dt),
+            "fast_glove_near_body_per_s": acc["near_body"] / (acc["steps"] * ring.dt),
+            "fast_glove_min_gap_head_p10": q(acc["reach_head"], 10),
+            "fast_glove_min_gap_body_p10": q(acc["reach_body"], 10),
+            "its_head_attempts_blocked_per_s": acc["att_blocked"] / (acc["steps"] * ring.dt),
+        }
         out[me] = row
         print(me.upper(), json.dumps(row, indent=1), flush=True)
     with open(os.path.join(HERE, "logs", "head_diag.json"), "w", encoding="utf-8") as f:

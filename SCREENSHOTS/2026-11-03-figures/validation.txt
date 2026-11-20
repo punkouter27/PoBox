@@ -18,4 +18,4 @@
   Blender pose UpperArm.R = 135 deg about local (-0.00,+0.00,-1.00)
   Blender pose Thigh.R = 90 deg about local (+1.00,-0.00,+0.00)
   Blender pose Shin.R = 90 deg about local (-1.00,-0.00,+0.00)
-  previews: C:\Users\punko\Downloads\_CODEMATT\PoBox\SCREENSHOTS\2026-11-03-figures\SK_Referee_rest.png, C:\Users\punko\Downloads\_CODEMATT\PoBox\SCREENSHOTS\2026-11-03-figures\SK_Referee_pose.png
+  previews: SCREENSHOTS\2026-11-03-figures\SK_Referee_rest.png, SCREENSHOTS\2026-11-03-figures\SK_Referee_pose.png

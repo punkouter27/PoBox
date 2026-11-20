@@ -1,5 +1,5 @@
 {
-  "source": "C:/Users/punko/Downloads/_CODEMATT/PoBox/Assets/Models/Timmy.glb",
+  "source": "Assets/Models/Timmy.glb",
   "frame": "blender_z_up (x = character left, -y = forward, z = up)",
   "height_m": 1.76,
   "mass_kg": 72.0,

@@ -8,6 +8,7 @@ half way there is never taken for a finished one. This writes checkpoints/getup_
 latest_NAME_policy_config.json (with "mode": "getup"), which is what PoBox/Import Trained Entrants copies
 to Assets/Entrants/NAME/getup.onnx. To take a policy back out of the game, delete its two files here.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -34,13 +35,26 @@ def export(name: str, ckpt: str, note: str = "") -> None:
     os.makedirs(OUT, exist_ok=True)
     export_onnx(ppo, os.path.join(OUT, f"latest_{name}.onnx"), 100)
     manifest = dict(cfg)
-    manifest.update({"action_scale": float(extra.get("action_scale", 0.5)), "observation_size": 100,
-                     "trained_by": {"run": extra.get("run_name", ""), "mode": "getup", "against": extra.get("fighters", [name]),
-                                    "iterations": int(extra.get("iter", 0)), "trainer": extra.get("trainer", "gpu"),
-                                    "exported": time.strftime("%Y-%m-%d %H:%M:%S"), "note": note}})
+    manifest.update(
+        {
+            "action_scale": float(extra.get("action_scale", 0.5)),
+            "observation_size": 100,
+            "trained_by": {
+                "run": extra.get("run_name", ""),
+                "mode": "getup",
+                "against": extra.get("fighters", [name]),
+                "iterations": int(extra.get("iter", 0)),
+                "trainer": extra.get("trainer", "gpu"),
+                "exported": time.strftime("%Y-%m-%d %H:%M:%S"),
+                "note": note,
+            },
+        }
+    )
     with open(os.path.join(OUT, f"latest_{name}_policy_config.json"), "w", encoding="utf-8") as f:
         json.dump(manifest, f, indent=2)
-    print(f"{name}: {os.path.relpath(ckpt, HERE) if os.path.isabs(ckpt) else ckpt} (iteration {extra.get('iter', 0)}) -> checkpoints/getup_final/latest_{name}.onnx")
+    print(
+        f"{name}: {os.path.relpath(ckpt, HERE) if os.path.isabs(ckpt) else ckpt} (iteration {extra.get('iter', 0)}) -> checkpoints/getup_final/latest_{name}.onnx"
+    )
 
 
 def main() -> None:
@@ -50,7 +64,11 @@ def main() -> None:
     ap.add_argument("--from-exam", default="")
     args = ap.parse_args()
     if args.from_exam:
-        with open(args.from_exam if os.path.isabs(args.from_exam) else os.path.join(HERE, args.from_exam), "r", encoding="utf-8") as f:
+        with open(
+            args.from_exam if os.path.isabs(args.from_exam) else os.path.join(HERE, args.from_exam),
+            "r",
+            encoding="utf-8",
+        ) as f:
             exam = json.load(f)
         for name, r in exam["boxers"].items():
             line = r["lines"].get("getting up", {})

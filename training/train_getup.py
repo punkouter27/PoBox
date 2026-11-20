@@ -16,6 +16,7 @@ does not do, and train_box.py was in use by another run on the night this was wr
 It writes checkpoints, TensorBoard charts, a CSV and a status file, and no ONNX: tools/export_getup.py
 makes the game's file once the policy has passed tools/exam.py.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -53,7 +54,12 @@ def main() -> None:
     ap.add_argument("--resume", nargs=2, required=True, help="one checkpoint for --a and one for --b, in that order")
     ap.add_argument("--freeze", nargs="*", default=[])
     ap.add_argument("--run-name", default="")
-    ap.add_argument("--num-envs", type=int, default=2048, help="0 = the size tools/bench_envs.py found best (logs/bench_envs.json), else 2048")
+    ap.add_argument(
+        "--num-envs",
+        type=int,
+        default=2048,
+        help="0 = the size tools/bench_envs.py found best (logs/bench_envs.json), else 2048",
+    )
     ap.add_argument("--steps", type=int, default=24)
     ap.add_argument("--max-hours", type=float, default=3.0)
     ap.add_argument("--more-iters", type=int, default=0)
@@ -64,42 +70,91 @@ def main() -> None:
     ap.add_argument("--reset-std", type=float, default=0.5)
     ap.add_argument("--max-std", type=float, default=0.6)
     ap.add_argument("--slack-hi", type=float, default=2.6)
-    ap.add_argument("--slack-lo", type=float, default=0.15,
-                    help="shortest slack after the shove (s); the exam's knockdowns are 1.6-2.6 s, always a real fall")
+    ap.add_argument(
+        "--slack-lo",
+        type=float,
+        default=0.15,
+        help="shortest slack after the shove (s); the exam's knockdowns are 1.6-2.6 s, always a real fall",
+    )
     ap.add_argument("--shove", type=float, default=2.5)
     ap.add_argument("--assist", type=float, default=0.6)
-    ap.add_argument("--fresh-assist", nargs="*", default=[],
-                    help="boxers that start at --assist whatever their checkpoint says: for a get-up policy borrowed from "
-                         "another body, which has learned the movement and not yet this body's weight")
+    ap.add_argument(
+        "--fresh-assist",
+        nargs="*",
+        default=[],
+        help="boxers that start at --assist whatever their checkpoint says: for a get-up policy borrowed from "
+        "another body, which has learned the movement and not yet this body's weight",
+    )
     ap.add_argument("--speed-limit", action="store_true", help="as train_box.py --speed-limit")
-    ap.add_argument("--no-drain", action="store_true",
-                    help="the reserve is drawn at the reset (0.3 to 1) and nothing is taken from it while getting up, as the game does")
-    ap.add_argument("--fade-above", type=float, default=0.6, help="the helping hand shrinks while the aided get-up rate is over this")
+    ap.add_argument(
+        "--no-drain",
+        action="store_true",
+        help="the reserve is drawn at the reset (0.3 to 1) and nothing is taken from it while getting up, as the game does",
+    )
+    ap.add_argument(
+        "--fade-above",
+        type=float,
+        default=0.6,
+        help="the helping hand shrinks while the aided get-up rate is over this",
+    )
     ap.add_argument("--unaided-share", type=float, default=0.1, help="share of the worlds with no helping hand at all")
-    ap.add_argument("--assist-max", type=float, default=0.75, help="the most the helping hand may lift, a share of body weight; 0 = never")
-    ap.add_argument("--speed-ramp", type=float, default=-1.0,
-                    help="ease the speed limit's damping in from this share (0 = none of it), up while the learners get up "
-                         "from the floor over 60%% of the time, down under 40%%; --done-when then also needs all of it. "
-                         "-1 = off (all of it, as before). A checkpoint that carries a share resumes from it")
-    ap.add_argument("--speed-share", type=float, default=-1.0,
-                    help="hold the speed limit's damping at this share the whole run (the game's config getup_speed_share, applied "
-                         "while the get-up brain has the body); not moved, not read from the checkpoint. -1 = off")
-    ap.add_argument("--action-rate-w", type=float, default=0.0,
-                    help="charge per squared change in action between control steps, on top of the stage's own small one; "
-                         "0 = off. For smoother, less buzzy drives. Try 0.01 (doubles the stage's own)")
-    ap.add_argument("--obs-delay-max", type=int, default=0,
-                    help="each episode the observation is 0 to this many control steps (20 ms each) late, drawn per fighter; "
-                         "0 = off. The game's is not late: this only makes a brain robust to lag. Try 2")
+    ap.add_argument(
+        "--assist-max",
+        type=float,
+        default=0.75,
+        help="the most the helping hand may lift, a share of body weight; 0 = never",
+    )
+    ap.add_argument(
+        "--speed-ramp",
+        type=float,
+        default=-1.0,
+        help="ease the speed limit's damping in from this share (0 = none of it), up while the learners get up "
+        "from the floor over 60%% of the time, down under 40%%; --done-when then also needs all of it. "
+        "-1 = off (all of it, as before). A checkpoint that carries a share resumes from it",
+    )
+    ap.add_argument(
+        "--speed-share",
+        type=float,
+        default=-1.0,
+        help="hold the speed limit's damping at this share the whole run (the game's config getup_speed_share, applied "
+        "while the get-up brain has the body); not moved, not read from the checkpoint. -1 = off",
+    )
+    ap.add_argument(
+        "--action-rate-w",
+        type=float,
+        default=0.0,
+        help="charge per squared change in action between control steps, on top of the stage's own small one; "
+        "0 = off. For smoother, less buzzy drives. Try 0.01 (doubles the stage's own)",
+    )
+    ap.add_argument(
+        "--obs-delay-max",
+        type=int,
+        default=0,
+        help="each episode the observation is 0 to this many control steps (20 ms each) late, drawn per fighter; "
+        "0 = off. The game's is not late: this only makes a brain robust to lag. Try 2",
+    )
     ap.add_argument("--save-every", type=int, default=50)
     ap.add_argument("--device", default="cuda")
-    ap.add_argument("--done-when", type=float, default=0.0,
-                    help="stop when every learning boxer gets up unaided this often (e.g. 0.9) with no help left and stands "
-                         "within --done-pose of its guard, for 40 iterations running")
+    ap.add_argument(
+        "--done-when",
+        type=float,
+        default=0.0,
+        help="stop when every learning boxer gets up unaided this often (e.g. 0.9) with no help left and stands "
+        "within --done-pose of its guard, for 40 iterations running",
+    )
     ap.add_argument("--done-pose", type=float, default=0.15, help="radians a joint from the guard, while standing")
-    ap.add_argument("--stage", default="getup", choices=["getup", "v2"],
-                    help="v2: the retrofit's bodies (models/v2) and its 103-number observation (envs/match.py)")
-    ap.add_argument("--models", default="", help="v2 stage: another folder of bodies with the same observation (models/v3)")
-    ap.add_argument("--bodies", type=int, default=0, help="downed bodies lying beside the fallen boxer (F4 crowd get-up)")
+    ap.add_argument(
+        "--stage",
+        default="getup",
+        choices=["getup", "v2"],
+        help="v2: the retrofit's bodies (models/v2) and its 103-number observation (envs/match.py)",
+    )
+    ap.add_argument(
+        "--models", default="", help="v2 stage: another folder of bodies with the same observation (models/v3)"
+    )
+    ap.add_argument(
+        "--bodies", type=int, default=0, help="downed bodies lying beside the fallen boxer (F4 crowd get-up)"
+    )
     args = ap.parse_args()
 
     torch.manual_seed(args.seed)
@@ -109,14 +164,30 @@ def main() -> None:
                 args.num_envs = int(json.load(fh)["best"])
         except Exception:
             args.num_envs = 2048
-    xml, x, y = pair_xml(args.a, args.b, (args.models or os.path.join("models", "v2")) if args.stage == "v2" else "models")
+    xml, x, y = pair_xml(
+        args.a, args.b, (args.models or os.path.join("models", "v2")) if args.stage == "v2" else "models"
+    )
     resume = dict(zip((args.a, args.b), args.resume))
-    env = (GetUpMatchEnv if args.stage == "v2" else GetUpEnv)(xml, args.num_envs, device=args.device, seed=args.seed, slack_lo=args.slack_lo, slack_hi=args.slack_hi, shove=args.shove, assist=args.assist,
-                                                              speed_limit=args.speed_limit, action_rate_w=args.action_rate_w,
-                                                              obs_delay_max=args.obs_delay_max, bodies=args.bodies,
-                                                              assist_max=args.assist_max, fade_above=args.fade_above, unaided_share=args.unaided_share, no_drain=args.no_drain,
-                                                              **({"speed_ramp": args.speed_ramp} if args.speed_ramp >= 0.0 else {}),
-                                                              **({"speed_ramp": args.speed_share, "speed_fixed": True} if args.speed_share >= 0.0 else {}))
+    env = (GetUpMatchEnv if args.stage == "v2" else GetUpEnv)(
+        xml,
+        args.num_envs,
+        device=args.device,
+        seed=args.seed,
+        slack_lo=args.slack_lo,
+        slack_hi=args.slack_hi,
+        shove=args.shove,
+        assist=args.assist,
+        speed_limit=args.speed_limit,
+        action_rate_w=args.action_rate_w,
+        obs_delay_max=args.obs_delay_max,
+        bodies=args.bodies,
+        assist_max=args.assist_max,
+        fade_above=args.fade_above,
+        unaided_share=args.unaided_share,
+        no_drain=args.no_drain,
+        **({"speed_ramp": args.speed_ramp} if args.speed_ramp >= 0.0 else {}),
+        **({"speed_ramp": args.speed_share, "speed_fixed": True} if args.speed_share >= 0.0 else {}),
+    )
     N, K, A, D = env.N, env.K, env.A, env.obs_dim
     names = env.names
     assert names == [x, y], f"{xml} holds {names}"
@@ -126,8 +197,16 @@ def main() -> None:
     minibatches = max(1, round(args.steps * N / 24576))
     learners, extras = [], []
     for k, n in enumerate(names):
-        cfg = PPOConfig(steps_per_env=args.steps, lr=args.lr, entropy_coef=args.entropy_coef, minibatches=minibatches, lr_adapt=1.2,
-                        init_std=0.5, max_std=args.max_std, lr_max=args.lr_max)
+        cfg = PPOConfig(
+            steps_per_env=args.steps,
+            lr=args.lr,
+            entropy_coef=args.entropy_coef,
+            minibatches=minibatches,
+            lr_adapt=1.2,
+            init_std=0.5,
+            max_std=args.max_std,
+            lr_max=args.lr_max,
+        )
         ppo = PPO(D, A, N, args.device, cfg)
         extra = ppo.load(resume[n])
         extras.append(extra)
@@ -145,8 +224,11 @@ def main() -> None:
                 with torch.no_grad():
                     ppo.model.log_std.fill_(float(np.log(args.reset_std)))
         learners.append(ppo)
-        print(f"{n}: from {resume[n]} ({extra.get('mode', 'unknown stage')}, iteration {extra.get('iter', 0)}, by {extra.get('trainer', 'gpu')})"
-              + (", frozen" if frozen[k] else ""), flush=True)
+        print(
+            f"{n}: from {resume[n]} ({extra.get('mode', 'unknown stage')}, iteration {extra.get('iter', 0)}, by {extra.get('trainer', 'gpu')})"
+            + (", frozen" if frozen[k] else ""),
+            flush=True,
+        )
 
     split = lambda t: [t.reshape(N, K, *t.shape[1:])[:, k] for k in range(K)]
     obs = env.reset()
@@ -157,8 +239,10 @@ def main() -> None:
         seen = [[] for _ in range(K)]
         with torch.no_grad():
             for _ in range(300):
-                acts = [p.model.actor(p.obs_rms.normalize(o, p.cfg.obs_clip)) + 0.3 * torch.randn(N, A, device=args.device)
-                        for p, o in zip(learners, split(obs))]
+                acts = [
+                    p.model.actor(p.obs_rms.normalize(o, p.cfg.obs_clip)) + 0.3 * torch.randn(N, A, device=args.device)
+                    for p, o in zip(learners, split(obs))
+                ]
                 obs, _, _, _ = env.step(torch.stack(acts, 1).reshape(N * K, A))
                 for k, o in enumerate(split(obs)):
                     if k in fresh and len(seen[k]) < 60:
@@ -167,9 +251,14 @@ def main() -> None:
             s = torch.cat(seen[k])
             p = learners[k]
             clipped = ((s - p.obs_rms.mean).abs() / torch.sqrt(p.obs_rms.var + 1e-8) > p.cfg.obs_clip).float().mean(0)
-            renormalise(p, p.obs_rms.mean.clone(), torch.maximum(((s - p.obs_rms.mean) ** 2).mean(0), p.obs_rms.var), 2.0e6)
-            print(f"[renorm] {names[k]}: {int((clipped > 0.05).sum())} of {D} observations were clipped more than 5% of the time "
-                  f"under the match's scaling; rescaled, the policy's outputs kept", flush=True)
+            renormalise(
+                p, p.obs_rms.mean.clone(), torch.maximum(((s - p.obs_rms.mean) ** 2).mean(0), p.obs_rms.var), 2.0e6
+            )
+            print(
+                f"[renorm] {names[k]}: {int((clipped > 0.05).sum())} of {D} observations were clipped more than 5% of the time "
+                f"under the match's scaling; rescaled, the policy's outputs kept",
+                flush=True,
+            )
         env.get_stats()
         obs = env.reset()
 
@@ -177,7 +266,7 @@ def main() -> None:
     for k in range(K):
         if extras[k].get("run_name") == run:
             start = max(start, int(extras[k].get("iter", 0)))
-    iters = start + args.more_iters if args.more_iters > 0 else 10 ** 9
+    iters = start + args.more_iters if args.more_iters > 0 else 10**9
 
     os.makedirs(os.path.join(HERE, "logs"), exist_ok=True)
     writer = SummaryWriter(os.path.join(HERE, "logs", "tb", run))
@@ -190,9 +279,23 @@ def main() -> None:
     keys = None
     stop_file = os.path.join(HERE, "logs", f"{run}.stop")
     with open(os.path.join(HERE, "logs", f"{run}.args.json"), "w", encoding="utf-8") as fh:
-        json.dump({"argv": sys.argv[1:], "args": vars(args), "mode": "getup", "fighters": names, "trainer": "gpu",
-                   "started": time.strftime("%Y-%m-%d %H:%M:%S")}, fh, indent=2, sort_keys=True)
-    print(f"[run] {run}: {'+'.join(names)}, {N} worlds, batch {args.steps * N:,} per boxer in {minibatches} minibatches, from iteration {start}", flush=True)
+        json.dump(
+            {
+                "argv": sys.argv[1:],
+                "args": vars(args),
+                "mode": "getup",
+                "fighters": names,
+                "trainer": "gpu",
+                "started": time.strftime("%Y-%m-%d %H:%M:%S"),
+            },
+            fh,
+            indent=2,
+            sort_keys=True,
+        )
+    print(
+        f"[run] {run}: {'+'.join(names)}, {N} worlds, batch {args.steps * N:,} per boxer in {minibatches} minibatches, from iteration {start}",
+        flush=True,
+    )
 
     t_start = time.time()
     good_for = 0
@@ -201,8 +304,10 @@ def main() -> None:
         t0 = time.time()
         with torch.no_grad():
             for _ in range(args.steps):
-                acts = [p.model.actor(p.obs_rms.normalize(o, p.cfg.obs_clip)) if fz else p.act(o)
-                        for p, o, fz in zip(learners, split(obs), frozen)]
+                acts = [
+                    p.model.actor(p.obs_rms.normalize(o, p.cfg.obs_clip)) if fz else p.act(o)
+                    for p, o, fz in zip(learners, split(obs), frozen)
+                ]
                 obs, rew, done, timeout = env.step(torch.stack(acts, 1).reshape(N * K, A))
                 for p, r, d, t, fz in zip(learners, split(rew), split(done), split(timeout), frozen):
                     if not fz:
@@ -221,8 +326,19 @@ def main() -> None:
             keys = sorted(s.keys())
             if new_csv:
                 csv_w.writerow(["iter", "hours", "steps", "fps", "kl", "lr", "std", "value_loss"] + keys)
-        csv_w.writerow([it, f"{hours:.4f}", total, int(sps), f"{stats['kl']:.5f}", f"{stats['lr']:.2e}", f"{stats['action_std']:.4f}",
-                        f"{stats['value_loss']:.4f}"] + [f"{s[k]:.5f}" for k in keys])
+        csv_w.writerow(
+            [
+                it,
+                f"{hours:.4f}",
+                total,
+                int(sps),
+                f"{stats['kl']:.5f}",
+                f"{stats['lr']:.2e}",
+                f"{stats['action_std']:.4f}",
+                f"{stats['value_loss']:.4f}",
+            ]
+            + [f"{s[k]:.5f}" for k in keys]
+        )
         csv_f.flush()
         for k, v in s.items():
             writer.add_scalar(f"env/{k}", v, it)
@@ -232,26 +348,74 @@ def main() -> None:
                     writer.add_scalar(f"ppo_{n}/{k}", v, it)
         writer.add_scalar("perf/fps", sps, it)
         if it % 10 == 0:
-            print(f"it {it:6d} | {sps:7.0f} sps | ret {s['ep_return']:7.2f} | on its feet at the end {s['up_rate']:4.0%} | "
-                  + " | ".join(f"{n}: from the floor {s[n + '_up_rate_from_floor']:.0%}, unaided {s[n + '_up_rate_unaided']:.0%}, help {s[n + '_assist']:.3f}, off guard {s[n + '_pose_err']:.2f}" for n in names)
-                  + f" | {s['time_to_stand_unaided']:4.1f} s | speed limit {env.speed_share:.0%} | kl {stats['kl']:.4f} lr {stats['lr']:.1e} std {stats['action_std']:.2f} | {hours * 60:6.1f} min", flush=True)
+            print(
+                f"it {it:6d} | {sps:7.0f} sps | ret {s['ep_return']:7.2f} | on its feet at the end {s['up_rate']:4.0%} | "
+                + " | ".join(
+                    f"{n}: from the floor {s[n + '_up_rate_from_floor']:.0%}, unaided {s[n + '_up_rate_unaided']:.0%}, help {s[n + '_assist']:.3f}, off guard {s[n + '_pose_err']:.2f}"
+                    for n in names
+                )
+                + f" | {s['time_to_stand_unaided']:4.1f} s | speed limit {env.speed_share:.0%} | kl {stats['kl']:.4f} lr {stats['lr']:.1e} std {stats['action_std']:.2f} | {hours * 60:6.1f} min",
+                flush=True,
+            )
             with open(os.path.join(HERE, "logs", f"{run}.status.json"), "w", encoding="utf-8") as fh:
-                json.dump({"run": run, "mode": "getup", "fighters": names, "iter": it, "hours": hours, "fps": sps, "max_hours": args.max_hours,
-                           "updated": time.strftime("%Y-%m-%d %H:%M:%S"), "ppo": stats, "env": s}, fh, indent=2)
+                json.dump(
+                    {
+                        "run": run,
+                        "mode": "getup",
+                        "fighters": names,
+                        "iter": it,
+                        "hours": hours,
+                        "fps": sps,
+                        "max_hours": args.max_hours,
+                        "updated": time.strftime("%Y-%m-%d %H:%M:%S"),
+                        "ppo": stats,
+                        "env": s,
+                    },
+                    fh,
+                    indent=2,
+                )
         if args.done_when > 0.0:
-            ok = env.speed_share >= 1.0 and all(fz or (s[n + "_up_rate_unaided"] >= args.done_when and s[n + "_assist"] <= 0.001 and s[n + "_pose_err"] <= args.done_pose)
-                     for n, fz in zip(names, frozen))
+            ok = env.speed_share >= 1.0 and all(
+                fz
+                or (
+                    s[n + "_up_rate_unaided"] >= args.done_when
+                    and s[n + "_assist"] <= 0.001
+                    and s[n + "_pose_err"] <= args.done_pose
+                )
+                for n, fz in zip(names, frozen)
+            )
             good_for = good_for + 1 if ok else 0
-        stopping = os.path.exists(stop_file) or (args.max_hours > 0.0 and hours >= args.max_hours) or (args.done_when > 0.0 and good_for >= 40)
+        stopping = (
+            os.path.exists(stop_file)
+            or (args.max_hours > 0.0 and hours >= args.max_hours)
+            or (args.done_when > 0.0 and good_for >= 40)
+        )
         if (it + 1) % args.save_every == 0 or it + 1 == iters or stopping:
             for k, (n, p) in enumerate(zip(names, learners)):
                 if frozen[k]:
                     continue
                 ck = os.path.join(ck_dir, f"model_{it + 1:06d}_{n}.pt")
-                p.save(ck, {"iter": it + 1, "mode": "getup", "fighters": names, "fighter": n, "obs_dim": D, "act_dim": A,
-                            "action_scale": env.action_scale, "run_name": run, "trainer": "gpu", "assist": float(env.assist[k].item()),
-                            "up_ema": float(env.up_ema[k].item()), "speed_share": env.speed_share, "lr": p.cfg.lr, "career": int(extras[k].get("career", 0)),
-                            "renormed": True, "xml": os.path.abspath(xml)})
+                p.save(
+                    ck,
+                    {
+                        "iter": it + 1,
+                        "mode": "getup",
+                        "fighters": names,
+                        "fighter": n,
+                        "obs_dim": D,
+                        "act_dim": A,
+                        "action_scale": env.action_scale,
+                        "run_name": run,
+                        "trainer": "gpu",
+                        "assist": float(env.assist[k].item()),
+                        "up_ema": float(env.up_ema[k].item()),
+                        "speed_share": env.speed_share,
+                        "lr": p.cfg.lr,
+                        "career": int(extras[k].get("career", 0)),
+                        "renormed": True,
+                        "xml": os.path.abspath(xml),
+                    },
+                )
                 shutil.copyfile(ck, os.path.join(ck_dir, f"latest_{n}.pt"))
             saved = sorted(f for f in os.listdir(ck_dir) if f.startswith("model_"))
             keep = sorted({f[6:12] for f in saved})[-4:]
@@ -260,7 +424,13 @@ def main() -> None:
                     os.remove(os.path.join(ck_dir, f))
             print(f"saved iteration {it + 1} to {ck_dir}", flush=True)
         if stopping:
-            why = "stop file" if os.path.exists(stop_file) else "every boxer gets up unaided" if good_for >= 40 else f"{args.max_hours:g} h"
+            why = (
+                "stop file"
+                if os.path.exists(stop_file)
+                else "every boxer gets up unaided"
+                if good_for >= 40
+                else f"{args.max_hours:g} h"
+            )
             print(f"[stop] {why}, after iteration {it + 1}, {hours:.2f} h", flush=True)
             break
     writer.close()

@@ -25,6 +25,7 @@ What is different for boxing:
 
 Frames: rig JSON is Blender Z-up (x = character left, -y = forward). MJCF is x forward, y left, z up.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -51,13 +52,18 @@ JOINT_GAINS = {
     "ankle_x": (80.0, 4.0, 60.0),
 }
 RANGES_DEG = {
-    "abdomen_z": (-45, 45), "abdomen_y": (-60, 30), "abdomen_x": (-35, 35),
-    "hip_x": (-40, 40), "hip_z": (-35, 35), "hip_y": (-120, 30),
+    "abdomen_z": (-45, 45),
+    "abdomen_y": (-60, 30),
+    "abdomen_x": (-35, 35),
+    "hip_x": (-40, 40),
+    "hip_z": (-35, 35),
+    "hip_y": (-120, 30),
     "knee": (0, 150),
-    "ankle_y": (-20, 50), "ankle_x": (-25, 25),
-    "shoulder_x": (-170, 30),   # left arm: negative = arm down; mirrored on the right
+    "ankle_y": (-20, 50),
+    "ankle_x": (-25, 25),
+    "shoulder_x": (-170, 30),  # left arm: negative = arm down; mirrored on the right
     "shoulder_z": (-110, 110),  # with the arm down this is the swing forward and back
-    "elbow": (-150, 0),         # left; mirrored on the right
+    "elbow": (-150, 0),  # left; mirrored on the right
 }
 # A person's joints are not as strong one way as the other (models/v3, a rig with "human_force": true): the share of the
 # force limit each way, (negative, positive). Dorsiflexing the foot (ankle_y < 0) takes about a fifth of the torque of
@@ -68,10 +74,17 @@ HUMAN_FORCE = {"ankle_y": (0.2, 1.0), "knee": (1.0, 0.5), "hip_z": (0.3, 0.3)}
 ARMATURE = {"abdomen": 0.08, "hip": 0.10, "knee": 0.10, "ankle": 0.03, "shoulder": 0.03, "elbow": 0.02}
 # Winter / Dempster segment masses as a fraction of body mass.
 SEGMENT_MASS_FRAC = {
-    "pelvis": 0.142, "torso": 0.355, "head": 0.081, "upper_arm": 0.028, "forearm": 0.016,
-    "hand": 0.006, "thigh": 0.100, "shin": 0.0465, "foot": 0.0145,
+    "pelvis": 0.142,
+    "torso": 0.355,
+    "head": 0.081,
+    "upper_arm": 0.028,
+    "forearm": 0.016,
+    "hand": 0.006,
+    "thigh": 0.100,
+    "shin": 0.0465,
+    "foot": 0.0145,
 }
-GLOVE_KG = 0.283   # a 10 oz glove
+GLOVE_KG = 0.283  # a 10 oz glove
 # Peak joint speeds a person reaches [rad/s]. A punch turns the shoulder at about 20 and snaps the
 # elbow open at about 25; the rest are the sprinter's figures PoDecath uses.
 VELOCITY_LIMIT = {"abdomen": 8.0, "hip": 15.0, "knee": 20.0, "ankle": 14.0, "shoulder": 20.0, "elbow": 25.0}
@@ -79,13 +92,30 @@ VELOCITY_LIMIT = {"abdomen": 8.0, "hip": 15.0, "knee": 20.0, "ankle": 14.0, "sho
 # Arm signs are for the left arm; the generator mirrors them. With the arm down, shoulder_z swings it
 # forward (negative on the left) and the elbow folds the forearm up towards the face.
 GUARD_DEG = {
-    "abdomen_z": 0, "abdomen_y": 0, "abdomen_x": 0,
-    "hip_x": 0, "hip_z": 0, "hip_y": -14, "knee": 26, "ankle_y": -12, "ankle_x": 0,
-    "shoulder_x": -76, "shoulder_z": -42, "elbow": -112,
+    "abdomen_z": 0,
+    "abdomen_y": 0,
+    "abdomen_x": 0,
+    "hip_x": 0,
+    "hip_z": 0,
+    "hip_y": -14,
+    "knee": 26,
+    "ankle_y": -12,
+    "ankle_x": 0,
+    "shoulder_x": -76,
+    "shoulder_z": -42,
+    "elbow": -112,
 }
 MIRRORED = ("shoulder_x", "shoulder_z", "elbow")
-RADII = {"pelvis": 0.085, "torso": 0.085, "head": 0.10, "thigh": 0.06, "shin": 0.045,
-         "upper_arm": 0.04, "forearm": 0.035, "glove": 0.075}
+RADII = {
+    "pelvis": 0.085,
+    "torso": 0.085,
+    "head": 0.10,
+    "thigh": 0.06,
+    "shin": 0.045,
+    "upper_arm": 0.04,
+    "forearm": 0.035,
+    "glove": 0.075,
+}
 RING_HALF = 3.05
 
 
@@ -150,11 +180,12 @@ class Fighter:
 
     @staticmethod
     def capsule_volume(a: np.ndarray, b: np.ndarray, radius: float) -> float:
-        return float(math.pi * radius ** 2 * np.linalg.norm(b - a) + (4.0 / 3.0) * math.pi * radius ** 3)
+        return float(math.pi * radius**2 * np.linalg.norm(b - a) + (4.0 / 3.0) * math.pi * radius**3)
 
     def capsule(self, name: str, a: np.ndarray, b: np.ndarray, radius: float, mass: str, extra: str = "") -> str:
-        return (f'<geom name="{self.p}{name}" type="capsule" fromto="{fmt(a)} {fmt(b)}" '
-                f'size="{radius:.4f}" {mass}{extra}/>')
+        return (
+            f'<geom name="{self.p}{name}" type="capsule" fromto="{fmt(a)} {fmt(b)}" size="{radius:.4f}" {mass}{extra}/>'
+        )
 
     def joint(self, name: str, axis: str, group: str, side: str = "") -> str:
         lo, hi = self.ranges[name]
@@ -176,24 +207,42 @@ class Fighter:
             neg, pos = pos, neg
         f_lo, f_hi = round(fl * neg, 3), round(fl * pos, 3)
         arm = ARMATURE[group]
-        self.joints.append({
-            "name": full, "group": group, "axis": axis,
-            "lower": math.radians(lo), "upper": math.radians(hi), "default": math.radians(default),
-            "kp": kp, "kv": kv, "force_limit": fl, "force_lo": -f_lo, "force_hi": f_hi, "armature": arm,
-            "velocity_limit": round(VELOCITY_LIMIT[group] * self.speed, 3),
-        })
+        self.joints.append(
+            {
+                "name": full,
+                "group": group,
+                "axis": axis,
+                "lower": math.radians(lo),
+                "upper": math.radians(hi),
+                "default": math.radians(default),
+                "kp": kp,
+                "kv": kv,
+                "force_limit": fl,
+                "force_lo": -f_lo,
+                "force_hi": f_hi,
+                "armature": arm,
+                "velocity_limit": round(VELOCITY_LIMIT[group] * self.speed, 3),
+            }
+        )
         self.qpos_tokens.append(math.radians(default))
         self.actuators.append(
             f'<position name="{self.p}{full}" joint="{self.p}{full}" kp="{kp}" kv="{kv}" forcerange="-{f_lo} {f_hi}" '
-            f'ctrlrange="{math.radians(lo):.4f} {math.radians(hi):.4f}"/>')
-        return (f'<joint name="{self.p}{full}" type="hinge" axis="{axis}" range="{lo} {hi}" '
-                f'damping="0.5" armature="{arm}" stiffness="0"/>')
+            f'ctrlrange="{math.radians(lo):.4f} {math.radians(hi):.4f}"/>'
+        )
+        return (
+            f'<joint name="{self.p}{full}" type="hinge" axis="{axis}" range="{lo} {hi}" '
+            f'damping="0.5" armature="{arm}" stiffness="0"/>'
+        )
 
-    def passive_joint(self, name: str, axis: str, lo: float, hi: float, stiffness: float, damping: float, armature: float = 0.02) -> str:
+    def passive_joint(
+        self, name: str, axis: str, lo: float, hi: float, stiffness: float, damping: float, armature: float = 0.02
+    ) -> str:
         """Unactuated spring-damper joint (G15 passive neck): keeps A=21 / obs=103 unchanged."""
         self.qpos_tokens.append(0.0)
-        return (f'<joint name="{self.p}{name}" type="hinge" axis="{axis}" range="{lo} {hi}" '
-                f'stiffness="{stiffness * self.strength:.2f}" damping="{damping * self.strength:.2f}" armature="{armature}"/>')
+        return (
+            f'<joint name="{self.p}{name}" type="hinge" axis="{axis}" range="{lo} {hi}" '
+            f'stiffness="{stiffness * self.strength:.2f}" damping="{damping * self.strength:.2f}" armature="{armature}"/>'
+        )
 
     def build(self, pos: Tuple[float, float], yaw: float) -> str:
         L, p = self.lines, self.p
@@ -211,80 +260,119 @@ class Fighter:
         v_lo = self.capsule_volume(p_a, p_b, RADII["pelvis"])
         v_up = self.capsule_volume(np.zeros(3), p_up_b, RADII["pelvis"] * 0.9)
         f_lo = v_lo / (v_lo + v_up)
-        L.append('  ' + self.capsule("pelvis_geom", p_a, p_b, RADII["pelvis"], self.mass("pelvis", f_lo)))
-        L.append('  ' + self.capsule("pelvis_up", np.zeros(3), p_up_b, RADII["pelvis"] * 0.9, self.mass("pelvis", 1.0 - f_lo)))
+        L.append("  " + self.capsule("pelvis_geom", p_a, p_b, RADII["pelvis"], self.mass("pelvis", f_lo)))
+        L.append(
+            "  "
+            + self.capsule("pelvis_up", np.zeros(3), p_up_b, RADII["pelvis"] * 0.9, self.mass("pelvis", 1.0 - f_lo))
+        )
 
         L.append(f'  <body name="{p}torso" pos="{fmt(spine - pelvis)}">')
-        L.append('    ' + self.joint("abdomen_z", "0 0 1", "abdomen"))
-        L.append('    ' + self.joint("abdomen_y", "0 1 0", "abdomen"))
-        L.append('    ' + self.joint("abdomen_x", "1 0 0", "abdomen"))
-        L.append('    ' + self.capsule("torso_geom", np.array([0, 0, 0.02]), neck - spine - np.array([0, 0, 0.01]),
-                                       RADII["torso"], self.mass("torso")))
+        L.append("    " + self.joint("abdomen_z", "0 0 1", "abdomen"))
+        L.append("    " + self.joint("abdomen_y", "0 1 0", "abdomen"))
+        L.append("    " + self.joint("abdomen_x", "1 0 0", "abdomen"))
+        L.append(
+            "    "
+            + self.capsule(
+                "torso_geom",
+                np.array([0, 0, 0.02]),
+                neck - spine - np.array([0, 0, 0.01]),
+                RADII["torso"],
+                self.mass("torso"),
+            )
+        )
         # Shoulders: a bar across the top of the chest, so a body shot has a chest to land on and the
         # arms hang off something as wide as a person.
         sh_l, sh_r = self.head("upper_arm_l") - spine, self.head("upper_arm_r") - spine
-        L.append(f'    <geom name="{p}chest_geom" type="capsule" fromto="{fmt(sh_r * 0.8)} {fmt(sh_l * 0.8)}" '
-                 f'size="{RADII["torso"] * 0.9:.4f}" mass="0.5"/>')
+        L.append(
+            f'    <geom name="{p}chest_geom" type="capsule" fromto="{fmt(sh_r * 0.8)} {fmt(sh_l * 0.8)}" '
+            f'size="{RADII["torso"] * 0.9:.4f}" mass="0.5"/>'
+        )
         if self.neck:
             # G15: passive spring-damper neck so head snaps on clean hits while keeping A=21 / obs=103 unchanged.
             L.append(f'    <body name="{p}head" pos="{fmt(neck - spine)}">')
-            L.append('      ' + self.passive_joint("neck_y", "0 1 0", -35.0, 35.0, 12.0, 1.4))
-            L.append('      ' + self.passive_joint("neck_x", "1 0 0", -25.0, 25.0, 12.0, 1.4))
-            L.append('      ' + self.passive_joint("neck_z", "0 0 1", -40.0, 40.0, 10.0, 1.2))
-            L.append(f'      <geom name="{p}head_geom" type="sphere" pos="{fmt(head_c - neck)}" '
-                     f'size="{RADII["head"]:.4f}" {self.mass("head")}/>')
-            L.append('    </body>')
+            L.append("      " + self.passive_joint("neck_y", "0 1 0", -35.0, 35.0, 12.0, 1.4))
+            L.append("      " + self.passive_joint("neck_x", "1 0 0", -25.0, 25.0, 12.0, 1.4))
+            L.append("      " + self.passive_joint("neck_z", "0 0 1", -40.0, 40.0, 10.0, 1.2))
+            L.append(
+                f'      <geom name="{p}head_geom" type="sphere" pos="{fmt(head_c - neck)}" '
+                f'size="{RADII["head"]:.4f}" {self.mass("head")}/>'
+            )
+            L.append("    </body>")
         else:
-            L.append(f'    <geom name="{p}head_geom" type="sphere" pos="{fmt(head_c - spine)}" '
-                     f'size="{RADII["head"]:.4f}" {self.mass("head")}/>')
+            L.append(
+                f'    <geom name="{p}head_geom" type="sphere" pos="{fmt(head_c - spine)}" '
+                f'size="{RADII["head"]:.4f}" {self.mass("head")}/>'
+            )
         for side in ("l", "r"):
-            sh = self.head(f"upper_arm_{side}"); el = self.head(f"forearm_{side}"); wr = self.head(f"hand_{side}")
+            sh = self.head(f"upper_arm_{side}")
+            el = self.head(f"forearm_{side}")
+            wr = self.head(f"hand_{side}")
             tip = self.tail(f"hand_tip_{side}") if self.has(f"hand_tip_{side}") else self.tail(f"hand_{side}")
             reach = (tip - wr) / max(1e-6, float(np.linalg.norm(tip - wr)))
             glove = wr + reach * RADII["glove"] * 0.9
             L.append(f'    <body name="{p}upper_arm_{side}" pos="{fmt(sh - spine)}">')
-            L.append('      ' + self.joint("shoulder_x", "1 0 0", "shoulder", side))
-            L.append('      ' + self.joint("shoulder_z", "0 0 1", "shoulder", side))
-            L.append('      ' + self.capsule(f"upper_arm_{side}_geom", np.zeros(3), el - sh, RADII["upper_arm"], self.mass("upper_arm")))
+            L.append("      " + self.joint("shoulder_x", "1 0 0", "shoulder", side))
+            L.append("      " + self.joint("shoulder_z", "0 0 1", "shoulder", side))
+            L.append(
+                "      "
+                + self.capsule(
+                    f"upper_arm_{side}_geom", np.zeros(3), el - sh, RADII["upper_arm"], self.mass("upper_arm")
+                )
+            )
             L.append(f'      <body name="{p}forearm_{side}" pos="{fmt(el - sh)}">')
-            L.append('        ' + self.joint("elbow", "0 0 1", "elbow", side))
-            L.append('        ' + self.capsule(f"forearm_{side}_geom", np.zeros(3), wr - el, RADII["forearm"], self.mass("forearm")))
-            L.append(f'        <geom name="{p}glove_{side}" type="sphere" pos="{fmt(glove - el)}" size="{RADII["glove"]:.4f}" '
-                     f'{self.mass("hand", 1.0, GLOVE_KG)}rgba="{"0.85 0.2 0.2 1" if p == "a_" else "0.2 0.45 0.9 1"}"/>')
-            L.append('      </body>')
-            L.append('    </body>')
-        L.append('  </body>')
+            L.append("        " + self.joint("elbow", "0 0 1", "elbow", side))
+            L.append(
+                "        "
+                + self.capsule(f"forearm_{side}_geom", np.zeros(3), wr - el, RADII["forearm"], self.mass("forearm"))
+            )
+            L.append(
+                f'        <geom name="{p}glove_{side}" type="sphere" pos="{fmt(glove - el)}" size="{RADII["glove"]:.4f}" '
+                f'{self.mass("hand", 1.0, GLOVE_KG)}rgba="{"0.85 0.2 0.2 1" if p == "a_" else "0.2 0.45 0.9 1"}"/>'
+            )
+            L.append("      </body>")
+            L.append("    </body>")
+        L.append("  </body>")
 
         for side in ("l", "r"):
-            hip = self.head(f"thigh_{side}"); knee = self.head(f"shin_{side}"); ankle = self.head(f"foot_{side}")
+            hip = self.head(f"thigh_{side}")
+            knee = self.head(f"shin_{side}")
+            ankle = self.head(f"foot_{side}")
             toe = self.tail(f"toe_{side}") if self.has(f"toe_{side}") else self.tail(f"foot_{side}")
             # Legs straight down from the hip. A rig modelled with its feet apart would otherwise put
             # every hip joint's zero in a straddle.
-            thigh_len = float(np.linalg.norm(knee - hip)); shin_len = float(np.linalg.norm(ankle - knee))
-            knee_rel = np.array([0.0, 0.0, -thigh_len]); ankle_rel = np.array([0.0, 0.0, -shin_len])
+            thigh_len = float(np.linalg.norm(knee - hip))
+            shin_len = float(np.linalg.norm(ankle - knee))
+            knee_rel = np.array([0.0, 0.0, -thigh_len])
+            ankle_rel = np.array([0.0, 0.0, -shin_len])
             ankle_h = max(0.05, float(ankle[2]))
             L.append(f'  <body name="{p}thigh_{side}" pos="{fmt(hip - pelvis)}">')
-            L.append('    ' + self.joint("hip_x", "1 0 0", "hip", side))
-            L.append('    ' + self.joint("hip_z", "0 0 1", "hip", side))
-            L.append('    ' + self.joint("hip_y", "0 1 0", "hip", side))
-            L.append('    ' + self.capsule(f"thigh_{side}_geom", np.zeros(3), knee_rel, RADII["thigh"], self.mass("thigh")))
+            L.append("    " + self.joint("hip_x", "1 0 0", "hip", side))
+            L.append("    " + self.joint("hip_z", "0 0 1", "hip", side))
+            L.append("    " + self.joint("hip_y", "0 1 0", "hip", side))
+            L.append(
+                "    " + self.capsule(f"thigh_{side}_geom", np.zeros(3), knee_rel, RADII["thigh"], self.mass("thigh"))
+            )
             L.append(f'    <body name="{p}shin_{side}" pos="{fmt(knee_rel)}">')
-            L.append('      ' + self.joint("knee", "0 1 0", "knee", side))
-            L.append('      ' + self.capsule(f"shin_{side}_geom", np.zeros(3), ankle_rel, RADII["shin"], self.mass("shin")))
+            L.append("      " + self.joint("knee", "0 1 0", "knee", side))
+            L.append(
+                "      " + self.capsule(f"shin_{side}_geom", np.zeros(3), ankle_rel, RADII["shin"], self.mass("shin"))
+            )
             L.append(f'      <body name="{p}foot_{side}" pos="{fmt(ankle_rel)}">')
-            L.append('        ' + self.joint("ankle_y", "0 1 0", "ankle", side))
-            L.append('        ' + self.joint("ankle_x", "1 0 0", "ankle", side))
+            L.append("        " + self.joint("ankle_y", "0 1 0", "ankle", side))
+            L.append("        " + self.joint("ankle_x", "1 0 0", "ankle", side))
             foot_len = float(np.clip(abs(float(toe[0] - ankle[0])) + 0.07, 0.22, 0.30))
             half = np.array([foot_len * 0.5, 0.045, 0.028])
             # A person's heel is about a quarter of the foot behind the ankle.
             center = np.array([foot_len * 0.5 - foot_len * 0.27, 0.0, -ankle_h + half[2]])
-            L.append(f'        <geom name="{p}foot_{side}_geom" type="box" pos="{fmt(center)}" size="{fmt(half)}" '
-                     f'{self.mass("foot")}friction="1.0 0.005 0.0001"/>')
+            L.append(
+                f'        <geom name="{p}foot_{side}_geom" type="box" pos="{fmt(center)}" size="{fmt(half)}" '
+                f'{self.mass("foot")}friction="1.0 0.005 0.0001"/>'
+            )
             L.append(f'        <site name="{p}foot_{side}_site" pos="{fmt(center)}" size="0.01"/>')
-            L.append('      </body>')
-            L.append('    </body>')
-            L.append('  </body>')
-        L.append('</body>')
+            L.append("      </body>")
+            L.append("    </body>")
+            L.append("  </body>")
+        L.append("</body>")
         return "\n    ".join(L)
 
     def exclusions(self) -> List[Tuple[str, str]]:
@@ -294,28 +382,41 @@ class Fighter:
         if self.neck:
             pairs.append((f"{p}torso", f"{p}head"))
         for s in ("l", "r"):
-            pairs += [(f"{p}pelvis", f"{p}thigh_{s}"), (f"{p}thigh_{s}", f"{p}shin_{s}"), (f"{p}shin_{s}", f"{p}foot_{s}"),
-                      (f"{p}torso", f"{p}upper_arm_{s}"), (f"{p}upper_arm_{s}", f"{p}forearm_{s}")]
+            pairs += [
+                (f"{p}pelvis", f"{p}thigh_{s}"),
+                (f"{p}thigh_{s}", f"{p}shin_{s}"),
+                (f"{p}shin_{s}", f"{p}foot_{s}"),
+                (f"{p}torso", f"{p}upper_arm_{s}"),
+                (f"{p}upper_arm_{s}", f"{p}forearm_{s}"),
+            ]
         return pairs
 
 
 def bag_xml() -> str:
     """A 35 kg heavy bag on a ball joint, hanging at the origin: head height at the top, belt at the bottom."""
-    return ('<body name="bag" pos="0 0 2.45">\n'
-            '      <joint name="bag_swing" type="ball" damping="6"/>\n'
-            '      <geom name="bag_geom" type="capsule" fromto="0 0 -0.62 0 0 -1.42" size="0.17" mass="35" rgba="0.5 0.3 0.2 1"/>\n'
-            '      <site name="bag_head" pos="0 0 -0.82" size="0.02"/>\n'
-            '      <site name="bag_body" pos="0 0 -1.22" size="0.02"/>\n'
-            '    </body>')
+    return (
+        '<body name="bag" pos="0 0 2.45">\n'
+        '      <joint name="bag_swing" type="ball" damping="6"/>\n'
+        '      <geom name="bag_geom" type="capsule" fromto="0 0 -0.62 0 0 -1.42" size="0.17" mass="35" rgba="0.5 0.3 0.2 1"/>\n'
+        '      <site name="bag_head" pos="0 0 -0.82" size="0.02"/>\n'
+        '      <site name="bag_body" pos="0 0 -1.22" size="0.02"/>\n'
+        "    </body>"
+    )
 
 
 def ring_xml() -> str:
     """Four walls where the ropes are. A wall, not ropes: all the trainer needs is that nobody leaves."""
     h, t, r = 0.75, 0.05, RING_HALF
-    walls = [("n", (0, r + t, h), (r + 2 * t, t, h)), ("s", (0, -r - t, h), (r + 2 * t, t, h)),
-             ("e", (r + t, 0, h), (t, r + 2 * t, h)), ("w", (-r - t, 0, h), (t, r + 2 * t, h))]
-    return "\n    ".join(f'<geom name="rope_{n}" type="box" pos="{fmt(pos)}" size="{fmt(size)}" rgba="0.8 0.8 0.8 0.15"/>'
-                         for n, pos, size in walls)
+    walls = [
+        ("n", (0, r + t, h), (r + 2 * t, t, h)),
+        ("s", (0, -r - t, h), (r + 2 * t, t, h)),
+        ("e", (r + t, 0, h), (t, r + 2 * t, h)),
+        ("w", (-r - t, 0, h), (t, r + 2 * t, h)),
+    ]
+    return "\n    ".join(
+        f'<geom name="rope_{n}" type="box" pos="{fmt(pos)}" size="{fmt(size)}" rgba="0.8 0.8 0.8 0.15"/>'
+        for n, pos, size in walls
+    )
 
 
 CUBE_HALF, CUBE_KG = 0.10, 1.0
@@ -334,7 +435,8 @@ def cubes_xml(n: int) -> Tuple[str, str]:
     xml = "\n    ".join(
         f'<body name="cube_{i}" pos="{fmt(cube_park(i))}"><freejoint name="cube_{i}"/>'
         f'<geom name="cube_{i}_geom" type="box" size="{h} {h} {h}" mass="{CUBE_KG}" rgba="0.9 0.7 0.2 1"/></body>'
-        for i in range(n))
+        for i in range(n)
+    )
     return xml, "".join(f" {fmt(cube_park(i))} 1 0 0 0" for i in range(n))
 
 
@@ -425,11 +527,22 @@ def fighter_config(rig: Dict, name: str, rig_path: str, a: "Fighter", root_z: fl
         "force_limit": [j["force_limit"] for j in a.joints],
         "armature": [j["armature"] for j in a.joints],
         "velocity_limit": [j["velocity_limit"] for j in a.joints],
-        **({"force_lo": [j["force_lo"] for j in a.joints], "force_hi": [j["force_hi"] for j in a.joints]} if a.human_force else {}),
+        **(
+            {"force_lo": [j["force_lo"] for j in a.joints], "force_hi": [j["force_hi"] for j in a.joints]}
+            if a.human_force
+            else {}
+        ),
         # models/v3: each joint's radians per unit of action, its furthest reach from the guard over the clip, so the clip
         # is the joint's range (one 0.5 for all of them could not straighten an elbow: 1.5 rad from the guard, 1.95 needed).
-        **({"action_scale_j": [round(max(j["upper"] - j["default"], j["default"] - j["lower"]) / 3.0, 4) for j in a.joints]}
-           if rig.get("per_joint_action", False) else {}),
+        **(
+            {
+                "action_scale_j": [
+                    round(max(j["upper"] - j["default"], j["default"] - j["lower"]) / 3.0, 4) for j in a.joints
+                ]
+            }
+            if rig.get("per_joint_action", False)
+            else {}
+        ),
         "total_mass_kg": report["mass_kg"],
         "height_m": rig.get("height_m", 0.0),
         "stand_height": round(root_z, 4),
@@ -466,7 +579,7 @@ def build_one(rig: Dict, rig_path: str, name: str, out_dir: str, cubes: int = 0)
             return assemble(f"{name}_solo", [a], body, "", key_for(a, 0.0, 0.0, 0.0, root_z) + cube_key), a
         if mode == "bag":
             body = [a.build((-0.75, 0.0), 0.0), bag_xml(), cube_bodies]
-            key = key_for(a, -0.75, 0.0, 0.0, root_z) + " 1 0 0 0" + cube_key   # the bag's ball joint
+            key = key_for(a, -0.75, 0.0, 0.0, root_z) + " 1 0 0 0" + cube_key  # the bag's ball joint
             return assemble(f"{name}_bag", [a], body, "", key), a
         b = Fighter(rig, "b_", lean)
         body = [a.build((-0.6, 0.0), 0.0), b.build((0.6, 0.0), math.pi), cube_bodies]
@@ -494,7 +607,7 @@ def build_one(rig: Dict, rig_path: str, name: str, out_dir: str, cubes: int = 0)
         path = os.path.join(out_dir, f"{name}_{mode}.xml")
         with open(path, "w", encoding="utf-8") as f:
             f.write(xml)
-        m = mujoco.MjModel.from_xml_path(path)   # fails loudly here if the model is malformed
+        m = mujoco.MjModel.from_xml_path(path)  # fails loudly here if the model is malformed
         _, report = settle_height(xml, 1, len(a.joints))
         print(f"wrote {path}: {m.nbody} bodies, {m.nu} actuators, {m.ngeom} geoms")
 
@@ -506,15 +619,29 @@ def build_one(rig: Dict, rig_path: str, name: str, out_dir: str, cubes: int = 0)
     with open(cfg_path, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=2)
     print(f"wrote {cfg_path}")
-    print(f"  {name}: {report['mass_kg']:.1f} kg, pelvis {root_z:.3f} m above the floor in the guard, "
-          f"weight {report['com_over_foot']:.0%} of the way from heel to toe (a standing person: about 45%)")
-    print(f"  gloves relative to the pelvis (x fwd, y left, z up): L {report['glove_l']}  R {report['glove_r']}  head {report['head']}")
+    print(
+        f"  {name}: {report['mass_kg']:.1f} kg, pelvis {root_z:.3f} m above the floor in the guard, "
+        f"weight {report['com_over_foot']:.0%} of the way from heel to toe (a standing person: about 45%)"
+    )
+    print(
+        f"  gloves relative to the pelvis (x fwd, y left, z up): L {report['glove_l']}  R {report['glove_r']}  head {report['head']}"
+    )
     print(f"  stance lean {lean:+.1f} degrees")
     return root_z, cfg
 
 
-def build_versus(rig_a: Dict, name_a: str, z_a: float, cfg_a: Dict,
-                 rig_b: Dict, name_b: str, z_b: float, cfg_b: Dict, out_dir: str, cubes: int = 0) -> None:
+def build_versus(
+    rig_a: Dict,
+    name_a: str,
+    z_a: float,
+    cfg_a: Dict,
+    rig_b: Dict,
+    name_b: str,
+    z_b: float,
+    cfg_b: Dict,
+    out_dir: str,
+    cubes: int = 0,
+) -> None:
     """The match: two different bodies in one ring, each at its own standing height."""
     a, b = Fighter(rig_a, "a_", cfg_a["stance_lean_deg"]), Fighter(rig_b, "b_", cfg_b["stance_lean_deg"])
     cube_bodies, cube_key = cubes_xml(cubes)
@@ -535,11 +662,15 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--rig", required=True)
     ap.add_argument("--name", default="fighter")
-    ap.add_argument("--versus", default="", help="a second rig: also writes <name>_vs_<versus-name>_spar.xml, the two in one ring")
+    ap.add_argument(
+        "--versus", default="", help="a second rig: also writes <name>_vs_<versus-name>_spar.xml, the two in one ring"
+    )
     ap.add_argument("--versus-name", default="")
     ap.add_argument("--out-dir", default=os.path.join(HERE, "models", "v2"))
     ap.add_argument("--cubes", type=int, default=0, help="cubes in the pool thrown at the fighter (see cubes_xml)")
-    ap.add_argument("--neck", action="store_true", help="add passive spring-damper neck joints under a head child body (G15)")
+    ap.add_argument(
+        "--neck", action="store_true", help="add passive spring-damper neck joints under a head child body (G15)"
+    )
     args = ap.parse_args()
     os.makedirs(args.out_dir, exist_ok=True)
 

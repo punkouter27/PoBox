@@ -8,6 +8,7 @@ held in its guard, so a fall there is the boxer's own.
 
     PYTHONPATH=.mj350 python tools/carry_diag_v3.py --name nick --book logs/book_v3t.json --trials 40
 """
+
 from __future__ import annotations
 
 import argparse
@@ -45,12 +46,12 @@ def handover(ring, k, getup, match, rng_state, opponent_boxes: bool):
     slack = rng.uniform(1.6, 2.6)
     hard = 0.2 + 0.8 * slack / 2.6
     rv = ring.rv[k]
-    d.qvel[rv:rv + 2] = rng.uniform(-2.5, 2.5, 2) * hard
-    d.qvel[rv + 3:rv + 6] = rng.uniform(-2.5, 2.5, 3) * hard
+    d.qvel[rv : rv + 2] = rng.uniform(-2.5, 2.5, 2) * hard
+    d.qvel[rv + 3 : rv + 6] = rng.uniform(-2.5, 2.5, 3) * hard
     stood_for, t, up_at = 0.0, 0.0, -1.0
     full = ring.m.dof_damping.copy()
     mine = np.zeros(ring.m.nv, bool)
-    mine[ring.rv[k]:ring.rv[k] + 6] = True
+    mine[ring.rv[k] : ring.rv[k] + 6] = True
     mine[ring.jv[k]] = True
     ring.m.dof_damping[mine] = full[mine] - (1.0 - ring.getup_share[k]) * ring.sl_extra[mine]
     ring.reserve[k], ring.no_drain[k] = 0.5, True
@@ -84,10 +85,21 @@ def handover(ring, k, getup, match, rng_state, opponent_boxes: bool):
     fwd = d.xmat[ring.pelvis[k]].reshape(3, 3)[:2, 0]
     to_o = (po - pk)[:2] / max(gap, 1e-6)
     facing = float(fwd @ to_o)
-    v0 = float(np.linalg.norm(d.qvel[rv:rv + 3]))
+    v0 = float(np.linalg.norm(d.qvel[rv : rv + 3]))
     off_guard = float(np.abs(d.qpos[ring.jq[k]] - ring.default[k]).mean())
-    rec = dict(reserve=float(ring.reserve[k]), height=float(h0), tilt=float(up0), gap=gap, facing=facing, speed=v0,
-               off_guard=off_guard, fell_at=None, touched_before=False, first_touch=None, clipped=0.0)
+    rec = dict(
+        reserve=float(ring.reserve[k]),
+        height=float(h0),
+        tilt=float(up0),
+        gap=gap,
+        facing=facing,
+        speed=v0,
+        off_guard=off_guard,
+        fell_at=None,
+        touched_before=False,
+        first_touch=None,
+        clipped=0.0,
+    )
 
     if opponent_boxes:
         ring.ghost(k, False)
@@ -97,17 +109,19 @@ def handover(ring, k, getup, match, rng_state, opponent_boxes: bool):
     ring.scale[:] = 1.0
     ring.last[:] = 0
     ring.hold(k)
-    own = set(ring.own_geoms[k]); theirs = set(ring.own_geoms[o])
+    own = set(ring.own_geoms[k])
+    theirs = set(ring.own_geoms[o])
     low, clipped, n = 0.0, 0, 0
     for step in range(int(3.0 / dt)):
         acts = [V.act(match[j], ring.observe(j)) for j in range(2)]
         if not opponent_boxes:
             ring.pin(o, their, face)
             acts[o] = None
-        clipped += int((np.abs(acts[k]) >= 2.95).sum()); n += len(acts[k])
+        clipped += int((np.abs(acts[k]) >= 2.95).sum())
+        n += len(acts[k])
         ring.drive(acts)
         if rec["first_touch"] is None:
-            for c in d.contact[:d.ncon]:
+            for c in d.contact[: d.ncon]:
                 if (c.geom1 in own and c.geom2 in theirs) or (c.geom2 in own and c.geom1 in theirs):
                     rec["first_touch"] = (step + 1) * dt
                     break
@@ -119,7 +133,9 @@ def handover(ring, k, getup, match, rng_state, opponent_boxes: bool):
     if not opponent_boxes:
         ring.ghost(o, False)
     rec["clipped"] = clipped / max(1, n)
-    rec["touched_before"] = rec["fell_at"] is not None and rec["first_touch"] is not None and rec["first_touch"] <= rec["fell_at"]
+    rec["touched_before"] = (
+        rec["fell_at"] is not None and rec["first_touch"] is not None and rec["first_touch"] <= rec["fell_at"]
+    )
     ring.ghost(k, False)
     return rec
 
@@ -145,7 +161,7 @@ def main() -> None:
     match = [V.load_policy(book[n]["match"], ring.A) for n in (x, y)]
     for i, p in enumerate(match):
         if getattr(p, "obs_state", False):
-            p.state = (lambda i=i: ring.state(i))
+            p.state = lambda i=i: ring.state(i)
     getup = V.load_policy(book[args.name]["getup"], ring.A)
     print(f"{args.name} ({book[args.name]['match']}) v {args.against}, {os.path.basename(xml)}, side {k}", flush=True)
 
@@ -155,7 +171,7 @@ def main() -> None:
         a = handover(ring, k, getup, match, state, opponent_boxes=True)
         b = handover(ring, k, getup, match, state, opponent_boxes=False)
         ring.rng.bit_generator.state = state
-        ring.rng.uniform(size=16)          # move the stream on for the next knockdown
+        ring.rng.uniform(size=16)  # move the stream on for the next knockdown
         if a is None or b is None:
             continue
         rows.append(dict(boxing=a, ghost=b))
@@ -166,14 +182,19 @@ def main() -> None:
     print(f"{len(rows)} hand-overs")
     for key in ("boxing", "ghost"):
         fell = [r[key] for r in rows if r[key]["fell_at"] is not None]
-        print(f"  {key:7s} still up at 3 s: {1 - len(fell) / max(1, len(rows)):.0%}; falls at "
-              f"{np.median([f['fell_at'] for f in fell]) if fell else 0:.2f} s (median); touched first in "
-              f"{sum(f['touched_before'] for f in fell)} of {len(fell)}")
+        print(
+            f"  {key:7s} still up at 3 s: {1 - len(fell) / max(1, len(rows)):.0%}; falls at "
+            f"{np.median([f['fell_at'] for f in fell]) if fell else 0:.2f} s (median); touched first in "
+            f"{sum(f['touched_before'] for f in fell)} of {len(fell)}"
+        )
     both = lambda r: r["boxing"]["fell_at"] is not None
     for label, sel in (("fell", lambda r: both(r)), ("stayed up", lambda r: not both(r))):
         g = [r["boxing"] for r in rows if sel(r)]
         if g:
-            m = {k2: float(np.mean([x2[k2] for x2 in g])) for k2 in ("reserve", "height", "tilt", "gap", "facing", "speed", "off_guard", "clipped")}
+            m = {
+                k2: float(np.mean([x2[k2] for x2 in g]))
+                for k2 in ("reserve", "height", "tilt", "gap", "facing", "speed", "off_guard", "clipped")
+            }
             print(f"  at the hand-over, {label} ({len(g)}): " + ", ".join(f"{k2} {v:.2f}" for k2, v in m.items()))
     if args.json:
         with open(os.path.join(HERE, args.json), "w", encoding="utf-8") as f:

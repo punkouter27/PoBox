@@ -10,6 +10,7 @@ Everything after the tool's name is that tool's own arguments. A brain's rules a
 and tools/onnx_to_pt.py's) is examined exactly as the tool always did. Every episode (a ring placed or reset, a solo
 boxer reset) starts the filter from the zero action and the delay's history afresh, as training does.
 """
+
 from __future__ import annotations
 
 import os
@@ -25,6 +26,7 @@ sys.path.insert(0, HERE)
 
 class Rules:
     """One brain's filter and delay, one boxer, numpy: the same arithmetic as envs/boxing.py and MjBoxer."""
+
     live: list = []
 
     def __init__(self, rules: dict, A: int, seed: int = 0):
@@ -50,7 +52,7 @@ class Rules:
             self.hist = [o.copy()] + self.hist[:-1]
         out = self.hist[self.lag].copy()
         a0 = 9 + 2 * self.A
-        out[a0:a0 + self.A] = o[a0:a0 + self.A]          # the last action is never late
+        out[a0 : a0 + self.A] = o[a0 : a0 + self.A]  # the last action is never late
         return out
 
     def act(self, a: np.ndarray) -> np.ndarray:
@@ -86,8 +88,12 @@ def install() -> None:
         r = Rules(rules_of(extra), int(extra.get("act_dim", self.model.actor[-1].out_features)))
         self._rules = r if r.on else None
         if r.on:
-            print(f"[rules] {os.path.basename(os.path.dirname(path))}/{os.path.basename(path)}: filter {r.f:g}, delay {r.lo}-{r.hi} steps", flush=True)
+            print(
+                f"[rules] {os.path.basename(os.path.dirname(path))}/{os.path.basename(path)}: filter {r.f:g}, delay {r.lo}-{r.hi} steps",
+                flush=True,
+            )
         return extra
+
     P.PPO.load = load_with_rules
 
     act = E.act
@@ -95,6 +101,7 @@ def install() -> None:
     def act_with_rules(ppo, obs):
         r = getattr(ppo, "_rules", None)
         return r.act(act(ppo, r.obs(obs))) if r else act(ppo, obs)
+
     E.act = act_with_rules
 
     def after(f):
@@ -102,7 +109,9 @@ def install() -> None:
             out = f(*a, **k)
             reset_all()
             return out
+
         return g
+
     C.Ring.reset = after(C.Ring.reset)
     E.ExamRing.place = after(E.ExamRing.place)
     F.Solo.reset = after(F.Solo.reset)
@@ -114,11 +123,13 @@ def install() -> None:
         if not path:
             return f
         import torch
+
         r = Rules(rules_of(torch.load(path, map_location="cpu", weights_only=False).get("extra", {})), A)
         if not r.on:
             return f
         print(f"[rules] {path}: filter {r.f:g}, delay {r.lo}-{r.hi} steps", flush=True)
         return lambda obs: r.act(f(r.obs(obs)))
+
     F.load_policy = fload_with_rules
 
 
@@ -130,7 +141,8 @@ def main() -> None:
     sys.argv = [os.path.join(HERE, "tools", tool + ".py")] + sys.argv[2:]
     if tool == "footwork_c":
         import footwork_c as F
-        F.main()                         # its globals (load_policy, Solo) are the patched ones
+
+        F.main()  # its globals (load_policy, Solo) are the patched ones
     else:
         runpy.run_path(sys.argv[0], run_name="__main__")
 

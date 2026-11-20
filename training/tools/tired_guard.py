@@ -12,6 +12,7 @@ head shots it takes a minute. The brains are checkpoints/onnx/match_NAME.pt (too
 Assets/Boxers/NAME/match.onnx); the rules (obs_state, hit_push, ...) are each boxer's Assets config. No daze: a guard,
 not a knockdown, is being measured; a fall puts both back on their marks.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -56,7 +57,7 @@ def job(args):
     k = names.index(x)
     pols = [V.load_policy(os.path.join(HERE, "checkpoints", "onnx", f"match_{n}.pt"), ring.A) for n in names]
     for i, pol in enumerate(pols):
-        pol.state = (lambda i=i: ring.state(i))
+        pol.state = lambda i=i: ring.state(i)
     told = level if mode in ("game", "mind") else 1.0
     felt = level if mode in ("game", "body") else 1.0
     pols[k].state = lambda: np.array([told, ring.share[k], ring.share[1 - k]])
@@ -66,7 +67,9 @@ def job(args):
     prev = np.array([d.geom_xpos[g].copy() for g in gl])
     under, above, n_idle, head_taken = 0.0, 0, 0, 0
     place = ring.place
-    ring.at_marks = lambda: place([(-0.72, -0.72), (0.72, 0.72)], [np.pi / 4, np.pi / 4 + np.pi], jitter=0.05)   # a seed differs
+    ring.at_marks = lambda: place(
+        [(-0.72, -0.72), (0.72, 0.72)], [np.pi / 4, np.pi / 4 + np.pi], jitter=0.05
+    )  # a seed differs
     ring.at_marks()
     p_ = E.Punches(ring)
     steps = int(seconds / dt)
@@ -92,8 +95,17 @@ def job(args):
             ring.reset()
             p_ = E.Punches(ring)
             prev = np.array([d.geom_xpos[g].copy() for g in gl])
-    return dict(boxer=x, opponent=names[1 - k], level=level, mode=mode, seed=seed, idle=n_idle / steps,
-                under_cm=100.0 * under / max(1, n_idle), above=above / max(1, n_idle), head_taken_per_min=head_taken / seconds * 60.0)
+    return dict(
+        boxer=x,
+        opponent=names[1 - k],
+        level=level,
+        mode=mode,
+        seed=seed,
+        idle=n_idle / steps,
+        under_cm=100.0 * under / max(1, n_idle),
+        above=above / max(1, n_idle),
+        head_taken_per_min=head_taken / seconds * 60.0,
+    )
 
 
 def main() -> None:
@@ -109,14 +121,18 @@ def main() -> None:
         res = pool.map(job, jobs, chunksize=1)
     with open(a.json, "w", encoding="utf-8") as fh:
         json.dump(res, fh, indent=1)
-    print("gloves under the head when not punching, cm (higher = lower guard) | both gloves above the chest | head shots taken a minute")
+    print(
+        "gloves under the head when not punching, cm (higher = lower guard) | both gloves above the chest | head shots taken a minute"
+    )
     for x in a.only:
         for md in MODES:
             cells = []
             for lv in LEVELS:
                 r = [o for o in res if o["boxer"] == x and o["mode"] == md and o["level"] == lv]
-                cells.append(f"R{lv:.1f}: {np.mean([o['under_cm'] for o in r]):5.1f} cm {np.mean([o['above'] for o in r]):4.0%} "
-                             f"{np.mean([o['head_taken_per_min'] for o in r]):4.1f}/min")
+                cells.append(
+                    f"R{lv:.1f}: {np.mean([o['under_cm'] for o in r]):5.1f} cm {np.mean([o['above'] for o in r]):4.0%} "
+                    f"{np.mean([o['head_taken_per_min'] for o in r]):4.1f}/min"
+                )
             print(f"{x:8s} {md:5s} | " + " | ".join(cells))
 
 

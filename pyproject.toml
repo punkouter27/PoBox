@@ -1,10 +1,63 @@
 [project]
 name = "pobox"
 version = "0.1.0"
-requires-python = ">=3.10"
+description = "PoBox: the boxing trainer (MuJoCo / MuJoCo Warp + PPO) and its helper servers"
+requires-python = ">=3.11,<3.13"
+dependencies = []
 
+# Every Python environment PoBox needs is its own (no sibling project's venv):
+#   uv sync                       dev tools only: ruff + pytest (the fast test tier)
+#   uv sync --group physics       + plain C MuJoCo and numpy (the physics tier: the game's MuJoCo, CPU)
+#   uv sync --group train         + MuJoCo Warp, torch, onnx (training, exams, ONNX export; CUDA torch on a GPU PC)
+# MuJoCo is pinned to the version the game's plugin runs (Packages/org.mujoco), so trainer, exams and game agree.
 [dependency-groups]
-dev = ["pytest>=8.0"]
+dev = ["pytest>=8.0", "ruff>=0.14"]
+physics = ["numpy>=1.26", "mujoco==3.15.0"]
+train = [
+    { include-group = "physics" },
+    "mujoco-warp==3.15.0",
+    "warp-lang>=1.10",
+    "torch>=2.5",
+    "onnx>=1.17",
+    "onnxruntime>=1.20",
+]
+
+[tool.uv]
+package = false
 
 [tool.pytest.ini_options]
-pythonpath = [".", "Tools"]
+testpaths = ["tests"]
+pythonpath = [".", "server", "training", "training/tools"]
+markers = [
+    "physics: needs plain MuJoCo + numpy (uv sync --group physics)",
+    "train: needs the trainer's stack (torch; uv sync --group train)",
+]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = [
+    "training/.mj350",
+    "training/checkpoints",
+    "training/logs",
+    "Library",
+    "Temp",
+    "Builds",
+]
+
+[tool.ruff.lint]
+# Correctness rules (pyflakes, syntax/runtime errors, import order inside a file is left alone):
+# the trainer is research code, so style rules beyond the formatter are not enforced.
+select = ["E4", "E7", "E9", "F", "W6"]
+ignore = [
+    "E731", # lambda assignments are the trainer's idiom for small local helpers
+    "E741", # single-letter names (l, I, O) mirror the maths they implement
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Blender scripts run inside Blender's Python, where bpy / mathutils exist and the sys.path setup comes first.
+"BLENDER/**" = ["E402"]
+
+[tool.ruff.format]
+quote-style = "double"

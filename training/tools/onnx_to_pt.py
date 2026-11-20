@@ -8,6 +8,7 @@ everything comes back but the action noise, which is not in it: --std sets it (t
 holds it). The normaliser's count is set very high (--count): at 1e5 one rollout moved the statistics enough that the first
 update tore the policy up (f1_zombie, KL 291 at iteration 0). Written 2026-10-14, when the checkpoints of the retrofit were not on this disk.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -34,20 +35,32 @@ def convert(src: str, dst: str, std: float, count: float, obs_state: bool = Fals
             sd[k] = w[k].float()
     model.load_state_dict(sd)
     var = w["std"].float() ** 2 - 1e-8
-    torch.save({"model": model.state_dict(),
-                "obs_rms": {"mean": w["mean"].float(), "var": var.clamp(min=0.0), "count": torch.tensor(count)},
-                "opt": {}, "extra": {"iter": 0, "from_onnx": os.path.abspath(src),
-                                          # a match brain that reads its reserve and daze (config obs_state): the gauntlet must not zero those inputs
-                                          **({"env": {"obs_state": True}} if obs_state else {})}}, dst)
+    torch.save(
+        {
+            "model": model.state_dict(),
+            "obs_rms": {"mean": w["mean"].float(), "var": var.clamp(min=0.0), "count": torch.tensor(count)},
+            "opt": {},
+            "extra": {
+                "iter": 0,
+                "from_onnx": os.path.abspath(src),
+                # a match brain that reads its reserve and daze (config obs_state): the gauntlet must not zero those inputs
+                **({"env": {"obs_state": True}} if obs_state else {}),
+            },
+        },
+        dst,
+    )
 
     # The check: the rebuilt policy answers as the shipped graph does.
     import onnxruntime as ort
+
     obs = np.random.default_rng(0).normal(size=(1, obs_dim)).astype(np.float32) * w["std"].numpy() + w["mean"].numpy()
     want_a, want_v = ort.InferenceSession(src, providers=["CPUExecutionProvider"]).run(None, {"obs": obs})
     x = torch.clamp((torch.from_numpy(obs) - w["mean"]) / w["std"], -10.0, 10.0)
     with torch.no_grad():
         got_a, got_v = model.actor(x).numpy(), model.critic(x).numpy()
-    assert np.allclose(got_a, want_a, atol=1e-4) and np.allclose(got_v, want_v, atol=1e-3), "rebuilt policy differs from the ONNX graph"
+    assert np.allclose(got_a, want_a, atol=1e-4) and np.allclose(got_v, want_v, atol=1e-3), (
+        "rebuilt policy differs from the ONNX graph"
+    )
     print(f"{os.path.basename(src)} -> {dst}: obs {obs_dim}, actions {act_dim}, matches the graph", flush=True)
 
 
@@ -57,7 +70,11 @@ if __name__ == "__main__":
     ap.add_argument("--out", required=True)
     ap.add_argument("--std", type=float, default=0.3, help="action noise to start from (not in the graph)")
     ap.add_argument("--count", type=float, default=1e9, help="weight of the donor's observation statistics")
-    ap.add_argument("--obs-state", action="store_true", help="the brain reads its state in the command's place (the game's config obs_state)")
+    ap.add_argument(
+        "--obs-state",
+        action="store_true",
+        help="the brain reads its state in the command's place (the game's config obs_state)",
+    )
     a = ap.parse_args()
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     convert(a.onnx, a.out, a.std, a.count, a.obs_state)

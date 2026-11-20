@@ -1,5 +1,5 @@
 {
-  "source": "C:/Users/punko/Downloads/PoBox/Assets/Models/Zombie.glb",
+  "source": "Assets/Models/Zombie.glb",
   "frame": "blender_z_up (x = character left, -y = forward, z = up)",
   "height_m": 1.816,
   "mass_kg": 90.5,

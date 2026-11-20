@@ -19,6 +19,7 @@ Reference: active range of motion of healthy adults, American Academy of Orthopa
 A limit more than 15 degrees past the person's is flagged "past"; one under half of it "short" (a boxer may not need
 it; the flag only says the body cannot).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -31,7 +32,7 @@ import mujoco
 import numpy as np
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-HUMAN = {   # joint kind: ((movement, degrees), (movement, degrees))
+HUMAN = {  # joint kind: ((movement, degrees), (movement, degrees))
     "abdomen_y": (("flexion", 80), ("extension", 30)),
     "abdomen_x": (("lateral bend", 35), ("lateral bend", 35)),
     "abdomen_z": (("rotation", 45), ("rotation", 45)),
@@ -60,7 +61,7 @@ class Body:
         m, d = self.m, self.d
         d.qpos[:] = m.qpos0
         d.qpos[0:3] = [0.0, 0.0, 1.5]
-        d.qpos[3:7] = [1.0, 0.0, 0.0, 0.0]               # facing +x, y left, z up
+        d.qpos[3:7] = [1.0, 0.0, 0.0, 0.0]  # facing +x, y left, z up
         for k, v in q.items():
             d.qpos[self.J(k)] = v
         mujoco.mj_kinematics(m, d)
@@ -81,7 +82,7 @@ class Body:
 def movement(body: Body, joint: str, base: dict, side: str) -> int:
     """+1 if turning the joint positive is the first movement of HUMAN[kind], -1 if it is the second."""
     kind = joint[:-2] if joint.endswith(("_l", "_r")) else joint
-    lat = 1.0 if side == "l" else -1.0                     # away from the midline is +y on the left
+    lat = 1.0 if side == "l" else -1.0  # away from the midline is +y on the left
     probe = math.radians(10.0)
 
     def where(q):
@@ -99,30 +100,32 @@ def movement(body: Body, joint: str, base: dict, side: str) -> int:
         R = d.geom_xmat[body.G(f"foot_{s}_geom")].reshape(3, 3)
         return {"toe": R[:, 0], "up": R[:, 2]}
 
-    copy = lambda w: {k: np.array(v, dtype=float) for k, v in w.items()}     # MjData fields are views: keep this pose's numbers
+    copy = lambda w: {
+        k: np.array(v, dtype=float) for k, v in w.items()
+    }  # MjData fields are views: keep this pose's numbers
     a, b = copy(where(-probe)), copy(where(probe))
     if kind == "abdomen_y":
-        first = b["x"] > a["x"]                            # the head forward: flexion
+        first = b["x"] > a["x"]  # the head forward: flexion
     elif kind in ("abdomen_x", "abdomen_z"):
-        return 1                                           # symmetric movements
+        return 1  # symmetric movements
     elif kind == "shoulder_x":
         first = lat * b["elbow"][1] > lat * a["elbow"][1]  # the elbow out from the side: abduction
     elif kind == "shoulder_z":
-        first = b["elbow"][0] > a["elbow"][0]              # the elbow forward: flexion
+        first = b["elbow"][0] > a["elbow"][0]  # the elbow forward: flexion
     elif kind == "elbow":
-        first = b["reach"] < a["reach"]                    # the glove nearer the shoulder: flexion (probed mid-range)
+        first = b["reach"] < a["reach"]  # the glove nearer the shoulder: flexion (probed mid-range)
     elif kind == "hip_y":
-        first = b["knee"][0] > a["knee"][0]                # the knee forward: flexion
+        first = b["knee"][0] > a["knee"][0]  # the knee forward: flexion
     elif kind == "hip_x":
-        first = lat * b["knee"][1] > lat * a["knee"][1]    # the knee away from the midline: abduction
+        first = lat * b["knee"][1] > lat * a["knee"][1]  # the knee away from the midline: abduction
     elif kind == "knee":
-        first = b["ankle"][0] < a["ankle"][0]              # the ankle back: flexion
+        first = b["ankle"][0] < a["ankle"][0]  # the ankle back: flexion
     elif kind == "hip_z":
-        first = lat * b["toe"][1] < lat * a["toe"][1]      # the toes towards the midline: internal rotation
+        first = lat * b["toe"][1] < lat * a["toe"][1]  # the toes towards the midline: internal rotation
     elif kind == "ankle_y":
-        first = b["toe"][2] > a["toe"][2]                  # the toes up: dorsiflexion
+        first = b["toe"][2] > a["toe"][2]  # the toes up: dorsiflexion
     elif kind == "ankle_x":
-        first = lat * b["up"][1] < lat * a["up"][1]        # the sole turned to the midline: inversion
+        first = lat * b["up"][1] < lat * a["up"][1]  # the sole turned to the midline: inversion
     else:
         raise ValueError(joint)
     return 1 if first else -1
@@ -145,9 +148,15 @@ def audit(xml: str, cfg: dict) -> list:
         first = math.degrees((hi - q0) if sign > 0 else (q0 - lo))
         second = math.degrees((q0 - lo) if sign > 0 else (hi - q0))
         (m1, h1), (m2, h2) = HUMAN[kind]
-        flag = lambda deg, ref: ("past" if deg > ref + PAST else "short" if ref > 0 and deg < SHORT * ref else "")
-        rows.append({"joint": j, "first": (m1, first, h1, flag(first, h1)), "second": (m2, second, h2, flag(second, h2)),
-                     "zero_deg": math.degrees(q0)})
+        flag = lambda deg, ref: "past" if deg > ref + PAST else "short" if ref > 0 and deg < SHORT * ref else ""
+        rows.append(
+            {
+                "joint": j,
+                "first": (m1, first, h1, flag(first, h1)),
+                "second": (m2, second, h2, flag(second, h2)),
+                "zero_deg": math.degrees(q0),
+            }
+        )
     return rows
 
 
@@ -156,18 +165,27 @@ def main() -> None:
     ap.add_argument("--models", default=os.path.join("models", "v2"))
     ap.add_argument("--out", default=os.path.join("tools", "rom_audit.md"))
     args = ap.parse_args()
-    out = ["# Joint ranges against a person's range of motion", "",
-           "Degrees from the anatomical zero: model / person; past = more than 15 past the person's, short = under half of it.", ""]
+    out = [
+        "# Joint ranges against a person's range of motion",
+        "",
+        "Degrees from the anatomical zero: model / person; past = more than 15 past the person's, short = under half of it.",
+        "",
+    ]
     tables, flagged = {}, []
     for solo in sorted(glob.glob(os.path.join(HERE, args.models, "*_solo.xml"))):
-        name = os.path.basename(solo)[:-len("_solo.xml")]
+        name = os.path.basename(solo)[: -len("_solo.xml")]
         with open(os.path.join(HERE, args.models, f"{name}_policy_config.json"), "r", encoding="utf-8") as fh:
             cfg = json.load(fh)
         rows = audit(solo, cfg)
         key = json.dumps([(r["joint"], round(r["first"][1]), round(r["second"][1])) for r in rows])
         tables.setdefault(key, (rows, []))[1].append(name)
     for rows, names in tables.values():
-        out += [f"## {', '.join(names)}", "", "| joint | movement | model | person | | movement | model | person | |", "|---|---|---|---|---|---|---|---|---|"]
+        out += [
+            f"## {', '.join(names)}",
+            "",
+            "| joint | movement | model | person | | movement | model | person | |",
+            "|---|---|---|---|---|---|---|---|---|",
+        ]
         for r in rows:
             (m1, a1, h1, f1), (m2, a2, h2, f2) = r["first"], r["second"]
             out.append(f"| {r['joint']} | {m1} | {a1:.0f} | {h1} | {f1} | {m2} | {a2:.0f} | {h2} | {f2} |")

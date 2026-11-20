@@ -1,5 +1,5 @@
 {
-  "source": "C:/Users/punko/Downloads/CODE_MATT/PoBox/Assets/Models/Sokol.glb",
+  "source": "Assets/Models/Sokol.glb",
   "frame": "blender_z_up (x = character left, -y = forward, z = up)",
   "height_m": 1.833,
   "mass_kg": 82.0,

@@ -7,6 +7,7 @@ The first layer of the actor and of the critic gets a column of zeros for each n
 policy returns exactly what the old one did whatever the command says; training then teaches it to listen.
 The optimiser's state is dropped: its moments are shaped for the old layer.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -46,8 +47,9 @@ def main() -> None:
     after.load_state_dict(sd)
     x = torch.randn(64, args.to) * 3.0
     with torch.no_grad():
-        assert torch.equal(before.actor(x[:, :old]), after.actor(x)) and torch.equal(before.critic(x[:, :old]), after.critic(x)), \
-            "the widened policy does not answer as the old one did"
+        assert torch.equal(before.actor(x[:, :old]), after.actor(x)) and torch.equal(
+            before.critic(x[:, :old]), after.critic(x)
+        ), "the widened policy does not answer as the old one did"
     os.makedirs(os.path.dirname(os.path.abspath(args.dst)), exist_ok=True)
     torch.save(ck, args.dst)
     print(f"wrote {args.dst}: {old} -> {args.to} inputs, same actions and value on 64 random observations")

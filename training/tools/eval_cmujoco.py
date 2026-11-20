@@ -11,6 +11,7 @@ to Warp that a policy trained in one stands up in the other?
 The observation here is written out again from scratch in numpy, on purpose. It is the same hundred
 numbers as envs/boxing.py builds, and it is the template for the C# that builds them in Unity.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -20,11 +21,9 @@ import sys
 
 import mujoco
 import numpy as np
-import torch
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, HERE)
-from ppo import PPO, PPOConfig  # noqa: E402
 
 
 def yaw_of(q):
@@ -39,7 +38,9 @@ def heading(v, yaw):
 
 class Ring:
     def __init__(self, xml: str, cfg: dict, seed: int = 1, model=None):
-        self.m = model or mujoco.MjModel.from_xml_path(xml)       # model: the file's, changed (tools/melee_exam.py adds bodies)
+        self.m = model or mujoco.MjModel.from_xml_path(
+            xml
+        )  # model: the file's, changed (tools/melee_exam.py adds bodies)
         self.d = mujoco.MjData(self.m)
         m = self.m
         self.rng = np.random.default_rng(seed)
@@ -48,7 +49,17 @@ class Ring:
         self.A = len(self.order)
         self.ring_half = float(cfg.get("ring_half", 3.05))
         J, G, B = mujoco.mjtObj.mjOBJ_JOINT, mujoco.mjtObj.mjOBJ_GEOM, mujoco.mjtObj.mjOBJ_BODY
-        self.rq, self.rv, self.jq, self.jv, self.pelvis, self.head, self.torso, self.glove, self.foot = [], [], [], [], [], [], [], [], []
+        self.rq, self.rv, self.jq, self.jv, self.pelvis, self.head, self.torso, self.glove, self.foot = (
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+        )
         for p in ("a_", "b_"):
             r = mujoco.mj_name2id(m, J, p + "root")
             self.rq.append(int(m.jnt_qposadr[r]))
@@ -83,9 +94,9 @@ class Ring:
         for k in range(2):
             yaw = bearing + (0.0 if k == 0 else math.pi) + self.rng.uniform(-0.6, 0.6)
             rq = self.rq[k]
-            q[rq:rq + 2] = centre + u * sep * (-0.5 if k == 0 else 0.5)
+            q[rq : rq + 2] = centre + u * sep * (-0.5 if k == 0 else 0.5)
             q[rq + 2] = self.stand[k] + 0.002
-            q[rq + 3:rq + 7] = [math.cos(yaw / 2), 0, 0, math.sin(yaw / 2)]
+            q[rq + 3 : rq + 7] = [math.cos(yaw / 2), 0, 0, math.sin(yaw / 2)]
             q[self.jq[k]] = self.default[k] + self.rng.uniform(-0.06, 0.06, self.A)
         d.qpos[:] = q
         d.qvel[:] = 0
@@ -104,7 +115,7 @@ class Ring:
         R = d.xmat[self.pelvis[k]].reshape(3, 3)
         yaw = yaw_of(quat)
         rv = self.rv[k]
-        lin_w = d.qvel[rv:rv + 3]
+        lin_w = d.qvel[rv : rv + 3]
         foot = []
         for g in self.foot[k]:
             sole = d.geom_xpos[g][2] - np.abs(d.geom_xmat[g].reshape(3, 3)[2]) @ self.m.geom_size[g]
@@ -112,22 +123,36 @@ class Ring:
         rel = lambda p: heading(p - pos, yaw)
         dyaw = yaw_of(d.xquat[self.pelvis[o]]) - yaw
         ring = heading(np.array([-pos[0], -pos[1], 0.0]), yaw)[:2] / self.ring_half
-        return np.concatenate([
-            R.T @ lin_w, d.qvel[rv + 3:rv + 6], R.T @ np.array([0.0, 0.0, -1.0]),
-            d.qpos[self.jq[k]] - self.default[k], d.qvel[self.jv[k]], self.last[k],
-            foot, [pos[2]],
-            rel(d.geom_xpos[self.head[o]]), rel(d.geom_xpos[self.torso[o]]), heading(self.head_vel[k] - lin_w, yaw),
-            rel(d.geom_xpos[self.glove[k][0]]), rel(d.geom_xpos[self.glove[k][1]]),
-            rel(d.geom_xpos[self.glove[o][0]]), rel(d.geom_xpos[self.glove[o][1]]),
-            [math.cos(dyaw), math.sin(dyaw)], ring,
-        ]).clip(-100.0, 100.0)
+        return np.concatenate(
+            [
+                R.T @ lin_w,
+                d.qvel[rv + 3 : rv + 6],
+                R.T @ np.array([0.0, 0.0, -1.0]),
+                d.qpos[self.jq[k]] - self.default[k],
+                d.qvel[self.jv[k]],
+                self.last[k],
+                foot,
+                [pos[2]],
+                rel(d.geom_xpos[self.head[o]]),
+                rel(d.geom_xpos[self.torso[o]]),
+                heading(self.head_vel[k] - lin_w, yaw),
+                rel(d.geom_xpos[self.glove[k][0]]),
+                rel(d.geom_xpos[self.glove[k][1]]),
+                rel(d.geom_xpos[self.glove[o][0]]),
+                rel(d.geom_xpos[self.glove[o][1]]),
+                [math.cos(dyaw), math.sin(dyaw)],
+                ring,
+            ]
+        ).clip(-100.0, 100.0)
 
     def step(self, action: np.ndarray) -> list:
         d = self.d
         action = action.clip(-3.0, 3.0)
         self.last = action
-        scale = [np.array(c.get("action_scale_j", [0.5] * self.A)) for c in self.cfgs]      # models/v3: per joint
-        d.ctrl[:] = np.concatenate([(self.default[k] + action[k] * scale[k]).clip(self.lo[k], self.hi[k]) for k in range(2)])
+        scale = [np.array(c.get("action_scale_j", [0.5] * self.A)) for c in self.cfgs]  # models/v3: per joint
+        d.ctrl[:] = np.concatenate(
+            [(self.default[k] + action[k] * scale[k]).clip(self.lo[k], self.hi[k]) for k in range(2)]
+        )
         for _ in range(4):
             mujoco.mj_step(self.m, d)
         fell = []
@@ -141,6 +166,9 @@ class Ring:
 
 
 def main() -> None:
+    import torch  # the trainer's stack: only the CLI needs it, Ring is plain MuJoCo + numpy
+    from ppo import PPO, PPOConfig
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--a", default="matt")
     ap.add_argument("--b", default="zombie")
@@ -149,6 +177,7 @@ def main() -> None:
     ap.add_argument("--models", default=os.path.join(HERE, "models", "v2"))
     args = ap.parse_args()
     import json
+
     stem = os.path.join(args.models, f"{args.a}_vs_{args.b}")
     ring = Ring(stem + "_spar.xml", json.load(open(stem + "_policy_config.json", encoding="utf-8")))
     ppos, iters = [], 0
@@ -163,7 +192,18 @@ def main() -> None:
     lengths = []
     with torch.no_grad():
         for _ in range(int(args.seconds / ring.dt)):
-            act = np.stack([ppos[k].model.actor(ppos[k].obs_rms.normalize(torch.tensor(ring.observe(k), dtype=torch.float32)[None], ppos[k].cfg.obs_clip))[0].numpy() for k in range(2)])
+            act = np.stack(
+                [
+                    ppos[k]
+                    .model.actor(
+                        ppos[k].obs_rms.normalize(
+                            torch.tensor(ring.observe(k), dtype=torch.float32)[None], ppos[k].cfg.obs_clip
+                        )
+                    )[0]
+                    .numpy()
+                    for k in range(2)
+                ]
+            )
             fell = ring.step(act)
             steps_in += 1
             if any(fell) or steps_in >= 600:
@@ -176,8 +216,10 @@ def main() -> None:
                 ring.reset()
     n = max(1, episodes)
     print(f"C MuJoCo {mujoco.__version__}, iteration {iters}, without exploration noise, {args.seconds:g} s:")
-    print(f"  {episodes} episodes; stays up {np.mean(lengths) if lengths else args.seconds:.1f} s of an episode; fall rate {falls / n:.2f}; "
-          f"{args.a} down in {down[0] / n:.0%} of endings, {args.b} in {down[1] / n:.0%}")
+    print(
+        f"  {episodes} episodes; stays up {np.mean(lengths) if lengths else args.seconds:.1f} s of an episode; fall rate {falls / n:.2f}; "
+        f"{args.a} down in {down[0] / n:.0%} of endings, {args.b} in {down[1] / n:.0%}"
+    )
 
 
 if __name__ == "__main__":

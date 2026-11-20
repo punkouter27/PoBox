@@ -3,6 +3,7 @@
 Usage:
     PYTHONPATH=.mj350 python tools/ffa_exam.py --bouts 20 --rounds 3 --json logs/ffa_exam.json
 """
+
 from __future__ import annotations
 
 import argparse
@@ -75,7 +76,15 @@ class FfaRing:
         self.order = self.cfgs[0]["joint_order"]
         self.A = len(self.order)
         self.rq, self.rv, self.jq, self.jv = [], [], [], []
-        self.pelvis, self.torso_b, self.head, self.torso, self.glove, self.forearm, self.foot = [], [], [], [], [], [], []
+        self.pelvis, self.torso_b, self.head, self.torso, self.glove, self.forearm, self.foot = (
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+        )
         self.f_lo, self.f_hi, self.scale_j = [], [], []
 
         for k, cfg in enumerate(self.cfgs):
@@ -102,8 +111,8 @@ class FfaRing:
                 self.f_lo.append(-fl)
                 self.f_hi.append(fl)
 
-        self.kp = np.array([m.actuator_gainprm[k * self.A:(k + 1) * self.A, 0] for k in range(self.K)])
-        self.kv = np.array([-m.actuator_biasprm[k * self.A:(k + 1) * self.A, 2] for k in range(self.K)])
+        self.kp = np.array([m.actuator_gainprm[k * self.A : (k + 1) * self.A, 0] for k in range(self.K)])
+        self.kv = np.array([-m.actuator_biasprm[k * self.A : (k + 1) * self.A, 2] for k in range(self.K)])
         self.key = m.key_qpos[0].copy()
         self.default = [self.key[self.jq[k]].copy() for k in range(self.K)]
         self.stand = [float(cfg["stand_height"]) for cfg in self.cfgs]
@@ -118,7 +127,10 @@ class FfaRing:
 
         rule = lambda key: np.array([float(c.get(key, 0.0)) for c in self.cfgs])
         self.hit_push, self.stagger_v, self.hurt_full, self.body_drain = (
-            rule("hit_push"), rule("stagger_v"), rule("hurt_full"), rule("body_drain")
+            rule("hit_push"),
+            rule("stagger_v"),
+            rule("hurt_full"),
+            rule("body_drain"),
         )
         self.ceiling = [bool(c.get("fatigue_ceiling", False)) for c in self.cfgs]
         self.hurt = np.zeros(self.K)
@@ -129,8 +141,12 @@ class FfaRing:
         for k in range(self.K):
             pos_k = self.d.xpos[self.pelvis[k]]
             y_k = yaw_of(self.d.xquat[self.pelvis[k]])
-            pts = [self.d.geom_xpos[self.head[k]], self.d.geom_xpos[self.torso[k]],
-                   self.d.geom_xpos[self.glove[k][0]], self.d.geom_xpos[self.glove[k][1]]]
+            pts = [
+                self.d.geom_xpos[self.head[k]],
+                self.d.geom_xpos[self.torso[k]],
+                self.d.geom_xpos[self.glove[k][0]],
+                self.d.geom_xpos[self.glove[k][1]],
+            ]
             self.guard.append([heading(p - pos_k, y_k) for p in pts])
         self.reset_round(keep_hurt=False)
 
@@ -148,9 +164,9 @@ class FfaRing:
             x, y = (c / mx) * r, (s / mx) * r
             yaw = math.atan2(-y, -x)
             rq = self.rq[k]
-            q[rq:rq + 2] = [x, y]
+            q[rq : rq + 2] = [x, y]
             q[rq + 2] = self.stand[k] + 0.002
-            q[rq + 3:rq + 7] = [math.cos(yaw / 2), 0.0, 0.0, math.sin(yaw / 2)]
+            q[rq + 3 : rq + 7] = [math.cos(yaw / 2), 0.0, 0.0, math.sin(yaw / 2)]
             q[self.jq[k]] = self.default[k]
         d.qpos[:] = q
         d.qvel[:] = 0.0
@@ -234,7 +250,7 @@ class FfaRing:
         R = d.xmat[self.pelvis[k]].reshape(3, 3)
         yaw = yaw_of(d.xquat[self.pelvis[k]])
         rv = self.rv[k]
-        lin_w = d.qvel[rv:rv + 3]
+        lin_w = d.qvel[rv : rv + 3]
         foot = []
         for g in self.foot[k]:
             sole = d.geom_xpos[g][2] - np.abs(d.geom_xmat[g].reshape(3, 3)[2]) @ self.m.geom_size[g]
@@ -245,7 +261,9 @@ class FfaRing:
             opp_xy = pos[:2] + np.array([math.cos(yaw), math.sin(yaw)]) * 1.2
             theirs = math.atan2(pos[1] - opp_xy[1], pos[0] - opp_xy[0])
             c, s = math.cos(theirs), math.sin(theirs)
-            place = lambda gp: np.array([opp_xy[0] + c * gp[0] - s * gp[1], opp_xy[1] + s * gp[0] + c * gp[1], self.stand[k] + gp[2]])
+            place = lambda gp: np.array(
+                [opp_xy[0] + c * gp[0] - s * gp[1], opp_xy[1] + s * gp[0] + c * gp[1], self.stand[k] + gp[2]]
+            )
             th, tb, g_l, g_r = (place(gp) for gp in self.guard[k])
             tvel = -lin_w
             ogloves = np.concatenate([rel(g_l), rel(g_r)])
@@ -253,18 +271,30 @@ class FfaRing:
         else:
             th = d.geom_xpos[self.head[opp]]
             tb = d.geom_xpos[self.torso[opp]]
-            tvel = (self.head_vel[opp] - lin_w)
+            tvel = self.head_vel[opp] - lin_w
             ogloves = np.concatenate([rel(d.geom_xpos[self.glove[opp][0]]), rel(d.geom_xpos[self.glove[opp][1]])])
             dyaw = yaw_of(d.xquat[self.pelvis[opp]]) - yaw
         ring = heading(np.array([-pos[0], -pos[1], 0.0]), yaw)[:2] / self.ring_half
-        return np.concatenate([
-            R.T @ lin_w, d.qvel[rv + 3:rv + 6], R.T @ np.array([0.0, 0.0, -1.0]),
-            d.qpos[self.jq[k]] - self.default[k], d.qvel[self.jv[k]], self.last[k],
-            foot, [pos[2]],
-            rel(th), rel(tb), heading(tvel, yaw),
-            rel(d.geom_xpos[self.glove[k][0]]), rel(d.geom_xpos[self.glove[k][1]]),
-            ogloves, [math.cos(dyaw), math.sin(dyaw)], ring,
-        ]).clip(-100.0, 100.0)
+        return np.concatenate(
+            [
+                R.T @ lin_w,
+                d.qvel[rv + 3 : rv + 6],
+                R.T @ np.array([0.0, 0.0, -1.0]),
+                d.qpos[self.jq[k]] - self.default[k],
+                d.qvel[self.jv[k]],
+                self.last[k],
+                foot,
+                [pos[2]],
+                rel(th),
+                rel(tb),
+                heading(tvel, yaw),
+                rel(d.geom_xpos[self.glove[k][0]]),
+                rel(d.geom_xpos[self.glove[k][1]]),
+                ogloves,
+                [math.cos(dyaw), math.sin(dyaw)],
+                ring,
+            ]
+        ).clip(-100.0, 100.0)
 
     def _brain_cmd(self, pol, obs100: np.ndarray, k: int, cmd3: np.ndarray, is_match: bool) -> np.ndarray:
         n = pol.obs_rms.mean.shape[0]
@@ -287,7 +317,11 @@ class FfaRing:
             self.target[k] = self.pick_target(k)
             if self.walking[k]:
                 opp = self.target[k]
-                odist = float(np.linalg.norm(d.xpos[self.pelvis[opp]][:2] - d.xpos[self.pelvis[k]][:2])) if opp >= 0 else 9.0
+                odist = (
+                    float(np.linalg.norm(d.xpos[self.pelvis[opp]][:2] - d.xpos[self.pelvis[k]][:2]))
+                    if opp >= 0
+                    else 9.0
+                )
                 cdist = float(np.linalg.norm(d.xpos[self.pelvis[k]][:2]))
                 if odist < 1.6 or cdist < 0.8 or self.walk_age[k] >= 6.0:
                     self.walking[k] = False
@@ -327,7 +361,7 @@ class FfaRing:
             self.m.dof_damping[jv] = self.damp_base[jv] + share * self.sl_extra[jv]
             if self.out[k]:
                 qpos_k = d.qpos[self.jq[k]]
-                d.ctrl[k * self.A:(k + 1) * self.A] = qpos_k
+                d.ctrl[k * self.A : (k + 1) * self.A] = qpos_k
                 continue
             act_k = np.clip(acts[k], -3.0, 3.0)
             brain_key = "getup" if self.down[k] else ("footwork" if self.walking[k] else "match")
@@ -352,7 +386,7 @@ class FfaRing:
             elif self.scale[k] < 0.999 or (not self.ceiling[k] and tired < 0.999):
                 scale = self.scale[k] * (1.0 if self.ceiling[k] else tired)
                 want = q + scale * (want - q)
-            d.ctrl[k * self.A:(k + 1) * self.A] = want
+            d.ctrl[k * self.A : (k + 1) * self.A] = want
             d.xfrc_applied[self.torso_b[k]] = self.push[k]
 
         mujoco.mj_step(self.m, d, 4)
@@ -362,8 +396,10 @@ class FfaRing:
         for k in range(self.K):
             joules = float(self.cfgs[k].get("fatigue_j", 0.0)) * float(self.cfgs[k].get("strength", 1.0))
             if joules > 0.0 and not self.no_drain[k] and not self.out[k]:
-                spent = np.abs(d.actuator_force[k * self.A:(k + 1) * self.A] * d.qvel[self.jv[k]]).sum() / joules
-                self.reserve[k] = float(np.clip(self.reserve[k] + dt * ((1.0 - self.reserve[k]) / 20.0 - spent), 0.0, 1.0))
+                spent = np.abs(d.actuator_force[k * self.A : (k + 1) * self.A] * d.qvel[self.jv[k]]).sum() / joules
+                self.reserve[k] = float(
+                    np.clip(self.reserve[k] + dt * ((1.0 - self.reserve[k]) / 20.0 - spent), 0.0, 1.0)
+                )
             head = d.geom_xpos[self.head[k]].copy()
             self.head_vel[k] = (head - self.prev_head[k]) / dt
             self.prev_head[k] = head
@@ -526,16 +562,22 @@ def main() -> None:
             "kos": v["kos"],
         }
     out = {
-        "bouts": args.bouts, "rounds": args.rounds, "boxers": names, "elapsed_s": round(time.time() - t0, 1),
+        "bouts": args.bouts,
+        "rounds": args.rounds,
+        "boxers": names,
+        "elapsed_s": round(time.time() - t0, 1),
         "slips_per_boxer_min": round(tot_slips / max(1e-6, tot_s / 60.0), 3),
         "hits_per_boxer_min": round(tot_hits / max(1e-6, tot_s / 60.0), 2),
-        "knockdowns": tot_kds, "getups_beaten_count": tot_up,
+        "knockdowns": tot_kds,
+        "getups_beaten_count": tot_up,
         "getup_beat_count_rate": round(tot_up / max(1, tot_kds), 3),
         "per_boxer": per,
     }
     print(json.dumps({k: v for k, v in out.items() if k != "per_boxer"}, indent=2))
     for n, v in per.items():
-        print(f"  {n:8s} slips={v['slips_per_min']:.2f}/m  hits={v['hits_per_min']:.1f}/m  up={v['beat_count']}/{v['knockdowns']} ({v['getup_rate']:.0%})  ko={v['kos']}")
+        print(
+            f"  {n:8s} slips={v['slips_per_min']:.2f}/m  hits={v['hits_per_min']:.1f}/m  up={v['beat_count']}/{v['knockdowns']} ({v['getup_rate']:.0%})  ko={v['kos']}"
+        )
     if args.json:
         os.makedirs(os.path.dirname(os.path.abspath(args.json)), exist_ok=True)
         with open(args.json, "w", encoding="utf-8") as fh:

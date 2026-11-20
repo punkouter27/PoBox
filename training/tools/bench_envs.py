@@ -7,6 +7,7 @@ Each size is its own process (the GPU's memory is only really given back when a 
 boxer-steps a second, physics and policy together, and the GPU memory it took. The answer is written as
 {"best": N, ...}; "best" is the largest size that is at least 8% faster than the one before it and fits.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -21,9 +22,11 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 def one(n: int, xml: str, steps: int) -> None:
     import torch
+
     sys.path.insert(0, HERE)
     from envs.getup import GetUpEnv
     from ppo import PPO, PPOConfig
+
     env = GetUpEnv(xml, n, device="cuda")
     ppos = [PPO(env.obs_dim, env.A, n, "cuda", PPOConfig(steps_per_env=24)) for _ in range(env.K)]
     obs = env.reset()
@@ -38,7 +41,7 @@ def one(n: int, xml: str, steps: int) -> None:
         torch.cuda.synchronize()
         dt = time.time() - t0
     free, total = torch.cuda.mem_get_info()
-    print(json.dumps({"n": n, "sps": steps * n * env.K / dt, "gpu_used_mb": (total - free) / 2 ** 20}), flush=True)
+    print(json.dumps({"n": n, "sps": steps * n * env.K / dt, "gpu_used_mb": (total - free) / 2**20}), flush=True)
 
 
 def main() -> None:
@@ -55,14 +58,34 @@ def main() -> None:
     rows = []
     for n in args.sizes:
         try:
-            out = subprocess.run([sys.executable, os.path.abspath(__file__), "--one", str(n), "--xml", args.xml, "--steps", str(args.steps)],
-                                 capture_output=True, text=True, timeout=600, cwd=HERE)
+            out = subprocess.run(
+                [
+                    sys.executable,
+                    os.path.abspath(__file__),
+                    "--one",
+                    str(n),
+                    "--xml",
+                    args.xml,
+                    "--steps",
+                    str(args.steps),
+                ],
+                capture_output=True,
+                text=True,
+                timeout=600,
+                cwd=HERE,
+            )
             line = [ln for ln in out.stdout.splitlines() if ln.startswith("{")]
             if line:
                 rows.append(json.loads(line[-1]))
-                print(f"{n:5d} rings: {rows[-1]['sps']:8.0f} boxer-steps a second, {rows[-1]['gpu_used_mb']:.0f} MB of GPU memory in use", flush=True)
+                print(
+                    f"{n:5d} rings: {rows[-1]['sps']:8.0f} boxer-steps a second, {rows[-1]['gpu_used_mb']:.0f} MB of GPU memory in use",
+                    flush=True,
+                )
             else:
-                print(f"{n:5d} rings: failed ({(out.stderr or out.stdout).strip().splitlines()[-1][:160] if (out.stderr or out.stdout).strip() else 'no output'})", flush=True)
+                print(
+                    f"{n:5d} rings: failed ({(out.stderr or out.stdout).strip().splitlines()[-1][:160] if (out.stderr or out.stdout).strip() else 'no output'})",
+                    flush=True,
+                )
                 break
         except Exception as e:
             print(f"{n:5d} rings: failed ({e})", flush=True)
@@ -75,7 +98,9 @@ def main() -> None:
             break
     print(f"best: {best}")
     if args.write:
-        with open(args.write if os.path.isabs(args.write) else os.path.join(HERE, args.write), "w", encoding="utf-8") as f:
+        with open(
+            args.write if os.path.isabs(args.write) else os.path.join(HERE, args.write), "w", encoding="utf-8"
+        ) as f:
             json.dump({"best": best, "rows": rows, "when": time.strftime("%Y-%m-%d %H:%M:%S")}, f, indent=1)
 
 

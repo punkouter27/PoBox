@@ -16,6 +16,7 @@ or zero actions where a brain or onnxruntime is missing. For every index it prin
 and, for footwork, the C MuJoCo 3.5.0 reference recording the Unity gate replays (reference_trajectory.json),
 the indices whose mean in the reference is furthest from training's, in training's standard deviations.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -52,6 +53,7 @@ class Brain:
         try:
             import onnx
             import onnxruntime as ort
+
             self.sess = ort.InferenceSession(path, providers=["CPUExecutionProvider"])
             init = {i.name: onnx.numpy_helper.to_array(i) for i in onnx.load(path).graph.initializer}
             self.mean, self.std = init.get("mean"), init.get("std")
@@ -82,7 +84,7 @@ def audit(stage: str, env, brains, seconds: float, names) -> dict:
     for k in range(K):
         b = brains[k]
         if b.mean is not None:
-            z = np.abs(x[k::K] - b.mean) / b.std           # rows are (world, fighter) pairs, fighter fastest
+            z = np.abs(x[k::K] - b.mean) / b.std  # rows are (world, fighter) pairs, fighter fastest
             clip = np.maximum(clip, (z > 10.0).mean(0))
     flags = []
     for i, name in enumerate(names):
@@ -100,7 +102,9 @@ def audit(stage: str, env, brains, seconds: float, names) -> dict:
     print(f"{'i':>3} {'number':22} {'min':>9} {'max':>9} {'mean':>9} {'std':>9}  flags")
     for i, name in enumerate(names):
         if flags[i]:
-            print(f"{i:3d} {name:22} {st['min'][i]:9.3f} {st['max'][i]:9.3f} {st['mean'][i]:9.3f} {st['std'][i]:9.4f}  {', '.join(flags[i])}")
+            print(
+                f"{i:3d} {name:22} {st['min'][i]:9.3f} {st['max'][i]:9.3f} {st['mean'][i]:9.3f} {st['std'][i]:9.4f}  {', '.join(flags[i])}"
+            )
     print(f"    ({sum(1 for f in flags if f)} of {len(names)} flagged; the rest are within bounds)")
     return {"stats": {k: v.tolist() for k, v in st.items()}, "clip": clip.tolist(), "flags": flags, "x": x}
 
@@ -119,8 +123,14 @@ def main() -> None:
     torch.manual_seed(args.seed)
     boxer = lambda n: os.path.join(REPO, "Assets", "Boxers", n.capitalize() if n != "lilmatt" else "LilMatt")
     models = os.path.join(HERE, "models", "v2")
-    pair = next((p for p in (f"{args.name}_vs_{args.opp}_spar.xml", f"{args.opp}_vs_{args.name}_spar.xml")
-                 if os.path.exists(os.path.join(models, p))), None)
+    pair = next(
+        (
+            p
+            for p in (f"{args.name}_vs_{args.opp}_spar.xml", f"{args.opp}_vs_{args.name}_spar.xml")
+            if os.path.exists(os.path.join(models, p))
+        ),
+        None,
+    )
     kw = dict(device="cpu", seed=args.seed, cuda_graph=False, obs_noise=1.0)
     out = {}
     for stage in args.stages:
@@ -131,8 +141,13 @@ def main() -> None:
             print(f"no pair model for {args.name} and {args.opp} in models/v2; {stage} skipped")
             continue
         else:
-            env = (MatchEnv if stage == "match" else GetUpMatchEnv)(os.path.join(models, pair), args.worlds, push_vel=0.4 if stage == "match" else 0.0,
-                                                                     **({"daze": True} if stage == "match" else {}), **kw)
+            env = (MatchEnv if stage == "match" else GetUpMatchEnv)(
+                os.path.join(models, pair),
+                args.worlds,
+                push_vel=0.4 if stage == "match" else 0.0,
+                **({"daze": True} if stage == "match" else {}),
+                **kw,
+            )
             file = "match.onnx" if stage == "match" else "getup.onnx"
             brains = [Brain(os.path.join(boxer(n), file)) for n in env.names]
         names = labels(env.cfg["joint_order"])
@@ -141,16 +156,24 @@ def main() -> None:
             ref = os.path.join(boxer(args.name), "reference_trajectory.json")
             if os.path.exists(ref):
                 r = np.array([row["obs"] for row in json.load(open(ref, encoding="utf-8"))["rows"]], np.float32)
-                gap = np.abs(r.mean(0) - np.array(res["stats"]["mean"])) / np.maximum(np.array(res["stats"]["std"]), 0.05)
+                gap = np.abs(r.mean(0) - np.array(res["stats"]["mean"])) / np.maximum(
+                    np.array(res["stats"]["std"]), 0.05
+                )
                 top = np.argsort(-gap)[:6]
-                print(f"   C MuJoCo reference ({len(r)} rows, the Unity gate's): furthest from training, in training's std: "
-                      + ", ".join(f"{names[i]} {gap[i]:.1f}" for i in top))
+                print(
+                    f"   C MuJoCo reference ({len(r)} rows, the Unity gate's): furthest from training, in training's std: "
+                    + ", ".join(f"{names[i]} {gap[i]:.1f}" for i in top)
+                )
                 res["reference_gap"] = gap.tolist()
         res.pop("x")
         out[stage] = res
     if args.json:
-        with open(args.json if os.path.isabs(args.json) else os.path.join(HERE, args.json), "w", encoding="utf-8") as fh:
-            json.dump({"name": args.name, "opp": args.opp, "labels": labels(env.cfg["joint_order"]), **out}, fh, indent=1)
+        with open(
+            args.json if os.path.isabs(args.json) else os.path.join(HERE, args.json), "w", encoding="utf-8"
+        ) as fh:
+            json.dump(
+                {"name": args.name, "opp": args.opp, "labels": labels(env.cfg["joint_order"]), **out}, fh, indent=1
+            )
 
 
 if __name__ == "__main__":

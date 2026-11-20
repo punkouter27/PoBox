@@ -8,6 +8,7 @@ the checkpoint's latest_*_policy_config.json says which ("rules_<brain>").
     python tools/set_brain_rules.py --only matt --brain match --clear
     python tools/set_brain_rules.py --from-run checkpoints/rz_d3_matt/latest_matt_policy_config.json
 """
+
 import argparse
 import glob
 import json
@@ -22,7 +23,9 @@ ap.add_argument("--obs-delay", type=int)
 ap.add_argument("--obs-delay-max", type=int)
 ap.add_argument("--blend-steps", type=int, help="the brain eases in over this many control steps (2026-10-31)")
 ap.add_argument("--clear", action="store_true", help="take the brain's rules away (no filter, no delay)")
-ap.add_argument("--from-run", default="", help="a run's latest_*_policy_config.json: its boxer and rules_<brain>, as trained")
+ap.add_argument(
+    "--from-run", default="", help="a run's latest_*_policy_config.json: its boxer and rules_<brain>, as trained"
+)
 ap.add_argument("--models", default=os.path.join("models", "v2"))
 args = ap.parse_args()
 
@@ -31,14 +34,28 @@ if args.from_run:
         made = json.load(f)
     keys = [k for k in made if k.startswith("rules_")]
     if not keys:
-        raise SystemExit(f"{args.from_run} has no rules_<brain>: it was trained before 2026-10-30 (no filter, no delay)")
-    only, brain, rules = [made["name"]], keys[0][len("rules_"):], made[keys[0]]
+        raise SystemExit(
+            f"{args.from_run} has no rules_<brain>: it was trained before 2026-10-30 (no filter, no delay)"
+        )
+    only, brain, rules = [made["name"]], keys[0][len("rules_") :], made[keys[0]]
 else:
     if not args.brain:
         raise SystemExit("--brain or --from-run")
     only, brain = args.only, args.brain
-    rules = None if args.clear else {k: v for k, v in (("action_filter", args.action_filter), ("obs_delay", args.obs_delay),
-                                                      ("obs_delay_max", args.obs_delay_max), ("blend_steps", args.blend_steps)) if v is not None}
+    rules = (
+        None
+        if args.clear
+        else {
+            k: v
+            for k, v in (
+                ("action_filter", args.action_filter),
+                ("obs_delay", args.obs_delay),
+                ("obs_delay_max", args.obs_delay_max),
+                ("blend_steps", args.blend_steps),
+            )
+            if v is not None
+        }
+    )
 if rules and not 0.0 <= float(rules.get("action_filter", 0.0)) < 1.0:
     raise SystemExit("action_filter is a share of the last action: 0 <= f < 1")
 

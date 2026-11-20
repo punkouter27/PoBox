@@ -14,6 +14,7 @@ seconds is the policy's. The observation is the match's hundred numbers; the opp
 standing in its guard a step or two away, which is what the game shows a fighter that is getting up.
 Reward, the helping hand and the statistics have the same names and the same numbers as in envs/getup.py.
 """
+
 from __future__ import annotations
 
 import json
@@ -28,7 +29,21 @@ import numpy as np
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # The bodies it loads: models/v2 (the v1 files left training/models on 2026-10-16); a caller may point it at models/v3.
 MODELS = os.path.join(HERE, "models", "v2")
-TERMS = ["height", "head", "upright", "stood", "pose", "still", "face", "feet", "act", "rate", "energy", "qvel", "limit"]
+TERMS = [
+    "height",
+    "head",
+    "upright",
+    "stood",
+    "pose",
+    "still",
+    "face",
+    "feet",
+    "act",
+    "rate",
+    "energy",
+    "qvel",
+    "limit",
+]
 
 
 def quat_yaw(q: np.ndarray) -> np.ndarray:
@@ -77,16 +92,33 @@ def guard_of(name: str) -> Dict[str, np.ndarray]:
     yaw = float(quat_yaw(d.xquat[pel]))
     rel = lambda p: to_heading(np.asarray(p) - d.xpos[pel], np.asarray(yaw))
     gid = lambda n: mujoco.mj_name2id(m, G, "a_" + n)
-    return {"head": rel(d.geom_xpos[gid("head_geom")]), "body": rel(d.geom_xpos[gid("torso_geom")]),
-            "glove": np.stack([rel(d.geom_xpos[gid("glove_l")]), rel(d.geom_xpos[gid("glove_r")])]),
-            "stand": float(d.xpos[pel][2])}
+    return {
+        "head": rel(d.geom_xpos[gid("head_geom")]),
+        "body": rel(d.geom_xpos[gid("torso_geom")]),
+        "glove": np.stack([rel(d.geom_xpos[gid("glove_l")]), rel(d.geom_xpos[gid("glove_r")])]),
+        "stand": float(d.xpos[pel][2]),
+    }
 
 
 class CGetUp:
-    def __init__(self, name: str, num_envs: int, threads: int = 2, seed: int = 0, slack_lo: float = 0.15,
-                 slack_hi: float = 2.6, shove: float = 2.5, stand_share: float = 0.12, assist: float = 0.6,
-                 episode_len_s: float = 10.0, obs_noise: float = 1.0, action_scale: float = 0.5,
-                 action_clip: float = 3.0, unaided_share: float = 0.1, stand_ins: Optional[List[str]] = None):
+    def __init__(
+        self,
+        name: str,
+        num_envs: int,
+        threads: int = 2,
+        seed: int = 0,
+        slack_lo: float = 0.15,
+        slack_hi: float = 2.6,
+        shove: float = 2.5,
+        stand_share: float = 0.12,
+        assist: float = 0.6,
+        episode_len_s: float = 10.0,
+        obs_noise: float = 1.0,
+        action_scale: float = 0.5,
+        action_clip: float = 3.0,
+        unaided_share: float = 0.1,
+        stand_ins: Optional[List[str]] = None,
+    ):
         self.name, self.N = name, num_envs
         self.m, self.cfg = load_alone(name)
         m, cfg, N = self.m, self.cfg, num_envs
@@ -101,7 +133,12 @@ class CGetUp:
         self.A = A = len(order)
         self.obs_dim = 9 + 3 * A + 3 + 9 + 6 + 6 + 2 + 2
 
-        J, G, B, U = mujoco.mjtObj.mjOBJ_JOINT, mujoco.mjtObj.mjOBJ_GEOM, mujoco.mjtObj.mjOBJ_BODY, mujoco.mjtObj.mjOBJ_ACTUATOR
+        J, G, B, U = (
+            mujoco.mjtObj.mjOBJ_JOINT,
+            mujoco.mjtObj.mjOBJ_GEOM,
+            mujoco.mjtObj.mjOBJ_BODY,
+            mujoco.mjtObj.mjOBJ_ACTUATOR,
+        )
         root = mujoco.mj_name2id(m, J, "a_root")
         self.rq, self.rv = int(m.jnt_qposadr[root]), int(m.jnt_dofadr[root])
         js = [mujoco.mj_name2id(m, J, "a_" + n) for n in order]
@@ -119,7 +156,7 @@ class CGetUp:
         self.default = self.key[self.jq].copy()
         self.stand = float(self.key[self.rq + 2])
         self.lo, self.hi = np.array(cfg["lower"]), np.array(cfg["upper"])
-        if "action_scale_j" in cfg:                    # models/v3: per joint (envs/boxing.py)
+        if "action_scale_j" in cfg:  # models/v3: per joint (envs/boxing.py)
             self.action_scale = np.array(cfg["action_scale_j"])
         self.qvel_limit = np.array(cfg["velocity_limit"])
         self.weight = float(m.body_subtreemass[self.pelvis]) * 9.81
@@ -150,7 +187,7 @@ class CGetUp:
         self.assist = float(assist)
         self.up_ema = 0.0
         n_raw = max(1, int(round(N * unaided_share))) if assist > 0.0 else N
-        self.aided = (np.arange(N) >= n_raw).astype(np.float64)        # the first tenth go without
+        self.aided = (np.arange(N) >= n_raw).astype(np.float64)  # the first tenth go without
         self._zero_stats()
         self._floor = {"up_end": 0.0, "ends": 0.0}
         self.reset()
@@ -158,12 +195,12 @@ class CGetUp:
     # ---- the worlds --------------------------------------------------------------------------------
     def _gather(self, which=None) -> None:
         jq, jv, act, rv = self.jq, self.jv, self.act, self.rv
-        for i in (range(self.N) if which is None else which):
+        for i in range(self.N) if which is None else which:
             d = self.datas[i]
             self.QJ[i] = d.qpos[jq]
             self.VJ[i] = d.qvel[jv]
             self.TAU[i] = d.actuator_force[act]
-            self.ROOTV[i] = d.qvel[rv:rv + 6]
+            self.ROOTV[i] = d.qvel[rv : rv + 6]
             self.POS[i] = d.xpos[self.pelvis]
             self.QUAT[i] = d.xquat[self.pelvis]
             self.HEAD[i] = d.geom_xpos[self.g_head]
@@ -196,16 +233,18 @@ class CGetUp:
             v = np.zeros(m.nv)
             spot = rng.uniform(-2.0, 2.0, 2)
             yaw = rng.uniform(-math.pi, math.pi)
-            q[self.rq:self.rq + 2] = spot
+            q[self.rq : self.rq + 2] = spot
             q[self.rq + 2] = self.stand + 0.002
-            q[self.rq + 3:self.rq + 7] = [math.cos(yaw / 2), 0.0, 0.0, math.sin(yaw / 2)]
+            q[self.rq + 3 : self.rq + 7] = [math.cos(yaw / 2), 0.0, 0.0, math.sin(yaw / 2)]
             q[self.jq] = self.default + rng.uniform(-0.1, 0.1, A)
             standing = rng.uniform() < self.stand_share
             slack = 0.0 if standing else rng.uniform(self.slack_lo, self.slack_hi)
             hard = 0.2 + 0.8 * slack / self.slack_hi
-            v[self.rv:self.rv + 2] = rng.uniform(-0.3, 0.3, 2) if standing else rng.uniform(-self.shove, self.shove, 2) * hard
+            v[self.rv : self.rv + 2] = (
+                rng.uniform(-0.3, 0.3, 2) if standing else rng.uniform(-self.shove, self.shove, 2) * hard
+            )
             if not standing:
-                v[self.rv + 3:self.rv + 6] = rng.uniform(-2.5, 2.5, 3) * hard
+                v[self.rv + 3 : self.rv + 6] = rng.uniform(-2.5, 2.5, 3) * hard
             bearing = yaw + rng.uniform(-0.6, 0.6)
             dist = rng.uniform(0.9, 2.0)
             opp = spot + np.array([math.cos(bearing), math.sin(bearing)]) * dist
@@ -247,12 +286,22 @@ class CGetUp:
         stand = self._ins["stand"][self.opp_who]
 
         def place(local: np.ndarray) -> np.ndarray:
-            return np.stack([self.opp_xy[:, 0] + c * local[:, 0] - s * local[:, 1],
-                             self.opp_xy[:, 1] + s * local[:, 0] + c * local[:, 1], stand + local[:, 2]], -1)
+            return np.stack(
+                [
+                    self.opp_xy[:, 0] + c * local[:, 0] - s * local[:, 1],
+                    self.opp_xy[:, 1] + s * local[:, 0] + c * local[:, 1],
+                    stand + local[:, 2],
+                ],
+                -1,
+            )
 
-        glove = self._ins["glove"][self.opp_who]                      # (N,2,3)
-        return {"t_head": place(self._ins["head"][self.opp_who]), "t_body": place(self._ins["body"][self.opp_who]),
-                "opp_glove": np.stack([place(glove[:, 0]), place(glove[:, 1])], 1), "opp_yaw": their_yaw}
+        glove = self._ins["glove"][self.opp_who]  # (N,2,3)
+        return {
+            "t_head": place(self._ins["head"][self.opp_who]),
+            "t_body": place(self._ins["body"][self.opp_who]),
+            "opp_glove": np.stack([place(glove[:, 0]), place(glove[:, 1])], 1),
+            "opp_yaw": their_yaw,
+        }
 
     def _feet(self):
         sole = self.FOOT[..., 2] - (np.abs(self.FOOTZ) * self.foot_half).sum(-1)
@@ -271,17 +320,32 @@ class CGetUp:
         opp_gloves = to_heading(g["opp_glove"] - pos[:, None], yaw[:, None]).reshape(N, 6)
         dyaw = g["opp_yaw"] - yaw
         ring = to_heading(np.concatenate([-pos[:, :2], np.zeros((N, 1))], -1), yaw)[:, :2] / self.ring_half
-        obs = np.concatenate([lin_b, self.ROOTV[:, 3:6], grav_b, self.QJ - self.default, self.VJ, self.last_action,
-                              contact.astype(np.float64), pos[:, 2:3],
-                              rel(g["t_head"]), rel(g["t_body"]), to_heading(self.head_vel - lin_w, yaw),
-                              own_gloves, opp_gloves, np.stack([np.cos(dyaw), np.sin(dyaw)], -1), ring], -1)
+        obs = np.concatenate(
+            [
+                lin_b,
+                self.ROOTV[:, 3:6],
+                grav_b,
+                self.QJ - self.default,
+                self.VJ,
+                self.last_action,
+                contact.astype(np.float64),
+                pos[:, 2:3],
+                rel(g["t_head"]),
+                rel(g["t_body"]),
+                to_heading(self.head_vel - lin_w, yaw),
+                own_gloves,
+                opp_gloves,
+                np.stack([np.cos(dyaw), np.sin(dyaw)], -1),
+                ring,
+            ],
+            -1,
+        )
         if self.obs_noise > 0.0:
             obs = obs + self.rng.standard_normal(obs.shape) * (0.02 * self.obs_noise)
         return np.nan_to_num(obs).clip(-100.0, 100.0).astype(np.float32)
 
     # ---- step --------------------------------------------------------------------------------------
     def step(self, action: np.ndarray):
-        N = self.N
         action = np.asarray(action, dtype=np.float64).clip(-self.action_clip, self.action_clip)
         self.prev_action = self.last_action
         self.last_action = action
@@ -319,10 +383,10 @@ class CGetUp:
         r["stood"] = 0.5 * st
         pose_err = np.abs(jp - self.default).mean(-1)
         r["pose"] = st * (1.5 * np.exp(-4.0 * ((jp - self.default) ** 2).mean(-1)) - 2.5 * pose_err)
-        r["still"] = 0.4 * st * np.exp(-((lin_w[:, :2] ** 2).sum(-1) + 0.1 * (ang_b ** 2).sum(-1)))
+        r["still"] = 0.4 * st * np.exp(-((lin_w[:, :2] ** 2).sum(-1) + 0.1 * (ang_b**2).sum(-1)))
         r["face"] = 0.4 * st * face
-        r["feet"] = -0.1 * st * (np.minimum((foot_v ** 2).sum(-1), 25.0) * contact).sum(-1)
-        r["act"] = -0.0005 * (action ** 2).sum(-1)
+        r["feet"] = -0.1 * st * (np.minimum((foot_v**2).sum(-1), 25.0) * contact).sum(-1)
+        r["act"] = -0.0005 * (action**2).sum(-1)
         r["rate"] = -0.005 * ((action - self.prev_action) ** 2).sum(-1)
         r["energy"] = -1.0e-4 * np.minimum(np.abs(tau * jv), 2000.0).sum(-1)
         r["qvel"] = -0.1 * ((np.abs(jv) - self.qvel_limit).clip(0.0, 10.0) ** 2).sum(-1)
@@ -381,8 +445,26 @@ class CGetUp:
 
     # ---- numbers -----------------------------------------------------------------------------------
     def _zero_stats(self) -> None:
-        keys = ["steps", "done_n", "ret_sum", "h_sum", "up_sum", "power_sum", "rew_sum", "up_end", "t_up", "n_up", "pose_err", "st_n",
-                "floor_up_end", "floor_ends", "raw_up_end", "raw_ends", "raw_t_up", "raw_n_up"] + ["rt_" + t for t in TERMS]
+        keys = [
+            "steps",
+            "done_n",
+            "ret_sum",
+            "h_sum",
+            "up_sum",
+            "power_sum",
+            "rew_sum",
+            "up_end",
+            "t_up",
+            "n_up",
+            "pose_err",
+            "st_n",
+            "floor_up_end",
+            "floor_ends",
+            "raw_up_end",
+            "raw_ends",
+            "raw_t_up",
+            "raw_n_up",
+        ] + ["rt_" + t for t in TERMS]
         self._s = {k: 0.0 for k in keys}
 
     def get_stats(self) -> Dict[str, float]:
@@ -393,7 +475,9 @@ class CGetUp:
         if self._floor["ends"] >= 16.0 and self.assist0 > 0.0:
             rate = self._floor["up_end"] / self._floor["ends"]
             self.up_ema = 0.9 * self.up_ema + 0.1 * rate
-            self.assist = float(np.clip(self.assist + (-0.004 if self.up_ema > 0.6 else 0.004 if self.up_ema < 0.3 else 0.0), 0.0, 0.75))
+            self.assist = float(
+                np.clip(self.assist + (-0.004 if self.up_ema > 0.6 else 0.004 if self.up_ema < 0.3 else 0.0), 0.0, 0.75)
+            )
             self._floor = {"up_end": 0.0, "ends": 0.0}
         out = {
             "ep_return": a["ret_sum"] / n,

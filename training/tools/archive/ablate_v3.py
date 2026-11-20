@@ -6,6 +6,7 @@ Builds each variant into logs/ablate_v3/<change>/ (models only, nothing under mo
 brain where the action scale changes (tools/rescale_actions.py), and runs tools/footwork_c.py's exam, 3 seeds x 2
 episodes of each kind. Prints stand / walk / turn pass, walk falls a minute and walk velocity error per variant.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -35,8 +36,12 @@ def main() -> None:
         "kv": {"joint_kv": v3rig["joint_kv"]},
         "action": {"per_joint_action": True},
         "head": {"radii": dict(base["radii"], head=round(HEAD_FILL * HEAD_HALF[n], 4))},
-        "v3": {"human_force": True, "joint_kv": v3rig["joint_kv"], "per_joint_action": True,
-               "radii": dict(base["radii"], head=round(HEAD_FILL * HEAD_HALF[n], 4))},
+        "v3": {
+            "human_force": True,
+            "joint_kv": v3rig["joint_kv"],
+            "per_joint_action": True,
+            "radii": dict(base["radii"], head=round(HEAD_FILL * HEAD_HALF[n], 4)),
+        },
     }
     env = dict(os.environ, PYTHONPATH=os.path.join(HERE, ".mj350"))
     rows = {}
@@ -52,21 +57,57 @@ def main() -> None:
         policy = os.path.join(HERE, "checkpoints", "onnx", f"policy_{n}.pt")
         if "action_scale_j" in cfg:
             scaled = os.path.join(out, f"policy_{n}.pt")
-            subprocess.run([sys.executable, os.path.join(HERE, "tools", "rescale_actions.py"), "--ckpt", policy,
-                            "--config", os.path.join(out, f"{n}_policy_config.json"), "--out", scaled], cwd=HERE, env=env,
-                           check=True, stdout=subprocess.DEVNULL)
+            subprocess.run(
+                [
+                    sys.executable,
+                    os.path.join(HERE, "tools", "rescale_actions.py"),
+                    "--ckpt",
+                    policy,
+                    "--config",
+                    os.path.join(out, f"{n}_policy_config.json"),
+                    "--out",
+                    scaled,
+                ],
+                cwd=HERE,
+                env=env,
+                check=True,
+                stdout=subprocess.DEVNULL,
+            )
             policy = scaled
         js = os.path.join(out, "exam.json")
-        subprocess.run([sys.executable, os.path.join(HERE, "tools", "footwork_c.py"), "--name", n, "--models", out, "--policy", policy,
-                        "--exam", "--seeds", "3", "--episodes", "2", "--json", js], cwd=HERE, env=env, check=True,
-                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(
+            [
+                sys.executable,
+                os.path.join(HERE, "tools", "footwork_c.py"),
+                "--name",
+                n,
+                "--models",
+                out,
+                "--policy",
+                policy,
+                "--exam",
+                "--seeds",
+                "3",
+                "--episodes",
+                "2",
+                "--json",
+                js,
+            ],
+            cwd=HERE,
+            env=env,
+            check=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
         rows[key] = json.load(open(js, encoding="utf-8"))
     print(f"\n{n}: the shipped footwork brain on v2 plus one change at a time (3 seeds x 2 episodes of each kind)")
     print(f"{'variant':8s} {'stand':>6s} {'walk':>6s} {'turn':>6s} {'falls/min':>10s} {'vel err':>8s}")
     for key, r in rows.items():
         w = r.get("walk", {})
-        print(f"{key:8s} {str(r.get('stand', {}).get('pass')):>6s} {str(w.get('pass')):>6s} {str(r.get('turn', {}).get('pass')):>6s} "
-              f"{w.get('falls_per_min', float('nan')):10.2f} {w.get('velocity_error', float('nan')):8.3f}")
+        print(
+            f"{key:8s} {str(r.get('stand', {}).get('pass')):>6s} {str(w.get('pass')):>6s} {str(r.get('turn', {}).get('pass')):>6s} "
+            f"{w.get('falls_per_min', float('nan')):10.2f} {w.get('velocity_error', float('nan')):8.3f}"
+        )
 
 
 if __name__ == "__main__":

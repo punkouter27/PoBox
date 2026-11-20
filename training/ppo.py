@@ -4,6 +4,7 @@
 - Running observation normalisation, baked into the exported ONNX graph.
 - GAE with time-out bootstrapping, clipped value loss, adaptive learning rate on KL.
 """
+
 from __future__ import annotations
 
 import os
@@ -185,7 +186,9 @@ class PPO:
         b, c = self.buf, self.cfg
         T = c.steps_per_env
         adv = torch.zeros_like(b["rew"])
-        rew = b["rew"] + c.gamma * b["val"] * b["timeout"] if c.bootstrap_cuts else b["rew"]   # bootstrap through time-outs
+        rew = (
+            b["rew"] + c.gamma * b["val"] * b["timeout"] if c.bootstrap_cuts else b["rew"]
+        )  # bootstrap through time-outs
         gae = torch.zeros(self.num_envs, device=self.device)
         for t in reversed(range(T)):
             next_val = last_val if t == T - 1 else b["val"][t + 1]
@@ -215,11 +218,15 @@ class PPO:
         for _ in range(c.epochs):
             perm = torch.randperm(T * N, device=self.device)
             for i in range(c.minibatches):
-                idx = perm[i * mb:(i + 1) * mb]
+                idx = perm[i * mb : (i + 1) * mb]
                 logp, ent, v, mu, sigma = self.model.evaluate(obs[idx], act[idx])
                 with torch.no_grad():
-                    kl = torch.sum(torch.log(sigma / sigma_old[idx] + 1e-5)
-                                   + (sigma_old[idx].pow(2) + (mu_old[idx] - mu).pow(2)) / (2.0 * sigma.pow(2)) - 0.5, dim=-1).mean()
+                    kl = torch.sum(
+                        torch.log(sigma / sigma_old[idx] + 1e-5)
+                        + (sigma_old[idx].pow(2) + (mu_old[idx] - mu).pow(2)) / (2.0 * sigma.pow(2))
+                        - 0.5,
+                        dim=-1,
+                    ).mean()
                     if kl > c.desired_kl * 2.0:
                         self.cfg.lr = max(1e-5, self.cfg.lr / c.lr_adapt)
                     elif kl < c.desired_kl / 2.0 and kl > 0.0:
@@ -231,7 +238,11 @@ class PPO:
                 # No clipped value loss: rewards here are about one a step, so a state is worth 50 to 100, and a
                 # critic held within `clip` (0.2) of its last answer cannot follow a change of stage.
                 v_loss = (v - ret_f[idx]).pow(2).mean()
-                v_train = (nn.functional.huber_loss(v, ret_f[idx], delta=c.value_huber) * 2.0 if c.value_huber > 0.0 else v_loss)
+                v_train = (
+                    nn.functional.huber_loss(v, ret_f[idx], delta=c.value_huber) * 2.0
+                    if c.value_huber > 0.0
+                    else v_loss
+                )
                 loss = surr + c.value_coef * v_train - c.entropy_coef * ent.mean()
                 self.opt.zero_grad(set_to_none=True)
                 loss.backward()
@@ -243,11 +254,14 @@ class PPO:
                 if c.max_std > 0.0:
                     with torch.no_grad():
                         self.model.log_std.clamp_(max=float(np.log(c.max_std)))
-                stats["policy_loss"] += surr.item(); stats["value_loss"] += v_loss.item()
-                stats["entropy"] += ent.mean().item(); stats["kl"] += kl.item()
+                stats["policy_loss"] += surr.item()
+                stats["value_loss"] += v_loss.item()
+                stats["entropy"] += ent.mean().item()
+                stats["kl"] += kl.item()
                 n_updates += 1
         self.t = 0
-        for k in stats: stats[k] /= max(1, n_updates)
+        for k in stats:
+            stats[k] /= max(1, n_updates)
         stats["lr"] = self.cfg.lr
         stats["action_std"] = self.model.log_std.exp().mean().item()
         return stats
@@ -255,8 +269,15 @@ class PPO:
     # ---- persistence ---------------------------------------------------------------------------
     def save(self, path: str, extra: Dict | None = None) -> None:
         os.makedirs(os.path.dirname(path), exist_ok=True)
-        torch.save({"model": self.model.state_dict(), "obs_rms": self.obs_rms.state_dict(),
-                    "opt": self.opt.state_dict(), "extra": extra or {}}, path)
+        torch.save(
+            {
+                "model": self.model.state_dict(),
+                "obs_rms": self.obs_rms.state_dict(),
+                "opt": self.opt.state_dict(),
+                "extra": extra or {},
+            },
+            path,
+        )
 
     def load(self, path: str, widen: bool = False) -> Dict:
         """widen: a checkpoint that reads fewer numbers than this model gets zero weights (and a unit scale) on the new
@@ -310,7 +331,14 @@ def export_onnx(ppo: PPO, path: str, obs_dim: int, fixed_batch: bool = False) ->
     os.makedirs(os.path.dirname(path), exist_ok=True)
     wrapper = ExportPolicy(ppo.model, ppo.obs_rms, ppo.cfg.obs_clip).to("cpu").eval()
     dummy = torch.zeros(1, obs_dim)
-    torch.onnx.export(wrapper, dummy, path, input_names=["obs"], output_names=["actions", "value"],
-                      opset_version=17, dynamo=False,
-                      dynamic_axes=None if fixed_batch else {"obs": {0: "batch"}, "actions": {0: "batch"}, "value": {0: "batch"}})
+    torch.onnx.export(
+        wrapper,
+        dummy,
+        path,
+        input_names=["obs"],
+        output_names=["actions", "value"],
+        opset_version=17,
+        dynamo=False,
+        dynamic_axes=None if fixed_batch else {"obs": {0: "batch"}, "actions": {0: "batch"}, "value": {0: "batch"}},
+    )
     ppo.model.to(ppo.device)

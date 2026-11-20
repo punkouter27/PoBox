@@ -1,5 +1,5 @@
 {
-  "source": "C:/Users/punko/Downloads/PoBox/Assets/Art/Exports/GLB/SK_Referee.glb",
+  "source": "Assets/Art/Exports/GLB/SK_Referee.glb",
   "frame": "blender_z_up (x = character left, -y = forward, z = up)",
   "height_m": 1.762,
   "mass_kg": 78.0,

@@ -1,7 +1,7 @@
 {
   "name": "grandma",
   "rig": "grandma.json",
-  "source_mesh": "C:/Users/punko/Downloads/PoBox/RIGGED_Grandma.glb",
+  "source_mesh": "RIGGED_Grandma.glb",
   "joint_order": [
     "abdomen_z",
     "abdomen_y",

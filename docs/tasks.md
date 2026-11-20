@@ -1,7 +1,7 @@
 # PoBox: live plan
 
 Open items only. The plan as it stood on 2026-11-13, with every ticked task and the agreed design, is
-[DOCS/archive/tasks_2026-10.md](DOCS/archive/tasks_2026-10.md). Task ids (D6, F1, G13 ...) are kept because the
+[archive/tasks_2026-10.md](archive/tasks_2026-10.md). Task ids (D6, F1, G13 ...) are kept because the
 logs and reports cite them. What was measured, run by run, is `rl_optimization_log.md`.
 
 ## Status (2026-11-13)

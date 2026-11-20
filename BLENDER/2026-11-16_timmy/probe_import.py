@@ -3,6 +3,7 @@ distance any vertex moves between the rest display (undeformed) and the pose wit
 
     blender -b -P probe_import.py -- <fbx>
 """
+
 import sys
 import bpy
 from mathutils import Matrix

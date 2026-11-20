@@ -13,9 +13,9 @@ INFO MeshOptimizer is available, use library at C:\Program Files\Blender Foundat
 15:43:12 | INFO: Extracting primitive: Kit_Matt
 15:43:12 | INFO: Primitives created: 4
 15:43:12 | INFO: Finished glTF 2.0 export in 0.174560546875 s
-00:11.234  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Matt_front.png'
-00:12.375  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Matt_34.png'
-00:13.390  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Matt_legs34.png'
+00:11.234  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Matt_front.png'
+00:12.375  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Matt_34.png'
+00:13.390  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Matt_legs34.png'
 
 Info: Deleted 38 data-block(s)
 Info: Saved as "Kit_Matt.blend"
@@ -30,9 +30,9 @@ Info: 25 vertex weights limited
 15:43:20 | INFO: Extracting primitive: Kit_Nick
 15:43:20 | INFO: Primitives created: 4
 15:43:20 | INFO: Finished glTF 2.0 export in 0.101470947265625 s
-00:16.031  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Nick_front.png'
-00:16.781  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Nick_34.png'
-00:17.546  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Nick_legs34.png'
+00:16.031  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Nick_front.png'
+00:16.781  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Nick_34.png'
+00:17.546  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Nick_legs34.png'
 
 Info: Deleted 18 data-block(s)
 Info: Saved as "Kit_Nick.blend"
@@ -47,9 +47,9 @@ Info: 14 vertex weights limited
 15:43:24 | INFO: Extracting primitive: Kit_Grandma
 15:43:24 | INFO: Primitives created: 4
 15:43:24 | INFO: Finished glTF 2.0 export in 0.06582331657409668 s
-00:20.109  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Grandma_front.png'
-00:21.296  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Grandma_34.png'
-00:22.453  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Grandma_legs34.png'
+00:20.109  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Grandma_front.png'
+00:21.296  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Grandma_34.png'
+00:22.453  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Grandma_legs34.png'
 
 Info: Deleted 18 data-block(s)
 Info: Saved as "Kit_Grandma.blend"
@@ -64,9 +64,9 @@ Info: 24 vertex weights limited
 15:43:29 | INFO: Extracting primitive: Kit_Grandpa
 15:43:29 | INFO: Primitives created: 4
 15:43:29 | INFO: Finished glTF 2.0 export in 0.06588888168334961 s
-00:24.750  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Grandpa_front.png'
-00:25.390  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Grandpa_34.png'
-00:26.375  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Grandpa_legs34.png'
+00:24.750  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Grandpa_front.png'
+00:25.390  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Grandpa_34.png'
+00:26.375  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Grandpa_legs34.png'
 
 Info: Deleted 18 data-block(s)
 Info: Saved as "Kit_Grandpa.blend"
@@ -81,9 +81,9 @@ Info: 6 vertex weights limited
 15:43:35 | INFO: Extracting primitive: Kit_Trump
 15:43:35 | INFO: Primitives created: 4
 15:43:35 | INFO: Finished glTF 2.0 export in 0.08308553695678711 s
-00:31.187  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Trump_front.png'
-00:31.984  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Trump_34.png'
-00:32.859  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Trump_legs34.png'
+00:31.187  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Trump_front.png'
+00:31.984  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Trump_34.png'
+00:32.859  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Trump_legs34.png'
 
 Info: Deleted 19 data-block(s)
 Info: Saved as "Kit_Trump.blend"
@@ -98,9 +98,9 @@ Info: 11 vertex weights limited
 15:43:41 | INFO: Extracting primitive: Kit_Zombie
 15:43:41 | INFO: Primitives created: 4
 15:43:41 | INFO: Finished glTF 2.0 export in 0.08946442604064941 s
-00:38.015  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Zombie_front.png'
-00:39.203  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Zombie_34.png'
-00:39.953  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Zombie_legs34.png'
+00:38.015  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Zombie_front.png'
+00:39.203  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Zombie_34.png'
+00:39.953  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Zombie_legs34.png'
 
 Info: Deleted 22 data-block(s)
 Info: Saved as "Kit_Zombie.blend"
@@ -114,9 +114,9 @@ Info: Saved as "Kit_Zombie.blend"
 15:43:49 | INFO: Extracting primitive: Kit_Kim
 15:43:49 | INFO: Primitives created: 4
 15:43:49 | INFO: Finished glTF 2.0 export in 0.09194231033325195 s
-00:45.515  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Kim_front.png'
-00:46.625  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Kim_34.png'
-00:48.187  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Kim_legs34.png'
+00:45.515  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Kim_front.png'
+00:46.625  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Kim_34.png'
+00:48.187  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Kim_legs34.png'
 
 Info: Deleted 20 data-block(s)
 Info: Saved as "Kit_Kim.blend"
@@ -130,13 +130,13 @@ Info: Saved as "Kit_Kim.blend"
 15:43:55 | INFO: Extracting primitive: Kit_Sokol
 15:43:55 | INFO: Primitives created: 4
 15:43:55 | INFO: Finished glTF 2.0 export in 0.14905858039855957 s
-00:51.859  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Sokol_front.png'
-00:53.578  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Sokol_34.png'
-00:54.765  render           | Saved: 'C:\Users\punko\Downloads\PoBox\BLENDER\2026-10-31_boxing-kit\renders\Sokol_legs34.png'
+00:51.859  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Sokol_front.png'
+00:53.578  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Sokol_34.png'
+00:54.765  render           | Saved: 'BLENDER\2026-10-31_boxing-kit\renders\Sokol_legs34.png'
 
 Info: Deleted 24 data-block(s)
 Info: Saved as "Kit_Sokol.blend"
-[kit] done C:/Users/punko/Downloads/PoBox/BLENDER/2026-10-31_boxing-kit/scripts/report_all.json
+[kit] done BLENDER/2026-10-31_boxing-kit/scripts/report_all.json
 Blender 5.2.3 LTS (hash e13b728c6880 built 2026-10-22 01:37:16)
 
 Blender quit

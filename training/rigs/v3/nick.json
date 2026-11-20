@@ -1,5 +1,5 @@
 {
-  "source": "C:/Users/punko/Downloads/PoBox/RIGGED_Nick.glb",
+  "source": "RIGGED_Nick.glb",
   "frame": "blender_z_up (x = character left, -y = forward, z = up)",
   "height_m": 1.65,
   "mass_kg": 57.5,

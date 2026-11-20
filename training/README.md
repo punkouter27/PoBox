@@ -12,14 +12,16 @@
 Teaches a fighter to box in MuJoCo (MuJoCo Warp, on the GPU) and exports the result as ONNX for Unity.
 Built 2026-10-01 on the pattern of `../../PoDecath/training`; `ppo.py` is PoDecath's, unchanged.
 
-Python is a sibling project's virtual environment, used in place. Which sibling has one differs by PC: check
-which sibling venv exists before a run. `../../PoDecath` is gone. On the PC of 2026-11-13 (RTX 2060, 6 GB) the
-only one is PoOlympic's (Python 3.11.17, mujoco 3.11.0, mujoco_warp 3.11.0, warp 1.17.0, torch 2.14.0+cu130, CUDA):
+Python is PoBox's own environment (the repo's `pyproject.toml`, `uv`, Python 3.11): from the repo root,
+`uv sync --group train` (MuJoCo 3.15.0 = the game's MuJoCo, MuJoCo Warp 3.15.0, torch, onnx); on a GPU PC put the
+CUDA build of torch into that venv. Commands below run from `training/` with that venv's Python:
 
-    $py = "..\..\PoOlympic\training\.venv\Scripts\python.exe"
+    $py = "..\.venv\Scripts\python.exe"
 
-MuJoCo 3.5.0 for the exams lives in `.mj350` (not versioned). On a fresh clone:
-`uv pip install --python $py --target .mj350 mujoco==3.5.0`, then `$env:PYTHONPATH=".mj350"` in front of an exam.
+Exams and reference recordings use the venv's plain C MuJoCo, which is the version the game's plugin runs, so no
+separate MuJoCo is needed (the old `.mj350` folder and `PYTHONPATH=.mj350` in staged queues are no-ops now).
+Reward penalty weights (torque², joint speed², angular velocity², action rate, foot slip) are in
+`config/reward.json` (`envs/reward_config.py`); shipped brains predate the torque² and joint-speed² terms.
 
 ## From a rigged mesh to a trained policy
 
@@ -77,7 +79,7 @@ other fighter down within a second and a half of hitting them pays a bonus.
 
 The eight-hour match ended with both fighters landing 1.5 hits a second and 0.04 knockdowns a minute. Sixty
 minutes more were spent, from its final policies, on two ideas. Charts and numbers:
-`DOCS/reports/2026-10-01-training-followup.html`. Both runs are started by `tools\followup.ps1`.
+`docs/reports/2026-10-01-training-followup.html`. Both runs are started by `tools\followup.ps1`.
 
 - **A knockdown should not cost the fighter who lands it** (`--survivor-bootstrap --ko-bonus 10`). A fighter
   earns about 0.8 a step just for standing upright in range, and a fall ended the episode for both, so the one
@@ -100,7 +102,7 @@ weakens the legs for a moment), so that a knockdown is something a fighter can c
 
 ## A roster: five boxers with styles, and the league (2026-10-01 night)
 
-Report, with the charts and what each boxer ended as: `DOCS/reports/2026-10-02-training-roster.html`.
+Report, with the charts and what each boxer ended as: `docs/reports/2026-10-02-training-roster.html`.
 
 **Who the boxers are is `roster.json`**: the mesh, the height if the file has no scale, how strong and how
 quick beside a trained adult (`age`, `speed`), and the `style`. One command builds all of them and every
@@ -147,7 +149,7 @@ What the night taught:
 ## The exam, and finishing every boxer (2026-10-02)
 
 The owner's goal: every boxer able to do everything a bout needs. The plan, with the audit of the bodies,
-the rewards and the hardware behind it: `DOCS/reports/2026-10-02-training-manifest.html`.
+the rewards and the hardware behind it: `docs/reports/2026-10-02-training-manifest.html`.
 
 **What "able" means is `tools/exam.py`.** Plain C MuJoCo (the game's library), the game's ring where it
 has been exported, no exploration noise. Six lines per boxer; the pass marks are at the top of the file.
@@ -215,7 +217,7 @@ permission check and was not done.
 
 ## The defend rung and the get-up stage (2026-10-01, evening)
 
-Report with the TensorBoard charts: `DOCS/reports/2026-10-01-training-defend.html`. Both are started by
+Report with the TensorBoard charts: `docs/reports/2026-10-01-training-defend.html`. Both are started by
 `tools\rungs.ps1` (one after the other, detached, with TensorBoard and the viewer); `-Only defend` or
 `-Only getup` runs one.
 
@@ -343,7 +345,7 @@ control step). The third writes `models/<a>_vs_<b>_ring.xml` (the match model wi
 the two match policies in plain C MuJoCo with no exploration noise and prints the fall rate; it takes half
 a minute where the Warp environment on the CPU takes half an hour. In Unity, menu
 `PoBox/Dev/Import Policies And Calibrate Scoring`; the transfer check is
-`Assets/Scripts/Editor/TransferProbe.cs` (see `DOCS/README.md`).
+`Assets/Scripts/Editor/TransferProbe.cs` (see `docs/README.md`).
 
 ## The run of 2026-10-01 (Matt and Zombie, 7.85 h)
 
@@ -354,7 +356,7 @@ a minute where the Warp environment on the CPU takes half an hour. In Unity, men
 | `match` | 381 min, 10,193 iterations, 1.0e9 fighter-steps | fall rate 0.00; Matt 1.5 hits/s at 6.2 m/s, Zombie 1.5 at 8.8 m/s; no knockdowns |
 
 Final policies without exploration noise, C MuJoCo, 600 s: 50 episodes, no falls. Charts and what they
-mean: `DOCS/reports/2026-10-01-training-matt-v-zombie.html`.
+mean: `docs/reports/2026-10-01-training-matt-v-zombie.html`.
 
 Throughput: about 48,000 fighter-steps/s with other jobs on the CPU, 59,000 with the machine left alone,
 11,500 while the Unity editor was in Play mode. The GPU was power-capped throughout (about 1,500 of

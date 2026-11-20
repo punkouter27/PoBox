@@ -1,5 +1,5 @@
 {
-  "source": "C:/Users/punko/Downloads/PoBox/RIGGED_Trump.glb",
+  "source": "RIGGED_Trump.glb",
   "frame": "blender_z_up (x = character left, -y = forward, z = up)",
   "height_m": 1.9,
   "mass_kg": 108.3,

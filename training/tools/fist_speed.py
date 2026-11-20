@@ -11,6 +11,7 @@ arm alone (no trunk turn, no step: a real punch adds those, so a brain can beat 
 The exam's attack mark is 3.0 m/s for the old boxers and 4.0-4.4 for the rest; a hit counts above 1 m/s closing.
 Fatigue starts full, so its ceiling does not bite. It changes no model.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -39,7 +40,7 @@ def probe(name: str, models: str, seconds: float, levels: list[float]) -> dict:
     d = mujoco.MjData(m)
     mujoco.mj_resetDataKeyframe(m, d, 0)
     d.qpos[root_q + 2] += 0.5
-    base = d.qpos[root_q:root_q + 7].copy()
+    base = d.qpos[root_q : root_q + 7].copy()
     guard = np.array([d.qpos[m.jnt_qposadr[j]] for j in jid])
     scale = np.array(cfg.get("action_scale_j", [cfg["action_scale"]] * len(order)))
     clip = float(cfg.get("action_clip", 3.0))
@@ -54,8 +55,8 @@ def probe(name: str, models: str, seconds: float, levels: list[float]) -> dict:
         for _ in range(int(secs / m.opt.timestep)):
             d.ctrl[:] = target
             mujoco.mj_step(m, d)
-            d.qpos[root_q:root_q + 7] = base
-            d.qvel[root_v:root_v + 6] = 0.0
+            d.qpos[root_q : root_q + 7] = base
+            d.qvel[root_v : root_v + 6] = 0.0
             mujoco.mj_forward(m, d)
             mujoco.mj_objectVelocity(m, d, mujoco.mjtObj.mjOBJ_GEOM, glove, v6, 0)
             peak = max(peak, float(np.linalg.norm(v6[3:])))
@@ -74,9 +75,15 @@ def probe(name: str, models: str, seconds: float, levels: list[float]) -> dict:
         if v > best[0]:
             best = (v, combo)
     arm_force = [cfg["force_limit"][i] for i in idx]
-    return {"name": name, "peak_glove_m_s": round(best[0], 2), "best_actions": best[1], "strength": cfg.get("strength"),
-            "speed": cfg.get("speed"), "arm_force_limits": [round(f, 1) for f in arm_force],
-            "arm_speed_limits": [round(cfg["velocity_limit"][i], 1) for i in idx]}
+    return {
+        "name": name,
+        "peak_glove_m_s": round(best[0], 2),
+        "best_actions": best[1],
+        "strength": cfg.get("strength"),
+        "speed": cfg.get("speed"),
+        "arm_force_limits": [round(f, 1) for f in arm_force],
+        "arm_speed_limits": [round(cfg["velocity_limit"][i], 1) for i in idx],
+    }
 
 
 def main() -> None:
@@ -92,8 +99,10 @@ def main() -> None:
     for n in args.names:
         r = probe(n, args.models, args.seconds, levels)
         rows.append(r)
-        print(f"{n:8} peak glove {r['peak_glove_m_s']:5.2f} m/s  actions {r['best_actions']}  strength {r['strength']}  "
-              f"speed {r['speed']}  force {r['arm_force_limits']}  speed limits {r['arm_speed_limits']}")
+        print(
+            f"{n:8} peak glove {r['peak_glove_m_s']:5.2f} m/s  actions {r['best_actions']}  strength {r['strength']}  "
+            f"speed {r['speed']}  force {r['arm_force_limits']}  speed limits {r['arm_speed_limits']}"
+        )
     if args.json:
         json.dump(rows, open(os.path.join(HERE, args.json), "w"), indent=1)
 

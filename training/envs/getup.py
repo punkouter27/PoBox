@@ -29,6 +29,7 @@ half-right movement succeed. The share comes down whenever the fighter is gettin
 goes back up when it is not, until there is none. One world in ten never gets the help, and the numbers
 called "unaided" come only from those: they are what the game will see.
 """
+
 from __future__ import annotations
 
 import math
@@ -39,15 +40,38 @@ import numpy as np
 import torch
 import warp as wp
 
-from .boxing import BoxingEnv, quat_yaw, yaw_quat, to_heading
+from .boxing import BoxingEnv, yaw_quat
 
 
 class GetUpEnv(BoxingEnv):
-    TERMS = ["height", "head", "upright", "stood", "pose", "still", "face", "feet", "act", "rate", "energy", "qvel", "limit"]
+    TERMS = [
+        "height",
+        "head",
+        "upright",
+        "stood",
+        "pose",
+        "still",
+        "face",
+        "feet",
+        "act",
+        "rate",
+        "energy",
+        "qvel",
+        "limit",
+    ]
     MODE = "getup"
 
-    def __init__(self, xml_path: str, num_envs: int, slack_lo: float = 0.15, slack_hi: float = 2.6,
-                 shove: float = 2.5, stand_share: float = 0.12, assist: float = 0.6, **kw):
+    def __init__(
+        self,
+        xml_path: str,
+        num_envs: int,
+        slack_lo: float = 0.15,
+        slack_hi: float = 2.6,
+        shove: float = 2.5,
+        stand_share: float = 0.12,
+        assist: float = 0.6,
+        **kw,
+    ):
         self.slack_lo, self.slack_hi, self.shove, self.stand_share = slack_lo, slack_hi, shove, stand_share
         self.assist0 = assist
         speed_ramp = kw.pop("speed_ramp", -1.0)
@@ -61,7 +85,7 @@ class GetUpEnv(BoxingEnv):
         # The game (2026-10-18) takes nothing from the reserve while the get-up brain has the body: off = no drain here either.
         self.drain = not kw.pop("no_drain", False)
         kw.setdefault("episode_len_s", 10.0)
-        kw["push_vel"] = 0.0          # the shove is given at the start of the episode, by the reset
+        kw["push_vel"] = 0.0  # the shove is given at the start of the episode, by the reset
         kw["daze"] = False
         super().__init__(xml_path, num_envs, **kw)
         # The speed limit eased in (2026-10-18, Grandma): her shipped get-up stands 30 of 30 without the speed limit's damping
@@ -74,7 +98,7 @@ class GetUpEnv(BoxingEnv):
             m_nv = self.m.nv
             extra = np.zeros(m_nv)
             for p, c, on in zip(("a_", "b_"), self.cfgs, self.limited):
-                if on:                        # envs/boxing.py's resolution: the argument, the config, or default_rules
+                if on:  # envs/boxing.py's resolution: the argument, the config, or default_rules
                     for n, fl, vl in zip(c["joint_order"], c["force_limit"], c["velocity_limit"]):
                         extra[self.m.jnt_dofadr[mujoco.mj_name2id(self.m, mujoco.mjtObj.mjOBJ_JOINT, p + n)]] += fl / vl
             # self.m.dof_damping already holds the extra; each world's (randomised) damping is that times its own factor.
@@ -104,25 +128,35 @@ class GetUpEnv(BoxingEnv):
     def _init_extra(self) -> None:
         N, K, dev = self.N, self.K, self.device
         z = lambda *shape: torch.zeros(*shape, device=dev)
-        self.slack = z(N, K)                      # seconds of slack drives left
-        self.opp_xy = z(N, K, 2)                  # where each fighter's stand-in opponent stands
-        self.stood_for = z(N, K)                  # seconds it has been standing without a break
-        self.first_up = torch.full((N, K), -1.0, device=dev)   # seconds after the drives came back that it first stood
+        self.slack = z(N, K)  # seconds of slack drives left
+        self.opp_xy = z(N, K, 2)  # where each fighter's stand-in opponent stands
+        self.stood_for = z(N, K)  # seconds it has been standing without a break
+        self.first_up = torch.full((N, K), -1.0, device=dev)  # seconds after the drives came back that it first stood
         self.since_drives = z(N, K)
         self.head_stand = (self.stand_height + self.guard_head[:, 2]).view(1, K)
-        self._g = {k: torch.zeros((), device=dev) for k in ("steps", "done_n", "ret_sum", "h_sum", "up_sum", "power_sum")}
-        self._gk = {k: torch.zeros(K, device=dev) for k in ("up_end", "ends", "t_up", "n_up", "ret", "pose_err", "st_n")}
-        self._gk_floor = {k: torch.zeros(K, device=dev) for k in ("up_end", "ends")}     # the episodes that began with a real fall
+        self._g = {
+            k: torch.zeros((), device=dev) for k in ("steps", "done_n", "ret_sum", "h_sum", "up_sum", "power_sum")
+        }
+        self._gk = {
+            k: torch.zeros(K, device=dev) for k in ("up_end", "ends", "t_up", "n_up", "ret", "pose_err", "st_n")
+        }
+        self._gk_floor = {
+            k: torch.zeros(K, device=dev) for k in ("up_end", "ends")
+        }  # the episodes that began with a real fall
         self._gt = {t: torch.zeros((), device=dev) for t in self.TERMS}
         self.was_floored = torch.zeros(N, K, dtype=torch.bool, device=dev)
-        self._gk_raw = {k: torch.zeros(K, device=dev) for k in ("up_end", "ends", "t_up", "n_up")}   # the unaided worlds
+        self._gk_raw = {k: torch.zeros(K, device=dev) for k in ("up_end", "ends", "t_up", "n_up")}  # the unaided worlds
         # The helping hand: an upward force on the trunk, as a share of body weight, per fighter.
-        self.xfrc = wp.to_torch(self.dw.xfrc_applied)                       # (N, nbody, 6): force, then torque
+        self.xfrc = wp.to_torch(self.dw.xfrc_applied)  # (N, nbody, 6): force, then torque
         self.b_torso = [mujoco.mj_name2id(self.m, mujoco.mjtObj.mjOBJ_BODY, p + "torso") for p in ("a_", "b_")[:K]]
-        self.weight = torch.tensor([float(self.m.body_subtreemass[int(self.pelvis[k])]) * 9.81 for k in range(K)], device=dev)
+        self.weight = torch.tensor(
+            [float(self.m.body_subtreemass[int(self.pelvis[k])]) * 9.81 for k in range(K)], device=dev
+        )
         self.assist = torch.full((K,), float(self.assist0), device=dev)
         self.up_ema = torch.zeros(K, device=dev)
-        self.aided = (torch.arange(N, device=dev) >= max(1, int(N * self.unaided_share))).float()[:, None]     # (N,1); the first tenth go without
+        self.aided = (torch.arange(N, device=dev) >= max(1, int(N * self.unaided_share))).float()[
+            :, None
+        ]  # (N,1); the first tenth go without
 
     # ---- reset ---------------------------------------------------------------------------------
     def _reset_states(self):
@@ -134,9 +168,9 @@ class GetUpEnv(BoxingEnv):
             rq, rv = self.root_q[k], self.root_v[k]
             spot = self._u(N, 2, lo=-2.0, hi=2.0)
             yaw = self._u(N, lo=-math.pi, hi=math.pi)
-            q[:, rq:rq + 2] = spot
+            q[:, rq : rq + 2] = spot
             q[:, rq + 2] = self.stand_height[k] + 0.002
-            q[:, rq + 3:rq + 7] = yaw_quat(yaw)
+            q[:, rq + 3 : rq + 7] = yaw_quat(yaw)
             q[:, self.jq[k]] = self.default_joint[k] + self._u(N, A, lo=-0.1, hi=0.1)
             # Some episodes are simply standing in the guard: what the end of every other episode looks
             # like, so that it is not forgotten while the floor is being learned.
@@ -145,9 +179,13 @@ class GetUpEnv(BoxingEnv):
             # A long slack comes with a hard shove and a short one with a nudge, so the short ones are
             # stumbles a standing policy can already save.
             hard = (0.2 + 0.8 * slack / self.slack_hi)[:, None]
-            push = torch.where(standing[:, None], self._u(N, 2, lo=-0.3, hi=0.3), self._u(N, 2, lo=-self.shove, hi=self.shove) * hard)
-            v[:, rv:rv + 2] = push
-            v[:, rv + 3:rv + 6] = torch.where(standing[:, None], torch.zeros(N, 3, device=dev), self._u(N, 3, lo=-2.5, hi=2.5) * hard)
+            push = torch.where(
+                standing[:, None], self._u(N, 2, lo=-0.3, hi=0.3), self._u(N, 2, lo=-self.shove, hi=self.shove) * hard
+            )
+            v[:, rv : rv + 2] = push
+            v[:, rv + 3 : rv + 6] = torch.where(
+                standing[:, None], torch.zeros(N, 3, device=dev), self._u(N, 3, lo=-2.5, hi=2.5) * hard
+            )
             # The stand-in opponent: a step or two away, in front or to the side. The game puts it where
             # the real opponent stands, which is where the punch came from.
             bearing = yaw + self._u(N, lo=-0.6, hi=0.6)
@@ -175,7 +213,7 @@ class GetUpEnv(BoxingEnv):
         lim = self.ring_half - 0.5
         for j in range(self.n_bodies):
             k = j % self.K
-            base = q[:, self.root_q[k]:self.root_q[k] + 2]
+            base = q[:, self.root_q[k] : self.root_q[k] + 2]
             ang = self._u(N, lo=-math.pi, hi=math.pi)
             rad = self._u(N, lo=0.15, hi=0.85)
             xy = (base + torch.stack([torch.cos(ang), torch.sin(ang)], -1) * rad[:, None]).clamp(-lim, lim)
@@ -184,7 +222,9 @@ class GetUpEnv(BoxingEnv):
             xy = torch.where(there[:, None], xy, away)
             pos = torch.cat([xy, torch.zeros(N, 1, device=dev)], -1)
             self.mocap_pos[:, j] = torch.where(mask[:, None], pos, self.mocap_pos[:, j])
-            self.mocap_quat[:, j] = torch.where(mask[:, None], yaw_quat(self._u(N, lo=-math.pi, hi=math.pi)), self.mocap_quat[:, j])
+            self.mocap_quat[:, j] = torch.where(
+                mask[:, None], yaw_quat(self._u(N, lo=-math.pi, hi=math.pi)), self.mocap_quat[:, j]
+            )
 
     # ---- what the fighter is shown -------------------------------------------------------------
     def _geometry(self) -> Dict[str, torch.Tensor]:
@@ -193,7 +233,7 @@ class GetUpEnv(BoxingEnv):
             return g
         pos = g["pos"]
         # The stand-in faces the fighter, wherever the fighter has got to.
-        their_yaw = torch.atan2(pos[..., 1] - self.opp_xy[..., 1], pos[..., 0] - self.opp_xy[..., 0])   # (N,K)
+        their_yaw = torch.atan2(pos[..., 1] - self.opp_xy[..., 1], pos[..., 0] - self.opp_xy[..., 0])  # (N,K)
         c, s = torch.cos(their_yaw), torch.sin(their_yaw)
 
         def place(local: torch.Tensor, stand: torch.Tensor) -> torch.Tensor:
@@ -202,12 +242,12 @@ class GetUpEnv(BoxingEnv):
             y = self.opp_xy[..., 1] + s * local[..., 0] + c * local[..., 1]
             return torch.stack([x, y, (stand + local[..., 2]).expand_as(x)], -1)
 
-        other = lambda t: t.flip(0)                # the other fighter's numbers, indexed by this fighter
+        other = lambda t: t.flip(0)  # the other fighter's numbers, indexed by this fighter
         stand = other(self.stand_height).view(1, self.K)
         g["t_head"] = place(other(self.guard_head)[None], stand)
         g["t_body"] = place(other(self.guard_body)[None], stand)
-        og = other(self.guard_glove)                                                    # (K,2,3)
-        g["opp_glove"] = torch.stack([place(og[None, :, i], stand) for i in range(2)], 2)   # (N,K,2,3)
+        og = other(self.guard_glove)  # (K,2,3)
+        g["opp_glove"] = torch.stack([place(og[None, :, i], stand) for i in range(2)], 2)  # (N,K,2,3)
         g["opp_yaw"] = their_yaw
         return g
 
@@ -228,7 +268,7 @@ class GetUpEnv(BoxingEnv):
         upright = -grav_b[..., 2]
         self.head_vel = (g["t_head"] - self.prev_head) / self.dt
 
-        active = self.slack <= 0.0                                   # the drives are back: the policy's time
+        active = self.slack <= 0.0  # the drives are back: the policy's time
         h = (pos[..., 2] / self.stand_height).clamp(0.0, 1.05)
         head_h = (g["own_head"][..., 2] / self.head_stand).clamp(0.0, 1.05)
         standing = (h > 0.88) & (upright > 0.85) & active
@@ -260,16 +300,21 @@ class GetUpEnv(BoxingEnv):
         # (0.8 a radian was still too gentle: 0.04 a joint a step, lost in the noise of the returns; Matt's
         # stance moved 0.47 to 0.40 rad in forty minutes. 2.5 is 0.12 a joint a step.)
         r["pose"] = st * (1.5 * torch.exp(-4.0 * ((jp - self.default_joint) ** 2).mean(-1)) - 2.5 * pose_err)
-        r["still"] = 0.4 * st * torch.exp(-((lin_w[..., :2] ** 2).sum(-1) + 0.1 * (ang_b ** 2).sum(-1)))
+        r["still"] = 0.4 * st * torch.exp(-((lin_w[..., :2] ** 2).sum(-1) + 0.1 * (ang_b**2).sum(-1)))
         r["face"] = 0.4 * st * face
-        r["feet"] = -0.1 * st * ((foot_v ** 2).sum(-1).clamp_max(25.0) * contact.float()).sum(-1)
-        r["act"] = -0.0005 * (action ** 2).sum(-1)
+        r["feet"] = -self.pen["foot_slip"] * st * ((foot_v**2).sum(-1).clamp_max(25.0) * contact.float()).sum(-1)
+        r["act"] = -0.0005 * (action**2).sum(-1)
         jerk = ((action - self.prev_action) ** 2).sum(-1)
-        r["rate"] = -0.005 * jerk - self.action_rate_w * jerk
+        r["rate"] = -self.pen["action_rate"] * jerk - self.action_rate_w * jerk
+        self._torque_terms(r, tau, jv)
+        if self.pen["ang_vel_sq"]:
+            r["still"] = r["still"] - self.pen["ang_vel_sq"] * (ang_b[..., :2] ** 2).sum(-1)
         r["energy"] = -1.0e-4 * (tau * jv).abs().clamp_max(2000.0).sum(-1)
         # House rule: joints move no faster than a person's.
         r["qvel"] = -0.1 * (jv.abs() - self.qvel_limit).clamp(0.0, 10.0).pow(2).sum(-1)
-        r["limit"] = -0.5 * ((self.joint_lo + 0.05 - jp).clamp_min(0.0) + (jp - self.joint_hi + 0.05).clamp_min(0.0)).sum(-1)
+        r["limit"] = -0.5 * (
+            (self.joint_lo + 0.05 - jp).clamp_min(0.0) + (jp - self.joint_hi + 0.05).clamp_min(0.0)
+        ).sum(-1)
         # While the drives are slack nothing the policy does changes anything, so nothing is paid for it.
         reward = sum(r.values()) * active.float()
 
@@ -364,13 +409,22 @@ class GetUpEnv(BoxingEnv):
             "power": a["power_sum"] / s,
             # The match stage's headline numbers, which mean nothing here, so that anything reading a
             # status file finds them.
-            "fall_rate": 0.0, "hits_per_s": 0.0, "head_share": 0.0, "hit_speed": 0.0, "hit_speed_max": 0.0,
-            "distance": 0.0, "knockdowns_per_min": 0.0, "glove_speed": 0.0, "act_sat": 0.0,
+            "fall_rate": 0.0,
+            "hits_per_s": 0.0,
+            "head_share": 0.0,
+            "hit_speed": 0.0,
+            "hit_speed_max": 0.0,
+            "distance": 0.0,
+            "knockdowns_per_min": 0.0,
+            "glove_speed": 0.0,
+            "act_sat": 0.0,
         }
         out.update({f"rt_{t}": self._gt[t].item() / s for t in self.TERMS})
         for i, name in enumerate(self.names):
             out[f"{name}_up_rate"] = self._gk["up_end"][i].item() / max(1.0, self._gk["ends"][i].item())
-            out[f"{name}_up_rate_from_floor"] = self._gk_floor["up_end"][i].item() / max(1.0, self._gk_floor["ends"][i].item())
+            out[f"{name}_up_rate_from_floor"] = self._gk_floor["up_end"][i].item() / max(
+                1.0, self._gk_floor["ends"][i].item()
+            )
             out[f"{name}_time_to_stand"] = self._gk["t_up"][i].item() / max(1.0, self._gk["n_up"][i].item())
             out[f"{name}_reward_per_step"] = self._gk["ret"][i].item() / (s * self.N)
             out[f"{name}_up_rate_unaided"] = self._gk_raw["up_end"][i].item() / max(1.0, self._gk_raw["ends"][i].item())

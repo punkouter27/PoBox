@@ -7,6 +7,7 @@ Per boxer: falls nobody caused a minute (the footing line, mark 0.2), how many o
 (trips), body touches a minute, and its punches landed a second. A 106-input brain sees the nearest body (envs/match.py's
 numbers, worked out here again in numpy); a 103 brain only feels it.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -25,7 +26,7 @@ import exam as E  # noqa: E402
 import exam_v2 as V  # noqa: E402
 from envs.bodies import lying_bodies  # noqa: E402
 
-PELVIS_X, SEE_M = -0.28, 3.0          # envs/match.py BODY_PELVIS_X, BODY_SEE_M
+PELVIS_X, SEE_M = -0.28, 3.0  # envs/match.py BODY_PELVIS_X, BODY_SEE_M
 
 
 class MeleeRing(E.ExamRing):
@@ -35,17 +36,27 @@ class MeleeRing(E.ExamRing):
         self.bid = [mujoco.mj_name2id(self.m, mujoco.mjtObj.mjOBJ_BODY, f"downed_{j}") for j in range(n)]
         self.mocap = [int(self.m.body_mocapid[b]) for b in self.bid]
         self.downed = {g for g in range(self.m.ngeom) if int(self.m.geom_bodyid[g]) in self.bid}
-        self.owner = np.array([0 if (mujoco.mj_id2name(self.m, mujoco.mjtObj.mjOBJ_GEOM, g) or "").startswith("a_") else
-                               1 if (mujoco.mj_id2name(self.m, mujoco.mjtObj.mjOBJ_GEOM, g) or "").startswith("b_") else -1 for g in range(self.m.ngeom)])
+        self.owner = np.array(
+            [
+                0
+                if (mujoco.mj_id2name(self.m, mujoco.mjtObj.mjOBJ_GEOM, g) or "").startswith("a_")
+                else 1
+                if (mujoco.mj_id2name(self.m, mujoco.mjtObj.mjOBJ_GEOM, g) or "").startswith("b_")
+                else -1
+                for g in range(self.m.ngeom)
+            ]
+        )
 
     def _bodies(self):
         d = self.d
-        feet = [d.qpos[self.rq[k]:self.rq[k] + 2].copy() for k in range(2)]
+        feet = [d.qpos[self.rq[k] : self.rq[k] + 2].copy() for k in range(2)]
         lim, placed = self.ring_half - 0.7, []
         for j in range(self.n):
             for _ in range(50):
                 xy = self.rng.uniform(-lim, lim, 2)
-                if all(np.linalg.norm(xy - f) > 0.9 for f in feet) and all(np.linalg.norm(xy - p) > 1.2 for p in placed):
+                if all(np.linalg.norm(xy - f) > 0.9 for f in feet) and all(
+                    np.linalg.norm(xy - p) > 1.2 for p in placed
+                ):
                     break
             placed.append(xy)
             yaw = self.rng.uniform(-math.pi, math.pi)
@@ -104,7 +115,9 @@ def main() -> None:
     if a.models:
         models_dir = a.models if os.path.isabs(a.models) else os.path.join(HERE, a.models)
         _join = E.os.path.join
-        E.os.path.join = lambda *p: _join(models_dir, p[2]) if len(p) == 3 and p[0] == HERE and p[1] == "models" else _join(*p)
+        E.os.path.join = lambda *p: (
+            _join(models_dir, p[2]) if len(p) == 3 and p[0] == HERE and p[1] == "models" else _join(*p)
+        )
     book = json.load(open(a.book, encoding="utf-8"))
     E.act = V.act
     me = a.name
@@ -120,8 +133,8 @@ def main() -> None:
         pols = [V.load_policy(os.path.join(HERE, book[n]["match"]), ring.A) for n in (x, y)]
         for i, p in enumerate(pols):
             if p.obs_state:
-                p.state = (lambda i=i: ring.state(i))
-            p.bodies = (lambda i=i: ring.seen(i))
+                p.state = lambda i=i: ring.state(i)
+            p.bodies = lambda i=i: ring.seen(i)
         r = dict(seconds=0.0, falls=0, trips=0, touch_s=0.0, touches=0, hits=0)
         for _ in range(a.rounds):
             ring.at_marks()
@@ -158,16 +171,31 @@ def main() -> None:
                     ring.reset()
                     pun = E.Punches(ring)
                     low[:], since_taken[:], since_touch[:] = 0.0, 99.0, 99.0
-        per[opp] = {"falls_per_min": r["falls"] / (r["seconds"] / 60), "trips_per_min": r["trips"] / (r["seconds"] / 60),
-                    "touches_per_min": r["touches"] / (r["seconds"] / 60), "touch_share": r["touch_s"] / r["seconds"], "hits_per_s": r["hits"] / r["seconds"]}
+        per[opp] = {
+            "falls_per_min": r["falls"] / (r["seconds"] / 60),
+            "trips_per_min": r["trips"] / (r["seconds"] / 60),
+            "touches_per_min": r["touches"] / (r["seconds"] / 60),
+            "touch_share": r["touch_s"] / r["seconds"],
+            "hits_per_s": r["hits"] / r["seconds"],
+        }
         for key in tot:
             tot[key] += r[key]
         print(f"  {me} v {opp}: {json.dumps({k2: round(v, 3) for k2, v in per[opp].items()})}", flush=True)
     mins = tot["seconds"] / 60
-    out = {"name": me, "match": book[me]["match"], "inputs": int(V.obs_dim_of(os.path.join(HERE, book[me]["match"]))), "bodies": a.bodies,
-           "rounds": a.rounds, "falls_per_min": tot["falls"] / mins, "trips_per_min": tot["trips"] / mins, "touches_per_min": tot["touches"] / mins,
-           "touch_share": tot["touch_s"] / tot["seconds"], "hits_per_s": tot["hits"] / tot["seconds"],
-           "worst_falls_per_min": max(v["falls_per_min"] for v in per.values()), "vs": per}
+    out = {
+        "name": me,
+        "match": book[me]["match"],
+        "inputs": int(V.obs_dim_of(os.path.join(HERE, book[me]["match"]))),
+        "bodies": a.bodies,
+        "rounds": a.rounds,
+        "falls_per_min": tot["falls"] / mins,
+        "trips_per_min": tot["trips"] / mins,
+        "touches_per_min": tot["touches"] / mins,
+        "touch_share": tot["touch_s"] / tot["seconds"],
+        "hits_per_s": tot["hits"] / tot["seconds"],
+        "worst_falls_per_min": max(v["falls_per_min"] for v in per.values()),
+        "vs": per,
+    }
     print(json.dumps({k2: v for k2, v in out.items() if k2 != "vs"}, indent=1))
     if a.json:
         with open(a.json, "w", encoding="utf-8") as f:

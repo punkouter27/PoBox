@@ -14,6 +14,7 @@ out: a clip's hang and swing, a boxer's are in the guard.
 ponytail: one moment at a time, with its velocities, where the paper judges a pair of moments. Judge pairs
 if the gait comes out stiff or the judge is fooled by poses that do not follow each other.
 """
+
 from __future__ import annotations
 
 import os
@@ -33,7 +34,9 @@ PARTS = ("abdomen", "hip", "knee", "ankle")
 FEATURES = 2 * 15 + 1 + 3 + 3 + 3
 
 
-def clip_features(m: mujoco.MjModel, order: list, path: str = os.path.join(HERE, "clips", "walk_turn.npz"), prefix: str = "a_"):
+def clip_features(
+    m: mujoco.MjModel, order: list, path: str = os.path.join(HERE, "clips", "walk_turn.npz"), prefix: str = "a_"
+):
     """Every moment of every clip on this body: (rows, FEATURES), and the qpos and qvel each row came from."""
     z = np.load(path)
     fps = float(z["fps"])
@@ -51,18 +54,27 @@ def clip_features(m: mujoco.MjModel, order: list, path: str = os.path.join(HERE,
             continue
         rows = place(m, z[name], order, prefix)
         for a, b in zip(rows[:-1], rows[1:]):
-            q0[root_q:root_q + 7], q0[jq] = a[:7], a[7:]
-            q1[root_q:root_q + 7], q1[jq] = b[:7], b[7:]
+            q0[root_q : root_q + 7], q0[jq] = a[:7], a[7:]
+            q1[root_q : root_q + 7], q1[jq] = b[:7], b[7:]
             mujoco.mj_differentiatePos(m, v, 1.0 / fps, q0, q1)
             quat = a[3:7] / np.linalg.norm(a[3:7])
             mujoco.mju_quat2Mat(R, quat)
             Rm = R.reshape(3, 3)
             yaw = np.arctan2(2.0 * (quat[0] * quat[3] + quat[1] * quat[2]), 1.0 - 2.0 * (quat[2] ** 2 + quat[3] ** 2))
             c, s = np.cos(yaw), np.sin(yaw)
-            lin = v[root_v:root_v + 3]
-            feats.append(np.concatenate([a[7:][idx], v[jv][idx], [a[2] / leg],
-                                         np.array([c * lin[0] + s * lin[1], -s * lin[0] + c * lin[1], lin[2]]) / leg,
-                                         v[root_v + 3:root_v + 6], Rm.T @ [0.0, 0.0, -1.0]]))
+            lin = v[root_v : root_v + 3]
+            feats.append(
+                np.concatenate(
+                    [
+                        a[7:][idx],
+                        v[jv][idx],
+                        [a[2] / leg],
+                        np.array([c * lin[0] + s * lin[1], -s * lin[0] + c * lin[1], lin[2]]) / leg,
+                        v[root_v + 3 : root_v + 6],
+                        Rm.T @ [0.0, 0.0, -1.0],
+                    ]
+                )
+            )
             states.append((q0.copy(), v.copy()))
     return np.array(feats, dtype=np.float32), states
 
@@ -94,7 +106,7 @@ class Judge:
         self.seen.append(feat.detach())
 
     def update(self, rounds: int = 4, batch: int = 4096) -> dict:
-        fake = torch.cat(self.seen)[-self.keep:] if self.seen else None
+        fake = torch.cat(self.seen)[-self.keep :] if self.seen else None
         self.seen = []
         if fake is None or len(fake) == 0:
             return {}
@@ -107,7 +119,7 @@ class Judge:
             # (its slope taken in the scaled numbers it reads: in metres and radians, a number that hardly
             # varies, like which way is down, would be all of the penalty).
             slope = torch.autograd.grad(d_r.sum(), r, create_graph=True)[0]
-            loss = ((d_r - 1.0) ** 2).mean() + ((d_f + 1.0) ** 2).mean() + 5.0 * (slope ** 2).sum(-1).mean()
+            loss = ((d_r - 1.0) ** 2).mean() + ((d_f + 1.0) ** 2).mean() + 5.0 * (slope**2).sum(-1).mean()
             self.opt.zero_grad(set_to_none=True)
             loss.backward()
             self.opt.step()
@@ -125,6 +137,7 @@ class Judge:
 def demo() -> None:
     import json
     from envs.footwork import FootworkEnv
+
     xml = os.path.join(HERE, "models", "v2", "matt_solo.xml")
     cfg = json.load(open(os.path.join(HERE, "models", "v2", "matt_policy_config.json"), encoding="utf-8"))
     env = FootworkEnv(xml, 16, device="cpu", seed=1, obs_noise=0.0, disturb=0.0, randomise=0.0)
@@ -151,7 +164,9 @@ def demo() -> None:
         judge.show(torch.cat(own))
         stats = judge.update(batch=1024)
     on_clips, on_boxer = judge.reward(judge.real).mean().item(), judge.reward(torch.cat(own)).mean().item()
-    print(f"after 240 updates the judge pays a clip's moment {on_clips:.2f} and the standing boxer's {on_boxer:.2f}; {stats}")
+    print(
+        f"after 240 updates the judge pays a clip's moment {on_clips:.2f} and the standing boxer's {on_boxer:.2f}; {stats}"
+    )
     assert on_clips > 0.6 > on_boxer + 0.3
 
 

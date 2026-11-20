@@ -4,6 +4,7 @@ get-up policy leaves a boxer in, for its match policy to practise taking over fr
     python tools/make_handover_v2.py --name matt --ckpt checkpoints/u1_matt_zombie/latest_matt.pt
     -> logs/handover_v2_matt.npz
 """
+
 from __future__ import annotations
 
 import os
@@ -16,7 +17,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "tools"))
 import envs.cgetup as C  # noqa: E402
 import make_handover_bank as B  # noqa: E402
-from ppo import PPO, PPOConfig  # noqa: E402
+from ppo import PPO  # noqa: E402
 
 V2 = os.path.join(HERE, "models", "v2")
 _join = os.path.join
@@ -48,7 +49,7 @@ if __name__ == "__main__":
         # models/v3: envs/cgetup.py reads its bodies from C.MODELS.
         i = sys.argv.index("--models")
         V2 = sys.argv[i + 1] if os.path.isabs(sys.argv[i + 1]) else _join(HERE, sys.argv[i + 1])
-        del sys.argv[i:i + 2]
+        del sys.argv[i : i + 2]
     C.MODELS = V2
     C.os.path.join = join
     C.CGetUp._observe = observe

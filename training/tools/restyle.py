@@ -8,6 +8,7 @@ its entry in every models/*_policy_config.json it appears in (its own, and each 
 envs/boxing.py reads when a session starts. tools/build_roster.py writes all three but also rebuilds the
 bodies; this changes only how a boxer is paid, so it is safe between two sessions of a running league.
 """
+
 from __future__ import annotations
 
 import argparse

@@ -18,6 +18,7 @@ appended to logs/cpu_bouts.ndjson with its numbers.
 ponytail: one judge, not three, and the lasting damage starts again each round (exam rounds() resets it at a
 bout's first round, and each round here is its own call); a closer copy of Judges.cs if ratings ever hinge on it.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -87,7 +88,7 @@ def box_pair(job) -> list:
     pols = [V.load_policy(os.path.join(HERE, book[n]["match"]), ring.A) for n in (x, y)]
     for i, p in enumerate(pols):
         if getattr(p, "obs_state", False):
-            p.state = (lambda i=i: ring.state(i))
+            p.state = lambda i=i: ring.state(i)
     # The marks with a jitter, so the bouts of a pair are not one bout repeated; half of them with the corners swapped.
     marks = [((-0.72, -0.72), (0.72, 0.72)), ((0.72, 0.72), (-0.72, -0.72))]
     out = []
@@ -106,9 +107,21 @@ def box_pair(job) -> list:
                 stats[k]["speed"] += r[k]["speed"]
                 stats[k]["knockdowns"] += r[1 - k]["falls_hit"]
         result = 1.0 if score[0] > score[1] else 0.0 if score[0] < score[1] else 0.5
-        out.append(dict(when=time.strftime("%Y-%m-%d %H:%M:%S"), red=x, blue=y, cards=score, result=result,
-                        red_brain=book[x]["match"], blue_brain=book[y]["match"], bout=n, seed=seed,
-                        red_stats=stats[0], blue_stats=stats[1]))
+        out.append(
+            dict(
+                when=time.strftime("%Y-%m-%d %H:%M:%S"),
+                red=x,
+                blue=y,
+                cards=score,
+                result=result,
+                red_brain=book[x]["match"],
+                blue_brain=book[y]["match"],
+                bout=n,
+                seed=seed,
+                red_stats=stats[0],
+                blue_stats=stats[1],
+            )
+        )
     return out
 
 
@@ -141,13 +154,19 @@ def main() -> None:
     ap.add_argument("--only", nargs="*", default=[], help="pairs with at least one of these boxers")
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--models", default="", help="models folder (e.g. models/v3); empty keeps exam_v2 default")
-    ap.add_argument("--no-write", action="store_true", help="print the table; write nothing (neither the game's file nor the bout log)")
+    ap.add_argument(
+        "--no-write",
+        action="store_true",
+        help="print the table; write nothing (neither the game's file nor the bout log)",
+    )
     args = ap.parse_args()
     if args.models:
         models_dir = args.models if os.path.isabs(args.models) else os.path.join(HERE, args.models)
         V.MODELS = models_dir
         _join = E.os.path.join
-        E.os.path.join = lambda *p: _join(models_dir, p[2]) if len(p) == 3 and p[0] == HERE and p[1] == "models" else _join(*p)
+        E.os.path.join = lambda *p: (
+            _join(models_dir, p[2]) if len(p) == 3 and p[0] == HERE and p[1] == "models" else _join(*p)
+        )
 
     with open(os.path.join(HERE, args.book), "r", encoding="utf-8") as f:
         book = json.load(f)
@@ -188,8 +207,16 @@ def main() -> None:
         os.makedirs(os.path.dirname(OUT), exist_ok=True)
         rows = [dict(name=n.upper(), elo=round(rating[n], 1), brain=book[n]["match"], **record[n]) for n in names]
         with open(OUT, "w", encoding="utf-8") as f:
-            json.dump({"when": time.strftime("%Y-%m-%d %H:%M:%S"), "bouts": len(results), "bouts_per_pair": args.bouts,
-                       "rows": sorted(rows, key=lambda r: -r["elo"])}, f, indent=1)
+            json.dump(
+                {
+                    "when": time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "bouts": len(results),
+                    "bouts_per_pair": args.bouts,
+                    "rows": sorted(rows, key=lambda r: -r["elo"]),
+                },
+                f,
+                indent=1,
+            )
         print(f"written {os.path.relpath(OUT, ROOT)}")
 
 

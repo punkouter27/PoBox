@@ -1,7 +1,8 @@
 """Render a model's stand keyframe to a PNG, from the side and the front, so a pose can be looked at.
 
-    python tools/render_pose.py --xml models/fighter_spar.xml --out logs/pose.png
+python tools/render_pose.py --xml models/fighter_spar.xml --out logs/pose.png
 """
+
 from __future__ import annotations
 
 import argparse
@@ -23,7 +24,6 @@ def main() -> None:
     d = mujoco.MjData(m)
     mujoco.mj_resetDataKeyframe(m, d, 0)
     # Hold the pose: the actuators are position servos, so the keyframe's joint angles are the targets.
-    nq_joint = m.nu // max(1, sum(1 for i in range(m.njnt) if m.jnt_type[i] == mujoco.mjtJoint.mjJNT_FREE))
     for i in range(m.nu):
         d.ctrl[i] = d.qpos[m.jnt_qposadr[m.actuator_trnid[i, 0]]]
     mujoco.mj_forward(m, d)

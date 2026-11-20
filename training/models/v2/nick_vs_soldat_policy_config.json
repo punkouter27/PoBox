@@ -7,7 +7,7 @@
     {
       "name": "nick",
       "rig": "nick.json",
-      "source_mesh": "C:/Users/punko/Downloads/PoBox/RIGGED_Nick.glb",
+      "source_mesh": "RIGGED_Nick.glb",
       "joint_order": [
         "abdomen_z",
         "abdomen_y",
@@ -257,7 +257,7 @@
     {
       "name": "soldat",
       "rig": "soldat.json",
-      "source_mesh": "C:/Users/punko/Downloads/_CODEMATT/PoBox/Assets/Models/Soldat.glb",
+      "source_mesh": "Assets/Models/Soldat.glb",
       "joint_order": [
         "abdomen_z",
         "abdomen_y",

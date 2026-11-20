@@ -6,6 +6,7 @@
 One world of envs/cgetup.py in plain C MuJoCo, in real time, with no helping hand and the policy's own
 choice of action (no exploration noise): what the game will get. It costs a few per cent of one core.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -17,7 +18,6 @@ import time
 
 import mujoco
 import mujoco.viewer
-import numpy as np
 import torch
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -39,12 +39,12 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=3)
     args = ap.parse_args()
     if os.name == "nt":
-        ctypes.windll.kernel32.SetPriorityClass(ctypes.windll.kernel32.GetCurrentProcess(), 0x00000040)   # idle
+        ctypes.windll.kernel32.SetPriorityClass(ctypes.windll.kernel32.GetCurrentProcess(), 0x00000040)  # idle
     torch.set_num_threads(1)
     ckpt = args.ckpt or newest(args.run)
     if not ckpt:
         raise SystemExit("no checkpoint yet")
-    name = args.name or os.path.basename(ckpt)[len("latest_"):-3]
+    name = args.name or os.path.basename(ckpt)[len("latest_") : -3]
     env = CGetUp(name, 1, threads=1, seed=args.seed, assist=0.0, obs_noise=0.0, stand_share=0.0, slack_lo=1.2)
     ppo = PPO(100, env.A, 1, "cpu", PPOConfig())
     extra = ppo.load(ckpt)
@@ -70,7 +70,10 @@ def main() -> None:
                     try:
                         extra = ppo.load(latest)
                         stamp = os.path.getmtime(latest)
-                        print(f"iteration {extra.get('iter', 0)}, help in training {extra.get('assist', 0.0):.2f}", flush=True)
+                        print(
+                            f"iteration {extra.get('iter', 0)}, help in training {extra.get('assist', 0.0):.2f}",
+                            flush=True,
+                        )
                     except Exception as e:
                         print(f"could not load yet: {e}", flush=True)
             time.sleep(max(0.0, env.dt - (time.time() - t0)))

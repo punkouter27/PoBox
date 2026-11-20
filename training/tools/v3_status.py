@@ -1,11 +1,12 @@
 """Plain-language status page for the v3 retrain (the queue's v3f_/v3u_/v3m_/exam_ jobs), one self-contained HTML file.
 
-    python tools/v3_status.py [OUT.html]        default ../DOCS/reports/v3_training_status.html
+    python tools/v3_status.py [OUT.html]        default ../docs/reports/v3_training_status.html
 
 Three charts from the runs' CSVs (the numbers TensorBoard shows under env/), smoothed 0.6 as TensorBoard does:
 staying up while walking (footwork falls a minute), getting up (get-up success), landing punches (match hits a second),
 plus a timeline estimated from logs/queue.log. Rerun it for the hourly update.
 """
+
 from __future__ import annotations
 
 import base64
@@ -18,6 +19,7 @@ import sys
 from datetime import datetime, timedelta
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
@@ -26,8 +28,14 @@ LOGS = os.path.join(HERE, "logs")
 ORDER = ["matt", "sokol", "kim", "zombie", "nick", "trump", "grandpa", "grandma"]
 COLORS = dict(zip(ORDER, ["#ff7043", "#0077bb", "#009988", "#ee3377", "#33bbee", "#cc3311", "#888888", "#ee7733"]))
 STEPS = ["v3f", "exam_v3f", "v3u", "bank_v3", "v3m", "exam_v3m"]
-STEP_NAMES = {"v3f": "footwork", "exam_v3f": "footwork exam", "v3u": "get-up", "bank_v3": "get-up endings",
-              "v3m": "boxing", "exam_v3m": "boxing exam"}
+STEP_NAMES = {
+    "v3f": "footwork",
+    "exam_v3f": "footwork exam",
+    "v3u": "get-up",
+    "bank_v3": "get-up endings",
+    "v3m": "boxing",
+    "exam_v3m": "boxing exam",
+}
 
 
 def series(run, key):
@@ -126,7 +134,9 @@ def exam_text(name):
     lines = []
     with open(path, encoding="utf-8", errors="replace") as f:
         for line in f:
-            m = re.match(r"^\s{4}(footing|attack|guard|chin|getting up|carrying on)\s+(pass|FAIL)\s+(.*)$", line.rstrip())
+            m = re.match(
+                r"^\s{4}(footing|attack|guard|chin|getting up|carrying on)\s+(pass|FAIL)\s+(.*)$", line.rstrip()
+            )
             if m:
                 lines.append(m.groups())
     return lines
@@ -177,7 +187,9 @@ def gantt(rows, per, now):
             a, b, alpha, hatch = cursor, cursor + per, 0.25, "//"
             cursor = b
         h0 = (a - t0).total_seconds() / 3600
-        ax.barh(y, (b - a).total_seconds() / 3600, left=h0, color=COLORS[name], alpha=alpha, hatch=hatch, edgecolor="#444")
+        ax.barh(
+            y, (b - a).total_seconds() / 3600, left=h0, color=COLORS[name], alpha=alpha, hatch=hatch, edgecolor="#444"
+        )
         ax.text(h0 - 0.1, y, name.capitalize(), ha="right", va="center", fontsize=8)
     ax.axvline((now - t0).total_seconds() / 3600, color="#111", lw=1.5)
     ax.text((now - t0).total_seconds() / 3600, len(rows) - 0.4, " now", fontsize=8)
@@ -194,14 +206,18 @@ def kim_test():
     if not xs:
         return ""
     fig, ax = plt.subplots(figsize=(7.5, 3.4))
-    for key, label, col, ls in (("kim_up_rate_unaided", "gets up on his own", "#009988", "-"),
-                                ("kim_up_rate", "gets up, with help where given", "#0077bb", "--"),
-                                ("kim_assist", "size of the helping hand", "#cc3311", ":")):
+    for key, label, col, ls in (
+        ("kim_up_rate_unaided", "gets up on his own", "#009988", "-"),
+        ("kim_up_rate", "gets up, with help where given", "#0077bb", "--"),
+        ("kim_assist", "size of the helping hand", "#cc3311", ":"),
+    ):
         x, y = series("v3u3_kim", key)
         ax.plot(x, smooth(y, 0.9), color=col, lw=2, ls=ls, label=label)
     ax.axhline(0.8, color="#2a7", ls="--", lw=1)
     ax.text(ax.get_xlim()[1], 0.8, " exam mark 80%", color="#2a7", va="bottom", ha="right", fontsize=8)
-    ax.set_xlabel("training round (iteration)"); ax.set_ylabel("share"); ax.grid(alpha=0.25)
+    ax.set_xlabel("training round (iteration)")
+    ax.set_ylabel("share")
+    ax.grid(alpha=0.25)
     ax.set_title("4. Kim's test: the helping hand taken away (1 hour)", fontsize=10, loc="left")
     ax.legend(fontsize=8, frameon=False, loc="center right")
     img = png(fig)
@@ -229,27 +245,43 @@ def exam_text_of(log, head):
             if line.startswith(head):
                 on = True
             elif on:
-                m = re.match(r"^\s{4}(footing|attack|guard|chin|getting up|carrying on)\s+(pass|FAIL)\s+(.*)$", line.rstrip())
+                m = re.match(
+                    r"^\s{4}(footing|attack|guard|chin|getting up|carrying on)\s+(pass|FAIL)\s+(.*)$", line.rstrip()
+                )
                 if m:
                     out.append(m.groups())
     return out
 
 
 def main():
-    out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "DOCS", "reports", "v3_training_status.html")
+    out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(HERE, "..", "docs", "reports", "v3_training_status.html")
     now = datetime.now()
     times = queue_times()
     rows, per, eta = timeline(times, now)
     done = sum(1 for r in rows if r[3] == "done")
 
-    c1, _ = chart("v3f", "falls_per_min", "falls a minute",
-                  "1. Staying on its feet: falls a minute while walking and turning (lower is better)")
-    c2, _ = chart("v3u", "{name}_up_rate", "share that got up",
-                  "2. Getting up: solid = with the practice helping hand, dashed = on its own (higher is better)", dashed="{name}_up_rate_unaided",
-                  marks=[(0.8, "exam mark 80%", "#2a7")], per_boxer_key=True)
-    c3, _ = chart("v3m", "hits_per_s", "punches landed a second",
-                  "3. Boxing: punches landed a second against the other seven (higher is better)",
-                  marks=[(0.5, "exam mark 0.5", "#2a7"), (1.2, "training goal 1.2", "#999")])
+    c1, _ = chart(
+        "v3f",
+        "falls_per_min",
+        "falls a minute",
+        "1. Staying on its feet: falls a minute while walking and turning (lower is better)",
+    )
+    c2, _ = chart(
+        "v3u",
+        "{name}_up_rate",
+        "share that got up",
+        "2. Getting up: solid = with the practice helping hand, dashed = on its own (higher is better)",
+        dashed="{name}_up_rate_unaided",
+        marks=[(0.8, "exam mark 80%", "#2a7")],
+        per_boxer_key=True,
+    )
+    c3, _ = chart(
+        "v3m",
+        "hits_per_s",
+        "punches landed a second",
+        "3. Boxing: punches landed a second against the other seven (higher is better)",
+        marks=[(0.5, "exam mark 0.5", "#2a7"), (1.2, "training goal 1.2", "#999")],
+    )
     g = gantt(rows, per, now)
     kim = kim_test()
 
@@ -264,13 +296,17 @@ def main():
         if box:
             fails = [f"{k} ({v})" for k, p, v in box if p == "FAIL"]
             verdict = "PASS" if not fails else "FAIL"
-            bits.append(f"boxing exam <b class={'ok' if not fails else 'bad'}>{verdict}</b>"
-                        + (": " + "; ".join(fails) if fails else ""))
+            bits.append(
+                f"boxing exam <b class={'ok' if not fails else 'bad'}>{verdict}</b>"
+                + (": " + "; ".join(fails) if fails else "")
+            )
         if state == "running":
             bits.append(f"now: {cur or 'between steps'}")
         if state == "waiting":
             bits.append("waiting its turn")
-        cards.append(f"<tr><td style='color:{COLORS[name]}'><b>{name.capitalize()}</b></td><td>{state}</td><td>{' &middot; '.join(bits)}</td></tr>")
+        cards.append(
+            f"<tr><td style='color:{COLORS[name]}'><b>{name.capitalize()}</b></td><td>{state}</td><td>{' &middot; '.join(bits)}</td></tr>"
+        )
 
     html = f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -288,8 +324,8 @@ def main():
 <h1>Retraining the boxers on their new bodies (v3)</h1>
 <p class="dim">Updated {now:%A %d %B, %H:%M}. Rebuilt from the training logs by training/tools/v3_status.py.</p>
 
-<p class="big"><b>{done} of 8 boxers finished.</b> At about {per.total_seconds()/3600:.1f} hours a boxer, the last one should be done around
-<b>{eta:%H:%M} {'tomorrow' if eta.date() > now.date() else 'today'}</b>. Keep Unity closed until then; it slows training about five times.</p>
+<p class="big"><b>{done} of 8 boxers finished.</b> At about {per.total_seconds() / 3600:.1f} hours a boxer, the last one should be done around
+<b>{eta:%H:%M} {"tomorrow" if eta.date() > now.date() else "today"}</b>. Keep Unity closed until then; it slows training about five times.</p>
 
 <h2>What is happening</h2>
 <p>Each boxer got a new body: a waist that bends 60&deg; forward and 30&deg; back like a person's, and body parts weighed the way
@@ -299,7 +335,7 @@ walking and boxing lessons it sits an exam in the same physics the game uses. No
 
 <h2>Timeline</h2>
 <img src="data:image/png;base64,{g}" alt="timeline">
-<table style="margin-top:10px">{''.join(cards)}</table>
+<table style="margin-top:10px">{"".join(cards)}</table>
 
 <h2>The three numbers that matter</h2>
 <img src="data:image/png;base64,{c1}" alt="falls a minute">
@@ -366,7 +402,9 @@ Zombie 9, Kim 32 (mark 48). In practice the helping hand never reached zero in t
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     with open(out, "w", encoding="utf-8") as f:
         f.write(html)
-    print(f"{done}/8 done, ~{per.total_seconds()/3600:.1f} h a boxer, eta {eta:%Y-%m-%d %H:%M} -> {os.path.abspath(out)}")
+    print(
+        f"{done}/8 done, ~{per.total_seconds() / 3600:.1f} h a boxer, eta {eta:%Y-%m-%d %H:%M} -> {os.path.abspath(out)}"
+    )
 
 
 if __name__ == "__main__":

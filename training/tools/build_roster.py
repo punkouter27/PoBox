@@ -12,6 +12,7 @@ the body is built again, until nothing does (house rule: verified before trainin
 Then the match models: every new boxer with every other, and with each veteran (a boxer already trained,
 whose own files are left alone).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -27,13 +28,21 @@ sys.path.insert(0, os.path.join(HERE, "tools"))
 import rig_to_mjcf  # noqa: E402
 from check_self_collision import check  # noqa: E402
 
-REFERENCE_HEIGHT = 1.81   # the height the generator's joint strengths were written for (Matt)
+REFERENCE_HEIGHT = 1.81  # the height the generator's joint strengths were written for (Matt)
 
 
 def build_boxer(name: str, spec: dict, models: str, rigs: str, plots: str, cubes: int) -> tuple:
     rig_path = os.path.join(rigs, f"{name}.json")
-    cmd = [sys.executable, os.path.join(HERE, "glb_to_rig.py"), "--glb", os.path.normpath(os.path.join(HERE, spec["glb"])),
-           "--out", rig_path, "--plot", os.path.join(plots, f"fit_{name}.png")]
+    cmd = [
+        sys.executable,
+        os.path.join(HERE, "glb_to_rig.py"),
+        "--glb",
+        os.path.normpath(os.path.join(HERE, spec["glb"])),
+        "--out",
+        rig_path,
+        "--plot",
+        os.path.join(plots, f"fit_{name}.png"),
+    ]
     if spec.get("height"):
         cmd += ["--height", str(spec["height"])]
     if spec.get("mass"):
@@ -59,12 +68,15 @@ def build_boxer(name: str, spec: dict, models: str, rigs: str, plots: str, cubes
         for part in ("torso", "pelvis"):
             rig["radii"][part] = round(rig["radii"][part] * 0.94, 4)
         rig.setdefault("notes", []).append(
-            f"trunk slimmed to torso {rig['radii']['torso']:.3f}, pelvis {rig['radii']['pelvis']:.3f}: its own arms touched it")
+            f"trunk slimmed to torso {rig['radii']['torso']:.3f}, pelvis {rig['radii']['pelvis']:.3f}: its own arms touched it"
+        )
         print(f"  {name}: slimming the trunk and building again (try {attempt + 2})", flush=True)
     else:
         raise SystemExit(f"{name}: its own parts still touch after ten tries; see the list above")
-    print(f"  {name}: strength {rig['strength']:.2f}, speed {rig['speed']:.2f}, {cfg['total_mass_kg']:.1f} kg, "
-          f"{rig['height_m']:.2f} m, radii {rig['radii']}")
+    print(
+        f"  {name}: strength {rig['strength']:.2f}, speed {rig['speed']:.2f}, {cfg['total_mass_kg']:.1f} kg, "
+        f"{rig['height_m']:.2f} m, radii {rig['radii']}"
+    )
     return rig, z, cfg
 
 
@@ -114,8 +126,10 @@ def main() -> None:
 
     print("\n==== the roster")
     for name, (rig, z, cfg) in built.items():
-        print(f"  {rig.get('display', name):9s} {rig['height_m']:.2f} m  {cfg['total_mass_kg']:5.1f} kg  "
-              f"strength {cfg.get('strength', 1.0):.2f}  speed {cfg.get('speed', 1.0):.2f}  {rig.get('persona', '')}")
+        print(
+            f"  {rig.get('display', name):9s} {rig['height_m']:.2f} m  {cfg['total_mass_kg']:5.1f} kg  "
+            f"strength {cfg.get('strength', 1.0):.2f}  speed {cfg.get('speed', 1.0):.2f}  {rig.get('persona', '')}"
+        )
 
 
 if __name__ == "__main__":

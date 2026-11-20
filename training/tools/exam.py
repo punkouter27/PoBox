@@ -22,6 +22,7 @@ logs/league.state.json, and the newest get-up checkpoint with the boxer's name o
 
 A hit, a block and the daze are envs/boxing.py's, written out again in numpy. The pass marks are at the top.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -45,24 +46,28 @@ from footwork_c import speed_limit  # noqa: E402
 
 VETERANS = ("matt", "zombie")
 MARKS = {
-    "footing_falls_per_min": 0.2,       # at most
-    "attack_hits_per_s": 0.5,           # at least
-    "attack_speed": 4.0,                # at least, times the boxer's own speed factor
-    "pressure_hits_per_s": 0.25,        # at least, against its hardest opponent (the mean above hides a boxer that only hits the weak)
-    "guard_block_share": 0.3,           # at least, or ...
-    "guard_head_taken_per_s": 0.3,      # ... at most this many head shots taken a second
-    "chin_legs_per_min": 1.5,           # at most
-    "getup_rate": 0.8, "getup_within_s": 8.0,
-    "getup_rate_frail": 0.6, "getup_within_s_frail": 9.0,     # a boxer with under 0.7 of an adult's strength
+    "footing_falls_per_min": 0.2,  # at most
+    "attack_hits_per_s": 0.5,  # at least
+    "attack_speed": 4.0,  # at least, times the boxer's own speed factor
+    "pressure_hits_per_s": 0.25,  # at least, against its hardest opponent (the mean above hides a boxer that only hits the weak)
+    "guard_block_share": 0.3,  # at least, or ...
+    "guard_head_taken_per_s": 0.3,  # ... at most this many head shots taken a second
+    "chin_legs_per_min": 1.5,  # at most
+    "getup_rate": 0.8,
+    "getup_within_s": 8.0,
+    "getup_rate_frail": 0.6,
+    "getup_within_s_frail": 9.0,  # a boxer with under 0.7 of an adult's strength
     "carry_on_rate": 0.9,
 }
-HANDOVER_S = 1.5        # seconds on its feet before the match policy takes the body back from the get-up policy
+HANDOVER_S = 1.5  # seconds on its feet before the match policy takes the body back from the get-up policy
 DAZE = {"tau": 2.5, "lo": 14.0, "hi": 42.0, "weak": 0.45, "body": 0.3, "legs_out": 0.7}
 # envs/boxing.py's defaults for the punch rules a config turns on (stagger_v, hurt_full).
 STAGGER = {"s": 0.3, "drive": 0.55}
 HURT = {"hi": 0.4, "weak": 0.25, "tau": 600.0}
 PUNCH_MASS = 2.2
-GETUP_NO_DRAIN = False      # --getup-no-drain: the get-up test under the game's rule (reserve 0.5 at the start, no drain while rising)
+GETUP_NO_DRAIN = (
+    False  # --getup-no-drain: the get-up test under the game's rule (reserve 0.5 at the start, no drain while rising)
+)
 
 
 def load_policy(path: str, A: int) -> PPO:
@@ -87,7 +92,7 @@ class ExamRing(Ring):
         # base + share * force / speed limit (envs/getup.py's speed_share); the full speed limit again once the match has it.
         self.sl_extra = m.dof_damping - base
         self.getup_share = [float(c.get("getup_speed_share", 1.0)) for c in self.cfgs]
-        self.no_drain = [False, False]        # the game's get-up (2026-10-18): nothing taken from the reserve while rising
+        self.no_drain = [False, False]  # the game's get-up (2026-10-18): nothing taken from the reserve while rising
         # The match brain's blend_steps (2026-10-31, envs/boxing.py, MjBoxer.Drive): it eases in from the pose it took the body in.
         self.blend = [int(c.get("rules_match", {}).get("blend_steps", 0)) for c in self.cfgs]
         self.action_filter = [float(c.get("rules_match", {}).get("action_filter", 0.0)) for c in self.cfgs]
@@ -102,24 +107,31 @@ class ExamRing(Ring):
         self.r_arm = [m.geom_size[self.forearm[k][0]][0] for k in range(2)]
         self.arm_half = [m.geom_size[self.forearm[k][0]][1] for k in range(2)]
         self.layers = (m.geom_contype.copy(), m.geom_conaffinity.copy())
-        self.own_geoms = [[g for g in range(m.ngeom) if (mujoco.mj_id2name(m, G, g) or "").startswith(p)] for p in ("a_", "b_")]
+        self.own_geoms = [
+            [g for g in range(m.ngeom) if (mujoco.mj_id2name(m, G, g) or "").startswith(p)] for p in ("a_", "b_")
+        ]
         self.scale = np.ones(2)
-        self.reserve = np.ones(2)             # envs/boxing.py's fatigue, for a boxer whose config has "fatigue_j"
+        self.reserve = np.ones(2)  # envs/boxing.py's fatigue, for a boxer whose config has "fatigue_j"
         # envs/boxing.py's punch rules of 2026-10-16, each the taker's own, from its config.
         rule = lambda key: np.array([float(c.get(key, 0.0)) for c in self.cfgs])
-        self.hit_push, self.stagger_v, self.hurt_full, self.body_drain = rule("hit_push"), rule("stagger_v"), rule("hurt_full"), rule("body_drain")
+        self.hit_push, self.stagger_v, self.hurt_full, self.body_drain = (
+            rule("hit_push"),
+            rule("stagger_v"),
+            rule("hurt_full"),
+            rule("body_drain"),
+        )
         self.hurt, self.stagger, self.share = np.zeros(2), np.zeros(2), np.zeros(2)
-        self.push = np.zeros((2, 6))          # force and torque on each trunk for the next control step
+        self.push = np.zeros((2, 6))  # force and torque on each trunk for the next control step
         self.b_torso = [mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_BODY, p + "torso") for p in ("a_", "b_")]
         # models/v3 (envs/boxing.py): each joint's action scale, and a tired drive's torque capped (fatigue_ceiling) at what
         # is left of its force range, from the model, per side.
         A = self.A
         self.act_scale = [np.array(c.get("action_scale_j", [0.5] * A)) for c in self.cfgs]
         self.ceiling = [bool(c.get("fatigue_ceiling", False)) for c in self.cfgs]
-        self.kp = [m.actuator_gainprm[k * A:(k + 1) * A, 0].copy() for k in range(2)]
-        self.kv = [-m.actuator_biasprm[k * A:(k + 1) * A, 2].copy() for k in range(2)]
-        self.f_lo = [m.actuator_forcerange[k * A:(k + 1) * A, 0].copy() for k in range(2)]
-        self.f_hi = [m.actuator_forcerange[k * A:(k + 1) * A, 1].copy() for k in range(2)]
+        self.kp = [m.actuator_gainprm[k * A : (k + 1) * A, 0].copy() for k in range(2)]
+        self.kv = [-m.actuator_biasprm[k * A : (k + 1) * A, 2].copy() for k in range(2)]
+        self.f_lo = [m.actuator_forcerange[k * A : (k + 1) * A, 0].copy() for k in range(2)]
+        self.f_hi = [m.actuator_forcerange[k * A : (k + 1) * A, 1].copy() for k in range(2)]
 
     def state(self, k: int) -> np.ndarray:
         """What a policy trained with obs_state reads in the command's place (envs/match.py)."""
@@ -142,9 +154,9 @@ class ExamRing(Ring):
         q = self.key.copy()
         for k in range(2):
             rq = self.rq[k]
-            q[rq:rq + 2] = spots[k]
+            q[rq : rq + 2] = spots[k]
             q[rq + 2] = self.stand[k] + 0.002
-            q[rq + 3:rq + 7] = [math.cos(yaws[k] / 2), 0, 0, math.sin(yaws[k] / 2)]
+            q[rq + 3 : rq + 7] = [math.cos(yaws[k] / 2), 0, 0, math.sin(yaws[k] / 2)]
             q[self.jq[k]] = self.default[k] + self.rng.uniform(-jitter, jitter, self.A)
         d.qpos[:] = q
         d.qvel[:] = 0
@@ -175,10 +187,10 @@ class ExamRing(Ring):
     def pin(self, k: int, spot, yaw: float) -> None:
         d = self.d
         rq, rv = self.rq[k], self.rv[k]
-        d.qpos[rq:rq + 2] = spot
+        d.qpos[rq : rq + 2] = spot
         d.qpos[rq + 2] = self.stand[k] + 0.002
-        d.qpos[rq + 3:rq + 7] = [math.cos(yaw / 2), 0, 0, math.sin(yaw / 2)]
-        d.qvel[rv:rv + 6] = 0
+        d.qpos[rq + 3 : rq + 7] = [math.cos(yaw / 2), 0, 0, math.sin(yaw / 2)]
+        d.qvel[rv : rv + 6] = 0
         d.qpos[self.jq[k]] = self.default[k]
         d.qvel[self.jv[k]] = 0
 
@@ -213,7 +225,9 @@ class ExamRing(Ring):
                 w = q + scale * (w - q)
             if self.ceiling[k] and tired < 0.999:
                 base = q + self.kv[k] * d.qvel[self.jv[k]] / self.kp[k]
-                w = np.minimum(np.maximum(w, base + tired * self.f_lo[k] / self.kp[k]), base + tired * self.f_hi[k] / self.kp[k])
+                w = np.minimum(
+                    np.maximum(w, base + tired * self.f_lo[k] / self.kp[k]), base + tired * self.f_hi[k] / self.kp[k]
+                )
             want.append(w)
         d.ctrl[:] = np.concatenate(want)
         for k in range(2):
@@ -224,8 +238,10 @@ class ExamRing(Ring):
             joules = float(self.cfgs[k].get("fatigue_j", 0.0)) * float(self.cfgs[k].get("strength", 1.0))
             if joules > 0.0 and not self.no_drain[k]:
                 n = self.A
-                spent = np.abs(d.actuator_force[k * n:(k + 1) * n] * d.qvel[self.jv[k]]).sum() / joules
-                self.reserve[k] = np.clip(self.reserve[k] + self.dt * ((1.0 - self.reserve[k]) / 20.0 - spent), 0.0, 1.0)
+                spent = np.abs(d.actuator_force[k * n : (k + 1) * n] * d.qvel[self.jv[k]]).sum() / joules
+                self.reserve[k] = np.clip(
+                    self.reserve[k] + self.dt * ((1.0 - self.reserve[k]) / 20.0 - spent), 0.0, 1.0
+                )
             head = d.geom_xpos[self.head[1 - k]]
             self.head_vel[k] = (head - self.prev_head[k]) / self.dt
             self.prev_head[k] = head.copy()
@@ -284,7 +300,9 @@ class Punches:
                     self.cool[k, i] = 0.25
                     landed[k].append((zone, float(speed[zone])))
                     n = nh if zone == 0 else nb
-                    r.take_push(o, float(speed[zone]), n, g + n * ((dh - r.r_head[o]) if zone == 0 else (db - r.r_torso[o])))
+                    r.take_push(
+                        o, float(speed[zone]), n, g + n * ((dh - r.r_head[o]) if zone == 0 else (db - r.r_torso[o]))
+                    )
                 # Is this glove, coming at the other one's head, met by a glove or a forearm of theirs?
                 near_head = (dh - r.r_head[o]) < 0.45
                 touching = False
@@ -306,7 +324,10 @@ class Punches:
 
 def rounds(ring: ExamRing, pols, n_rounds: int, round_s: float, daze_on: bool) -> list:
     """Box. Returns per fighter a dict of counts over all the rounds."""
-    out = [dict(hits=0, head=0, speed=0.0, blocks=0, head_taken=0, falls_own=0, falls_hit=0, legs=0, seconds=0.0) for _ in range(2)]
+    out = [
+        dict(hits=0, head=0, speed=0.0, blocks=0, head_taken=0, falls_own=0, falls_hit=0, legs=0, seconds=0.0)
+        for _ in range(2)
+    ]
     dt = ring.dt
     for rnd in range(n_rounds):
         # A bout is three rounds: the lasting punishment starts again with each, and a minute on the stool takes some off.
@@ -346,7 +367,9 @@ def rounds(ring: ExamRing, pols, n_rounds: int, round_s: float, daze_on: bool) -
                         out[k]["legs"] += 1
                     else:
                         legs_out[k] = max(0.0, legs_out[k] - dt)
-                    weak = 1.0 - DAZE["weak"] * float(np.clip((daze[k] - DAZE["lo"]) / max(1.0, legs_at - DAZE["lo"]), 0.0, 1.0))
+                    weak = 1.0 - DAZE["weak"] * float(
+                        np.clip((daze[k] - DAZE["lo"]) / max(1.0, legs_at - DAZE["lo"]), 0.0, 1.0)
+                    )
                     weak *= 1.0 - HURT["weak"] * h
                     if ring.stagger[k] > 0.0:
                         weak = min(weak, STAGGER["drive"])
@@ -385,17 +408,17 @@ def getting_up(ring: ExamRing, k: int, getup: PPO, match, trials: int, within_s:
         spots[o] = their
         ring.ghost(k, True)
         ring.place(spots, yaws, jitter=0.1)
-        ring.held[k] = None                 # the get-up brain has the body first: no blend until the match takes over
+        ring.held[k] = None  # the get-up brain has the body first: no blend until the match takes over
         d = ring.d
         slack = rng.uniform(1.6, 2.6)
         hard = 0.2 + 0.8 * slack / 2.6
         rv = ring.rv[k]
-        d.qvel[rv:rv + 2] = rng.uniform(-2.5, 2.5, 2) * hard
-        d.qvel[rv + 3:rv + 6] = rng.uniform(-2.5, 2.5, 3) * hard
+        d.qvel[rv : rv + 2] = rng.uniform(-2.5, 2.5, 2) * hard
+        d.qvel[rv + 3 : rv + 6] = rng.uniform(-2.5, 2.5, 3) * hard
         floored, stood_for, t, up_at = False, 0.0, 0.0, -1.0
         full = ring.m.dof_damping.copy()
         mine = np.zeros(ring.m.nv, bool)
-        mine[ring.rv[k]:ring.rv[k] + 6] = True
+        mine[ring.rv[k] : ring.rv[k] + 6] = True
         mine[ring.jv[k]] = True
         ring.m.dof_damping[mine] = full[mine] - (1.0 - ring.getup_share[k]) * ring.sl_extra[mine]
         if GETUP_NO_DRAIN:
@@ -434,7 +457,7 @@ def getting_up(ring: ExamRing, k: int, getup: PPO, match, trials: int, within_s:
         res["up"] += 1
         res["t_up"] += up_at
         if stood_for < HANDOVER_S:
-            continue            # got up, and was down again before the match could be handed the body
+            continue  # got up, and was down again before the match could be handed the body
         if footwork is not None:
             # 2026-11-02 (tools/carry_diag_v3.py): a boxer up facing away from its opponent fell after the hand-over about
             # half the time. The game can square it up first on its footwork policy's turn (cmd zero, the opponent where
@@ -456,7 +479,7 @@ def getting_up(ring: ExamRing, k: int, getup: PPO, match, trials: int, within_s:
                 here = d.xpos[ring.pelvis[k]]
                 off = math.atan2(their[1] - here[1], their[0] - here[0]) - math.atan2(R[1, 0], R[0, 0])
                 err = abs(math.atan2(math.sin(off), math.cos(off)))
-                if ts > 0.5 and err < 0.26 and float(np.linalg.norm(d.qvel[rv:rv + 2])) < 0.3:
+                if ts > 0.5 and err < 0.26 and float(np.linalg.norm(d.qvel[rv : rv + 2])) < 0.3:
                     break
             res["square_s"] += ts
             if down:
@@ -502,8 +525,11 @@ def policies() -> dict:
                     book.setdefault(n, {})["match"] = p
     for n in list(book):
         if "getup" not in book[n]:
-            found = [p for p in glob.glob(os.path.join(ck, "*getup*", f"latest_{n}.pt"))
-                     if not os.path.exists(os.path.join(os.path.dirname(p), "REJECTED.txt"))]
+            found = [
+                p
+                for p in glob.glob(os.path.join(ck, "*getup*", f"latest_{n}.pt"))
+                if not os.path.exists(os.path.join(os.path.dirname(p), "REJECTED.txt"))
+            ]
             if found:
                 book[n]["getup"] = max(found, key=os.path.getmtime)
     return book
@@ -530,10 +556,20 @@ def main() -> None:
     ap.add_argument("--skip", nargs="*", default=[], choices=["box", "chin", "getup"])
     ap.add_argument("--json", default="")
     ap.add_argument("--seed", type=int, default=1)
-    ap.add_argument("--walls", action="store_true", help="always the trainer's ring (walls), even where the game's (ropes) exists")
-    ap.add_argument("--getup-no-drain", action="store_true", help="the get-up test as the game runs it: reserve 0.5 at the start, nothing drained while rising")
-    ap.add_argument("--square-up", default="", help="square up on the footwork policy before the hand-over: the run prefix of "
-                    "its checkpoints (v3f: checkpoints/v3f_NAME/latest.pt)")
+    ap.add_argument(
+        "--walls", action="store_true", help="always the trainer's ring (walls), even where the game's (ropes) exists"
+    )
+    ap.add_argument(
+        "--getup-no-drain",
+        action="store_true",
+        help="the get-up test as the game runs it: reserve 0.5 at the start, nothing drained while rising",
+    )
+    ap.add_argument(
+        "--square-up",
+        default="",
+        help="square up on the footwork policy before the hand-over: the run prefix of "
+        "its checkpoints (v3f: checkpoints/v3f_NAME/latest.pt)",
+    )
     args = ap.parse_args()
     global GETUP_NO_DRAIN
     GETUP_NO_DRAIN = args.getup_no_drain
@@ -545,14 +581,16 @@ def main() -> None:
         raise SystemExit("no boxer with a match policy to examine")
     pairs = []
     for i, a in enumerate(names):
-        for b in names[i + 1:]:
+        for b in names[i + 1 :]:
             if not (a in subjects or b in subjects) or (args.among and not (a in subjects and b in subjects)):
                 continue
             stem, x, y = pair_model(a, b)
             if stem:
                 pairs.append((stem, x, y))
     # Three parts on purpose: tools/exam_v2.py redirects exactly this join to its --models folder (v2 or v3).
-    cfgs = {n: json.load(open(os.path.join(HERE, "models", f"{n}_policy_config.json"), encoding="utf-8")) for n in names}
+    cfgs = {
+        n: json.load(open(os.path.join(HERE, "models", f"{n}_policy_config.json"), encoding="utf-8")) for n in names
+    }
     rows = {n: {"vs": {}, "getup": None} for n in subjects}
     t0 = time.time()
     for stem, x, y in pairs:
@@ -563,7 +601,7 @@ def main() -> None:
         for i, p in enumerate(pols):
             # A policy trained with obs_state (train_gauntlet.py --obs-state) reads its state where the command is.
             if getattr(p, "obs_state", False):
-                p.state = (lambda i=i: ring.state(i))
+                p.state = lambda i=i: ring.state(i)
         plain = rounds(ring, pols, args.rounds, args.round_s, False) if "box" not in args.skip else None
         dazed = rounds(ring, pols, args.rounds, args.round_s, True) if "chin" not in args.skip else None
         for k, n in enumerate((x, y)):
@@ -572,14 +610,22 @@ def main() -> None:
             e = {}
             if plain:
                 p, minutes = plain[k], plain[k]["seconds"] / 60.0
-                e.update(falls_own_per_min=p["falls_own"] / minutes, falls_hit_per_min=p["falls_hit"] / minutes,
-                         hits_per_s=p["hits"] / p["seconds"], speed=p["speed"] / max(1, p["hits"]),
-                         head_share=p["head"] / max(1, p["hits"]), blocks_per_s=p["blocks"] / p["seconds"],
-                         head_taken_per_s=p["head_taken"] / p["seconds"],
-                         block_share=p["blocks"] / max(1, p["blocks"] + p["head_taken"]))
+                e.update(
+                    falls_own_per_min=p["falls_own"] / minutes,
+                    falls_hit_per_min=p["falls_hit"] / minutes,
+                    hits_per_s=p["hits"] / p["seconds"],
+                    speed=p["speed"] / max(1, p["hits"]),
+                    head_share=p["head"] / max(1, p["hits"]),
+                    blocks_per_s=p["blocks"] / p["seconds"],
+                    head_taken_per_s=p["head_taken"] / p["seconds"],
+                    block_share=p["blocks"] / max(1, p["blocks"] + p["head_taken"]),
+                )
             if dazed:
                 q = dazed[k]
-                e.update(legs_per_min=q["legs"] / (q["seconds"] / 60.0), falls_dazed_per_min=(q["falls_own"] + q["falls_hit"]) / (q["seconds"] / 60.0))
+                e.update(
+                    legs_per_min=q["legs"] / (q["seconds"] / 60.0),
+                    falls_dazed_per_min=(q["falls_own"] + q["falls_hit"]) / (q["seconds"] / 60.0),
+                )
             rows[n]["vs"][y if k == 0 else x] = e
         # Getting up is tested once per boxer, against the first opponent it has a model with.
         if "getup" not in args.skip:
@@ -587,12 +633,28 @@ def main() -> None:
                 if n in subjects and rows[n]["getup"] is None and "getup" in book[n]:
                     frail = float(cfgs[n].get("strength", 1.0)) < 0.7
                     within = MARKS["getup_within_s_frail" if frail else "getup_within_s"]
-                    fw = os.path.join(HERE, "checkpoints", f"{args.square_up}_{n}", "latest.pt") if args.square_up else ""
+                    fw = (
+                        os.path.join(HERE, "checkpoints", f"{args.square_up}_{n}", "latest.pt")
+                        if args.square_up
+                        else ""
+                    )
                     if fw and not os.path.exists(fw):
                         raise SystemExit(f"--square-up: no {fw}")
-                    g = getting_up(ring, k, load_policy(book[n]["getup"], ring.A), pols, args.trials, within,
-                                   footwork=load_policy(fw, ring.A) if fw else None)
-                    g.update(within_s=within, frail=frail, against=y if k == 0 else x, policy=os.path.relpath(book[n]["getup"], HERE))
+                    g = getting_up(
+                        ring,
+                        k,
+                        load_policy(book[n]["getup"], ring.A),
+                        pols,
+                        args.trials,
+                        within,
+                        footwork=load_policy(fw, ring.A) if fw else None,
+                    )
+                    g.update(
+                        within_s=within,
+                        frail=frail,
+                        against=y if k == 0 else x,
+                        policy=os.path.relpath(book[n]["getup"], HERE),
+                    )
                     rows[n]["getup"] = g
         print(f"  {x} v {y}: done ({time.time() - t0:.0f} s)", flush=True)
 
@@ -604,22 +666,47 @@ def main() -> None:
         style = cfg.get("style", {})
         guards = n in VETERANS or float(style.get("block_w", 0.0)) > 0.0
         speed_mark = MARKS["attack_speed"] * float(cfg.get("speed", 1.0))
-        mean = lambda key: float(np.mean([v[key] for v in vs.values() if key in v])) if any(key in v for v in vs.values()) else float("nan")
-        worst = lambda key: float(np.max([v[key] for v in vs.values() if key in v])) if any(key in v for v in vs.values()) else float("nan")
+        mean = lambda key: (
+            float(np.mean([v[key] for v in vs.values() if key in v]))
+            if any(key in v for v in vs.values())
+            else float("nan")
+        )
+        worst = lambda key: (
+            float(np.max([v[key] for v in vs.values() if key in v]))
+            if any(key in v for v in vs.values())
+            else float("nan")
+        )
         lines = {}
         if "box" not in args.skip and vs:
-            lines["footing"] = (worst("falls_own_per_min") <= MARKS["footing_falls_per_min"], f"{worst('falls_own_per_min'):.2f} falls a minute at worst")
-            lines["attack"] = (mean("hits_per_s") >= MARKS["attack_hits_per_s"] and mean("speed") >= speed_mark,
-                               f"{mean('hits_per_s'):.2f} a second at {mean('speed'):.1f} m/s (mark {speed_mark:.1f}), {mean('head_share'):.0%} to the head")
+            lines["footing"] = (
+                worst("falls_own_per_min") <= MARKS["footing_falls_per_min"],
+                f"{worst('falls_own_per_min'):.2f} falls a minute at worst",
+            )
+            lines["attack"] = (
+                mean("hits_per_s") >= MARKS["attack_hits_per_s"] and mean("speed") >= speed_mark,
+                f"{mean('hits_per_s'):.2f} a second at {mean('speed'):.1f} m/s (mark {speed_mark:.1f}), {mean('head_share'):.0%} to the head",
+            )
             hardest = min(vs, key=lambda o: vs[o].get("hits_per_s", float("inf")))
             low = vs[hardest].get("hits_per_s", float("nan"))
-            lines["under pressure"] = (low >= MARKS["pressure_hits_per_s"],
-                                       f"{low:.2f} a second against {hardest}, its hardest opponent (mark {MARKS['pressure_hits_per_s']})")
-            ok = mean("block_share") >= MARKS["guard_block_share"] or mean("head_taken_per_s") <= MARKS["guard_head_taken_per_s"]
-            lines["guard"] = (ok if guards else None, f"stops {mean('block_share'):.0%} of what comes at its head ({mean('blocks_per_s'):.2f} blocks a second), "
-                                                      f"takes {mean('head_taken_per_s'):.2f} head shots a second" + ("" if guards else "; built without a guard"))
+            lines["under pressure"] = (
+                low >= MARKS["pressure_hits_per_s"],
+                f"{low:.2f} a second against {hardest}, its hardest opponent (mark {MARKS['pressure_hits_per_s']})",
+            )
+            ok = (
+                mean("block_share") >= MARKS["guard_block_share"]
+                or mean("head_taken_per_s") <= MARKS["guard_head_taken_per_s"]
+            )
+            lines["guard"] = (
+                ok if guards else None,
+                f"stops {mean('block_share'):.0%} of what comes at its head ({mean('blocks_per_s'):.2f} blocks a second), "
+                f"takes {mean('head_taken_per_s'):.2f} head shots a second"
+                + ("" if guards else "; built without a guard"),
+            )
         if "chin" not in args.skip and vs:
-            lines["chin"] = (mean("legs_per_min") <= MARKS["chin_legs_per_min"], f"legs taken {mean('legs_per_min'):.2f} a minute (worst {worst('legs_per_min'):.2f})")
+            lines["chin"] = (
+                mean("legs_per_min") <= MARKS["chin_legs_per_min"],
+                f"legs taken {mean('legs_per_min'):.2f} a minute (worst {worst('legs_per_min'):.2f})",
+            )
         if "getup" not in args.skip:
             g = rows[n]["getup"]
             if g is None:
@@ -628,25 +715,48 @@ def main() -> None:
             else:
                 rate = g["up"] / max(1, g["floored"])
                 need = MARKS["getup_rate_frail" if g["frail"] else "getup_rate"]
-                lines["getting up"] = (rate >= need and g["floored"] > 0, f"{g['up']} of {g['floored']} knockdowns, in {g['t_up'] / max(1, g['up']):.1f} s on average "
-                                                                           f"(mark {need:.0%} within {g['within_s']:g} s; against {g['against']})")
+                lines["getting up"] = (
+                    rate >= need and g["floored"] > 0,
+                    f"{g['up']} of {g['floored']} knockdowns, in {g['t_up'] / max(1, g['up']):.1f} s on average "
+                    f"(mark {need:.0%} within {g['within_s']:g} s; against {g['against']})",
+                )
                 carried = g["carried"] / max(1, g["up"])
-                lines["carrying on"] = (carried >= MARKS["carry_on_rate"] and g["up"] > 0, f"{g['carried']} of {g['up']} still up 3 s after the match policy took over")
+                lines["carrying on"] = (
+                    carried >= MARKS["carry_on_rate"] and g["up"] > 0,
+                    f"{g['carried']} of {g['up']} still up 3 s after the match policy took over",
+                )
         passed = all(ok for ok, _ in lines.values() if ok is not None)
-        report[n] = {"passed": passed, "lines": {k: {"ok": ok, "text": text} for k, (ok, text) in lines.items()}, "vs": vs, "getup": rows[n]["getup"],
-                     "match": os.path.relpath(book[n]["match"], HERE)}
+        report[n] = {
+            "passed": passed,
+            "lines": {k: {"ok": ok, "text": text} for k, (ok, text) in lines.items()},
+            "vs": vs,
+            "getup": rows[n]["getup"],
+            "match": os.path.relpath(book[n]["match"], HERE),
+        }
         print(f"{n.upper():9s} {'PASS' if passed else 'FAIL'}   ({os.path.relpath(book[n]['match'], HERE)})")
         for k, (ok, text) in lines.items():
             print(f"    {k:12s} {'pass' if ok else '  - ' if ok is None else 'FAIL'}  {text}")
         for opp, v in vs.items():
             if "hits_per_s" in v:
-                print(f"        v {opp:8s} lands {v['hits_per_s']:.2f}/s at {v['speed']:.1f} m/s, {v['head_share']:.0%} head | blocks {v['blocks_per_s']:.2f}/s, "
-                      f"head shots taken {v['head_taken_per_s']:.2f}/s | falls {v['falls_own_per_min']:.2f}/min"
-                      + (f" | dazed: legs {v['legs_per_min']:.2f}/min" if "legs_per_min" in v else ""))
+                print(
+                    f"        v {opp:8s} lands {v['hits_per_s']:.2f}/s at {v['speed']:.1f} m/s, {v['head_share']:.0%} head | blocks {v['blocks_per_s']:.2f}/s, "
+                    f"head shots taken {v['head_taken_per_s']:.2f}/s | falls {v['falls_own_per_min']:.2f}/min"
+                    + (f" | dazed: legs {v['legs_per_min']:.2f}/min" if "legs_per_min" in v else "")
+                )
     if args.json:
         with open(args.json, "w", encoding="utf-8") as f:
-            json.dump({"when": time.strftime("%Y-%m-%d %H:%M:%S"), "marks": MARKS, "rounds": args.rounds, "round_s": args.round_s,
-                       "trials": args.trials, "boxers": report}, f, indent=1)
+            json.dump(
+                {
+                    "when": time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "marks": MARKS,
+                    "rounds": args.rounds,
+                    "round_s": args.round_s,
+                    "trials": args.trials,
+                    "boxers": report,
+                },
+                f,
+                indent=1,
+            )
     print(f"\n{sum(1 for r in report.values() if r['passed'])} of {len(report)} boxers pass. {time.time() - t0:.0f} s.")
 
 

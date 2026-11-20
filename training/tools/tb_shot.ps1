@@ -1,6 +1,6 @@
 # A picture of TensorBoard's own charts, taken with a headless browser.
 #
-#   tools\tb_shot.ps1 -Tags 'env/fall_rate$' -Out ..\DOCS\reports\img\fall_rate.png
+#   tools\tb_shot.ps1 -Tags 'env/fall_rate$' -Out ..\docs\reports\img\fall_rate.png
 #
 # House rule: after a long run, the three charts that matter most are screenshotted from TensorBoard and
 # explained. This uses the classic SCALARS page, which draws with SVG; the newer TIME SERIES page draws

@@ -3,6 +3,7 @@ in TensorBoard's look: one line per run, smoothed 0.6, against iteration.
 
     python tools/day_charts.py OUT_DIR
 """
+
 from __future__ import annotations
 
 import csv
@@ -10,6 +11,7 @@ import os
 import sys
 
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
@@ -68,11 +70,27 @@ def main() -> None:
     out = sys.argv[1]
     os.makedirs(out, exist_ok=True)
     m14 = ["m14_grandpa", "m14b_kim", "m14_grandma", "m14_sokol", "m14_matt"]
-    chart(os.path.join(out, "tb_hits.png"), "env/hits_per_s: punches landed a second, the m14 runs", "hits_per_s", m14, "landed / s")
-    chart(os.path.join(out, "tb_head.png"), "env/head_share: share of landed punches to the head, Matt and Sokol (m13 against m14)", "head_share",
-          ["m13b_matt", "m14_matt", "m13_sokol", "m14_sokol"], "head share")
-    chart(os.path.join(out, "tb_falls.png"), "env/falls: share of episodes ending in the learner's fall (the game's daze line), the m14 runs",
-          "falls", m14, "falls / episode")
+    chart(
+        os.path.join(out, "tb_hits.png"),
+        "env/hits_per_s: punches landed a second, the m14 runs",
+        "hits_per_s",
+        m14,
+        "landed / s",
+    )
+    chart(
+        os.path.join(out, "tb_head.png"),
+        "env/head_share: share of landed punches to the head, Matt and Sokol (m13 against m14)",
+        "head_share",
+        ["m13b_matt", "m14_matt", "m13_sokol", "m14_sokol"],
+        "head share",
+    )
+    chart(
+        os.path.join(out, "tb_falls.png"),
+        "env/falls: share of episodes ending in the learner's fall (the game's daze line), the m14 runs",
+        "falls",
+        m14,
+        "falls / episode",
+    )
 
 
 if __name__ == "__main__":

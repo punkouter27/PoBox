@@ -1,5 +1,5 @@
 {
-  "source": "C:/Users/punko/Downloads/_CODEMATT/PoBox/Assets/Models/Soldat.glb",
+  "source": "Assets/Models/Soldat.glb",
   "frame": "blender_z_up (x = character left, -y = forward, z = up)",
   "height_m": 1.84,
   "mass_kg": 86.0,

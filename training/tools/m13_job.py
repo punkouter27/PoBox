@@ -8,6 +8,7 @@ The common recipe is m12_zombie's (guard 1% -> 57%), with tonight's terms: repea
 priced 2x (--head-mult; Matt lands 0% to the head), the arms pulled to the guard (--arms-w 0.01), the opponents reading
 their state (--foe-state), and a low first learning rate (KL fix for ONNX-rebuilt brains). RECIPE adds each boxer's own.
 """
+
 from __future__ import annotations
 
 import os
@@ -17,15 +18,81 @@ import sys
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 NAMES = ("matt", "zombie", "nick", "sokol", "kim", "trump", "grandma", "grandpa")
 BANK = {"grandma": "logs/handover_d9_grandma.npz", "grandpa": "logs/handover_d9_grandpa.npz"}
-COMMON = ["--daze", "--obs-state", "--foe-state", "--block-w", "0.5", "--sep-max", "3.5", "--num-envs", "3072", "--more-iters", "700",
-          "--max-hours", "0.5", "--max-std", "0.3", "--lr", "3e-5", "--hit-push", "0.6", "--stagger-v", "5", "--hurt-full", "400",
-          "--body-drain", "0.0025", "--selfcontact-w", "0.02", "--repeat-decay", "0.7", "--combo-w", "0.1", "--hurt-start", "0.2",
-          "--clinch-w", "0.1", "--rope-w", "0.05", "--cutoff-w", "0.05", "--taken-w", "1.0", "--hit-w", "2.0", "--seek-w", "0.3",
-          "--handover-share", "0.5", "--fall-penalty", "12", "--slow-v", "4.0", "--head-mult", "2.0", "--arms-w", "0.01",
-          "--done-when", "hits_per_s>=1.2,falls<=0.03,repeat_share<=0.6", "--done-window", "40", "--no-onnx"]
+COMMON = [
+    "--daze",
+    "--obs-state",
+    "--foe-state",
+    "--block-w",
+    "0.5",
+    "--sep-max",
+    "3.5",
+    "--num-envs",
+    "3072",
+    "--more-iters",
+    "700",
+    "--max-hours",
+    "0.5",
+    "--max-std",
+    "0.3",
+    "--lr",
+    "3e-5",
+    "--hit-push",
+    "0.6",
+    "--stagger-v",
+    "5",
+    "--hurt-full",
+    "400",
+    "--body-drain",
+    "0.0025",
+    "--selfcontact-w",
+    "0.02",
+    "--repeat-decay",
+    "0.7",
+    "--combo-w",
+    "0.1",
+    "--hurt-start",
+    "0.2",
+    "--clinch-w",
+    "0.1",
+    "--rope-w",
+    "0.05",
+    "--cutoff-w",
+    "0.05",
+    "--taken-w",
+    "1.0",
+    "--hit-w",
+    "2.0",
+    "--seek-w",
+    "0.3",
+    "--handover-share",
+    "0.5",
+    "--fall-penalty",
+    "12",
+    "--slow-v",
+    "4.0",
+    "--head-mult",
+    "2.0",
+    "--arms-w",
+    "0.01",
+    "--done-when",
+    "hits_per_s>=1.2,falls<=0.03,repeat_share<=0.6",
+    "--done-window",
+    "40",
+    "--no-onnx",
+]
 # Later flags win (argparse keeps the last).
 RECIPE = {
-    "matt": ["--block-w", "1.0", "--head-mult", "2.5", "--handover-share", "0.7", "--weights", "grandma=2", "grandpa=2"],
+    "matt": [
+        "--block-w",
+        "1.0",
+        "--head-mult",
+        "2.5",
+        "--handover-share",
+        "0.7",
+        "--weights",
+        "grandma=2",
+        "grandpa=2",
+    ],
     "zombie": ["--weights", "grandma=2", "grandpa=2", "kim=2", "nick=2"],
     "nick": ["--fall-penalty", "16", "--weights", "sokol=3"],
     "sokol": ["--fall-penalty", "16", "--weights", "kim=2", "trump=2"],
@@ -44,18 +111,47 @@ def main() -> None:
         # Another warm start: "newest" = tonight's m13 if it was exported (it passed its exam), else the shipped brain.
         i = rest.index("--from")
         start = rest[i + 1]
-        del rest[i:i + 2]
+        del rest[i : i + 2]
         if start == "newest":
             m13 = f"checkpoints/m13_{name}/latest_{name}"
             start = m13 + ".pt" if os.path.exists(os.path.join(HERE, m13 + ".onnx")) else None
     shipped = lambda n: f"checkpoints/onnx_1018/match_{n}.pt"
     # m13b_NAME: an m13 carried on after a fault (Matt's, 2026-10-19 01:40) is the newer one.
-    tonight = lambda n: next((p for p in (f"checkpoints/m13b_{n}/latest_{n}.pt", f"checkpoints/m13_{n}/latest_{n}.pt")
-                              if os.path.exists(os.path.join(HERE, p))), f"checkpoints/m13_{n}/latest_{n}.pt")
-    against = [f"{n}={tonight(n) if os.path.exists(os.path.join(HERE, tonight(n))) else shipped(n)}" for n in NAMES if n != name]
-    cmd = [sys.executable, os.path.join(HERE, "tools", "train_resilient.py"), "--gauntlet", "--run-name", run, "--stage", "match",
-           "--models", "models/v2", "--name", name, "--resume", start or shipped(name), "--against", *against,
-           "--handover", BANK.get(name, f"logs/handover_v2_{name}.npz"), *COMMON, *RECIPE[name], *[a for a in rest if a not in ("--run-name", run)]]
+    tonight = lambda n: next(
+        (
+            p
+            for p in (f"checkpoints/m13b_{n}/latest_{n}.pt", f"checkpoints/m13_{n}/latest_{n}.pt")
+            if os.path.exists(os.path.join(HERE, p))
+        ),
+        f"checkpoints/m13_{n}/latest_{n}.pt",
+    )
+    against = [
+        f"{n}={tonight(n) if os.path.exists(os.path.join(HERE, tonight(n))) else shipped(n)}"
+        for n in NAMES
+        if n != name
+    ]
+    cmd = [
+        sys.executable,
+        os.path.join(HERE, "tools", "train_resilient.py"),
+        "--gauntlet",
+        "--run-name",
+        run,
+        "--stage",
+        "match",
+        "--models",
+        "models/v2",
+        "--name",
+        name,
+        "--resume",
+        start or shipped(name),
+        "--against",
+        *against,
+        "--handover",
+        BANK.get(name, f"logs/handover_v2_{name}.npz"),
+        *COMMON,
+        *RECIPE[name],
+        *[a for a in rest if a not in ("--run-name", run)],
+    ]
     print(" ".join(cmd[1:]), flush=True)
     sys.exit(subprocess.call(cmd, cwd=HERE))
 

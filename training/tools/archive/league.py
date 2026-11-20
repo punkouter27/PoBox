@@ -19,6 +19,7 @@ envs/boxing.py pays by. The last rounds turn on the game's rule that being hit w
 It keeps MuJoCo's viewer open on whichever stage is running, writes a contact sheet every half hour to
 logs/sheets/, charts every boxer in TensorBoard as boxer_<name>, and logs what it did in logs/league.log.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -46,8 +47,21 @@ ROUNDS = [
 ]
 VETERAN_FOR = {"trump": "zombie", "nick": "matt", "grandma": "zombie", "lilmatt": "matt", "grandpa": "zombie"}
 DAZE_FROM_ROUND = 4
-DAZE = ["--daze", "--daze-hi", "42", "--ko-bonus", "6", "--max-std", "0.35", "--entropy-coef", "0",
-        "--lr", "3e-4", "--lr-max", "5e-4"]
+DAZE = [
+    "--daze",
+    "--daze-hi",
+    "42",
+    "--ko-bonus",
+    "6",
+    "--max-std",
+    "0.35",
+    "--entropy-coef",
+    "0",
+    "--lr",
+    "3e-4",
+    "--lr-max",
+    "5e-4",
+]
 
 
 def log(msg: str) -> None:
@@ -71,8 +85,19 @@ def alive(pid: int) -> bool:
 
 
 def train(xml: str, run: str, minutes: float, extra: list) -> int:
-    cmd = [sys.executable, os.path.join(HERE, "train_box.py"), "--xml", xml, "--run-name", run,
-           "--max-hours", f"{minutes / 60.0:.4f}", "--keep-old-runs", "--no-tensorboard", "--career"] + extra
+    cmd = [
+        sys.executable,
+        os.path.join(HERE, "train_box.py"),
+        "--xml",
+        xml,
+        "--run-name",
+        run,
+        "--max-hours",
+        f"{minutes / 60.0:.4f}",
+        "--keep-old-runs",
+        "--no-tensorboard",
+        "--career",
+    ] + extra
     log("start  " + " ".join(os.path.relpath(c, HERE) if os.path.isabs(c) else c for c in cmd[1:]))
     with open(os.path.join(HERE, "logs", f"{run}.log"), "a", encoding="utf-8") as out:
         return subprocess.call(cmd, cwd=HERE, stdout=out, stderr=subprocess.STDOUT)
@@ -100,8 +125,12 @@ class Side:
                 if self.viewer is not None and self.viewer.poll() is None:
                     self.viewer.terminate()
                 try:
-                    self.viewer = subprocess.Popen([sys.executable, os.path.join(HERE, "view_box.py"), "--run", run], cwd=HERE,
-                                                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    self.viewer = subprocess.Popen(
+                        [sys.executable, os.path.join(HERE, "view_box.py"), "--run", run],
+                        cwd=HERE,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
                     self.viewer_run = run
                     log(f"viewer on {run}")
                 except Exception as e:
@@ -110,8 +139,22 @@ class Side:
                 last_sheet = time.time()
                 out = os.path.join(HERE, "logs", "sheets", f"{run}_{time.strftime('%H%M')}.png")
                 try:
-                    subprocess.call([sys.executable, os.path.join(HERE, "view_box.py"), "--run", run, "--sheet", out, "--seconds", "8"],
-                                    cwd=HERE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=600)
+                    subprocess.call(
+                        [
+                            sys.executable,
+                            os.path.join(HERE, "view_box.py"),
+                            "--run",
+                            run,
+                            "--sheet",
+                            out,
+                            "--seconds",
+                            "8",
+                        ],
+                        cwd=HERE,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        timeout=600,
+                    )
                     log(f"sheet  {os.path.relpath(out, HERE)}")
                 except Exception as e:
                     log(f"sheet  failed: {e}")
@@ -130,8 +173,11 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--hours", type=float, default=8.0)
     ap.add_argument("--bag-min", type=float, default=18.0, help="bag time for each new boxer")
-    ap.add_argument("--warm", default=os.path.join(HERE, "checkpoints", "bag_matt", "latest.pt"),
-                    help="the brain every new boxer starts its bag stage from")
+    ap.add_argument(
+        "--warm",
+        default=os.path.join(HERE, "checkpoints", "bag_matt", "latest.pt"),
+        help="the brain every new boxer starts its bag stage from",
+    )
     ap.add_argument("--wait-pid", type=int, default=0, help="do nothing until this process has exited")
     ap.add_argument("--resume", action="store_true", help="skip the stages logs/league.state.json says are done")
     ap.add_argument("--no-viewer", action="store_true")
@@ -163,13 +209,17 @@ def main() -> None:
             raise SystemExit(f"models/{n}_bag.xml does not exist. Run tools/build_roster.py.")
     if args.plan:
         ring = (args.hours * 60.0 - 8.0 - args.bag_min * len(boxers)) / len(sessions)
-        print(f"{args.hours:g} h: {args.bag_min:g} min on the bag each for {', '.join(boxers)} (from {os.path.relpath(args.warm, HERE)}), "
-              f"then {len(sessions)} sessions of about {ring:.0f} min")
+        print(
+            f"{args.hours:g} h: {args.bag_min:g} min on the bag each for {', '.join(boxers)} (from {os.path.relpath(args.warm, HERE)}), "
+            f"then {len(sessions)} sessions of about {ring:.0f} min"
+        )
         for s in sessions:
             vet = [n for n in (s["a"], s["b"]) if n not in boxers]
-            print(f"  round {s['round']}: {s['run']:28s} {os.path.basename(s['xml'])}"
-                  + (f"   frozen: {vet[0]} ({os.path.relpath(veteran_checkpoint(vet[0]), HERE)})" if vet else "")
-                  + ("   hurt rule on" if s["round"] >= DAZE_FROM_ROUND else ""))
+            print(
+                f"  round {s['round']}: {s['run']:28s} {os.path.basename(s['xml'])}"
+                + (f"   frozen: {vet[0]} ({os.path.relpath(veteran_checkpoint(vet[0]), HERE)})" if vet else "")
+                + ("   hurt rule on" if s["round"] >= DAZE_FROM_ROUND else "")
+            )
         for n in boxers:
             print(f"  {n}: {sum(1 for s in sessions if n in (s['a'], s['b']))} ring sessions")
         return
@@ -202,16 +252,21 @@ def main() -> None:
         s.settimeout(1.0)
         up = s.connect_ex(("127.0.0.1", 6006)) == 0
     if not up:
-        subprocess.Popen([sys.executable, "-m", "tensorboard.main", "--logdir", tb, "--port", "6006", "--bind_all"],
-                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                         creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
+        subprocess.Popen(
+            [sys.executable, "-m", "tensorboard.main", "--logdir", tb, "--port", "6006", "--bind_all"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0),
+        )
     log(f"tensorboard: {'already up' if up else 'started'} on http://localhost:6006")
 
     t0 = state["started"]
-    budget = args.hours * 60.0 - 8.0      # minutes; start-up, saving and the sheets take a few of them
+    budget = args.hours * 60.0 - 8.0  # minutes; start-up, saving and the sheets take a few of them
     left = lambda: budget - (time.time() - t0) / 60.0
-    log(f"league {args.hours:g} h: {args.bag_min:g} min on the bag for each of {', '.join(boxers)}, then {len(sessions)} "
-        f"ring sessions over {len(ROUNDS)} rounds; the hurt rule from round {DAZE_FROM_ROUND}")
+    log(
+        f"league {args.hours:g} h: {args.bag_min:g} min on the bag for each of {', '.join(boxers)}, then {len(sessions)} "
+        f"ring sessions over {len(ROUNDS)} rounds; the hurt rule from round {DAZE_FROM_ROUND}"
+    )
     side = Side(not args.no_viewer)
 
     for n in boxers:
@@ -219,12 +274,18 @@ def main() -> None:
         if run in state["done"]:
             continue
         side.run = run
-        code = train(os.path.join(models, f"{n}_bag.xml"), run, args.bag_min,
-                     ["--num-envs", "4096", "--resume", args.warm, "--reset-std", "0.3"])
+        code = train(
+            os.path.join(models, f"{n}_bag.xml"),
+            run,
+            args.bag_min,
+            ["--num-envs", "4096", "--resume", args.warm, "--reset-std", "0.3"],
+        )
         ck = os.path.join(HERE, "checkpoints", run, "latest.pt")
         e = status(run).get("env", {})
-        log(f"end    {run}: exit {code}, fall rate {e.get('fall_rate', float('nan')):.2f}, "
-            f"{e.get('hits_per_s', float('nan')):.2f} hits/s at {e.get('hit_speed', float('nan')):.1f} m/s")
+        log(
+            f"end    {run}: exit {code}, fall rate {e.get('fall_rate', float('nan')):.2f}, "
+            f"{e.get('hits_per_s', float('nan')):.2f} hits/s at {e.get('hit_speed', float('nan')):.1f} m/s"
+        )
         if not os.path.exists(ck):
             log(f"stop   {run} produced no checkpoint; see logs/{run}.log. {n} starts the ring from the warm brain")
             ck = args.warm
@@ -265,18 +326,27 @@ def main() -> None:
             if os.path.exists(ck):
                 state["ck"][n] = ck
             else:
-                log(f"keep   {n}: {s['run']} left no checkpoint for it; it goes on from {os.path.relpath(state['ck'][n], HERE)}")
-        log(f"end    {s['run']}: exit {code}, fall rate {e.get('fall_rate', float('nan')):.2f} | " + " | ".join(
-            f"{n}: {e.get(n + '_hits_per_s', float('nan')):.2f} hits/s at {e.get(n + '_hit_speed', float('nan')):.1f} m/s, "
-            f"head {e.get(n + '_head_share', float('nan')):.0%}, down in {e.get(n + '_falls', float('nan')):.0%}, "
-            f"{e.get(n + '_blocks_per_s', float('nan')):.2f} blocks/s" for n in (s["a"], s["b"])))
+                log(
+                    f"keep   {n}: {s['run']} left no checkpoint for it; it goes on from {os.path.relpath(state['ck'][n], HERE)}"
+                )
+        log(
+            f"end    {s['run']}: exit {code}, fall rate {e.get('fall_rate', float('nan')):.2f} | "
+            + " | ".join(
+                f"{n}: {e.get(n + '_hits_per_s', float('nan')):.2f} hits/s at {e.get(n + '_hit_speed', float('nan')):.1f} m/s, "
+                f"head {e.get(n + '_head_share', float('nan')):.0%}, down in {e.get(n + '_falls', float('nan')):.0%}, "
+                f"{e.get(n + '_blocks_per_s', float('nan')):.2f} blocks/s"
+                for n in (s["a"], s["b"])
+            )
+        )
         first_ring -= {s["a"], s["b"]}
         state["done"].append(s["run"])
         save_state()
 
-    side.stop.set()     # the last viewer is left open: the owner asked to be able to watch after training too
-    log(f"done   {(time.time() - t0) / 3600.0:.2f} h. Final policies: " + ", ".join(
-        f"{n} {os.path.relpath(state['ck'].get(n, ''), HERE)}" for n in boxers))
+    side.stop.set()  # the last viewer is left open: the owner asked to be able to watch after training too
+    log(
+        f"done   {(time.time() - t0) / 3600.0:.2f} h. Final policies: "
+        + ", ".join(f"{n} {os.path.relpath(state['ck'].get(n, ''), HERE)}" for n in boxers)
+    )
     with open(os.path.join(HERE, "logs", "league.done"), "w", encoding="utf-8") as f:
         f.write(time.strftime("%Y-%m-%d %H:%M:%S"))
 

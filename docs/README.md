@@ -6,7 +6,7 @@ screen where the two boxers are picked. Portrait, one screen, nothing scrolls. U
 Cinemachine, UI Toolkit. The fight runs on the official MuJoCo Unity plugin 3.5.0, with no PhysX.
 
 This file is the running history, newest first. The overview is the root [README.md](../README.md), the live
-plan is [tasks.md](../tasks.md), the training log is [rl_optimization_log.md](../rl_optimization_log.md), and
+plan is [tasks.md](tasks.md), the training log is [rl_optimization_log.md](rl_optimization_log.md), and
 the house rules are [AGENTS.md](../AGENTS.md).
 
 ## Where it stands (2026-11-13)
@@ -116,7 +116,7 @@ and "Things that cost time, worth knowing". The plan as it stood, with every tic
 
 ## Overnight 2: the referee and card walker walk on their own, Matt punches (2026-11-04)
 
-- Report `DOCS/reports/2026-11-04-overnight.html`; best weights `DOCS/reports/2026-11-04-overnight-weights.json`.
+- Report `docs/reports/2026-11-04-overnight.html`; best weights `docs/reports/2026-11-04-overnight-weights.json`.
 - **Crew:** referee and ring-card walker built from the stylised figures (`training/tools/build_crew.py`, models/crew),
   footwork trained from Sokol's and Nick's (`crewf1_*`), the referee again with his arm held (`--gesture`, `crewf2`).
   Every C MuJoCo footwork line passes; both in the game (Assets/Crew, Mj/MjCrew), 0 differences from the trainer.
@@ -135,7 +135,7 @@ and "Things that cost time, worth knowing". The plan as it stood, with every tic
 ## Overnight training: Nick passes everything, Matt gets up (2026-11-03)
 
 - About 9 h of lessons in urgency order (owner: "EXTENDED TRAINING (10 hours)"). Report with charts:
-  `DOCS/reports/2026-11-03-overnight.html`; best brains per boxer: `DOCS/reports/2026-11-03-overnight-weights.json`.
+  `docs/reports/2026-11-03-overnight.html`; best brains per boxer: `docs/reports/2026-11-03-overnight-weights.json`.
 - **Nick** `v3m9_nick` (reward for staying up doubled, get-ups facing any way): carrying on 97% under the game's rule
   (was 84%): all six lines pass. Ready to replace v3m8 in the game.
 - **Zombie** passes all six lines under the game's get-up rule with his existing v3 brains; moved to v3 in the working
@@ -162,7 +162,7 @@ and "Things that cost time, worth knowing". The plan as it stood, with every tic
   (the exam's v3 Matt does not engage: no blocks, no hits either way); getting up 60/60, carrying on 58/60; under
   pressure still FAIL (Matt). **In the game:** against Sokol 92 thrown, 73 landed (was 2/0), against Nick a TKO win in
   R1 (3 knockdowns). Parity 3/3, gate 24/24. **Zombie promoted on v3** (v3f footwork, v3m6 boxing, v3u4 get-up).
-  Report: `DOCS/reports/2026-11-03-zombie-punching.html`.
+  Report: `docs/reports/2026-11-03-zombie-punching.html`.
 
 ## Sokol on the v3 body, the first boxer through the exam's six lines (2026-11-02)
 

@@ -5,6 +5,7 @@ the m13 passes at least as many lines as the shipped brain. Promoting is left to
 
     python tools/m13_compare.py [--only kim matt] [--prefix m13]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -17,7 +18,7 @@ sys.path.insert(0, HERE)
 from ppo import PPO, PPOConfig, export_onnx  # noqa: E402
 
 NAMES = ("matt", "zombie", "nick", "sokol", "kim", "trump", "grandma", "grandpa")
-BOX = ("footing", "attack", "guard", "chin")      # the match brain's own lines (getting up is the get-up brain's)
+BOX = ("footing", "attack", "guard", "chin")  # the match brain's own lines (getting up is the get-up brain's)
 
 
 def lines(path: str, name: str):
@@ -43,7 +44,12 @@ def main() -> None:
         p_old = sum(1 for v in old.values() if v["ok"])
         p_new = sum(1 for v in new.values() if v["ok"])
         ok = p_new >= p_old
-        row = {"shipped": p_old, a.prefix: p_new, "export": ok, "lines": {k: [old[k]["text"], new[k]["text"], old[k]["ok"], new[k]["ok"]] for k in new}}
+        row = {
+            "shipped": p_old,
+            a.prefix: p_new,
+            "export": ok,
+            "lines": {k: [old[k]["text"], new[k]["text"], old[k]["ok"], new[k]["ok"]] for k in new},
+        }
         if ok:
             ppo = PPO(103, 21, 1, "cpu", PPOConfig())
             ppo.load(ck)
@@ -51,9 +57,13 @@ def main() -> None:
             export_onnx(ppo, path, 103, fixed_batch=True)
             row["onnx"] = os.path.relpath(path, HERE)
         out[n] = row
-        print(f"{n}: lines shipped {p_old} -> {a.prefix} {p_new}: {'exported ' + row['onnx'] if ok else 'not exported (worse)'}")
+        print(
+            f"{n}: lines shipped {p_old} -> {a.prefix} {p_new}: {'exported ' + row['onnx'] if ok else 'not exported (worse)'}"
+        )
         for k, (t0, t1, o0, o1) in row["lines"].items():
-            print(f"    {k:8s} {'pass' if o0 else 'FAIL' if o0 is False else ' -  '} {t0}\n             -> {'pass' if o1 else 'FAIL' if o1 is False else ' -  '} {t1}")
+            print(
+                f"    {k:8s} {'pass' if o0 else 'FAIL' if o0 is False else ' -  '} {t0}\n             -> {'pass' if o1 else 'FAIL' if o1 is False else ' -  '} {t1}"
+            )
     with open(os.path.join(HERE, "logs", f"{a.prefix}_compare.json"), "w", encoding="utf-8") as f:
         json.dump(out, f, indent=1)
 

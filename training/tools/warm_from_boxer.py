@@ -9,6 +9,7 @@ joint targets at its own boxer's per-joint scale (models/v3/<source>_policy_conf
 into a copy of the checkpoint first, then rescale_actions.py turns it onto the target's scale joint by joint, with its
 --check (targets unchanged wherever the old action lay inside its clip).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -26,7 +27,9 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--ckpt", required=True, help="a checkpoint from tools/onnx_to_pt.py")
-    ap.add_argument("--source", required=True, help="the boxer the brain was trained on (its v3 config gives the scale)")
+    ap.add_argument(
+        "--source", required=True, help="the boxer the brain was trained on (its v3 config gives the scale)"
+    )
     ap.add_argument("--target", required=True, help="the boxer it is for")
     ap.add_argument("--models", default="models/v3")
     ap.add_argument("--out", required=True)
@@ -41,9 +44,20 @@ def main() -> None:
         staged = os.path.join(tmp, "scaled.pt")
         torch.save(ck, staged)
         os.makedirs(os.path.dirname(path(args.out)), exist_ok=True)
-        r = subprocess.run([sys.executable, os.path.join(HERE, "tools", "rescale_actions.py"), "--ckpt", staged,
-                            "--config", os.path.join(args.models, f"{args.target}_policy_config.json"),
-                            "--out", args.out, "--check"], cwd=HERE)
+        r = subprocess.run(
+            [
+                sys.executable,
+                os.path.join(HERE, "tools", "rescale_actions.py"),
+                "--ckpt",
+                staged,
+                "--config",
+                os.path.join(args.models, f"{args.target}_policy_config.json"),
+                "--out",
+                args.out,
+                "--check",
+            ],
+            cwd=HERE,
+        )
     sys.exit(r.returncode)
 
 

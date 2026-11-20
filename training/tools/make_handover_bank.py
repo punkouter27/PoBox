@@ -14,6 +14,7 @@ Each state is the boxer's body HANDOVER_S after it got to its feet (tools/exam.p
 same time), in plain C MuJoCo, with the policy's own choice of action: joint angles and speeds, pelvis
 height, the pelvis's tilt with its heading taken out, and its velocities in its own heading.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -34,8 +35,15 @@ HANDOVER_S = 1.5
 def quat_mul(a: np.ndarray, b: np.ndarray) -> np.ndarray:
     aw, ax, ay, az = a[..., 0], a[..., 1], a[..., 2], a[..., 3]
     bw, bx, by, bz = b[..., 0], b[..., 1], b[..., 2], b[..., 3]
-    return np.stack([aw * bw - ax * bx - ay * by - az * bz, aw * bx + ax * bw + ay * bz - az * by,
-                     aw * by - ax * bz + ay * bw + az * bx, aw * bz + ax * by - ay * bx + az * bw], -1)
+    return np.stack(
+        [
+            aw * bw - ax * bx - ay * by - az * bz,
+            aw * bx + ax * bw + ay * bz - az * by,
+            aw * by - ax * bz + ay * bw + az * bx,
+            aw * bz + ax * by - ay * bx + az * bw,
+        ],
+        -1,
+    )
 
 
 def main() -> None:
@@ -51,7 +59,9 @@ def main() -> None:
     if args.models:
         cgetup.MODELS = args.models if os.path.isabs(args.models) else os.path.join(HERE, args.models)
     torch.set_num_threads(2)
-    env = cgetup.CGetUp(args.name, args.worlds, threads=args.threads, assist=0.0, obs_noise=1.0, stand_share=0.0, slack_lo=0.6, seed=7)
+    env = cgetup.CGetUp(
+        args.name, args.worlds, threads=args.threads, assist=0.0, obs_noise=1.0, stand_share=0.0, slack_lo=0.6, seed=7
+    )
     ckpt = args.ckpt if os.path.isabs(args.ckpt) else os.path.join(HERE, args.ckpt)
     obs_dim = obs_dim_of(ckpt)
     ppo = PPO(obs_dim, env.A, 1, "cpu", PPOConfig())
@@ -78,15 +88,17 @@ def main() -> None:
             keep["lin"].append(cgetup.to_heading(env.ROOTV[ready, :3], yaw))
             keep["ang"].append(env.ROOTV[ready, 3:6].copy())
             got += len(ready)
-            env.step_count[ready] = env.max_steps        # that world's episode is over: the next step resets it
+            env.step_count[ready] = env.max_steps  # that world's episode is over: the next step resets it
             episodes += len(ready)
     bank = {k: np.concatenate(v).astype(np.float32) for k, v in keep.items()}
     out = args.out or os.path.join(HERE, "logs", f"handover_{args.name}.npz")
     np.savez(out, **bank, default=env.default.astype(np.float32), stand=np.float32(env.stand))
     err = np.abs(bank["joint"] - env.default).mean(-1)
-    print(f"{args.name}: {len(bank['z'])} hand-over states from {episodes} knockdowns (get-up policy at iteration {extra.get('iter', 0)}) -> "
-          f"{os.path.relpath(out, HERE)}; off the guard by {err.mean():.2f} rad a joint (worst {err.max():.2f}), "
-          f"pelvis at {bank['z'].mean() / env.stand:.0%} of standing height, moving {np.linalg.norm(bank['lin'][:, :2], axis=-1).mean():.2f} m/s")
+    print(
+        f"{args.name}: {len(bank['z'])} hand-over states from {episodes} knockdowns (get-up policy at iteration {extra.get('iter', 0)}) -> "
+        f"{os.path.relpath(out, HERE)}; off the guard by {err.mean():.2f} rad a joint (worst {err.max():.2f}), "
+        f"pelvis at {bank['z'].mean() / env.stand:.0%} of standing height, moving {np.linalg.norm(bank['lin'][:, :2], axis=-1).mean():.2f} m/s"
+    )
 
 
 if __name__ == "__main__":

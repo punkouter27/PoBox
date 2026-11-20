@@ -20,6 +20,7 @@ Two things it does that the GPU stage does not do yet:
       exactly the outputs it gave before. Nothing the boxer knew is lost and the floor becomes legible.
   the helping hand's count is carried between iterations (see CGetUp.get_stats).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -78,15 +79,30 @@ def main() -> None:
     args = ap.parse_args()
 
     if os.name == "nt" and not args.normal_priority:
-        ctypes.windll.kernel32.SetPriorityClass(ctypes.windll.kernel32.GetCurrentProcess(), 0x00000040)   # idle
+        ctypes.windll.kernel32.SetPriorityClass(ctypes.windll.kernel32.GetCurrentProcess(), 0x00000040)  # idle
     torch.set_num_threads(max(1, args.threads))
     torch.manual_seed(args.seed)
     run = args.run_name or f"cgetup_{args.name}"
-    env = CGetUp(args.name, args.num_envs, threads=args.threads, seed=args.seed, slack_hi=args.slack_hi,
-                 shove=args.shove, assist=args.assist)
+    env = CGetUp(
+        args.name,
+        args.num_envs,
+        threads=args.threads,
+        seed=args.seed,
+        slack_hi=args.slack_hi,
+        shove=args.shove,
+        assist=args.assist,
+    )
     N, A, D = env.N, env.A, env.obs_dim
-    cfg = PPOConfig(steps_per_env=args.steps, lr=args.lr, entropy_coef=args.entropy_coef, lr_adapt=1.2,
-                    minibatches=max(1, round(args.steps * N / 8192)), init_std=0.5, max_std=args.max_std, lr_max=args.lr_max)
+    cfg = PPOConfig(
+        steps_per_env=args.steps,
+        lr=args.lr,
+        entropy_coef=args.entropy_coef,
+        lr_adapt=1.2,
+        minibatches=max(1, round(args.steps * N / 8192)),
+        init_std=0.5,
+        max_std=args.max_std,
+        lr_max=args.lr_max,
+    )
     ppo = PPO(D, A, N, "cpu", cfg)
     extra = ppo.load(args.resume)
     carried = extra.get("mode") == "getup"
@@ -99,8 +115,11 @@ def main() -> None:
         cfg.lr = args.lr
         with torch.no_grad():
             ppo.model.log_std.fill_(float(np.log(args.reset_std)))
-    print(f"[run] {run}: {args.name} from {args.resume} ({extra.get('mode', 'unknown stage')}, iteration {extra.get('iter', 0)}); "
-          f"{N} worlds on {args.threads} threads, {args.steps} steps an iteration, batch {args.steps * N:,} in {cfg.minibatches} minibatches", flush=True)
+    print(
+        f"[run] {run}: {args.name} from {args.resume} ({extra.get('mode', 'unknown stage')}, iteration {extra.get('iter', 0)}); "
+        f"{N} worlds on {args.threads} threads, {args.steps} steps an iteration, batch {args.steps * N:,} in {cfg.minibatches} minibatches",
+        flush=True,
+    )
 
     obs = torch.from_numpy(env.reset())
     if not carried and not args.no_renorm:
@@ -118,8 +137,11 @@ def main() -> None:
         new_var = torch.maximum(((seen - ppo.obs_rms.mean) ** 2).mean(0), ppo.obs_rms.var)
         new_mean = ppo.obs_rms.mean.clone()
         renormalise(ppo, new_mean, new_var, 2.0e6)
-        print(f"[renorm] {int((out > 0.05).sum())} of {D} observations were clipped more than 5% of the time under the match's scaling "
-              f"(worst {out.max():.0%}); rescaled, the policy's outputs kept", flush=True)
+        print(
+            f"[renorm] {int((out > 0.05).sum())} of {D} observations were clipped more than 5% of the time under the match's scaling "
+            f"(worst {out.max():.0%}); rescaled, the policy's outputs kept",
+            flush=True,
+        )
         env.get_stats()
         obs = torch.from_numpy(env.reset())
 
@@ -134,8 +156,19 @@ def main() -> None:
     keys = None
     stop_file = args.stop_file or os.path.join(HERE, "logs", f"{run}.stop")
     with open(os.path.join(HERE, "logs", f"{run}.args.json"), "w", encoding="utf-8") as fh:
-        json.dump({"argv": sys.argv[1:], "args": vars(args), "mode": "getup", "fighters": [args.name], "trainer": "cpu",
-                   "started": time.strftime("%Y-%m-%d %H:%M:%S")}, fh, indent=2, sort_keys=True)
+        json.dump(
+            {
+                "argv": sys.argv[1:],
+                "args": vars(args),
+                "mode": "getup",
+                "fighters": [args.name],
+                "trainer": "cpu",
+                "started": time.strftime("%Y-%m-%d %H:%M:%S"),
+            },
+            fh,
+            indent=2,
+            sort_keys=True,
+        )
 
     t_start = time.time()
     total = 0
@@ -159,8 +192,19 @@ def main() -> None:
             keys = sorted(s.keys())
             if new_csv:
                 csv_w.writerow(["iter", "hours", "steps", "sps", "kl", "lr", "std", "value_loss"] + keys)
-        csv_w.writerow([it, f"{hours:.4f}", total, int(sps), f"{stats['kl']:.5f}", f"{stats['lr']:.2e}", f"{stats['action_std']:.4f}",
-                        f"{stats['value_loss']:.4f}"] + [f"{s[k]:.5f}" for k in keys])
+        csv_w.writerow(
+            [
+                it,
+                f"{hours:.4f}",
+                total,
+                int(sps),
+                f"{stats['kl']:.5f}",
+                f"{stats['lr']:.2e}",
+                f"{stats['action_std']:.4f}",
+                f"{stats['value_loss']:.4f}",
+            ]
+            + [f"{s[k]:.5f}" for k in keys]
+        )
         csv_f.flush()
         for k, v in s.items():
             writer.add_scalar(f"env/{k}", v, it)
@@ -168,20 +212,53 @@ def main() -> None:
             writer.add_scalar(f"ppo/{k}", v, it)
         writer.add_scalar("perf/fps", sps, it)
         if it % 5 == 0:
-            print(f"it {it:6d} | {sps:6.0f} sps | ret {s['ep_return']:7.2f} | on its feet at the end {s['up_rate']:4.0%}, "
-                  f"from the floor {s['up_rate_from_floor']:4.0%}, unaided {s['up_rate_unaided']:4.0%} in {s['time_to_stand_unaided']:4.1f} s, "
-                  f"help {s['assist']:.3f} | height {s['height']:4.2f} upright {s['upright']:4.2f} "
-                  f"| kl {stats['kl']:.4f} lr {stats['lr']:.1e} std {stats['action_std']:.2f} | {hours * 60:6.1f} min", flush=True)
+            print(
+                f"it {it:6d} | {sps:6.0f} sps | ret {s['ep_return']:7.2f} | on its feet at the end {s['up_rate']:4.0%}, "
+                f"from the floor {s['up_rate_from_floor']:4.0%}, unaided {s['up_rate_unaided']:4.0%} in {s['time_to_stand_unaided']:4.1f} s, "
+                f"help {s['assist']:.3f} | height {s['height']:4.2f} upright {s['upright']:4.2f} "
+                f"| kl {stats['kl']:.4f} lr {stats['lr']:.1e} std {stats['action_std']:.2f} | {hours * 60:6.1f} min",
+                flush=True,
+            )
             with open(os.path.join(HERE, "logs", f"{run}.status.json"), "w", encoding="utf-8") as fh:
-                json.dump({"run": run, "mode": "getup", "fighters": [args.name], "iter": it, "hours": hours, "fps": sps,
-                           "updated": time.strftime("%Y-%m-%d %H:%M:%S"), "ppo": stats, "env": s}, fh, indent=2)
+                json.dump(
+                    {
+                        "run": run,
+                        "mode": "getup",
+                        "fighters": [args.name],
+                        "iter": it,
+                        "hours": hours,
+                        "fps": sps,
+                        "updated": time.strftime("%Y-%m-%d %H:%M:%S"),
+                        "ppo": stats,
+                        "env": s,
+                    },
+                    fh,
+                    indent=2,
+                )
         stopping = os.path.exists(stop_file) or (args.hours > 0.0 and hours >= args.hours)
         if (it + 1) % args.save_every == 0 or it + 1 == args.iters or stopping:
             ck = os.path.join(ck_dir, f"model_{it + 1:06d}_{args.name}.pt")
-            ppo.save(ck, {"iter": it + 1, "mode": "getup", "fighters": [args.name], "fighter": args.name, "obs_dim": D, "act_dim": A,
-                          "action_scale": env.action_scale, "run_name": run, "trainer": "cpu", "assist": env.assist,
-                          "up_ema": env.up_ema, "lr": cfg.lr, "career": int(extra.get("career", 0)), "renormed": True})
+            ppo.save(
+                ck,
+                {
+                    "iter": it + 1,
+                    "mode": "getup",
+                    "fighters": [args.name],
+                    "fighter": args.name,
+                    "obs_dim": D,
+                    "act_dim": A,
+                    "action_scale": env.action_scale,
+                    "run_name": run,
+                    "trainer": "cpu",
+                    "assist": env.assist,
+                    "up_ema": env.up_ema,
+                    "lr": cfg.lr,
+                    "career": int(extra.get("career", 0)),
+                    "renormed": True,
+                },
+            )
             import shutil
+
             shutil.copyfile(ck, os.path.join(ck_dir, f"latest_{args.name}.pt"))
             saved = sorted(f for f in os.listdir(ck_dir) if f.startswith("model_"))
             for f in saved[:-4]:

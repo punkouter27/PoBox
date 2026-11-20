@@ -1,4 +1,5 @@
 """Quaternion / heading helpers and punch-variety accounting shared across boxing envs."""
+
 from __future__ import annotations
 
 import torch
@@ -29,8 +30,15 @@ def yaw_quat(yaw: torch.Tensor) -> torch.Tensor:
 def quat_mul(a: torch.Tensor, b: torch.Tensor) -> torch.Tensor:
     aw, ax, ay, az = a[..., 0], a[..., 1], a[..., 2], a[..., 3]
     bw, bx, by, bz = b[..., 0], b[..., 1], b[..., 2], b[..., 3]
-    return torch.stack([aw * bw - ax * bx - ay * by - az * bz, aw * bx + ax * bw + ay * bz - az * by,
-                        aw * by - ax * bz + ay * bw + az * bx, aw * bz + ax * by - ay * bx + az * bw], -1)
+    return torch.stack(
+        [
+            aw * bw - ax * bx - ay * by - az * bz,
+            aw * bx + ax * bw + ay * bz - az * by,
+            aw * by - ax * bz + ay * bw + az * bx,
+            aw * bz + ax * by - ay * bx + az * bw,
+        ],
+        -1,
+    )
 
 
 def to_heading(v: torch.Tensor, yaw: torch.Tensor) -> torch.Tensor:
@@ -50,6 +58,8 @@ def punch_variety(landed, arriving, zone, last_kind, streak, since_hit, combo_s:
     kind = hand * 2 + zone.gather(-1, hand[..., None]).squeeze(-1)
     same = any_land & (kind == last_kind) & (since_hit <= pause_s)
     streak = torch.where(any_land, torch.where(same, streak + 1.0, torch.zeros_like(streak)), streak)
-    combo = any_land & (last_kind >= 0) & (hand != torch.div(last_kind, 2, rounding_mode="floor")) & (since_hit < combo_s)
+    combo = (
+        any_land & (last_kind >= 0) & (hand != torch.div(last_kind, 2, rounding_mode="floor")) & (since_hit < combo_s)
+    )
     combo_q = combo.float() * (landed.float() * arriving).amax(-1)
     return any_land, same, combo, combo_q, streak, torch.where(any_land, kind, last_kind)

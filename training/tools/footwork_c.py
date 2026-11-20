@@ -20,6 +20,7 @@ The exam (pass marks in tasks.md; no exploration noise, the body as the file has
     joints  no joint's 99th-percentile speed above its limit, over all of the above.
 A frail boxer's shoves and a slow boxer's commands are scaled as in training.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -69,7 +70,9 @@ class Solo:
         self.key = m.key_qpos[0].copy()
         self.default, self.stand = self.key[self.jq], float(self.key[2])
         self.lo, self.hi = np.array(cfg["lower"]), np.array(cfg["upper"])
-        self.act_scale = np.array(cfg.get("action_scale_j", [0.5] * len(cfg["lower"])))     # models/v3: per joint (envs/boxing.py)
+        self.act_scale = np.array(
+            cfg.get("action_scale_j", [0.5] * len(cfg["lower"]))
+        )  # models/v3: per joint (envs/boxing.py)
         self.limit = np.array(cfg["velocity_limit"])
         self.frail, self.quick = min(1.0, float(cfg.get("strength", 1.0))), float(cfg.get("speed", 1.0))
         self.ring_half = float(cfg.get("ring_half", 3.05))
@@ -80,7 +83,7 @@ class Solo:
         mujoco.mj_forward(m, d)
         rel0 = lambda p: heading(p - d.xpos[self.pelvis], yaw_of(d.xquat[self.pelvis]))
         self.guard = [rel0(d.geom_xpos[g]) for g in (self.head, self.torso, *self.glove)]
-        self.events = []                      # what was written into the simulation from outside, for a replay
+        self.events = []  # what was written into the simulation from outside, for a replay
         self.reset(STAND, noise=False)
 
     # ---- reset ---------------------------------------------------------------------------------
@@ -108,7 +111,7 @@ class Solo:
         self.prev_head = self.stand_in()[0]
         self.shove_left, self.shove_force = 0.0, np.zeros(3)
         self.cube_left = [0.0] * len(self.cube_q)
-        self.scale = 1.0              # the share of drive strength left; 0.04 is a knockdown's slack drives
+        self.scale = 1.0  # the share of drive strength left; 0.04 is a knockdown's slack drives
         self.next_cube, self.events = 0, []
 
     # ---- what the boxer is shown ---------------------------------------------------------------
@@ -128,20 +131,35 @@ class Solo:
         R = d.xmat[self.pelvis].reshape(3, 3)
         yaw = yaw_of(quat)
         lin_w = d.qvel[0:3]
-        foot = [1.0 if d.geom_xpos[g][2] - np.abs(d.geom_xmat[g].reshape(3, 3)[2]) @ self.m.geom_size[g] < 0.005 else 0.0 for g in self.foot]
+        foot = [
+            1.0 if d.geom_xpos[g][2] - np.abs(d.geom_xmat[g].reshape(3, 3)[2]) @ self.m.geom_size[g] < 0.005 else 0.0
+            for g in self.foot
+        ]
         rel = lambda p: heading(p - pos, yaw)
         t_head, t_body, g_l, g_r, theirs = self.stand_in()
         ring = (heading(np.array([-pos[0], -pos[1], 0.0]), yaw)[:2] / self.ring_half).clip(-1.0, 1.0)
-        return np.concatenate([
-            R.T @ lin_w, d.qvel[3:6], R.T @ np.array([0.0, 0.0, -1.0]),
-            d.qpos[self.jq] - self.default, d.qvel[self.jv], self.last,
-            foot, [pos[2]],
-            rel(t_head), rel(t_body), heading(self.head_vel - lin_w, yaw),
-            rel(d.geom_xpos[self.glove[0]]), rel(d.geom_xpos[self.glove[1]]),
-            rel(g_l), rel(g_r),
-            [math.cos(theirs - yaw), math.sin(theirs - yaw)], ring,
-            self.cmd,
-        ]).clip(-100.0, 100.0)
+        return np.concatenate(
+            [
+                R.T @ lin_w,
+                d.qvel[3:6],
+                R.T @ np.array([0.0, 0.0, -1.0]),
+                d.qpos[self.jq] - self.default,
+                d.qvel[self.jv],
+                self.last,
+                foot,
+                [pos[2]],
+                rel(t_head),
+                rel(t_body),
+                heading(self.head_vel - lin_w, yaw),
+                rel(d.geom_xpos[self.glove[0]]),
+                rel(d.geom_xpos[self.glove[1]]),
+                rel(g_l),
+                rel(g_r),
+                [math.cos(theirs - yaw), math.sin(theirs - yaw)],
+                ring,
+                self.cmd,
+            ]
+        ).clip(-100.0, 100.0)
 
     # ---- what knocks it about ------------------------------------------------------------------
     def shove(self, newton_seconds: float, angle: float, seconds: float) -> None:
@@ -163,7 +181,7 @@ class Solo:
             start = chest + np.array([*(away * dist), rise])
             vel = np.array([*(-away * speed), -rise / t + 0.5 * 9.81 * t])
         q, v = np.array([*start, 1.0, 0.0, 0.0, 0.0]), np.array([*vel, 0.0, 0.0, 0.0])
-        d.qpos[self.cube_q[i]:self.cube_q[i] + 7], d.qvel[self.cube_v[i]:self.cube_v[i] + 6] = q, v
+        d.qpos[self.cube_q[i] : self.cube_q[i] + 7], d.qvel[self.cube_v[i] : self.cube_v[i] + 6] = q, v
         self.cube_left[i] = 2.0
         self.next_cube = (i + 1) % len(self.cube_q)
         self.events.append({"t": self.t, "cube": i, "qpos": q.tolist(), "qvel": v.tolist()})
@@ -175,13 +193,15 @@ class Solo:
         self.last = action
         want = (self.default + action * self.act_scale).clip(self.lo, self.hi)
         q = d.qpos[self.jq]
-        d.ctrl[:] = q + self.scale * (want - q)      # a weakened boxer is asked for a point part of the way (envs/boxing.py)
+        d.ctrl[:] = q + self.scale * (
+            want - q
+        )  # a weakened boxer is asked for a point part of the way (envs/boxing.py)
         d.xfrc_applied[self.torso_body, :3] = self.shove_force if self.shove_left > 1e-6 else 0.0
         self.shove_left = max(0.0, self.shove_left - self.dt)
         for i, (q, v) in enumerate(zip(self.cube_q, self.cube_v)):
             self.cube_left[i] = max(0.0, self.cube_left[i] - self.dt)
-            if self.cube_left[i] <= 0.0:       # a waiting cube is held at its parking place
-                d.qpos[q:q + 7], d.qvel[v:v + 6] = self.key[q:q + 7], 0.0
+            if self.cube_left[i] <= 0.0:  # a waiting cube is held at its parking place
+                d.qpos[q : q + 7], d.qvel[v : v + 6] = self.key[q : q + 7], 0.0
         for _ in range(int(round(self.dt / m.opt.timestep))):
             mujoco.mj_step(m, d)
         self.t += self.dt
@@ -207,6 +227,7 @@ def load_policy(path: str, A: int):
         return lambda obs: np.zeros(A)
     import torch
     from ppo import PPO, PPOConfig
+
     ppo = PPO(103, A, 1, "cpu", PPOConfig())
     ppo.load(path)
 
@@ -214,6 +235,7 @@ def load_policy(path: str, A: int):
         with torch.no_grad():
             x = ppo.obs_rms.normalize(torch.tensor(obs, dtype=torch.float32)[None], ppo.cfg.obs_clip)
             return ppo.model.actor(x)[0].numpy().astype(float)
+
     return act
 
 
@@ -267,11 +289,15 @@ def exam(solo: Solo, act, seeds: int, episodes: int) -> dict:
     worst = int(np.argmax(p99))
     out = {
         "stand": {"up_at_20s": stood / n, "pass": stood / n >= 0.95},
-        "walk": {"velocity_error": float(np.mean(v_err)), "falls_per_min": walk_falls / walk_s * 60.0,
-                 "pass": float(np.mean(v_err)) <= 0.15 and walk_falls / walk_s * 60.0 <= 0.2},
+        "walk": {
+            "velocity_error": float(np.mean(v_err)),
+            "falls_per_min": walk_falls / walk_s * 60.0,
+            "pass": float(np.mean(v_err)) <= 0.15 and walk_falls / walk_s * 60.0 <= 0.2,
+        },
         "turn": {"faced_in_3s": turned / turns, "pass": turned / turns >= 0.90},
         "joints": {"worst": solo.order[worst], "p99_of_limit": float(p99[worst]), "pass": bool(p99[worst] <= 1.0)},
-        "episodes_each": n, "mujoco": mujoco.__version__,
+        "episodes_each": n,
+        "mujoco": mujoco.__version__,
     }
     return out
 
@@ -302,8 +328,14 @@ def getup(solo: Solo, act, seeds: int, episodes: int) -> dict:
                 times.append(at)
     n = seeds * episodes
     frail = solo.frail < 0.7
-    return {"up": up / n, "seconds": float(np.mean(times)) if times else None, "episodes": n,
-            "mark": 0.6 if frail else 0.8, "within": 9.0 if frail else 8.0, "pass": up / n >= (0.6 if frail else 0.8)}
+    return {
+        "up": up / n,
+        "seconds": float(np.mean(times)) if times else None,
+        "episodes": n,
+        "mark": 0.6 if frail else 0.8,
+        "within": 9.0 if frail else 8.0,
+        "pass": up / n >= (0.6 if frail else 0.8),
+    }
 
 
 def falls(solo: Solo, act, episodes: int, seed: int = 7) -> dict:
@@ -317,10 +349,17 @@ def falls(solo: Solo, act, episodes: int, seed: int = 7) -> dict:
             solo.reset(STAND)
         else:
             solo.reset(WALK, cmd=(0.6 * solo.quick, 0.0, 0.0))
-        row = {"kind": int(solo.kind), "command": solo.cmd.tolist(), "stand_in_xy": solo.opp.tolist(),
-               "root_pos": d.qpos[0:3].tolist(), "root_quat": d.qpos[3:7].tolist(), "root_linvel": d.qvel[0:3].tolist(),
-               "joint_pos": d.qpos[solo.jq].tolist(),
-               "shove": [20.0 * solo.frail, float(u(-math.pi, math.pi)), 0.15], "cube_bearing": float(u(-math.pi, math.pi))}
+        row = {
+            "kind": int(solo.kind),
+            "command": solo.cmd.tolist(),
+            "stand_in_xy": solo.opp.tolist(),
+            "root_pos": d.qpos[0:3].tolist(),
+            "root_quat": d.qpos[3:7].tolist(),
+            "root_linvel": d.qvel[0:3].tolist(),
+            "joint_pos": d.qpos[solo.jq].tolist(),
+            "shove": [20.0 * solo.frail, float(u(-math.pi, math.pi)), 0.15],
+            "cube_bearing": float(u(-math.pi, math.pi)),
+        }
         shoved = thrown = fell = False
         while solo.t < 8.0 and not fell:
             if not shoved and solo.t >= 2.0:
@@ -332,8 +371,15 @@ def falls(solo: Solo, act, episodes: int, seed: int = 7) -> dict:
             fell = solo.step(act(solo.observe()))
         row["fell"], row["seconds"] = fell, round(solo.t, 2)
         rows.append(row)
-    return {"episodes": episodes, "fall_rate": sum(r["fell"] for r in rows) / episodes, "mujoco": mujoco.__version__,
-            "control_dt": solo.dt, "shove_at": 2.0, "cube_at": 4.0, "rows": rows}
+    return {
+        "episodes": episodes,
+        "fall_rate": sum(r["fell"] for r in rows) / episodes,
+        "mujoco": mujoco.__version__,
+        "control_dt": solo.dt,
+        "shove_at": 2.0,
+        "cube_at": 4.0,
+        "rows": rows,
+    }
 
 
 def reference(solo: Solo, act, seconds: float, cube_at: float, kind: int = STAND, cmd=(0.0, 0.0, 0.0)) -> dict:
@@ -342,29 +388,50 @@ def reference(solo: Solo, act, seconds: float, cube_at: float, kind: int = STAND
     d, rows, thrown = solo.d, [], False
     while solo.t < seconds - 1e-9:
         if not thrown and cube_at > 0.0 and solo.t >= cube_at:
-            solo.throw(5.0, math.pi, 2.5, 0.2)      # from in front, 5 m/s
+            solo.throw(5.0, math.pi, 2.5, 0.2)  # from in front, 5 m/s
             thrown = True
         obs = solo.observe()
         action = act(obs)
         fell = solo.step(action)
-        rows.append({"t": round(solo.t, 4), "obs": obs.tolist(), "action": np.asarray(action).tolist(),
-                     "ctrl": d.ctrl.tolist(), "torque": d.actuator_force.tolist(),
-                     "root_pos": d.qpos[0:3].tolist(), "root_quat": d.qpos[3:7].tolist(),
-                     "root_linvel": d.qvel[0:3].tolist(), "root_angvel": d.qvel[3:6].tolist(),
-                     "joint_pos": d.qpos[solo.jq].tolist(), "joint_vel": d.qvel[solo.jv].tolist(),
-                     "foot_contact": [bool(x) for x in solo.observe()[72:74]], "fell": fell})
-    return {"mujoco": mujoco.__version__, "control_dt": solo.dt, "timestep": float(solo.m.opt.timestep), "joint_order": solo.order,
-            "start_qpos": solo.key.tolist(), "stand_in_xy": solo.opp.tolist(), "command": solo.cmd.tolist(), "kind": int(solo.kind),
-            "events": solo.events, "rows": rows,
-            "note": "obs and action are before the step of that row; everything else is after it. Frames are MuJoCo's (z up)."}
+        rows.append(
+            {
+                "t": round(solo.t, 4),
+                "obs": obs.tolist(),
+                "action": np.asarray(action).tolist(),
+                "ctrl": d.ctrl.tolist(),
+                "torque": d.actuator_force.tolist(),
+                "root_pos": d.qpos[0:3].tolist(),
+                "root_quat": d.qpos[3:7].tolist(),
+                "root_linvel": d.qvel[0:3].tolist(),
+                "root_angvel": d.qvel[3:6].tolist(),
+                "joint_pos": d.qpos[solo.jq].tolist(),
+                "joint_vel": d.qvel[solo.jv].tolist(),
+                "foot_contact": [bool(x) for x in solo.observe()[72:74]],
+                "fell": fell,
+            }
+        )
+    return {
+        "mujoco": mujoco.__version__,
+        "control_dt": solo.dt,
+        "timestep": float(solo.m.opt.timestep),
+        "joint_order": solo.order,
+        "start_qpos": solo.key.tolist(),
+        "stand_in_xy": solo.opp.tolist(),
+        "command": solo.cmd.tolist(),
+        "kind": int(solo.kind),
+        "events": solo.events,
+        "rows": rows,
+        "note": "obs and action are before the step of that row; everything else is after it. Frames are MuJoCo's (z up).",
+    }
 
 
 def check_env(xml: str, cfg: dict) -> None:
     """The same body, state and actions in the Warp environment and here: do the 103 numbers agree?"""
     import torch
     from envs.footwork import FootworkEnv
+
     env = FootworkEnv(xml, 1, device="cpu", seed=3, obs_noise=0.0, disturb=0.0, randomise=0.0, episode_len_s=60.0)
-    env.step_count[:] = 0.0          # the episode clock starts anywhere; a time-out in mid-check would move the body
+    env.step_count[:] = 0.0  # the episode clock starts anywhere; a time-out in mid-check would move the body
     solo = Solo(xml, cfg)
     rng = np.random.default_rng(0)
     worst = {}
@@ -374,10 +441,18 @@ def check_env(xml: str, cfg: dict) -> None:
         env._physics_forward()
         env._reseed_trackers(torch.ones(1, dtype=torch.bool))
         env.head_vel[:] = 0.0
-        solo.kind, solo.cmd, solo.opp = kind, env.cmd[0, 0].numpy().astype(float), env.opp_xy[0, 0].numpy().astype(float)
+        solo.kind, solo.cmd, solo.opp = (
+            kind,
+            env.cmd[0, 0].numpy().astype(float),
+            env.opp_xy[0, 0].numpy().astype(float),
+        )
         solo.d.qpos[:], solo.d.qvel[:] = env.qpos[0].numpy(), env.qvel[0].numpy()
         mujoco.mj_forward(solo.m, solo.d)
-        solo.last, solo.head_vel, solo.prev_head = env.last_action[0, 0].numpy().astype(float), np.zeros(3), solo.stand_in()[0]
+        solo.last, solo.head_vel, solo.prev_head = (
+            env.last_action[0, 0].numpy().astype(float),
+            np.zeros(3),
+            solo.stand_in()[0],
+        )
         gap = [float(np.abs(env._observe(env._geometry())[0].numpy() - solo.observe()).max())]
         for _ in range(5):
             a = rng.uniform(-1.0, 1.0, solo.A)
@@ -385,7 +460,10 @@ def check_env(xml: str, cfg: dict) -> None:
             solo.step(a)
             gap.append(float(np.abs(obs - solo.observe()).max()))
         worst[("stand", "walk", "turn")[kind]] = gap
-        print(f"{('stand', 'walk', 'turn')[kind]:5s} largest difference in the observation: at the same state {gap[0]:.1e}; after 1 to 5 steps of the same actions " + " ".join(f"{g:.1e}" for g in gap[1:]))
+        print(
+            f"{('stand', 'walk', 'turn')[kind]:5s} largest difference in the observation: at the same state {gap[0]:.1e}; after 1 to 5 steps of the same actions "
+            + " ".join(f"{g:.1e}" for g in gap[1:])
+        )
     assert all(g[0] < 1e-3 for g in worst.values()), "the two observations are not the same numbers"
 
 
@@ -401,7 +479,9 @@ def main() -> None:
     ap.add_argument("--reference", default="", help="write the recording Unity is checked against here")
     ap.add_argument("--seconds", type=float, default=5.0)
     ap.add_argument("--cube-at", type=float, default=2.0, help="reference: throw one cube at this time; 0 for none")
-    ap.add_argument("--kind", default="stand", choices=["stand", "walk", "turn"], help="reference: the kind of episode recorded")
+    ap.add_argument(
+        "--kind", default="stand", choices=["stand", "walk", "turn"], help="reference: the kind of episode recorded"
+    )
     ap.add_argument("--cmd", type=float, nargs=3, default=[0.0, 0.0, 0.0], help="reference: the command, for a walk")
     ap.add_argument("--falls", type=int, default=0, help="the gate's fall rate over this many episodes")
     ap.add_argument("--getup-policy", default="", help="exam: also R3, getting up, with this get-up policy")
@@ -414,16 +494,22 @@ def main() -> None:
     solo = Solo(xml, cfg)
     act = load_policy(args.policy, solo.A)
     if args.reference:
-        ref = reference(solo, act, args.seconds, args.cube_at, ("stand", "walk", "turn").index(args.kind), tuple(args.cmd))
+        ref = reference(
+            solo, act, args.seconds, args.cube_at, ("stand", "walk", "turn").index(args.kind), tuple(args.cmd)
+        )
         ref["model"], ref["policy"] = os.path.basename(xml), os.path.basename(args.policy) or "zero action"
         os.makedirs(os.path.dirname(os.path.abspath(args.reference)), exist_ok=True)
         with open(args.reference, "w", encoding="utf-8") as fh:
             json.dump(ref, fh)
         up = sum(1 for r in ref["rows"] if not r["fell"]) * solo.dt
-        print(f"wrote {args.reference}: {len(ref['rows'])} control steps, MuJoCo {mujoco.__version__}, up for {up:.2f} s, {len(ref['events'])} event(s)")
+        print(
+            f"wrote {args.reference}: {len(ref['rows'])} control steps, MuJoCo {mujoco.__version__}, up for {up:.2f} s, {len(ref['events'])} event(s)"
+        )
     if args.falls:
         out = falls(solo, act, args.falls)
-        print(f"{args.name}, C MuJoCo {out['mujoco']}: on the floor at the end of {out['fall_rate']:.0%} of {out['episodes']} episodes (stand and walk by turns, a shove and a cube each)")
+        print(
+            f"{args.name}, C MuJoCo {out['mujoco']}: on the floor at the end of {out['fall_rate']:.0%} of {out['episodes']} episodes (stand and walk by turns, a shove and a cube each)"
+        )
         if args.json:
             with open(args.json, "w", encoding="utf-8") as fh:
                 json.dump(out, fh, indent=1)
@@ -434,13 +520,23 @@ def main() -> None:
             out["getup"] = getup(solo, load_policy(args.getup_policy, solo.A), args.seeds, args.episodes)
         mark = lambda b: "pass" if b else "FAIL"
         print(f"{args.name}, C MuJoCo {mujoco.__version__}, {out['episodes_each']} episodes of each kind:")
-        print(f"  stand   up at 20 s in {out['stand']['up_at_20s']:.0%} (mark 95%)                                  {mark(out['stand']['pass'])}")
-        print(f"  walk    velocity off by {out['walk']['velocity_error']:.2f} m/s (0.15), {out['walk']['falls_per_min']:.2f} falls a minute (0.2)        {mark(out['walk']['pass'])}")
-        print(f"  turn    facing in 3 s and still up in {out['turn']['faced_in_3s']:.0%} (90%)                          {mark(out['turn']['pass'])}")
-        print(f"  joints  fastest against its limit: {out['joints']['worst']} at {out['joints']['p99_of_limit']:.2f} of it (1.00)          {mark(out['joints']['pass'])}")
+        print(
+            f"  stand   up at 20 s in {out['stand']['up_at_20s']:.0%} (mark 95%)                                  {mark(out['stand']['pass'])}"
+        )
+        print(
+            f"  walk    velocity off by {out['walk']['velocity_error']:.2f} m/s (0.15), {out['walk']['falls_per_min']:.2f} falls a minute (0.2)        {mark(out['walk']['pass'])}"
+        )
+        print(
+            f"  turn    facing in 3 s and still up in {out['turn']['faced_in_3s']:.0%} (90%)                          {mark(out['turn']['pass'])}"
+        )
+        print(
+            f"  joints  fastest against its limit: {out['joints']['worst']} at {out['joints']['p99_of_limit']:.2f} of it (1.00)          {mark(out['joints']['pass'])}"
+        )
         if "getup" in out:
             g = out["getup"]
-            print(f"  get up  standing 1.5 s within 8 s in {g['up']:.0%} (mark {g['mark']:.0%}), {g['seconds'] or 0:.1f} s on average          {mark(g['pass'])}")
+            print(
+                f"  get up  standing 1.5 s within 8 s in {g['up']:.0%} (mark {g['mark']:.0%}), {g['seconds'] or 0:.1f} s on average          {mark(g['pass'])}"
+            )
         if args.json:
             with open(args.json, "w", encoding="utf-8") as fh:
                 json.dump(out, fh, indent=1)

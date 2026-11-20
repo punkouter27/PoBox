@@ -13,6 +13,7 @@ boxer in a bout, or on the canvas, is told nothing. The pool of cubes is in ever
 wait where they are parked (held there every step, as in the footwork stage) and are never thrown: the
 opponent is what knocks a boxer about. Each world's body is randomised as in the footwork stage.
 """
+
 from __future__ import annotations
 
 import mujoco
@@ -41,10 +42,10 @@ class _Retrofit:
             self.cube_qi = L([[int(m.jnt_qposadr[j]) + i for i in range(7)] for j in cubes])
             self.cube_vi = L([[int(m.jnt_dofadr[j]) + i for i in range(6)] for j in cubes])
             self.cube_park = self.default_qpos[self.cube_qi]
-        FootworkEnv._randomise(self)          # the same bodies a world, drawn the same way
+        FootworkEnv._randomise(self)  # the same bodies a world, drawn the same way
 
     def _observe(self, g) -> torch.Tensor:
-        self.obs_dim = self.base_obs_dim      # the stage shapes its hundred by this
+        self.obs_dim = self.base_obs_dim  # the stage shapes its hundred by this
         obs = super()._observe(g)
         self.obs_dim = self.base_obs_dim + CMD
         return torch.cat([obs, torch.zeros(obs.shape[0], CMD, device=self.device)], -1)
@@ -56,7 +57,7 @@ class _Retrofit:
         return super().step(action)
 
 
-BODY_OBS = 3                 # the Melee (2026-10-19): the nearest downed body, after the 103
+BODY_OBS = 3  # the Melee (2026-10-19): the nearest downed body, after the 103
 BODY_SEE_M = 3.0
 # Where a lying body's pelvis is in its own frame (envs/boxing.py lying_bodies: trunk -0.25..0.25 along x, legs from -0.30).
 BODY_PELVIS_X = -0.28
@@ -77,13 +78,13 @@ class MatchEnv(_Retrofit, BoxingEnv):
         N, K = self.N, self.K
         if not self.n_bodies:
             return torch.zeros(N, K, BODY_OBS, device=self.device)
-        yb = quat_yaw(self.mocap_quat)                                                  # (N, B)
+        yb = quat_yaw(self.mocap_quat)  # (N, B)
         p = self.mocap_pos.clone()
         p[..., 0] += torch.cos(yb) * BODY_PELVIS_X
         p[..., 1] += torch.sin(yb) * BODY_PELVIS_X
-        d = p[:, None] - g["pos"][:, :, None]                                           # (N, K, B, 3)
+        d = p[:, None] - g["pos"][:, :, None]  # (N, K, B, 3)
         dist = d[..., :2].norm(dim=-1)
-        j = dist.argmin(-1)                                                             # (N, K)
+        j = dist.argmin(-1)  # (N, K)
         near = d.gather(2, j[..., None, None].expand(N, K, 1, 3)).squeeze(2)
         xy = to_heading(near, g["yaw"])[..., :2].clamp(-3.0, 3.0)
         seen = (dist.gather(2, j[..., None]).squeeze(2) <= BODY_SEE_M).float()[..., None]
@@ -95,7 +96,7 @@ class MatchEnv(_Retrofit, BoxingEnv):
         if self.obs_state.any():
             share = self.daze / self.legs_at.clamp_min(1.0)
             state = torch.stack([self.reserve, share, share.flip(1)], -1) * self.obs_state.view(1, self.K, 1)
-            obs[:, self.base_obs_dim:] = state.reshape(-1, CMD)
+            obs[:, self.base_obs_dim :] = state.reshape(-1, CMD)
         if self.obs_bodies:
             obs = torch.cat([obs, self._bodies_seen(g).reshape(-1, BODY_OBS)], -1)
             self.obs_dim = self.base_obs_dim + CMD + BODY_OBS

@@ -14,11 +14,11 @@ The share is of the body without its gloves (the rig's own mass, as de Leva's su
 its fractions from Winter / Dempster (cadaver data); de Leva's come from living subjects (gamma-ray scanning) and put
 about 4 points more in the thigh and about as much less in the trunk and head.
 """
+
 from __future__ import annotations
 
 import argparse
 import glob
-import json
 import os
 import sys
 
@@ -29,9 +29,16 @@ sys.path.insert(0, HERE)
 
 # de Leva (1996) table 4, % of body mass: (male, female).
 DE_LEVA = {
-    "head": (6.94, 6.68), "upper_trunk": (15.96, 15.45), "middle_trunk": (16.33, 14.65), "lower_trunk": (11.17, 12.47),
-    "upper_arm": (2.71, 2.55), "forearm": (1.62, 1.38), "hand": (0.61, 0.56),
-    "thigh": (14.16, 14.78), "shank": (4.33, 4.81), "foot": (1.37, 1.29),
+    "head": (6.94, 6.68),
+    "upper_trunk": (15.96, 15.45),
+    "middle_trunk": (16.33, 14.65),
+    "lower_trunk": (11.17, 12.47),
+    "upper_arm": (2.71, 2.55),
+    "forearm": (1.62, 1.38),
+    "hand": (0.61, 0.56),
+    "thigh": (14.16, 14.78),
+    "shank": (4.33, 4.81),
+    "foot": (1.37, 1.29),
 }
 # The model's bodies as groups of de Leva's segments.
 GROUPS = {
@@ -43,9 +50,9 @@ GROUPS = {
     "shin": ("shank",),
     "foot": ("foot",),
 }
-FEMALE = {"grandma"}          # the roster's women; the rest are compared with de Leva's men
-GLOVE_KG = 0.283              # rig_to_mjcf.py: a 10 oz glove, on the hand
-FLAG = 0.20                   # a group more than this share off de Leva's is flagged
+FEMALE = {"grandma"}  # the roster's women; the rest are compared with de Leva's men
+GLOVE_KG = 0.283  # rig_to_mjcf.py: a 10 oz glove, on the hand
+FLAG = 0.20  # a group more than this share off de Leva's is flagged
 
 
 def audit(xml: str, name: str, female: bool) -> list:
@@ -61,8 +68,18 @@ def audit(xml: str, name: str, female: bool) -> list:
             kg -= GLOVE_KG
         model = 100.0 * kg / bare
         ref = sum(DE_LEVA[s][1 if female else 0] for s in segs)
-        rows.append({"boxer": name, "sex": "F" if female else "M", "segment": group, "kg": kg, "model_pct": model,
-                     "de_leva_pct": ref, "ratio": model / ref, "flag": abs(model / ref - 1.0) > FLAG})
+        rows.append(
+            {
+                "boxer": name,
+                "sex": "F" if female else "M",
+                "segment": group,
+                "kg": kg,
+                "model_pct": model,
+                "de_leva_pct": ref,
+                "ratio": model / ref,
+                "flag": abs(model / ref - 1.0) > FLAG,
+            }
+        )
     return rows, bare
 
 
@@ -71,22 +88,32 @@ def main() -> None:
     ap.add_argument("--models", default=os.path.join("models", "v2"))
     ap.add_argument("--out", default=os.path.join("tools", "mass_audit.md"))
     args = ap.parse_args()
-    lines = ["# Segment masses against de Leva (1996)", "",
-             "Share of the boxer's mass without gloves; ratio = model / de Leva; ** = more than 20% off.", "",
-             "| boxer | sex | kg (no gloves) | " + " | ".join(GROUPS) + " |", "|" + "---|" * (3 + len(GROUPS))]
+    lines = [
+        "# Segment masses against de Leva (1996)",
+        "",
+        "Share of the boxer's mass without gloves; ratio = model / de Leva; ** = more than 20% off.",
+        "",
+        "| boxer | sex | kg (no gloves) | " + " | ".join(GROUPS) + " |",
+        "|" + "---|" * (3 + len(GROUPS)),
+    ]
     worst = []
     for solo in sorted(glob.glob(os.path.join(HERE, args.models, "*_solo.xml"))):
-        name = os.path.basename(solo)[:-len("_solo.xml")]
+        name = os.path.basename(solo)[: -len("_solo.xml")]
         rows, bare = audit(solo, name, name in FEMALE)
-        cells = [f"{'**' if r['flag'] else ''}{r['model_pct']:.1f} / {r['de_leva_pct']:.1f} ({r['ratio']:.2f}){'**' if r['flag'] else ''}" for r in rows]
+        cells = [
+            f"{'**' if r['flag'] else ''}{r['model_pct']:.1f} / {r['de_leva_pct']:.1f} ({r['ratio']:.2f}){'**' if r['flag'] else ''}"
+            for r in rows
+        ]
         lines.append(f"| {name} | {rows[0]['sex']} | {bare:.1f} | " + " | ".join(cells) + " |")
         worst += [r for r in rows if r["flag"]]
     lines += ["", "Each cell: model % / de Leva % (ratio).", ""]
     if worst:
         lines.append("Flagged (more than 20% off):")
         for r in worst:
-            lines.append(f"- {r['boxer']} {r['segment']}: {r['model_pct']:.1f}% against {r['de_leva_pct']:.1f}% "
-                         f"({r['kg']:.2f} kg, x{r['ratio']:.2f})")
+            lines.append(
+                f"- {r['boxer']} {r['segment']}: {r['model_pct']:.1f}% against {r['de_leva_pct']:.1f}% "
+                f"({r['kg']:.2f} kg, x{r['ratio']:.2f})"
+            )
     text = "\n".join(lines) + "\n"
     print(text)
     out = os.path.join(HERE, args.out)

@@ -10,6 +10,7 @@ checkpoints/wide/match_<name>.pt (the old one widened to 103, before any trainin
 policy the newest checkpoints/u1_*/latest_<name>.pt, then checkpoints/wide/getup_<name>.pt. --book FILE
 ({"matt": {"match": path, "getup": path}}) overrides either.
 """
+
 from __future__ import annotations
 
 import glob
@@ -61,13 +62,25 @@ def policies() -> dict:
     for n in NAMES:
         # A run that was tried and not kept has REJECTED.txt in its folder, as the game's importer expects.
         # rc<round>_<name>: the ringcraft rounds (train_gauntlet.py --rope-w/--cutoff-w), taken as match rounds.
-        trained = [p for p in glob.glob(os.path.join(ck, f"m[0-9]_{n}", f"latest_{n}.pt")) + glob.glob(os.path.join(ck, f"rc[0-9]_{n}", f"latest_{n}.pt"))
-                   if not os.path.exists(os.path.join(os.path.dirname(p), "REJECTED.txt"))]
+        trained = [
+            p
+            for p in glob.glob(os.path.join(ck, f"m[0-9]_{n}", f"latest_{n}.pt"))
+            + glob.glob(os.path.join(ck, f"rc[0-9]_{n}", f"latest_{n}.pt"))
+            if not os.path.exists(os.path.join(os.path.dirname(p), "REJECTED.txt"))
+        ]
         # Then the brain the game ships (tools/onnx_to_pt.py), then the old one widened.
-        shipped = [p for p in (os.path.join(ck, "onnx", f"match_{n}.pt"), os.path.join(ck, "wide", f"match_{n}.pt")) if os.path.exists(p)]
+        shipped = [
+            p
+            for p in (os.path.join(ck, "onnx", f"match_{n}.pt"), os.path.join(ck, "wide", f"match_{n}.pt"))
+            if os.path.exists(p)
+        ]
         match = max(trained, key=os.path.getmtime) if trained else (shipped[0] if shipped else "")
         ups = glob.glob(os.path.join(ck, "u1_*", f"latest_{n}.pt"))
-        shipped = [p for p in (os.path.join(ck, "onnx", f"getup_{n}.pt"), os.path.join(ck, "wide", f"getup_{n}.pt")) if os.path.exists(p)]
+        shipped = [
+            p
+            for p in (os.path.join(ck, "onnx", f"getup_{n}.pt"), os.path.join(ck, "wide", f"getup_{n}.pt"))
+            if os.path.exists(p)
+        ]
         getup = max(ups, key=os.path.getmtime) if ups else (shipped[0] if shipped else "")
         e = {}
         if match and os.path.exists(match):
@@ -91,16 +104,16 @@ if __name__ == "__main__":
         # models/v3 (or another folder of the same bodies' files): the pairs and configs are read from there.
         i = sys.argv.index("--models")
         MODELS = sys.argv[i + 1] if os.path.isabs(sys.argv[i + 1]) else os.path.join(HERE, sys.argv[i + 1])
-        del sys.argv[i:i + 2]
+        del sys.argv[i : i + 2]
     if "--book" in sys.argv:
         # Kept before it leaves argv (exam.py's parser does not know it); policies() reads it later.
         i = sys.argv.index("--book")
         BOOK = sys.argv[i + 1]
-        del sys.argv[i:i + 2]
+        del sys.argv[i : i + 2]
     # The old exam with the new bodies, configs and policies put in: its rounds and get-up test call these by name.
     E.HERE = HERE
     E.load_policy, E.act, E.policies, E.MODELS = load_policy, act, policies, MODELS
-    E.VETERANS = NAMES          # every boxer on the new line is trained with a guard
+    E.VETERANS = NAMES  # every boxer on the new line is trained with a guard
     _join = os.path.join
 
     def join(*parts):

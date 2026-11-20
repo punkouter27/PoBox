@@ -5,6 +5,7 @@
 
 The same file u1_d9_grandpa_matt's latest_grandpa.onnx is (ppo.export_onnx at 103); MjRetrofit.Promote copies it into Assets.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -28,7 +29,9 @@ def main() -> None:
     g, ok = row["getup"], row["lines"]["getting up"]["ok"]
     rate = g["up"] / max(1, g["floored"])
     if not ok or rate < a.min_rate:
-        print(f"{a.name}: not exported (getting up {g['up']} of {g['floored']}, exam {'pass' if ok else 'FAIL'}, needs {a.min_rate:.0%})")
+        print(
+            f"{a.name}: not exported (getting up {g['up']} of {g['floored']}, exam {'pass' if ok else 'FAIL'}, needs {a.min_rate:.0%})"
+        )
         return
     ppo = PPO(103, 21, 1, "cpu", PPOConfig())
     extra = ppo.load(os.path.join(HERE, a.ckpt))

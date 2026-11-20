@@ -4,8 +4,8 @@ A boxing broadcast for phones. Two physics-driven boxers fight in a ring while t
 cameras that cut on the action, scores it with three judges, and commentates. Nobody animates the boxers:
 each is a body with 21 joints and a trained brain that decides, 50 times a second, where every joint goes.
 
-Portrait, one screen, nothing scrolls. Unity 6000.6 (URP, Cinemachine, UI Toolkit), the official MuJoCo
-Unity plugin 3.5.0 for the fight's physics, and Unity Inference Engine for the brains. No PhysX in the fight.
+One screen, nothing scrolls, portrait or landscape. Unity 6000.6.9f1 (URP, Cinemachine, UI Toolkit), the official MuJoCo
+Unity plugin 3.15.0 for the fight's physics, and Unity Inference Engine for the brains. No PhysX in the fight.
 
 ## What is in it
 
@@ -25,10 +25,10 @@ Unity plugin 3.5.0 for the fight's physics, and Unity Inference Engine for the b
 Six boxers are on the v3 body (`training/models/v3`). Grandma and Grandpa are still on v2: on v3 they got up
 5 and 14 times of 60 (2026-11-03), far below the mark.
 
-The exam runs in plain C MuJoCo 3.5.0 (`training/tools/exam.py`). It has six original lines (footing, attack,
+The exam runs in plain C MuJoCo (`training/tools/exam.py`; 3.5.0 until 2026-11-20, now the game's 3.15.0, which replays every 3.5.0 recording to within 1e-5 rad). It has six original lines (footing, attack,
 guard, chin, getting up, carrying on) and, since 2026-11-03, a seventh: under pressure, punches landed
 against the boxer's hardest opponent. Figures below are the last ones in
-[rl_optimization_log.md](rl_optimization_log.md), with their dates. Get-up figures use the game's rule.
+[docs/rl_optimization_log.md](docs/rl_optimization_log.md), with their dates. Get-up figures use the game's rule.
 
 | Boxer | Body | Brains (footwork, boxing, get-up) | Last exam | Open |
 |---|---|---|---|---|
@@ -38,7 +38,7 @@ against the boxer's hardest opponent. Figures below are the last ones in
 | Sokol | v3 | v3f, v3m6, v3u4 | Footing, attack 0.58/s, guard, chin and getting up pass; carrying on 53/57 (2026-11-02) | Under pressure |
 | Trump | v3 | v3f, v3c1, v3u4 | Footing and guard pass, getting up 59/60, carrying on 55/59 (2026-11-04) | Attack: 0.11/s, mark 0.5 |
 | Kim | v3 | v3f, v3m3, v3u3 | Getting up 60/60 (2026-11-02) | Footing: about 2 falls a minute. Attack: 0.39/s (2026-11-03). Carrying on: 49/60 |
-| Grandma | v2 | October brains | Not re-examined in November. October figures are in the [archived log](DOCS/archive/rl_optimization_log_2026-10.md) | Getting up on v3: 5/60 |
+| Grandma | v2 | October brains | Not re-examined in November. October figures are in the [archived log](docs/archive/rl_optimization_log_2026-10.md) | Getting up on v3: 5/60 |
 | Grandpa | v2 | October brains | As Grandma | Getting up on v3: 14/60 |
 
 Nobody passed the under-pressure line when all eight were examined on 2026-11-03. Every boxer in the game
@@ -46,7 +46,7 @@ compiles to the trainer's model with no difference, and the Unity gate tests pas
 
 ## Run it
 
-1. Open the project in Unity 6000.6.0f1.
+1. Open the project in Unity 6000.6.9f1.
 2. Open `Assets/Scenes/Menu.unity` and press Play. Pick a boxer for each corner, then FIGHT. ALL starts the
    free-for-all.
 3. `Assets/Scenes/Arena.unity` goes straight to the default pair. `Assets/Scenes/Melee.unity` is the
@@ -54,36 +54,38 @@ compiles to the trainer's model with no difference, and the Unity gate tests pas
 
 Android: menu `PoBox/Android/Prepare`, then `PoBox/Android/Build APK` (arm64, Android 12 or later).
 
-WebGL: a push to `master` builds and deploys it from the dev PC (`.github/workflows/webgl.yml`,
-`Tools/ci_webgl.ps1`).
+WebGL (live at https://gentle-mushroom-0d162090f.6.azurestaticapps.net, status at `/diag`): `scripts/publish_webgl.ps1`
+runs the EditMode tests, builds the player on this PC and publishes a `webgl-*` release, which
+`.github/workflows/webgl.yml` deploys. In the browser, `Tab` (or the corner button on a touch screen) shows FPS,
+the bout's reward, inference latency and the curriculum stage; after 30 s without input the game runs a demo.
 
-Tests: play-mode fixtures in `Assets/Scripts/Tests` (`MjParityTests`, `MjGateTests`, `MjCollisionTests`,
-`OneScreenTests`, `StateFlowTests`, `SceneIntegrityTests`, `FreeForAllTests`, `FeatureTests`). How to run
-them is in [CLAUDE.md](CLAUDE.md).
+Tests: Unity fixtures in `Assets/Scripts/Tests` (`MjParityTests`, `MjGateTests`, `MjCollisionTests`,
+`OneScreenTests`, `StateFlowTests`, `SceneIntegrityTests`, `FreeForAllTests`, `FeatureTests`, ...) and Python in
+`tests/` (`uv run pytest`; tiers `-m physics`, `-m train`). How to run them is in [AGENTS.md](AGENTS.md).
 
 ## Documentation
 
-- [DOCS/README.md](DOCS/README.md): where the project stands and the running history, newest first.
-- [tasks.md](tasks.md): the live plan, open items only.
-- [rl_optimization_log.md](rl_optimization_log.md): the training log, run by run, November onward.
-- [AGENTS.md](AGENTS.md) and [CLAUDE.md](CLAUDE.md): house rules and working notes for AI agents.
+- [docs/README.md](docs/README.md): where the project stands and the running history, newest first.
+- [docs/tasks.md](docs/tasks.md): the live plan, open items only.
+- [docs/rl_optimization_log.md](docs/rl_optimization_log.md): the training log, run by run, November onward.
+- [AGENTS.md](AGENTS.md): the Po game standard, house rules and working notes (CLAUDE.md points there).
 - [training/README.md](training/README.md): the trainer.
-- [DOCS/archive](DOCS/archive): the October history, plan and training log, moved word for word.
-- [DOCS/reports](DOCS/reports): dated training and UI reports.
+- [docs/archive](docs/archive): the October history, plan and training log, moved word for word.
+- [docs/reports](docs/reports): dated training and UI reports.
 
-The design set in [DOCS/20261004](DOCS/20261004) is a snapshot of 4 October 2026: six boxers on the v2
+The design set in [docs/20261004](docs/20261004) is a snapshot of 4 October 2026: six boxers on the v2
 bodies, before the free-for-all, the crew and v3. The architecture still holds; the boxer figures do not.
 
 | Document | What it covers |
 |---|---|
-| [architecture_overview.md](DOCS/20261004/architecture_overview.md) | The decision loop, what a boxer senses and controls, scoring, tuning settings |
-| [architecture_dashboard.html](DOCS/20261004/architecture_dashboard.html) | Component map, step-by-step sequence diagrams, data model |
-| [creatures_dashboard.html](DOCS/20261004/creatures_dashboard.html) | Scorecards per boxer, with an Executive and a Technical view |
-| [abilities_and_training.html](DOCS/20261004/abilities_and_training.html) | The abilities grid and three annotated TensorBoard charts |
-| [model_summary.md](DOCS/20261004/model_summary.md) | Every brain file and every body |
-| [scene_layout.html](DOCS/20261004/scene_layout.html) | The ring and testbed to scale, spawn points, engine setup |
-| [creature_benchmarks.html](DOCS/20261004/creature_benchmarks.html) | Learning speed, energy and smoothness, running cost |
-| [training_metrics_guide.md](DOCS/20261004/training_metrics_guide.md) | The training charts in plain English |
+| [architecture_overview.md](docs/20261004/architecture_overview.md) | The decision loop, what a boxer senses and controls, scoring, tuning settings |
+| [architecture_dashboard.html](docs/20261004/architecture_dashboard.html) | Component map, step-by-step sequence diagrams, data model |
+| [creatures_dashboard.html](docs/20261004/creatures_dashboard.html) | Scorecards per boxer, with an Executive and a Technical view |
+| [abilities_and_training.html](docs/20261004/abilities_and_training.html) | The abilities grid and three annotated TensorBoard charts |
+| [model_summary.md](docs/20261004/model_summary.md) | Every brain file and every body |
+| [scene_layout.html](docs/20261004/scene_layout.html) | The ring and testbed to scale, spawn points, engine setup |
+| [creature_benchmarks.html](docs/20261004/creature_benchmarks.html) | Learning speed, energy and smoothness, running cost |
+| [training_metrics_guide.md](docs/20261004/training_metrics_guide.md) | The training charts in plain English |
 
 ## Folder map
 
@@ -95,10 +97,12 @@ Assets/Scripts/Mj    the fight's physics loop on the MuJoCo plugin (MjRing, MjBo
 Assets/Scripts/Runtime  bout rules, judges, cameras, commentary, HUD, sound, effects
 Assets/Scripts/Editor   importer (MjRetrofit), scene and asset tools, Android and WebGL builds
 Assets/Scripts/Tests    play-mode tests, including the training-to-Unity gate
-Packages/org.mujoco, Packages/bin.mujoco   the MuJoCo plugin and its libraries (embedded)
+Packages/org.mujoco  the MuJoCo plugin 3.15.0 (embedded; native libs also in Assets/Plugins/MuJoCo, Assets/Plugins/WebGL/MuJoCo)
 training/            the trainer: environments, PPO, exams, body models (v2, v3, crew)
 server/              the cornerman's key-holding proxy
+scripts/             WebGL publish/deploy, play-mode test runner
+tests/               Python tests (pytest)
 BLENDER/             Blender sources
-DOCS/                history, archive and dated reports
+docs/                history, plan, training log, archive and dated reports
 SCREENSHOTS/         before/after reports of UI and graphics passes
 ```

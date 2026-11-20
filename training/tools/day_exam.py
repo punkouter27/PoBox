@@ -5,6 +5,7 @@ game's own brain (12 rounds, 30 knockdowns, the game's get-up rule, MuJoCo 3.5.0
 
     python tools/day_exam.py NAME RUN            e.g. grandpa m14_grandpa; mel1_grandpa
 """
+
 from __future__ import annotations
 
 import json
@@ -34,24 +35,69 @@ def main() -> None:
     book[name]["match"] = ck
     with open(L(f"book_{run}.json"), "w", encoding="utf-8") as f:
         json.dump(book, f, indent=1)
-    env = {**os.environ, "CUDA_VISIBLE_DEVICES": "-1", "PYTHONPATH": os.path.join(HERE, ".mj350"), "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"}
+    env = {
+        **os.environ,
+        "CUDA_VISIBLE_DEVICES": "-1",
+        "PYTHONPATH": os.path.join(HERE, ".mj350"),
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1",
+    }
     out = L(f"exam_{run}.json")
     if "--melee" in sys.argv:
         # The Melee exam too (tools/melee_exam.py, 2 bodies), started beside the 1v1 exam.
-        melee = subprocess.Popen([sys.executable, "tools/melee_exam.py", name, "--book", L(f"book_{run}.json"), "--rounds", "2",
-                                  "--json", L(f"melee_{run}.json")], cwd=HERE, env=env, stdout=open(L(f"melee_{run}.out"), "w"), stderr=subprocess.STDOUT)
+        melee = subprocess.Popen(
+            [
+                sys.executable,
+                "tools/melee_exam.py",
+                name,
+                "--book",
+                L(f"book_{run}.json"),
+                "--rounds",
+                "2",
+                "--json",
+                L(f"melee_{run}.json"),
+            ],
+            cwd=HERE,
+            env=env,
+            stdout=open(L(f"melee_{run}.out"), "w"),
+            stderr=subprocess.STDOUT,
+        )
     with open(L(f"exam_{run}.log"), "w", encoding="utf-8") as log:
-        subprocess.call([sys.executable, "tools/exam_v2.py", "--only", name, "--book", L(f"book_{run}.json"), "--rounds", "12", "--trials", "30",
-                         "--getup-no-drain", "--json", out], cwd=HERE, env=env, stdout=log, stderr=subprocess.STDOUT)
+        subprocess.call(
+            [
+                sys.executable,
+                "tools/exam_v2.py",
+                "--only",
+                name,
+                "--book",
+                L(f"book_{run}.json"),
+                "--rounds",
+                "12",
+                "--trials",
+                "30",
+                "--getup-no-drain",
+                "--json",
+                out,
+            ],
+            cwd=HERE,
+            env=env,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+        )
     if "--melee" in sys.argv:
-        melee.wait()          # two CPU exams at a time at most (RAM, 2026-10-19)
+        melee.wait()  # two CPU exams at a time at most (RAM, 2026-10-19)
     p_old, old = passed(L(f"exam_nightmix_{name}.json"), name)
     p_new, new = passed(out, name)
-    row = {"run": run, "game": p_old, "new": p_new, "export": p_new >= p_old,
-           "lines": {k: [old[k]["text"], new[k]["text"], old[k]["ok"], new[k]["ok"]] for k in new}}
+    row = {
+        "run": run,
+        "game": p_old,
+        "new": p_new,
+        "export": p_new >= p_old,
+        "lines": {k: [old[k]["text"], new[k]["text"], old[k]["ok"], new[k]["ok"]] for k in new},
+    }
     if row["export"]:
-        import torch
         from ppo import PPO, PPOConfig, export_onnx, obs_dim_of
+
         D = obs_dim_of(os.path.join(HERE, ck))
         ppo = PPO(D, 21, 1, "cpu", PPOConfig())
         ppo.load(os.path.join(HERE, ck))
@@ -60,7 +106,9 @@ def main() -> None:
         row.update(onnx=os.path.relpath(onnx, HERE), inputs=D)
     with open(L(f"compare_{run}.json"), "w", encoding="utf-8") as f:
         json.dump(row, f, indent=1)
-    print(f"{name} {run}: lines game {p_old} -> {p_new}: {'exported ' + row['onnx'] if row['export'] else 'not exported (worse)'}")
+    print(
+        f"{name} {run}: lines game {p_old} -> {p_new}: {'exported ' + row['onnx'] if row['export'] else 'not exported (worse)'}"
+    )
     for k, (t0, t1, o0, o1) in row["lines"].items():
         print(f"    {k:12s} {'pass' if o0 else 'FAIL'} {t0}\n                 -> {'pass' if o1 else 'FAIL'} {t1}")
 

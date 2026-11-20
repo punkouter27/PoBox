@@ -11,6 +11,7 @@ living body (the speed limit and fatigue, from Nick's v3 config). Two difference
 the pose a zero action asks for is their own (rig "stance_deg"): the referee's arms hang at his sides; the walker's
 left arm hangs and her right holds the card up beside her head. Checked for self-contact like every boxer.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -39,7 +40,12 @@ RULES_FROM = "nick"
 
 def mass_frac(sex: str) -> dict:
     t = DE_LEVA[sex]
-    whole = t["pelvis"] + t["torso"] + t["head"] + 2 * sum(t[k] for k in ("upper_arm", "forearm", "hand", "thigh", "shin", "foot"))
+    whole = (
+        t["pelvis"]
+        + t["torso"]
+        + t["head"]
+        + 2 * sum(t[k] for k in ("upper_arm", "forearm", "hand", "thigh", "shin", "foot"))
+    )
     return {k: round(v / whole, 5) for k, v in t.items()}
 
 
@@ -59,9 +65,25 @@ def build(name: str, rigs: str, models: str) -> None:
     z, cfg = rig_to_mjcf.build_one(rig, rig_path, name, models, 0)
     save(os.path.join(models, f"{name}_policy_config.json"), with_rules(cfg, rules))
     env = dict(os.environ, PYTHONPATH=os.path.join(HERE, ".mj350"))
-    subprocess.run([sys.executable, os.path.join(HERE, "tools", "pd_sweep.py"), "--name", name, "--loaded",
-                    "--models", os.path.relpath(models, HERE), "--rig", rig_path,
-                    "--write", os.path.join("logs", f"pd_crew_{name}.json")], cwd=HERE, env=env, check=True, stdout=subprocess.DEVNULL)
+    subprocess.run(
+        [
+            sys.executable,
+            os.path.join(HERE, "tools", "pd_sweep.py"),
+            "--name",
+            name,
+            "--loaded",
+            "--models",
+            os.path.relpath(models, HERE),
+            "--rig",
+            rig_path,
+            "--write",
+            os.path.join("logs", f"pd_crew_{name}.json"),
+        ],
+        cwd=HERE,
+        env=env,
+        check=True,
+        stdout=subprocess.DEVNULL,
+    )
     rig = json.load(open(rig_path, encoding="utf-8"))
     z, cfg = rig_to_mjcf.build_one(rig, rig_path, name, models, 0)
     save(os.path.join(models, f"{name}_policy_config.json"), with_rules(cfg, rules))

@@ -1,5 +1,5 @@
 {
-  "source": "C:/Users/punko/Downloads/PoBox/Assets/Models/Matt.glb",
+  "source": "Assets/Models/Matt.glb",
   "frame": "blender_z_up (x = character left, -y = forward, z = up)",
   "height_m": 1.857,
   "mass_kg": 84.0,

@@ -1,4 +1,5 @@
 """Simulation graph, reset, geometry, observation, and actuator drive ops for BoxingEnv."""
+
 from __future__ import annotations
 
 import math
@@ -37,7 +38,7 @@ class BoxingOpsMixin:
             with wp.ScopedCapture() as cap:
                 mjw.forward(self.mw, self.dw)
             self._fwd_graph = cap.graph
-        except Exception as e:   # capture is an optimisation, never a requirement
+        except Exception as e:  # capture is an optimisation, never a requirement
             print(f"[cuda-graph] capture unavailable ({e}); falling back to direct launches")
             self._step_graph = self._fwd_graph = None
 
@@ -79,6 +80,7 @@ class BoxingOpsMixin:
                     a = i.float() * (2.0 * math.pi / 16.0)
                     c, s = torch.cos(a), torch.sin(a)
                     return torch.stack([c, s], -1) / torch.maximum(c.abs(), s.abs())[:, None] * (self.ring_half - 0.5)
+
                 i0 = torch.randint(0, 16, (N,), device=self.device, generator=self.rng)
                 i1 = (i0 + torch.randint(2, 9, (N,), device=self.device, generator=self.rng)) % 16
                 use = self._u(N) < self.ropes_start
@@ -94,19 +96,23 @@ class BoxingOpsMixin:
             spots = [-u * dist[:, None]]
             facing = [bearing]
             tilt = self._u(N, 3, lo=-0.06, hi=0.06)
-            bq = torch.cat([torch.ones(N, 1, device=self.device), tilt[:, :2], torch.zeros(N, 1, device=self.device)], -1)
-            q[:, self.bag_q:self.bag_q + 4] = bq / bq.norm(dim=-1, keepdim=True)
-            v[:, self.bag_v:self.bag_v + 2] = self._u(N, 2, lo=-0.3, hi=0.3)
+            bq = torch.cat(
+                [torch.ones(N, 1, device=self.device), tilt[:, :2], torch.zeros(N, 1, device=self.device)], -1
+            )
+            q[:, self.bag_q : self.bag_q + 4] = bq / bq.norm(dim=-1, keepdim=True)
+            v[:, self.bag_v : self.bag_v + 2] = self._u(N, 2, lo=-0.3, hi=0.3)
 
         for k in range(self.K):
             rq, rv = self.root_q[k], self.root_v[k]
             yaw = facing[k] + self._u(N, lo=-0.6, hi=0.6)
-            q[:, rq:rq + 2] = spots[k]
+            q[:, rq : rq + 2] = spots[k]
             q[:, rq + 2] = self.stand_height[k] + 0.002
-            q[:, rq + 3:rq + 7] = yaw_quat(yaw)
+            q[:, rq + 3 : rq + 7] = yaw_quat(yaw)
             s = self.start_spread
-            q[:, self.jq[k]] = (self.default_joint[k] + self._u(N, A, lo=-0.06 * s, hi=0.06 * s)).clamp(self.joint_lo[k], self.joint_hi[k])
-            v[:, rv:rv + 2] = self._u(N, 2, lo=-0.15 * s, hi=0.15 * s)
+            q[:, self.jq[k]] = (self.default_joint[k] + self._u(N, A, lo=-0.06 * s, hi=0.06 * s)).clamp(
+                self.joint_lo[k], self.joint_hi[k]
+            )
+            v[:, rv : rv + 2] = self._u(N, 2, lo=-0.15 * s, hi=0.15 * s)
             b = self.bank[k]
             if b is not None:
                 pick = torch.randint(0, b["z"].shape[0], (N,), device=self.device, generator=self.rng)
@@ -120,12 +126,12 @@ class BoxingOpsMixin:
                     yaw = facing[k] + self._u(N, lo=-self.handover_yaw, hi=self.handover_yaw)
                 q[:, self.jq[k]] = torch.where(u1, b["joint"][pick], q[:, self.jq[k]])
                 q[:, rq + 2] = torch.where(use, b["z"][pick] + 0.002, q[:, rq + 2])
-                q[:, rq + 3:rq + 7] = torch.where(u1, quat_mul(yaw_quat(yaw), b["tilt"][pick]), q[:, rq + 3:rq + 7])
+                q[:, rq + 3 : rq + 7] = torch.where(u1, quat_mul(yaw_quat(yaw), b["tilt"][pick]), q[:, rq + 3 : rq + 7])
                 c, s = torch.cos(yaw), torch.sin(yaw)
                 lin = b["lin"][pick]
                 world = torch.stack([c * lin[:, 0] - s * lin[:, 1], s * lin[:, 0] + c * lin[:, 1], lin[:, 2]], -1)
-                v[:, rv:rv + 3] = torch.where(u1, world, v[:, rv:rv + 3])
-                v[:, rv + 3:rv + 6] = torch.where(u1, b["ang"][pick], v[:, rv + 3:rv + 6])
+                v[:, rv : rv + 3] = torch.where(u1, world, v[:, rv : rv + 3])
+                v[:, rv + 3 : rv + 6] = torch.where(u1, b["ang"][pick], v[:, rv + 3 : rv + 6])
                 v[:, self.jv[k]] = torch.where(u1, b["jvel"][pick], v[:, self.jv[k]])
         return q, v
 
@@ -148,7 +154,9 @@ class BoxingOpsMixin:
         self.episode_return = torch.where(m1, torch.zeros_like(self.episode_return), self.episode_return)
         self.armed = torch.where(m3, torch.ones_like(self.armed), self.armed)
         self.cool = torch.where(m3, torch.zeros_like(self.cool), self.cool)
-        self.prev_closing = torch.where(mask[:, None, None, None], torch.zeros_like(self.prev_closing), self.prev_closing)
+        self.prev_closing = torch.where(
+            mask[:, None, None, None], torch.zeros_like(self.prev_closing), self.prev_closing
+        )
         self.since_hit = torch.where(m1, torch.full_like(self.since_hit, 99.0), self.since_hit)
         self.head_vel = torch.where(m3, torch.zeros_like(self.head_vel), self.head_vel)
         self.daze = torch.where(m1, torch.zeros_like(self.daze), self.daze)
@@ -183,7 +191,7 @@ class BoxingOpsMixin:
         bodies (the first of 8 tries that is), turned any way; a quarter of the time, or with no try clear, parked away."""
         N, dev = self.N, self.device
         lim = self.ring_half - 0.7
-        feet = [q[:, self.root_q[k]:self.root_q[k] + 2] for k in range(self.K)]
+        feet = [q[:, self.root_q[k] : self.root_q[k] + 2] for k in range(self.K)]
         placed = []
         for j in range(self.n_bodies):
             tries = self._u(N, 8, 2, lo=-lim, hi=lim)
@@ -200,7 +208,9 @@ class BoxingOpsMixin:
             placed.append(torch.where(there[:, None], xy, torch.full_like(xy, 1e3)))
             pos = torch.cat([xy, torch.zeros(N, 1, device=dev)], -1)
             self.mocap_pos[:, j] = torch.where(mask[:, None], pos, self.mocap_pos[:, j])
-            self.mocap_quat[:, j] = torch.where(mask[:, None], yaw_quat(self._u(N, lo=-math.pi, hi=math.pi)), self.mocap_quat[:, j])
+            self.mocap_quat[:, j] = torch.where(
+                mask[:, None], yaw_quat(self._u(N, lo=-math.pi, hi=math.pi)), self.mocap_quat[:, j]
+            )
 
     def _reseed_trackers(self, mask: torch.Tensor) -> None:
         """Positions remembered for finite differences have to follow a reset, or the first step of
@@ -235,7 +245,9 @@ class BoxingOpsMixin:
         self._physics_forward()
         self._reseed_trackers(all_envs)
         # Spread the episode clock, so the population does not time out in lockstep for ever.
-        self.step_count = torch.randint(0, max(1, self.max_steps), (self.N,), device=self.device, generator=self.rng).float()
+        self.step_count = torch.randint(
+            0, max(1, self.max_steps), (self.N,), device=self.device, generator=self.rng
+        ).float()
         # Those clocks are not time since a hand-over: recover_w and carry_on start counting at the next resets.
         self.from_bank = torch.zeros_like(self.from_bank)
         self._obs = self._observe(self._geometry())
@@ -245,13 +257,13 @@ class BoxingOpsMixin:
     def _geometry(self) -> Dict[str, torch.Tensor]:
         """Everything the observation and the reward read off the bodies, shaped (N, K, ...)."""
         g: Dict[str, torch.Tensor] = {}
-        g["pos"] = self.xpos[:, self.pelvis]                               # (N,K,3)
-        g["quat"] = self.xquat[:, self.pelvis]                             # (N,K,4)
+        g["pos"] = self.xpos[:, self.pelvis]  # (N,K,3)
+        g["quat"] = self.xquat[:, self.pelvis]  # (N,K,4)
         g["yaw"] = quat_yaw(g["quat"])
-        g["glove"] = self.geom_xpos[:, self.g_glove]                       # (N,K,2,3)
-        head = self.geom_xpos[:, self.g_head]                              # (N,K,3)
+        g["glove"] = self.geom_xpos[:, self.g_glove]  # (N,K,2,3)
+        head = self.geom_xpos[:, self.g_head]  # (N,K,3)
         tc = self.geom_xpos[:, self.g_torso]
-        tax = self.geom_xmat[:, self.g_torso][..., :, 2]                   # capsule axis, world
+        tax = self.geom_xmat[:, self.g_torso][..., :, 2]  # capsule axis, world
         g["own_head"], g["own_body"], g["own_axis"] = head, tc, tax
 
         if self.spar:
@@ -262,9 +274,9 @@ class BoxingOpsMixin:
             shape = lambda t: t.flip(0).view(1, self.K, 1)
             g["t_r_head"], g["t_r_body"] = shape(self.r_head_k), shape(self.r_torso_k)
             g["own_r_head"] = self.r_head_k.view(1, self.K, 1)
-            g["t_half_head"], g["t_half"] = 0.0, shape(self.torso_half_k)   # a head is a ball, a body a capsule
+            g["t_half_head"], g["t_half"] = 0.0, shape(self.torso_half_k)  # a head is a ball, a body a capsule
         else:
-            axis = self.geom_xmat[:, self.g_bag][:, :, 2]                  # (N,3)
+            axis = self.geom_xmat[:, self.g_bag][:, :, 2]  # (N,3)
             g["t_head"] = self.site_xpos[:, self.s_bag_head][:, None]
             g["t_body"] = self.site_xpos[:, self.s_bag_body][:, None]
             g["t_axis"] = axis[:, None]
@@ -272,8 +284,8 @@ class BoxingOpsMixin:
             g["t_r_head"], g["t_r_body"] = self.r_bag, self.r_bag
             g["t_half_head"], g["t_half"] = 0.2, 0.2
 
-        cz = self.geom_xpos[:, self.g_foot][..., 2]                        # (N,K,2)
-        rz = self.geom_xmat[:, self.g_foot][..., 2, :]                     # world-z row of each foot
+        cz = self.geom_xpos[:, self.g_foot][..., 2]  # (N,K,2)
+        rz = self.geom_xmat[:, self.g_foot][..., 2, :]  # world-z row of each foot
         g["sole_z"] = cz - (rz.abs() * self.foot_half).sum(-1)
         g["foot_xy"] = self.geom_xpos[:, self.g_foot][..., :2]
         g["foot_contact"] = g["sole_z"] < 0.005
@@ -281,8 +293,8 @@ class BoxingOpsMixin:
 
     def _base(self, g):
         N, K = self.N, self.K
-        lin_w = torch.stack([self.qvel[:, rv:rv + 3] for rv in self.root_v], 1)            # (N,K,3)
-        ang_b = torch.stack([self.qvel[:, rv + 3:rv + 6] for rv in self.root_v], 1)
+        lin_w = torch.stack([self.qvel[:, rv : rv + 3] for rv in self.root_v], 1)  # (N,K,3)
+        ang_b = torch.stack([self.qvel[:, rv + 3 : rv + 6] for rv in self.root_v], 1)
         q = g["quat"]
         lin_b = quat_rotate_inverse(q, lin_w)
         grav_b = quat_rotate_inverse(q, self.gravity_world.expand(N, K, 3))
@@ -302,16 +314,37 @@ class BoxingOpsMixin:
         else:
             opp_gloves = torch.zeros(N, K, 6, device=self.device)
             facing = torch.zeros(N, K, 2, device=self.device)
-        ring = to_heading(torch.cat([-pos[..., :2], torch.zeros(N, K, 1, device=self.device)], -1), yaw)[..., :2] / self.ring_half
+        ring = (
+            to_heading(torch.cat([-pos[..., :2], torch.zeros(N, K, 1, device=self.device)], -1), yaw)[..., :2]
+            / self.ring_half
+        )
 
         jp = self.qpos[:, self.jq] - self.default_joint
         jv = self.qvel[:, self.jv]
-        obs = torch.cat([lin_b, ang_b, grav_b, jp, jv, self.last_action,
-                         g["foot_contact"].float(), pos[..., 2:3],
-                         rel(g["t_head"]), rel(g["t_body"]), to_heading(head_vel, yaw),
-                         own_gloves, opp_gloves, facing, ring], dim=-1)
+        obs = torch.cat(
+            [
+                lin_b,
+                ang_b,
+                grav_b,
+                jp,
+                jv,
+                self.last_action,
+                g["foot_contact"].float(),
+                pos[..., 2:3],
+                rel(g["t_head"]),
+                rel(g["t_body"]),
+                to_heading(head_vel, yaw),
+                own_gloves,
+                opp_gloves,
+                facing,
+                ring,
+            ],
+            dim=-1,
+        )
         if self.obs_noise > 0.0:
-            obs = obs + torch.randn(obs.shape, generator=self.rng, device=self.device) * (self.noise_scale * self.obs_noise)
+            obs = obs + torch.randn(obs.shape, generator=self.rng, device=self.device) * (
+                self.noise_scale * self.obs_noise
+            )
         return torch.nan_to_num(obs).clamp(-100.0, 100.0).reshape(N * K, self.obs_dim)
 
     def _delayed(self, obs: torch.Tensor) -> torch.Tensor:
@@ -331,8 +364,8 @@ class BoxingOpsMixin:
             lag = self._lag_lo + (u * self._lag_span).long().clamp_max(self._lag_span - 1)
         self._obs_lag = torch.where(fresh, lag, self._obs_lag)
         out = self._obs_hist[self._obs_lag, self._rows].clone()
-        a0 = 9 + 2 * self.A                                    # the last action: the boxer's own, known at once
-        out[:, a0:a0 + self.A] = obs[:, a0:a0 + self.A]
+        a0 = 9 + 2 * self.A  # the last action: the boxer's own, known at once
+        out[:, a0 : a0 + self.A] = obs[:, a0 : a0 + self.A]
         return out
 
     # ---- step ----------------------------------------------------------------------------------
@@ -344,7 +377,9 @@ class BoxingOpsMixin:
         want = (self.default_joint + action * self.scale_ka).clamp(self.joint_lo, self.joint_hi)
         if self.blend_on:
             n = torch.tensor(self.blend_k, device=self.device, dtype=torch.float32).view(1, K)
-            w = torch.where(n > 0, (1.0 - self.step_count.view(N, 1) / n.clamp_min(1.0)).clamp(0.0, 1.0), torch.zeros_like(n))
+            w = torch.where(
+                n > 0, (1.0 - self.step_count.view(N, 1) / n.clamp_min(1.0)).clamp(0.0, 1.0), torch.zeros_like(n)
+            )
             want = w[..., None] * self.held + (1.0 - w[..., None]) * want
         q = self.qpos[:, self.jq]
         if self.ceiling_on:
@@ -372,13 +407,22 @@ class BoxingOpsMixin:
             self._kv = (-b[:, :n, 2]).reshape(-1, self.K, self.A).clone()
         return self._kp, self._kv
 
+    def _torque_terms(self, r: dict, tau: torch.Tensor, jv: torch.Tensor) -> None:
+        """The training config's torque^2 and joint-speed^2 charges (training/config/reward.json), scaled like the other
+        effort charges; nothing is added while their weight is 0."""
+        scale = getattr(self, "effort_scale", 1.0)
+        if self.pen["torque_sq"]:
+            r["torque"] = -self.pen["torque_sq"] * scale * (tau**2).sum(-1)
+        if self.pen["joint_vel_sq"]:
+            r["jvel"] = -self.pen["joint_vel_sq"] * scale * (jv**2).sum(-1)
+
     def _selfcontact(self) -> torch.Tensor:
         """Metres of each fighter's own parts pressed into each other at the last substep, (N, K): the soft contacts'
         overlap, which grows with how hard they press. Read off the contact list on the GPU, without a sync."""
         c = self.dw.contact
         geom, dist, world = wp.to_torch(c.geom).long(), wp.to_torch(c.dist), wp.to_torch(c.worldid).long()
         live = torch.arange(dist.shape[0], device=self.device) < wp.to_torch(self.dw.nacon)[0]
-        own = self.geom_owner[geom]                                            # (C, 2)
+        own = self.geom_owner[geom]  # (C, 2)
         mine = live & (own[:, 0] == own[:, 1]) & (own[:, 0] >= 0)
         pen = (-dist).clamp_min(0.0) * mine.float()
         out = torch.zeros(self.N * self.K, device=self.device)
@@ -387,7 +431,7 @@ class BoxingOpsMixin:
 
     def _flail(self, jv: torch.Tensor, idle: torch.Tensor) -> torch.Tensor:
         """(rad/s)^2 of the shoulders and elbows of the hands that are idle (N, K, 2), summed: (N, K)."""
-        per_hand = (jv[..., self.hand_arm] ** 2).sum(-1)                         # (N, K, 2)
+        per_hand = (jv[..., self.hand_arm] ** 2).sum(-1)  # (N, K, 2)
         return (per_hand * idle.float()).sum(-1)
 
     def _spend(self, tau: torch.Tensor, jv: torch.Tensor) -> None:
@@ -395,7 +439,9 @@ class BoxingOpsMixin:
         and get-up once skipped it, and their reserve stayed where the reset drew it."""
         if self.fatigue_on:
             spent = (tau * jv).abs().sum(-1) / self.fatigue_j
-            self.reserve = (self.reserve + self.dt * ((1.0 - self.reserve) / self.fatigue_rec_s - spent)).clamp(0.0, 1.0)
+            self.reserve = (self.reserve + self.dt * ((1.0 - self.reserve) / self.fatigue_rec_s - spent)).clamp(
+                0.0, 1.0
+            )
 
     def _tired(self) -> torch.Tensor:
         """Share of drive strength a tiring body has: all of it down to half its reserve, then less."""
@@ -403,4 +449,6 @@ class BoxingOpsMixin:
 
     def _hurt01(self) -> torch.Tensor:
         """How much of hurt_full a fighter has taken, 0 to 1 (0 where the rule is off)."""
-        return torch.where(self.hurt_full > 0.0, self.hurt / self.hurt_full.clamp_min(1e-6), torch.zeros_like(self.hurt)).clamp(0.0, 1.0)
+        return torch.where(
+            self.hurt_full > 0.0, self.hurt / self.hurt_full.clamp_min(1e-6), torch.zeros_like(self.hurt)
+        ).clamp(0.0, 1.0)

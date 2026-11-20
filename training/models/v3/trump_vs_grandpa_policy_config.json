@@ -7,7 +7,7 @@
     {
       "name": "trump",
       "rig": "trump.json",
-      "source_mesh": "C:/Users/punko/Downloads/PoBox/RIGGED_Trump.glb",
+      "source_mesh": "RIGGED_Trump.glb",
       "joint_order": [
         "abdomen_z",
         "abdomen_y",
@@ -331,7 +331,7 @@
     {
       "name": "grandpa",
       "rig": "grandpa.json",
-      "source_mesh": "C:/Users/punko/Downloads/PoBox/RIGGED_Grandpa.glb",
+      "source_mesh": "RIGGED_Grandpa.glb",
       "joint_order": [
         "abdomen_z",
         "abdomen_y",

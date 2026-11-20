@@ -9,6 +9,7 @@ plain number, flag and string the env object holds (its weights, rules, shares),
 (speed limit, fatigue, the brain's action filter and observation delay) and the model files. Nothing here can stop a run:
 a field that cannot be read is written as the error text.
 """
+
 from __future__ import annotations
 
 import json
@@ -45,14 +46,16 @@ def brain_rules(env, k: int) -> dict:
         "speed_limit": bool(env.limited[k]),
         "fatigue_j": float(env.fatigue_j_k[k]),
         "fatigue_in_this_stage": bool(env.fatigue_on and bool(env.tires[k])),
-        f"rules_{env.brain}": {"action_filter": float(env.act_filter_k[k]), "obs_delay": int(env.delay_lo_k[k]),
-                               "obs_delay_max": int(env.delay_hi_k[k])},
+        f"rules_{env.brain}": {
+            "action_filter": float(env.act_filter_k[k]),
+            "obs_delay": int(env.delay_lo_k[k]),
+            "obs_delay_max": int(env.delay_hi_k[k]),
+        },
     }
 
 
 def _env_settings(env) -> dict:
-    plain = {k: v for k, v in vars(env).items()
-             if isinstance(v, (bool, int, float, str)) and not k.startswith("_")}
+    plain = {k: v for k, v in vars(env).items() if isinstance(v, (bool, int, float, str)) and not k.startswith("_")}
     for k in ("act_filter_k", "delay_lo_k", "delay_hi_k", "fatigue_j_k", "limited", "names", "TERMS"):
         if hasattr(env, k):
             plain[k] = list(getattr(env, k))
@@ -69,8 +72,12 @@ def write_run_config(ck_dir: str, args, envs, extra: dict = None) -> str:
         "written": time.strftime("%Y-%m-%d %H:%M:%S"),
         "argv": [os.path.basename(sys.argv[0])] + sys.argv[1:],
         "args": {k: v for k, v in vars(args).items()},
-        "git": {"commit": _git("rev-parse", "HEAD"), "branch": _git("rev-parse", "--abbrev-ref", "HEAD"),
-                "dirty": bool(status), "changed": status.splitlines()[:200]},
+        "git": {
+            "commit": _git("rev-parse", "HEAD"),
+            "branch": _git("rev-parse", "--abbrev-ref", "HEAD"),
+            "dirty": bool(status),
+            "changed": status.splitlines()[:200],
+        },
         "versions": _versions(),
         "envs": [],
     }

@@ -7,6 +7,7 @@
 Four worlds, thirty control steps of seeded random actions, in each of: footwork (Matt alone), the match plain, the
 match under every rule of a living body and a punch, and get-up (Matt and Zombie). Warp on the CPU, MuJoCo as the venv has it.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -17,13 +18,24 @@ import sys
 import numpy as np
 import torch
 
-HERE = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))     # training/ (this file is in tools/archive)
+HERE = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+)  # training/ (this file is in tools/archive)
 sys.path.insert(0, HERE)
 from envs.footwork import FootworkEnv  # noqa: E402
 from envs.match import GetUpMatchEnv, MatchEnv  # noqa: E402
 
-RULES = dict(daze=True, fatigue_j=8000.0, speed_limit=True, hit_push=0.6, stagger_v=5.0, hurt_full=400.0,
-             body_drain=0.0025, block_w=0.5, survivor_bootstrap=True)
+RULES = dict(
+    daze=True,
+    fatigue_j=8000.0,
+    speed_limit=True,
+    hit_push=0.6,
+    stagger_v=5.0,
+    hurt_full=400.0,
+    body_drain=0.0025,
+    block_w=0.5,
+    survivor_bootstrap=True,
+)
 
 
 def scenarios(models: str, extra: dict) -> dict:
@@ -52,9 +64,19 @@ def check_variety() -> int:
     """envs/boxing.py's punch_variety on a made-up sequence for one fighter: jab, jab, jab (a streak of 2), the other hand
     0.4 s later (a combination, the streak broken), then the first hand to the body after a 3 s pause (neither)."""
     from envs.boxing import punch_variety
+
     seq = [  # (glove, zone, seconds since the last punch landed)
-        (0, 0, 99.0), (0, 0, 0.5), (0, 0, 0.6), (1, 0, 0.4), (0, 1, 3.0)]
-    want_streak, want_same, want_combo = [0, 1, 2, 0, 0], [False, True, True, False, False], [False, False, False, True, False]
+        (0, 0, 99.0),
+        (0, 0, 0.5),
+        (0, 0, 0.6),
+        (1, 0, 0.4),
+        (0, 1, 3.0),
+    ]
+    want_streak, want_same, want_combo = (
+        [0, 1, 2, 0, 0],
+        [False, True, True, False, False],
+        [False, False, False, True, False],
+    )
     last, streak = torch.full((1, 1), -1, dtype=torch.long), torch.zeros(1, 1)
     bad = 0
     for i, (g, z, since) in enumerate(seq):
@@ -62,12 +84,20 @@ def check_variety() -> int:
         landed[0, 0, g] = True
         arriving = torch.full((1, 1, 2), 6.0)
         zone = torch.full((1, 1, 2), z, dtype=torch.long)
-        _, same, combo, combo_q, streak, last = punch_variety(landed, arriving, zone, last, streak, torch.full((1, 1), since), 0.8)
-        ok = (int(streak) == want_streak[i] and bool(same) == want_same[i] and bool(combo) == want_combo[i]
-              and float(combo_q) == (6.0 if want_combo[i] else 0.0))
+        _, same, combo, combo_q, streak, last = punch_variety(
+            landed, arriving, zone, last, streak, torch.full((1, 1), since), 0.8
+        )
+        ok = (
+            int(streak) == want_streak[i]
+            and bool(same) == want_same[i]
+            and bool(combo) == want_combo[i]
+            and float(combo_q) == (6.0 if want_combo[i] else 0.0)
+        )
         bad += not ok
         if not ok:
-            print(f"punch {i}: streak {int(streak)} same {bool(same)} combo {bool(combo)}, wanted {want_streak[i]} {want_same[i]} {want_combo[i]}")
+            print(
+                f"punch {i}: streak {int(streak)} same {bool(same)} combo {bool(combo)}, wanted {want_streak[i]} {want_same[i]} {want_combo[i]}"
+            )
     print("punch_variety: the made-up sequence counts as it should" if not bad else f"punch_variety: {bad} wrong")
     return bad
 
@@ -75,7 +105,9 @@ def check_variety() -> int:
 def check_ceiling(models: str) -> int:
     """The fatigue ceiling's arithmetic: right after the drive, kp (target - q) - kv qdot of every tired drive lies inside
     its force range times the strength it has left (the targets of wild actions, half the reserve gone)."""
-    env = MatchEnv(os.path.join(models, "matt_vs_zombie_spar.xml"), 4, device="cpu", seed=0, **dict(RULES, fatigue_ceiling=True))
+    env = MatchEnv(
+        os.path.join(models, "matt_vs_zombie_spar.xml"), 4, device="cpu", seed=0, **dict(RULES, fatigue_ceiling=True)
+    )
     env.reserve.fill_(0.2)
     env.drive_scale.fill_(1.0)
     a = torch.randn(env.N, env.K, env.A, generator=torch.Generator().manual_seed(3)) * 3.0
@@ -86,7 +118,9 @@ def check_ceiling(models: str) -> int:
     t = env._tired()[..., None]
     over = (force - t * env.f_hi).clamp_min(0.0).max() + (t * env.f_lo - force).clamp_min(0.0).max()
     capped = ((force - t * env.f_hi).abs() < 1e-3) | ((force - t * env.f_lo).abs() < 1e-3)
-    print(f"fatigue ceiling: tired to {float(t.mean()):.2f}, worst excess {float(over):.2e} N m, {float(capped.float().mean()):.0%} of drives at the cap")
+    print(
+        f"fatigue ceiling: tired to {float(t.mean()):.2f}, worst excess {float(over):.2e} N m, {float(capped.float().mean()):.0%} of drives at the cap"
+    )
     return int(float(over) > 1e-3 or not bool(capped.any()))
 
 
@@ -118,12 +152,18 @@ def main() -> None:
             env, o1, r1 = run(on)
             finite = np.isfinite(o1).all() and np.isfinite(r1).all()
             moved = not (np.array_equal(o0, o1) and np.array_equal(r0, r1))
-            print(f"{flag:16s} on {stage:11s}: {'finite' if finite else 'NOT FINITE'}, {'changes the run' if moved else 'CHANGES NOTHING'}"
-                  f"  (reward {r0.mean():+.4f} -> {r1.mean():+.4f})")
-            already = flag == "fatigue_ceiling" and json.load(open(os.path.join(args.models, "matt_policy_config.json"))).get("fatigue_ceiling", False)
+            print(
+                f"{flag:16s} on {stage:11s}: {'finite' if finite else 'NOT FINITE'}, {'changes the run' if moved else 'CHANGES NOTHING'}"
+                f"  (reward {r0.mean():+.4f} -> {r1.mean():+.4f})"
+            )
+            already = flag == "fatigue_ceiling" and json.load(
+                open(os.path.join(args.models, "matt_policy_config.json"))
+            ).get("fatigue_ceiling", False)
             if already:
                 print(f"{'':16s}   (the configs here already turn it on: nothing to change)")
-            failed += (not finite) + (not moved and flag.strip() not in ("repeat_decay", "combo_w", "slow_v") and not already)
+            failed += (not finite) + (
+                not moved and flag.strip() not in ("repeat_decay", "combo_w", "slow_v") and not already
+            )
         print("all flags pass" if not failed else f"{failed} failure(s)")
         raise SystemExit(failed)
 

@@ -2,7 +2,7 @@
 
 Runs and decisions of the retrofit (plan: `tasks.md`), newest last. Earlier training is in `training/README.md`.
 
-Entries from 2 to 31 October 2026 are in [DOCS/archive/rl_optimization_log_2026-10.md](DOCS/archive/rl_optimization_log_2026-10.md).
+Entries from 2 to 31 October 2026 are in [archive/rl_optimization_log_2026-10.md](archive/rl_optimization_log_2026-10.md).
 
 ## 2026-11-01 17:33, carrying-on push v3f (owner: "do all" / "yes")
 - `v3m5_sokol` (from v3m4), `v3m5_nick` (from v3m4), `v3m4_kim` (from v3m3): `--handover-share 0.75 --blend-steps 25`, 1 h,
@@ -59,7 +59,7 @@ Entries from 2 to 31 October 2026 are in [DOCS/archive/rl_optimization_log_2026-
 ## 2026-11-02 08:00, Sokol promoted on v3; tired hand-over starts (owner: "3")
 - **Promoted:** Sokol on models/v3 with `v3f_sokol` (footwork), `v3m6_sokol` (match), `v3u4_sokol` (get-up, exported by
   `export_getup_v2.py` on exam_v3r_sokol). Parity 0 differences after regenerating the stale v3 fingerprints; MjParityTests
-  3/3, MjGateTests 24/24. See DOCS/README.md 2026-11-02.
+  3/3, MjGateTests 24/24. See docs/README.md 2026-11-02.
 - **Tired starts:** `--handover-reserve X` (envs/boxing.py): a bank start begins with a reserve of 0 to X. Measured with
   learning off (lr 1e-9), v3m6_sokol v Grandma: carry_on 0.885 fresh, 0.833 with X = 0.5, so the fresh bank starts were
   part of training's 0.95 against the exam's 0.87.
@@ -161,8 +161,8 @@ Entries from 2 to 31 October 2026 are in [DOCS/archive/rl_optimization_log_2026-
 - **Night summary (05:20):** passes all six lines: Nick v3m9 (new), Zombie v3m4/v3u4 (found on the game rule), Sokol
   (in the game). Matt's get-up now passes (v3u5, exported); his attack still fails. Trump, Kim, Grandma, Grandpa stay on
   v2. Exports: `v3u5_matt` get-up ONNX; Grandma/Grandpa not exported (the export gate refused their failing exams).
-  Manifest `DOCS/reports/2026-11-03-overnight-weights.json` (copy of training/logs/overnight_2026-11-03_weights.json);
-  report `DOCS/reports/2026-11-03-overnight.html`. Nothing promoted into Unity unattended.
+  Manifest `docs/reports/2026-11-03-overnight-weights.json` (copy of training/logs/overnight_2026-11-03_weights.json);
+  report `docs/reports/2026-11-03-overnight.html`. Nothing promoted into Unity unattended.
 
 - **Morning (2026-11-03, Unity open):** Nick promoted with `v3m9_nick` boxing (only `match.onnx` changes; the body and
   get-up are v3u4 as before). `MjParityTests` 3/3, `MjGateTests` 24/24, `StateFlowTests` 2/2. Referee check committed.
@@ -182,7 +182,7 @@ Entries from 2 to 31 October 2026 are in [DOCS/archive/rl_optimization_log_2026-
   (the exam's v3 Matt does not engage: no blocks, no hits either way); getting up 60/60, carrying on 58/60; under
   pressure still FAIL (Matt). **In the game:** against Sokol 92 thrown, 73 landed (was 2/0), against Nick a TKO win in
   R1 (3 knockdowns). Parity 3/3, gate 24/24. **Zombie promoted on v3** (v3f footwork, v3m6 boxing, v3u4 get-up).
-  Report: `DOCS/reports/2026-11-03-zombie-punching.html`.
+  Report: `docs/reports/2026-11-03-zombie-punching.html`.
 
 ## 2026-11-03 22:20, overnight 2: the crew's footwork, then punching under pressure
 
@@ -245,7 +245,7 @@ Entries from 2 to 31 October 2026 are in [DOCS/archive/rl_optimization_log_2026-
   (0.66/s at 4.3 m/s), guard, getting up 60/60, carrying on 59/60 all pass; under pressure 0.02/s against Zombie.
 - **Night summary:** crew trained and in the game (referee crewf2, walker crewf1, every footwork line passes). Matt passes
   the six original lines (proposed for promotion). Trump and Kim: the Zombie/Matt recipe does not work for them, with or
-  without a fresh critic. Report `DOCS/reports/2026-11-04-overnight.html`, weights `DOCS/reports/2026-11-04-overnight-weights.json`.
+  without a fresh critic. Report `docs/reports/2026-11-04-overnight.html`, weights `docs/reports/2026-11-04-overnight-weights.json`.
 - **2026-11-04 morning (owner: "ok")** Matt promoted on the v3 body: footwork v3f_matt (exam passes; references recorded
   in C MuJoCo 3.5.0: walk, falls 0% of 25, hold), boxing v3p2_matt, get-up v3u5_matt. Parity 0 differences; MjParity 3/3,
   MjGate 24/24, StateFlow 2/2, OneScreen 74/74. Bouts: v Sokol 25 of 30 landed to 1 (decision), v Zombie a stand-off
@@ -308,7 +308,7 @@ Entries from 2 to 31 October 2026 are in [DOCS/archive/rl_optimization_log_2026-
   - `PoBox/Assets/Scripts/Runtime/{Audio,UI}` split; `PoBox/Packages/org.mujoco` test cleanup fix; `Tools/run_tests.ps1` `124/125` passed (`FreeForAllTests 0/1`: 3/8 boxers landed vs `>=4`).
   - `Assets/Models/{Grandma,Kim,Sokol}.glb` updated and weight-checked (`SCREENSHOTS/2026-11-13-hands-hair/report.html`).
   - Android APK built (`PoBox/Build/Android/PoBox.apk`, 340,460,565 bytes; 889.27 MB raw packed GLB textures flagged as primary cut); ADB deploy blocked with no device attached.
-  - Report: `DOCS/reports/2026-11-13-sprint.html` with charts in `DOCS/reports/2026-11-13-sprint-charts/`.
+  - Report: `docs/reports/2026-11-13-sprint.html` with charts in `docs/reports/2026-11-13-sprint-charts/`.
 - **Results by 14:30** (queue.log; all exams C MuJoCo 3.5.0):
   - `v3f_grandma` (0.5 h, 550 iterations, 23-35k samples/s): footwork exam passes every line (stand 100%, walk off by 0.01 m/s,
     no falls, turn 90%, joints 0.42 of the limit).

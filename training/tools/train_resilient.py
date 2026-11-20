@@ -12,6 +12,7 @@ counted from the start of the stage and so means the same after a restart (--max
 ponytail: one learner (a solo or self-play model, whose save is latest.pt). A match of two different boxers
 saves one file each; teach this their names when a match is run through it.
 """
+
 from __future__ import annotations
 
 import os
@@ -34,7 +35,10 @@ def watched(cmd, csv_path: str, stale_s: float = 900.0) -> int:
         if size != seen:
             seen, since = size, time.time()
         elif size > 0 and time.time() - since > stale_s:
-            print(f"[resilient] no progress for {stale_s / 60:.0f} min: ending the hung run at {time.strftime('%H:%M:%S')}", flush=True)
+            print(
+                f"[resilient] no progress for {stale_s / 60:.0f} min: ending the hung run at {time.strftime('%H:%M:%S')}",
+                flush=True,
+            )
             subprocess.run(["taskkill", "/PID", str(p.pid), "/T", "/F"], capture_output=True)
             p.wait(60)
             return 99
@@ -67,7 +71,10 @@ def main() -> None:
         code = watched([sys.executable, os.path.join(HERE, script)] + args, os.path.join(HERE, "logs", f"{run}.csv"))
         if code == 0:
             return
-        print(f"[resilient] attempt {attempt} of {run} ended with exit code {code} at {time.strftime('%H:%M:%S')}", flush=True)
+        print(
+            f"[resilient] attempt {attempt} of {run} ended with exit code {code} at {time.strftime('%H:%M:%S')}",
+            flush=True,
+        )
         if not any(os.path.exists(p) for p in latest):
             # Faulted before its first save (m1_nick, 2026-10-03: CUDA 719 a minute in): nothing was learned, so
             # it simply starts again as it started.
@@ -78,15 +85,20 @@ def main() -> None:
         # only a first start does.
         i = args.index("--resume")
         j = next((k for k in range(i + 1, len(args)) if args[k].startswith("--")), len(args))
-        args[i + 1:j] = [p if os.path.exists(p) else args[i + 1 + n] for n, p in enumerate(latest)]
+        args[i + 1 : j] = [p if os.path.exists(p) else args[i + 1 + n] for n, p in enumerate(latest)]
         if "--reset-std" in args:
             k = args.index("--reset-std")
-            del args[k:k + 2]
+            del args[k : k + 2]
         if total:
             import torch
-            done = max(int(torch.load(p, map_location="cpu", weights_only=False).get("extra", {}).get("iter", 0)) for p in latest if os.path.exists(p))
+
+            done = max(
+                int(torch.load(p, map_location="cpu", weights_only=False).get("extra", {}).get("iter", 0))
+                for p in latest
+                if os.path.exists(p)
+            )
             args[args.index("--more-iters") + 1] = str(max(1, total - done))
-        time.sleep(30)        # let the driver come back
+        time.sleep(30)  # let the driver come back
     raise SystemExit(f"[resilient] {run} faulted eight times; giving up")
 
 

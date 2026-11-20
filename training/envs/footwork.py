@@ -23,6 +23,7 @@ What knocks the boxer about, in every kind of episode:
     each within `randomise` of the model's. They are drawn once, when the worlds are made.
 A frail boxer's shoves are scaled by its strength.
 """
+
 from __future__ import annotations
 
 import math
@@ -36,18 +37,52 @@ import warp as wp
 from .boxing import BoxingEnv, quat_mul, quat_yaw, to_heading, yaw_quat
 
 STAND, WALK, TURN = 0, 1, 2
-CMD = 3                      # numbers of command on the end of the observation
+CMD = 3  # numbers of command on the end of the observation
 
 
 class FootworkEnv(BoxingEnv):
-    TERMS = ["alive", "upright", "height", "track", "yaw", "face", "steps", "arms", "legs", "stance", "lin_z", "ang", "act",
-             "rate", "energy", "qvel", "limit", "slip", "lean", "fall", "style"]
+    TERMS = [
+        "alive",
+        "upright",
+        "height",
+        "track",
+        "yaw",
+        "face",
+        "steps",
+        "arms",
+        "legs",
+        "stance",
+        "lin_z",
+        "ang",
+        "act",
+        "rate",
+        "energy",
+        "qvel",
+        "limit",
+        "slip",
+        "lean",
+        "fall",
+        "style",
+    ]
     MODE = "footwork"
 
-    def __init__(self, xml_path: str, num_envs: int, walk_share: float = 0.5, turn_share: float = 0.25,
-                 disturb: float = 1.0, randomise: float = 0.15, shove_every_s: float = 3.0, cube_every_s: float = 3.0,
-                 rsi: float = 0.0, shove_hi: float = 30.0, cmd_fwd_max: float = 1.0, slope_deg: float = 0.0,
-                 gesture: float = 0.0, **kw):
+    def __init__(
+        self,
+        xml_path: str,
+        num_envs: int,
+        walk_share: float = 0.5,
+        turn_share: float = 0.25,
+        disturb: float = 1.0,
+        randomise: float = 0.15,
+        shove_every_s: float = 3.0,
+        cube_every_s: float = 3.0,
+        rsi: float = 0.0,
+        shove_hi: float = 30.0,
+        cmd_fwd_max: float = 1.0,
+        slope_deg: float = 0.0,
+        gesture: float = 0.0,
+        **kw,
+    ):
         self.walk_share, self.turn_share = walk_share, turn_share
         # One more (2026-11-03, the referee): the share of episodes in which the right arm is held from outside the brain,
         # as the game holds it (Mj/MjCrew.Hold): the count's stroke, forward and down once a second, or the winner's arm
@@ -64,9 +99,9 @@ class FootworkEnv(BoxingEnv):
         # stood does not find walking by trying things at random, but one put in mid-stride learns to carry on.
         self.rsi = rsi
         self.disturb, self.randomise = disturb, randomise
-        self.shove_hi = shove_hi      # the hardest shove, N s (the exam's is 30; a harder one in training leaves room)
+        self.shove_hi = shove_hi  # the hardest shove, N s (the exam's is 30; a harder one in training leaves room)
         self.shove_every_s, self.cube_every_s = shove_every_s, cube_every_s
-        kw["push_vel"] = 0.0          # shoves here are forces, not jumps in velocity
+        kw["push_vel"] = 0.0  # shoves here are forces, not jumps in velocity
         kw["daze"] = False
         kw.setdefault("nconmax", 96)  # cubes on the floor and on the boxer
         kw.setdefault("njmax", 384)
@@ -84,29 +119,34 @@ class FootworkEnv(BoxingEnv):
         self.obs_dim += CMD
         self.kind = torch.zeros(N, K, dtype=torch.long, device=dev)
         self.cmd = z(N, K, CMD)
-        self.cmd_left = z(N, K)                          # seconds until a walk's command changes
-        self.opp_xy = z(N, K, 2)                         # where the stand-in opponent stands
-        self.faced_at = torch.full((N, K), -1.0, device=dev)   # seconds into the episode it first faced the stand-in
+        self.cmd_left = z(N, K)  # seconds until a walk's command changes
+        self.opp_xy = z(N, K, 2)  # where the stand-in opponent stands
+        self.faced_at = torch.full((N, K), -1.0, device=dev)  # seconds into the episode it first faced the stand-in
         self.frail = torch.tensor([min(1.0, float(c.get("strength", 1.0))) for c in self.cfgs], device=dev)
         self.quick = torch.tensor([float(c.get("speed", 1.0)) for c in self.cfgs], device=dev)
         order = self.cfg["joint_order"]
         self.arm_idx = L([i for i, n in enumerate(order) if n.split("_")[0] in ("abdomen", "shoulder", "elbow")])
         self.style_idx = L([i for i, n in enumerate(order) if n.split("_")[0] in ("abdomen", "hip", "knee", "ankle")])
-        self.gest = torch.zeros(N, K, dtype=torch.long, device=dev)        # 0 none, 1 counting, 2 arm up
+        self.gest = torch.zeros(N, K, dtype=torch.long, device=dev)  # 0 none, 1 counting, 2 arm up
         self.g_idx = [order.index(n) for n in ("shoulder_x_r", "shoulder_z_r", "elbow_r")] if "elbow_r" in order else []
         self.g_mask = torch.zeros(len(order), dtype=torch.bool, device=dev)
         if self.g_idx:
             self.g_mask[L(self.g_idx)] = True
         name = lambda k, part: mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_BODY, ("a_", "b_")[k] + part)
-        self.leg_len = torch.tensor([float(np.linalg.norm(m.body_pos[name(k, "shin_l")]) + np.linalg.norm(m.body_pos[name(k, "foot_l")]))
-                                     for k in range(K)], device=dev)
+        self.leg_len = torch.tensor(
+            [
+                float(np.linalg.norm(m.body_pos[name(k, "shin_l")]) + np.linalg.norm(m.body_pos[name(k, "foot_l")]))
+                for k in range(K)
+            ],
+            device=dev,
+        )
 
-        self.xfrc = wp.to_torch(self.dw.xfrc_applied)    # (N, nbody, 6): force, then torque
+        self.xfrc = wp.to_torch(self.dw.xfrc_applied)  # (N, nbody, 6): force, then torque
         B, J = mujoco.mjtObj.mjOBJ_BODY, mujoco.mjtObj.mjOBJ_JOINT
         self.b_torso = [mujoco.mj_name2id(m, B, p + "torso") for p in ("a_", "b_")[:K]]
         self.shove_left = z(N, K)
         self.shove_force = z(N, K, 3)
-        self.air = z(N, K, 2)                            # seconds each foot has been off the floor
+        self.air = z(N, K, 2)  # seconds each foot has been off the floor
         self.was_down = torch.ones(N, K, 2, dtype=torch.bool, device=dev)
 
         cubes = []
@@ -114,36 +154,67 @@ class FootworkEnv(BoxingEnv):
             cubes.append(mujoco.mj_name2id(m, J, f"cube_{len(cubes)}"))
         self.C = len(cubes)
         if self.C:
-            self.cube_qi = L([[int(m.jnt_qposadr[j]) + i for i in range(7)] for j in cubes])     # (C, 7)
-            self.cube_vi = L([[int(m.jnt_dofadr[j]) + i for i in range(6)] for j in cubes])      # (C, 6)
+            self.cube_qi = L([[int(m.jnt_qposadr[j]) + i for i in range(7)] for j in cubes])  # (C, 7)
+            self.cube_vi = L([[int(m.jnt_dofadr[j]) + i for i in range(6)] for j in cubes])  # (C, 6)
             self.cube_park = self.default_qpos[self.cube_qi]
-            self.cube_left = z(N, self.C)                # seconds a cube in play has left
+            self.cube_left = z(N, self.C)  # seconds a cube in play has left
             self.next_cube = torch.zeros(N, dtype=torch.long, device=dev)
         if self.rsi > 0.0 and K == 1:
             from style import clip_features
+
             feats, states = clip_features(m, order)
             self.clip_q = torch.tensor(np.stack([q for q, _ in states]), device=dev, dtype=torch.float32)
             self.clip_v = torch.tensor(np.stack([v for _, v in states]), device=dev, dtype=torch.float32)
             f = torch.tensor(feats, device=dev)
             leg = float(self.leg_len[0])
-            self.clip_cmd = torch.stack([(f[:, 31] * leg).clamp(-0.4, max(1.0, self.cmd_fwd_max)), (f[:, 32] * leg).clamp(-0.4, 0.4), f[:, 36].clamp(-1.0, 1.0)], -1)
+            self.clip_cmd = torch.stack(
+                [
+                    (f[:, 31] * leg).clamp(-0.4, max(1.0, self.cmd_fwd_max)),
+                    (f[:, 32] * leg).clamp(-0.4, 0.4),
+                    f[:, 36].clamp(-1.0, 1.0),
+                ],
+                -1,
+            )
         else:
             self.rsi = 0.0
         self._randomise()
         self._slope()
 
-        self._f = {k: torch.zeros((), device=dev) for k in
-                   ("steps", "done_n", "ret_sum", "len_sum", "fell_sum", "up_sum", "power_sum", "walk_n", "track_err",
-                    "speed", "asked", "yaw_err", "turn_ends", "turn_ok", "turn_t", "turn_n", "shoves", "cubes", "sat_sum")}
+        self._f = {
+            k: torch.zeros((), device=dev)
+            for k in (
+                "steps",
+                "done_n",
+                "ret_sum",
+                "len_sum",
+                "fell_sum",
+                "up_sum",
+                "power_sum",
+                "walk_n",
+                "track_err",
+                "speed",
+                "asked",
+                "yaw_err",
+                "turn_ends",
+                "turn_ok",
+                "turn_t",
+                "turn_n",
+                "shoves",
+                "cubes",
+                "sat_sum",
+            )
+        }
         self._ft = {t: torch.zeros((), device=dev) for t in self.TERMS}
-        self._fk = {k: torch.zeros(3, device=dev) for k in ("ends", "fell")}     # by kind of episode
+        self._fk = {k: torch.zeros(3, device=dev) for k in ("ends", "fell")}  # by kind of episode
 
     def _randomise(self) -> None:
         """A body for each world. MuJoCo Warp keeps one copy of a model field unless it is given one a world."""
         f, N = self.randomise, self.N
         if f <= 0.0:
             return
-        rng = np.random.default_rng(int(torch.randint(0, 2 ** 31 - 1, (1,), generator=self.rng, device=self.device).item()))
+        rng = np.random.default_rng(
+            int(torch.randint(0, 2**31 - 1, (1,), generator=self.rng, device=self.device).item())
+        )
         u = lambda *shape: rng.uniform(1.0 - f, 1.0 + f, shape).astype(np.float32)
 
         def spread(name: str, factor: np.ndarray) -> None:
@@ -154,7 +225,11 @@ class FootworkEnv(BoxingEnv):
         spread("body_mass", link)
         spread("body_inertia", link[..., None])
         spread("geom_friction", u(N, 1, 1) * np.ones((1, self.m.ngeom, 3), np.float32))
-        spread("geom_solref", np.concatenate([u(N, 1, 1), np.ones((N, 1, 1), np.float32)], -1) * np.ones((1, self.m.ngeom, 1), np.float32))
+        spread(
+            "geom_solref",
+            np.concatenate([u(N, 1, 1), np.ones((N, 1, 1), np.float32)], -1)
+            * np.ones((1, self.m.ngeom, 1), np.float32),
+        )
         spread("dof_damping", u(N, self.m.nv))
         # A position drive is gain kp and bias (0, -kp, -kv): stiffness and damping each get their own factor.
         kp, kv = u(N, self.m.nu), u(N, self.m.nu)
@@ -171,15 +246,26 @@ class FootworkEnv(BoxingEnv):
         N = self.N
         tilt = torch.deg2rad(self._u(N, lo=0.0, hi=self.slope_deg))
         way = self._u(N, lo=-math.pi, hi=math.pi)
-        down = torch.stack([torch.sin(tilt) * torch.cos(way), torch.sin(tilt) * torch.sin(way), -torch.cos(tilt)], -1)   # (N, 3)
+        down = torch.stack(
+            [torch.sin(tilt) * torch.cos(way), torch.sin(tilt) * torch.sin(way), -torch.cos(tilt)], -1
+        )  # (N, 3)
         g = float(np.linalg.norm(self.m.opt.gravity))
-        self.mw.opt.gravity = wp.array((down * g).cpu().numpy().astype(np.float32), dtype=wp.vec3, device=self.mw.opt.gravity.device)
-        self.gravity_world = down[:, None, :]                                    # (N, 1, 3): _base expands it to (N, K, 3)
+        self.mw.opt.gravity = wp.array(
+            (down * g).cpu().numpy().astype(np.float32), dtype=wp.vec3, device=self.mw.opt.gravity.device
+        )
+        self.gravity_world = down[:, None, :]  # (N, 1, 3): _base expands it to (N, K, 3)
 
     # ---- reset ---------------------------------------------------------------------------------
     def _draw_cmd(self, shape) -> torch.Tensor:
         """A walk's command: up to cmd_fwd_max (1 m/s) forward, 0.4 back or sideways, 1 rad/s of turn; one in five is 'stand'."""
-        c = torch.stack([self._u(*shape, lo=-0.4, hi=self.cmd_fwd_max), self._u(*shape, lo=-0.4, hi=0.4), self._u(*shape, lo=-1.0, hi=1.0)], -1)
+        c = torch.stack(
+            [
+                self._u(*shape, lo=-0.4, hi=self.cmd_fwd_max),
+                self._u(*shape, lo=-0.4, hi=0.4),
+                self._u(*shape, lo=-1.0, hi=1.0),
+            ],
+            -1,
+        )
         return c * (self._u(*shape) > 0.2).float()[..., None] * self.quick.view(1, self.K, 1)
 
     def _reset_states(self):
@@ -187,19 +273,23 @@ class FootworkEnv(BoxingEnv):
         q = self.default_qpos.unsqueeze(0).repeat(N, 1)
         v = torch.zeros(N, self.qvel.shape[1], device=dev)
         pick = self._u(N, K)
-        self._new_kind = torch.where(pick < self.walk_share, WALK, torch.where(pick < self.walk_share + self.turn_share, TURN, STAND))
+        self._new_kind = torch.where(
+            pick < self.walk_share, WALK, torch.where(pick < self.walk_share + self.turn_share, TURN, STAND)
+        )
         self._new_cmd = self._draw_cmd((N, K)) * (self._new_kind == WALK).float()[..., None]
         opp = []
         for k in range(K):
             rq, rv = self.root_q[k], self.root_v[k]
             spot = self._u(N, 2, lo=-1.5, hi=1.5)
             yaw = self._u(N, lo=-math.pi, hi=math.pi)
-            q[:, rq:rq + 2] = spot
+            q[:, rq : rq + 2] = spot
             q[:, rq + 2] = self.stand_height[k] + 0.002
-            q[:, rq + 3:rq + 7] = yaw_quat(yaw)
+            q[:, rq + 3 : rq + 7] = yaw_quat(yaw)
             s = self.start_spread
-            q[:, self.jq[k]] = (self.default_joint[k] + self._u(N, A, lo=-0.06 * s, hi=0.06 * s)).clamp(self.joint_lo[k], self.joint_hi[k])
-            v[:, rv:rv + 2] = self._u(N, 2, lo=-0.15 * s, hi=0.15 * s)
+            q[:, self.jq[k]] = (self.default_joint[k] + self._u(N, A, lo=-0.06 * s, hi=0.06 * s)).clamp(
+                self.joint_lo[k], self.joint_hi[k]
+            )
+            v[:, rv : rv + 2] = self._u(N, 2, lo=-0.15 * s, hi=0.15 * s)
             # In front for a stand, anywhere for a turn. (A walk's is put ahead of the boxer every step.)
             turn = self._new_kind[:, k] == TURN
             bearing = yaw + torch.where(turn, self._u(N, lo=-math.pi, hi=math.pi), self._u(N, lo=-0.4, hi=0.4))
@@ -209,23 +299,29 @@ class FootworkEnv(BoxingEnv):
                 clip = (self._new_kind[:, k] == WALK) & (self._u(N) < self.rsi)
                 at = torch.randint(0, self.clip_q.shape[0], (N,), device=dev, generator=self.rng)
                 cq, cv = self.clip_q[at], self.clip_v[at]
-                turn = yaw - quat_yaw(cq[:, rq + 3:rq + 7])           # the clip turned to face the episode's way
+                turn = yaw - quat_yaw(cq[:, rq + 3 : rq + 7])  # the clip turned to face the episode's way
                 c1 = clip[:, None]
                 q[:, rq + 2] = torch.where(clip, cq[:, rq + 2], q[:, rq + 2])
-                q[:, rq + 3:rq + 7] = torch.where(c1, quat_mul(yaw_quat(turn), cq[:, rq + 3:rq + 7]), q[:, rq + 3:rq + 7])
+                q[:, rq + 3 : rq + 7] = torch.where(
+                    c1, quat_mul(yaw_quat(turn), cq[:, rq + 3 : rq + 7]), q[:, rq + 3 : rq + 7]
+                )
                 c, s_ = torch.cos(turn), torch.sin(turn)
-                lin = torch.stack([c * cv[:, rv] - s_ * cv[:, rv + 1], s_ * cv[:, rv] + c * cv[:, rv + 1], cv[:, rv + 2]], -1)
-                v[:, rv:rv + 3] = torch.where(c1, lin, v[:, rv:rv + 3])
-                v[:, rv + 3:rv + 6] = torch.where(c1, cv[:, rv + 3:rv + 6], v[:, rv + 3:rv + 6])
+                lin = torch.stack(
+                    [c * cv[:, rv] - s_ * cv[:, rv + 1], s_ * cv[:, rv] + c * cv[:, rv + 1], cv[:, rv + 2]], -1
+                )
+                v[:, rv : rv + 3] = torch.where(c1, lin, v[:, rv : rv + 3])
+                v[:, rv + 3 : rv + 6] = torch.where(c1, cv[:, rv + 3 : rv + 6], v[:, rv + 3 : rv + 6])
                 legs = self.jq[k][self.style_idx]
                 q[:, legs] = torch.where(c1, cq[:, legs], q[:, legs])
-                v[:, self.jv[k][self.style_idx]] = torch.where(c1, cv[:, self.jv[k][self.style_idx]], v[:, self.jv[k][self.style_idx]])
+                v[:, self.jv[k][self.style_idx]] = torch.where(
+                    c1, cv[:, self.jv[k][self.style_idx]], v[:, self.jv[k][self.style_idx]]
+                )
                 self._new_cmd[:, k] = torch.where(c1, self.clip_cmd[at] * self.quick[k], self._new_cmd[:, k])
         self._new_opp = torch.stack(opp, 1)
         return q, v
 
     def _apply_reset(self, mask: torch.Tensor) -> None:
-        super()._apply_reset(mask)          # the keyframe has every cube at its parking place
+        super()._apply_reset(mask)  # the keyframe has every cube at its parking place
         m1, m3 = mask[:, None], mask[:, None, None]
         self.kind = torch.where(m1, self._new_kind, self.kind)
         if self.gesture_share > 0.0 and self.g_idx:
@@ -248,13 +344,15 @@ class FootworkEnv(BoxingEnv):
             return
         N, K, A = self.N, self.K, self.A
         t = self.step_count.view(N, 1) * self.dt
-        stroke = 1.1 + 0.6 * torch.cos(2.0 * math.pi * t)                 # the count: 0.5 to 1.7 rad, once a second
+        stroke = 1.1 + 0.6 * torch.cos(2.0 * math.pi * t)  # the count: 0.5 to 1.7 rad, once a second
         ctrl = self.ctrl.view(N, K, A)
         sx, sz, el = self.g_idx
         count, up = (self.gest == 1), (self.gest == 2)
+
         def put(i, value_count, value_up):
             v = torch.where(count, value_count, torch.where(up, torch.full_like(stroke, value_up), ctrl[..., i]))
             ctrl[..., i] = v.clamp(self.joint_lo[..., i], self.joint_hi[..., i])
+
         put(sz, stroke, 1.92)
         put(el, torch.full_like(stroke, 0.3), 1.2)
         put(sx, ctrl[..., sx], 1.51)
@@ -267,7 +365,7 @@ class FootworkEnv(BoxingEnv):
         pos, yaw = g["pos"], g["yaw"]
         ahead = pos[..., :2] + torch.stack([torch.cos(yaw), torch.sin(yaw)], -1) * 1.2
         opp = torch.where((self.kind == WALK)[..., None], ahead, self.opp_xy)
-        their_yaw = torch.atan2(pos[..., 1] - opp[..., 1], pos[..., 0] - opp[..., 0])      # it faces the boxer
+        their_yaw = torch.atan2(pos[..., 1] - opp[..., 1], pos[..., 0] - opp[..., 0])  # it faces the boxer
         c, s = torch.cos(their_yaw), torch.sin(their_yaw)
 
         def place(local: torch.Tensor, stand: torch.Tensor) -> torch.Tensor:
@@ -276,7 +374,7 @@ class FootworkEnv(BoxingEnv):
             y = opp[..., 1] + s * local[..., 0] + c * local[..., 1]
             return torch.stack([x, y, (stand + local[..., 2]).expand_as(x)], -1)
 
-        other = lambda t: t.flip(0)        # the stand-in has the other boxer's shape; alone, the boxer's own
+        other = lambda t: t.flip(0)  # the stand-in has the other boxer's shape; alone, the boxer's own
         stand = other(self.stand_height).view(1, self.K)
         g["t_head"] = place(other(self.guard_head)[None], stand)
         g["t_body"] = place(other(self.guard_body)[None], stand)
@@ -287,7 +385,7 @@ class FootworkEnv(BoxingEnv):
 
     def _observe(self, g) -> torch.Tensor:
         N, K = self.N, self.K
-        self.obs_dim = self.base_obs_dim            # the base class shapes its hundred by this
+        self.obs_dim = self.base_obs_dim  # the base class shapes its hundred by this
         obs = super()._observe(g).reshape(N, K, self.base_obs_dim).clone()
         self.obs_dim = self.base_obs_dim + CMD
         # The base class shows a lone boxer zeros for its opponent's gloves and facing, and its place in a
@@ -308,7 +406,9 @@ class FootworkEnv(BoxingEnv):
         lin_w, _, ang_b, grav_b = self._base(g)
         jp, jv = self.qpos[:, self.jq][..., self.style_idx], self.qvel[:, self.jv][..., self.style_idx]
         leg = self.leg_len.view(1, K, 1)
-        return torch.cat([jp, jv, g["pos"][..., 2:3] / leg, to_heading(lin_w, g["yaw"]) / leg, ang_b, grav_b], -1).reshape(N * K, -1)
+        return torch.cat(
+            [jp, jv, g["pos"][..., 2:3] / leg, to_heading(lin_w, g["yaw"]) / leg, ang_b, grav_b], -1
+        ).reshape(N * K, -1)
 
     def style_mask(self) -> torch.Tensor:
         """Where a walk is being judged: a walk with somewhere to go, or a turn. (N * K,)"""
@@ -336,15 +436,19 @@ class FootworkEnv(BoxingEnv):
         self.cube_left = (self.cube_left - self.dt).clamp_min(0.0)
         waiting = (self.cube_left <= 0.0)[..., None]
         self.qpos[:, self.cube_qi] = torch.where(waiting, self.cube_park[None], self.qpos[:, self.cube_qi])
-        self.qvel[:, self.cube_vi] = torch.where(waiting, torch.zeros_like(self.qvel[:, self.cube_vi]), self.qvel[:, self.cube_vi])
+        self.qvel[:, self.cube_vi] = torch.where(
+            waiting, torch.zeros_like(self.qvel[:, self.cube_vi]), self.qvel[:, self.cube_vi]
+        )
         if self.disturb <= 0.0:
             return
         c = self.next_cube
-        rows = torch.nonzero((self._u(N) < self.dt / self.cube_every_s) & (self.cube_left.gather(1, c[:, None])[:, 0] <= 0.0))[:, 0]
+        rows = torch.nonzero(
+            (self._u(N) < self.dt / self.cube_every_s) & (self.cube_left.gather(1, c[:, None])[:, 0] <= 0.0)
+        )[:, 0]
         if rows.numel() == 0:
             return
         n, c = rows.numel(), c[rows]
-        k = c % self.K                                          # whose turn it is to be thrown at
+        k = c % self.K  # whose turn it is to be thrown at
         chest = self.xpos[rows, self.pelvis[k]] + torch.tensor([0.0, 0.0, 0.25], device=dev)
         u = lambda lo, hi: self._u(n, lo=lo, hi=hi)
         # Thrown: from two or three metres, any side, on the arc that arrives at the chest.
@@ -382,13 +486,13 @@ class FootworkEnv(BoxingEnv):
         self.head_vel = (g["t_head"] - self.prev_head) / self.dt
 
         stand, walk, turn = (self.kind == STAND).float(), (self.kind == WALK).float(), (self.kind == TURN).float()
-        still = (self.cmd.abs().sum(-1) == 0.0).float() * (1.0 - turn)        # asked to stand where it is
+        still = (self.cmd.abs().sum(-1) == 0.0).float() * (1.0 - turn)  # asked to stand where it is
         vel = to_heading(lin_w, yaw)[..., :2]
         v_err = (vel - self.cmd[..., :2]).norm(dim=-1)
         w_err = (ang_b[..., 2] - self.cmd[..., 2]).abs()
         to_t = g["t_body"] - pos
         off = torch.atan2(to_t[..., 1], to_t[..., 0]) - yaw
-        off = torch.atan2(torch.sin(off), torch.cos(off)).abs()             # how far it is from facing the stand-in
+        off = torch.atan2(torch.sin(off), torch.cos(off)).abs()  # how far it is from facing the stand-in
         contact = g["foot_contact"]
         moving_now = (1.0 - still) * (1.0 - turn) * (self.cmd[..., :2].norm(dim=-1) > 0.1).float()
         foot_v = (g["foot_xy"] - self.prev_foot_xy) / self.dt
@@ -408,11 +512,13 @@ class FootworkEnv(BoxingEnv):
         # flat there: exp(-16)), the narrow one is what makes 0.15 m/s of error cost something.
         # Worth twice as much when the boxer is asked to go somewhere: walking has to pay more than standing,
         # and what it costs (below) is charged at less than standing's rate.
-        r["track"] = (1.0 + moving_now) * (0.5 * torch.exp(-(v_err / 0.5) ** 2) + 0.5 * torch.exp(-(v_err / 0.2) ** 2))
-        r["yaw"] = 0.5 * torch.exp(-(w_err / 0.5) ** 2) * (1.0 - turn)
+        r["track"] = (1.0 + moving_now) * (
+            0.5 * torch.exp(-((v_err / 0.5) ** 2)) + 0.5 * torch.exp(-((v_err / 0.2) ** 2))
+        )
+        r["yaw"] = 0.5 * torch.exp(-((w_err / 0.5) ** 2)) * (1.0 - turn)
         # Two widths again: the cosine is felt from behind; the narrow one (0.2 rad) is what makes 20 degrees off
         # cost something. With the cosine alone a policy settled 15 to 30 degrees off (R2's exam: 73%, mark 90%).
-        r["face"] = (0.25 * stand + 0.6 * turn) * (torch.cos(off) + torch.exp(-(off / 0.2) ** 2))
+        r["face"] = (0.25 * stand + 0.6 * turn) * (torch.cos(off) + torch.exp(-((off / 0.2) ** 2)))
         # A step is a foot that leaves the floor and comes down again. Paid when it lands, for every tenth of a
         # second it was up beyond the first quarter, and only when going somewhere: a boxer standing still that
         # learned to stand is slow to learn that walking means lifting a foot, and shuffling is charged (slip).
@@ -426,18 +532,21 @@ class FootworkEnv(BoxingEnv):
         r["legs"] = -0.03 * still * (away[..., self.leg_idx] ** 2).sum(-1)
         r["stance"] = -0.2 * still * (foot_sep - 0.30).abs()
         r["lin_z"] = -0.3 * lin_b[..., 2] ** 2
-        r["ang"] = -0.02 * (ang_b[..., :2] ** 2).sum(-1)
-        r["act"] = -0.001 * self.effort_scale * (action ** 2).sum(-1)
+        r["ang"] = -self.pen["ang_vel_sq"] * (ang_b[..., :2] ** 2).sum(-1)
+        r["act"] = -0.001 * self.effort_scale * (action**2).sum(-1)
         jerk = ((action - self.prev_action) ** 2).sum(-1)
-        r["rate"] = -0.01 * self.effort_scale * jerk - self.action_rate_w * jerk
+        r["rate"] = -self.pen["action_rate"] * self.effort_scale * jerk - self.action_rate_w * jerk
+        self._torque_terms(r, tau, jv)
         # A boxer's charges, for standing and for punching. A walker's legs do work every step: charged at full
         # rate it cost more than walking earned, and the first three walking runs learned to stand (2 October).
         easy = 1.0 - 0.7 * moving_now
         r["energy"] = -2.5e-4 * self.effort_scale * easy * (tau * jv).abs().clamp_max(2000.0).sum(-1)
         # House rule: joints move no faster than a person's.
         r["qvel"] = -0.1 * (jv.abs() - self.qvel_limit).clamp(0.0, 10.0).pow(2).sum(-1)
-        r["limit"] = -0.5 * ((self.joint_lo + 0.05 - jp).clamp_min(0.0) + (jp - self.joint_hi + 0.05).clamp_min(0.0)).sum(-1)
-        r["slip"] = -0.2 * easy * ((foot_v ** 2).sum(-1).clamp_max(25.0) * contact.float()).sum(-1)
+        r["limit"] = -0.5 * (
+            (self.joint_lo + 0.05 - jp).clamp_min(0.0) + (jp - self.joint_hi + 0.05).clamp_min(0.0)
+        ).sum(-1)
+        r["slip"] = -self.pen["foot_slip"] * easy * ((foot_v**2).sum(-1).clamp_max(25.0) * contact.float()).sum(-1)
         r["lean"] = -1.5 * easy * ((g["own_head"][..., :2] - g["foot_xy"].mean(2)).norm(dim=-1) - 0.18).clamp_min(0.0)
         # Moving like a person, judged against the walking and turning clips: paid by the trainer, when it
         # has a judge. Nothing here.
@@ -458,7 +567,9 @@ class FootworkEnv(BoxingEnv):
 
         # ---- bookkeeping
         t_now = (self.episode_len[:, None] + 1.0) * self.dt
-        self.faced_at = torch.where((off < math.radians(15.0)) & (self.faced_at < 0.0), t_now.expand(N, K), self.faced_at)
+        self.faced_at = torch.where(
+            (off < math.radians(15.0)) & (self.faced_at < 0.0), t_now.expand(N, K), self.faced_at
+        )
         self.episode_return = self.episode_return + reward
         self.episode_len = self.episode_len + 1.0
         df = done.float()
@@ -519,7 +630,9 @@ class FootworkEnv(BoxingEnv):
             "power": a["power_sum"] / s,
             "act_sat": a["sat_sum"] / s,
             # Walking: how far the velocity is from the one asked for, m/s; what was asked and what was done.
-            "track_err": a["track_err"] / w, "speed": a["speed"] / w, "speed_asked": a["asked"] / w,
+            "track_err": a["track_err"] / w,
+            "speed": a["speed"] / w,
+            "speed_asked": a["asked"] / w,
             "yaw_err": a["yaw_err"] / w,
             # Turning: the share of turn episodes that faced the stand-in within 15 degrees inside 3 s and stayed up.
             "turn_rate": a["turn_ok"] / max(1.0, a["turn_ends"]),
@@ -531,8 +644,15 @@ class FootworkEnv(BoxingEnv):
             "cubes_per_min": a["cubes"] / (s * self.dt * self.N) * 60.0,
             # The match stage's headline numbers, which mean nothing here, so that anything reading a
             # status file finds them.
-            "hits_per_s": 0.0, "head_share": 0.0, "hit_speed": 0.0, "hit_speed_max": 0.0, "distance": 0.0,
-            "knockdowns_per_min": 0.0, "glove_speed": 0.0, "blocks_per_s": 0.0, "daze": 0.0,
+            "hits_per_s": 0.0,
+            "head_share": 0.0,
+            "hit_speed": 0.0,
+            "hit_speed_max": 0.0,
+            "distance": 0.0,
+            "knockdowns_per_min": 0.0,
+            "glove_speed": 0.0,
+            "blocks_per_s": 0.0,
+            "daze": 0.0,
         }
         out.update({f"rt_{t}": self._ft[t].item() / s for t in self.TERMS})
         for group in (self._f, self._ft, self._fk):

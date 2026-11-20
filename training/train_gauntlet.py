@@ -20,6 +20,7 @@ log line.
 --weights         relative share of rings per opponent, e.g. zombie=2 (default 1 each)
 Everything else is train_box.py's (the daze rule, the block payment, the ceilings on noise and learning rate).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -76,21 +77,53 @@ def main() -> None:
     ap.add_argument("--save-every", type=int, default=50)
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--lr", type=float, default=3e-4)
-    ap.add_argument("--foe-state", action="store_true",
-                    help="an opponent whose checkpoint was trained with obs_state reads its reserve and daze too, as in the game "
-                         "(without it an opponent sees zeros there: an empty reserve)")
+    ap.add_argument(
+        "--foe-state",
+        action="store_true",
+        help="an opponent whose checkpoint was trained with obs_state reads its reserve and daze too, as in the game "
+        "(without it an opponent sees zeros there: an empty reserve)",
+    )
     ap.add_argument("--lr-max", type=float, default=5e-4)
-    ap.add_argument("--bodies", type=int, default=0, help="the Melee: this many boxers down on the canvas as solid obstacles (envs/boxing.py)")
+    ap.add_argument(
+        "--bodies",
+        type=int,
+        default=0,
+        help="the Melee: this many boxers down on the canvas as solid obstacles (envs/boxing.py)",
+    )
     ap.add_argument("--head-mult", type=float, default=1.0, help="the head's price (style head, 1.5) times this; try 2")
-    ap.add_argument("--body-mult", type=float, default=1.0, help="the body's price (style body) times this; Sokol's 0%% head: try 0.5")
-    ap.add_argument("--head-aim-w", type=float, default=0.0, help="pay per m/s a glove closes on the head within 25 cm of it (envs/boxing.py); try 0.05")
-    ap.add_argument("--style", nargs="*", default=[], help="the learner's style keys replaced for this run, e.g. range_m=0.7 crowd=0 (its config's 'style')")
-    ap.add_argument("--arms-w", type=float, default=0.0, help="pull of the shoulders and elbows to the guard pose, as the legs' 0.03; try 0.01")
+    ap.add_argument(
+        "--body-mult",
+        type=float,
+        default=1.0,
+        help="the body's price (style body) times this; Sokol's 0%% head: try 0.5",
+    )
+    ap.add_argument(
+        "--head-aim-w",
+        type=float,
+        default=0.0,
+        help="pay per m/s a glove closes on the head within 25 cm of it (envs/boxing.py); try 0.05",
+    )
+    ap.add_argument(
+        "--style",
+        nargs="*",
+        default=[],
+        help="the learner's style keys replaced for this run, e.g. range_m=0.7 crowd=0 (its config's 'style')",
+    )
+    ap.add_argument(
+        "--arms-w",
+        type=float,
+        default=0.0,
+        help="pull of the shoulders and elbows to the guard pose, as the legs' 0.03; try 0.01",
+    )
     ap.add_argument("--gamma", type=float, default=0.99, help="0.99 at 50 Hz looks 2 s ahead; 0.995 looks 4 s")
     ap.add_argument("--entropy-coef", type=float, default=0.0)
     ap.add_argument("--reset-std", type=float, default=0.0)
-    ap.add_argument("--reset-critic", action="store_true", help="a fresh critic over the resumed actor (2026-11-04: Trump's "
-                    "v3m5 critic came in with a value loss of 2e5 and every lesson from it ran away)")
+    ap.add_argument(
+        "--reset-critic",
+        action="store_true",
+        help="a fresh critic over the resumed actor (2026-11-04: Trump's "
+        "v3m5 critic came in with a value loss of 2e5 and every lesson from it ran away)",
+    )
     ap.add_argument("--max-std", type=float, default=0.35)
     ap.add_argument("--episode-s", type=float, default=12.0)
     ap.add_argument("--obs-noise", type=float, default=1.0)
@@ -105,90 +138,260 @@ def main() -> None:
     ap.add_argument("--daze-lo", type=float, default=14.0)
     ap.add_argument("--daze-hi", type=float, default=42.0)
     ap.add_argument("--daze-weak", type=float, default=0.45)
-    ap.add_argument("--daze-body", type=float, default=0.3, help="share of a body shot's speed that dazes (the game's Fighter: 0.45)")
-    ap.add_argument("--obs-bodies", action="store_true",
-                    help="match: three more inputs (106), the nearest downed body (envs/match.py); a 103 brain is widened with zero weights")
+    ap.add_argument(
+        "--daze-body",
+        type=float,
+        default=0.3,
+        help="share of a body shot's speed that dazes (the game's Fighter: 0.45)",
+    )
+    ap.add_argument(
+        "--obs-bodies",
+        action="store_true",
+        help="match: three more inputs (106), the nearest downed body (envs/match.py); a 103 brain is widened with zero weights",
+    )
     ap.add_argument("--block-w", type=float, default=0.0)
-    ap.add_argument("--rope-w", type=float, default=0.0,
-                    help="ringcraft: charge a step for being on the ropes or in a corner while a close opponent holds the centre. Try 0.05")
-    ap.add_argument("--cutoff-w", type=float, default=0.0,
-                    help="ringcraft: pay a step for cutting the ring off (between a roped opponent and the centre, facing it in reach). Try 0.05")
-    ap.add_argument("--speed-limit", action="store_true",
-                    help="every fighter: a drive's torque falls to nothing as its joint nears its speed limit (envs/boxing.py). "
-                         "Without it each fighter's config says; a config that does not say gets it (see --legacy-rules)")
-    ap.add_argument("--fatigue-j", type=float, default=0.0,
-                    help="a bout: joules a full-strength boxer's drives can put out before they tire, for every fighter; 0 = each "
-                         "config's own, and 20000 for a config that does not say (see --legacy-rules)")
-    ap.add_argument("--legacy-rules", action="store_true",
-                    help="a fighter whose config does not say trains with neither the speed limit nor fatigue (before 2026-10-30)")
-    ap.add_argument("--action-filter", type=float, default=0.0,
-                    help="the learner's drives get f x its last action + (1 - f) x the policy's (envs/boxing.py); 0 = off. Try 0.3-0.5. "
-                         "Opponents keep their config's rules_match; the game's MjBoxer reads the same")
-    ap.add_argument("--obs-delay", type=int, default=0,
-                    help="the learner's observation is at least this many control steps (20 ms) late (reaction delay); 0 = off. Try 3")
-    ap.add_argument("--flail-w", type=float, default=0.0,
-                    help="charge per (rad/s)^2 of an idle hand's shoulder and elbow speed, a hand not punching (envs/boxing.py); 0 = off. Try 1e-4")
-    ap.add_argument("--escape-w", type=float, default=0.0,
-                    help="ringcraft: pay per m/s of coming out of the ropes' last metre, charged as much going in (envs/boxing.py); 0 = off. Try 0.1")
-    ap.add_argument("--start-spread", type=float, default=1.0,
-                    help="how far from the guard an episode may begin, as a multiple of the usual 0.06 rad and 0.15 m/s")
-    ap.add_argument("--effort-free-iters", type=int, default=0,
-                    help="no charge for power or for action size and change for this many iterations of the run, then "
-                         "brought back over as many again: for a stage in which a skill has first to be found")
-    ap.add_argument("--action-rate-w", type=float, default=0.0,
-                    help="charge per squared change in action between control steps, on top of the stage's own small one; "
-                         "0 = off. For smoother, less buzzy drives. Try 0.01 (doubles the stage's own)")
-    ap.add_argument("--obs-delay-max", type=int, default=0,
-                    help="each episode the observation is 0 to this many control steps (20 ms each) late, drawn per fighter; "
-                         "0 = off. The game's is not late: this only makes a brain robust to lag. Try 2")
-    ap.add_argument("--seek-w", type=float, default=0.0,
-                    help="pay per m/s of closing on the opponent while outside punching range, whatever the style "
-                         "(tasks.md F2); 0 = off. Try 0.3")
-    ap.add_argument("--clinch-w", type=float, default=0.0,
-                    help="ringcraft: pay a hurt boxer (needs --daze) for tying up, both gloves resting on the opponent's trunk, chest to chest. Try 0.1")
-    ap.add_argument("--ropes-start", type=float, default=0.0,
-                    help="share of episodes that begin as a free-for-all round does: both boxers at the ropes, facing the "
-                         "middle (tasks.md F3); 0 = none. Try 0.3")
+    ap.add_argument(
+        "--rope-w",
+        type=float,
+        default=0.0,
+        help="ringcraft: charge a step for being on the ropes or in a corner while a close opponent holds the centre. Try 0.05",
+    )
+    ap.add_argument(
+        "--cutoff-w",
+        type=float,
+        default=0.0,
+        help="ringcraft: pay a step for cutting the ring off (between a roped opponent and the centre, facing it in reach). Try 0.05",
+    )
+    ap.add_argument(
+        "--speed-limit",
+        action="store_true",
+        help="every fighter: a drive's torque falls to nothing as its joint nears its speed limit (envs/boxing.py). "
+        "Without it each fighter's config says; a config that does not say gets it (see --legacy-rules)",
+    )
+    ap.add_argument(
+        "--fatigue-j",
+        type=float,
+        default=0.0,
+        help="a bout: joules a full-strength boxer's drives can put out before they tire, for every fighter; 0 = each "
+        "config's own, and 20000 for a config that does not say (see --legacy-rules)",
+    )
+    ap.add_argument(
+        "--legacy-rules",
+        action="store_true",
+        help="a fighter whose config does not say trains with neither the speed limit nor fatigue (before 2026-10-30)",
+    )
+    ap.add_argument(
+        "--action-filter",
+        type=float,
+        default=0.0,
+        help="the learner's drives get f x its last action + (1 - f) x the policy's (envs/boxing.py); 0 = off. Try 0.3-0.5. "
+        "Opponents keep their config's rules_match; the game's MjBoxer reads the same",
+    )
+    ap.add_argument(
+        "--obs-delay",
+        type=int,
+        default=0,
+        help="the learner's observation is at least this many control steps (20 ms) late (reaction delay); 0 = off. Try 3",
+    )
+    ap.add_argument(
+        "--flail-w",
+        type=float,
+        default=0.0,
+        help="charge per (rad/s)^2 of an idle hand's shoulder and elbow speed, a hand not punching (envs/boxing.py); 0 = off. Try 1e-4",
+    )
+    ap.add_argument(
+        "--escape-w",
+        type=float,
+        default=0.0,
+        help="ringcraft: pay per m/s of coming out of the ropes' last metre, charged as much going in (envs/boxing.py); 0 = off. Try 0.1",
+    )
+    ap.add_argument(
+        "--start-spread",
+        type=float,
+        default=1.0,
+        help="how far from the guard an episode may begin, as a multiple of the usual 0.06 rad and 0.15 m/s",
+    )
+    ap.add_argument(
+        "--effort-free-iters",
+        type=int,
+        default=0,
+        help="no charge for power or for action size and change for this many iterations of the run, then "
+        "brought back over as many again: for a stage in which a skill has first to be found",
+    )
+    ap.add_argument(
+        "--action-rate-w",
+        type=float,
+        default=0.0,
+        help="charge per squared change in action between control steps, on top of the stage's own small one; "
+        "0 = off. For smoother, less buzzy drives. Try 0.01 (doubles the stage's own)",
+    )
+    ap.add_argument(
+        "--obs-delay-max",
+        type=int,
+        default=0,
+        help="each episode the observation is 0 to this many control steps (20 ms each) late, drawn per fighter; "
+        "0 = off. The game's is not late: this only makes a brain robust to lag. Try 2",
+    )
+    ap.add_argument(
+        "--seek-w",
+        type=float,
+        default=0.0,
+        help="pay per m/s of closing on the opponent while outside punching range, whatever the style "
+        "(tasks.md F2); 0 = off. Try 0.3",
+    )
+    ap.add_argument(
+        "--clinch-w",
+        type=float,
+        default=0.0,
+        help="ringcraft: pay a hurt boxer (needs --daze) for tying up, both gloves resting on the opponent's trunk, chest to chest. Try 0.1",
+    )
+    ap.add_argument(
+        "--ropes-start",
+        type=float,
+        default=0.0,
+        help="share of episodes that begin as a free-for-all round does: both boxers at the ropes, facing the "
+        "middle (tasks.md F3); 0 = none. Try 0.3",
+    )
     ap.add_argument("--sep-max", type=float, default=2.2, help="the furthest apart the two boxers begin an episode, m")
     ap.add_argument("--no-onnx", action="store_true")
-    ap.add_argument("--handover", default="", help="states the learner's get-up policy leaves it in (tools/make_handover_bank.py); "
-                                                   "a share of its episodes begin in one")
+    ap.add_argument(
+        "--handover",
+        default="",
+        help="states the learner's get-up policy leaves it in (tools/make_handover_bank.py); "
+        "a share of its episodes begin in one",
+    )
     ap.add_argument("--handover-share", type=float, default=0.15)
-    ap.add_argument("--recover-w", type=float, default=0.0, help="in an episode begun from the hand-over bank: 0.2 a step for "
-                    "being up and this x the fall penalty again for falling, for the first --recover-s seconds (2026-11-01)")
+    ap.add_argument(
+        "--recover-w",
+        type=float,
+        default=0.0,
+        help="in an episode begun from the hand-over bank: 0.2 a step for "
+        "being up and this x the fall penalty again for falling, for the first --recover-s seconds (2026-11-01)",
+    )
     ap.add_argument("--recover-s", type=float, default=3.0)
-    ap.add_argument("--handover-yaw", type=float, default=0.6, help="an episode begun from the hand-over bank faces the other "
-                    "boxer to within this many radians; 3.14 = any way, as a boxer gets up wherever it fell (2026-11-02)")
-    ap.add_argument("--handover-reserve", type=float, default=1.0, help="an episode begun from the hand-over bank starts with a "
-                    "reserve of 0 to this (needs --fatigue-ceiling or fatigue_j); 1 = as any other episode (2026-11-02)")
-    ap.add_argument("--blend-steps", type=int, default=0, help="the learner's brain eases in over this many control steps "
-                    "from the pose it took the body in (15 = 0.3 s); write it into its config (set_brain_rules.py) for the game")
-    ap.add_argument("--stage", default="spar", choices=["spar", "match"],
-                    help="match: the retrofit's bodies and its 103-number observation (envs/match.py); give --models models/v2")
-    ap.add_argument("--randomise", type=float, default=0.15, help="match: each world's body is within this of the file's")
-    ap.add_argument("--hit-push", type=float, default=0.0, help="a landed punch pushes the taker's trunk with this share of its impulse (envs/boxing.py); try 0.6")
-    ap.add_argument("--stagger-v", type=float, default=0.0, help="a head shot this fast (m/s) holds the taker's drives down for a moment; try 5")
-    ap.add_argument("--hurt-full", type=float, default=0.0, help="punishment that lasts: m/s of punches taken for the full effect; try 400")
-    ap.add_argument("--body-drain", type=float, default=0.0, help="a body shot takes this much of the taker's reserve per m/s (envs/boxing.py); try 0.0025")
-    ap.add_argument("--obs-state", action="store_true", help="match: the learner reads its reserve, its daze and the opponent's in the command's three numbers")
-    ap.add_argument("--selfcontact-w", type=float, default=0.0, help="charge per cm of the learner's own parts pressed into each other (envs/boxing.py); try 0.02")
-    ap.add_argument("--repeat-decay", type=float, default=1.0, help="the same punch again (hand and zone) is worth this times the last one's pay; 1 = off, try 0.6")
-    ap.add_argument("--combo-w", type=float, default=0.0, help="pay per m/s of a punch landed within --combo-s of one from the other hand; try 0.1")
+    ap.add_argument(
+        "--handover-yaw",
+        type=float,
+        default=0.6,
+        help="an episode begun from the hand-over bank faces the other "
+        "boxer to within this many radians; 3.14 = any way, as a boxer gets up wherever it fell (2026-11-02)",
+    )
+    ap.add_argument(
+        "--handover-reserve",
+        type=float,
+        default=1.0,
+        help="an episode begun from the hand-over bank starts with a "
+        "reserve of 0 to this (needs --fatigue-ceiling or fatigue_j); 1 = as any other episode (2026-11-02)",
+    )
+    ap.add_argument(
+        "--blend-steps",
+        type=int,
+        default=0,
+        help="the learner's brain eases in over this many control steps "
+        "from the pose it took the body in (15 = 0.3 s); write it into its config (set_brain_rules.py) for the game",
+    )
+    ap.add_argument(
+        "--stage",
+        default="spar",
+        choices=["spar", "match"],
+        help="match: the retrofit's bodies and its 103-number observation (envs/match.py); give --models models/v2",
+    )
+    ap.add_argument(
+        "--randomise", type=float, default=0.15, help="match: each world's body is within this of the file's"
+    )
+    ap.add_argument(
+        "--hit-push",
+        type=float,
+        default=0.0,
+        help="a landed punch pushes the taker's trunk with this share of its impulse (envs/boxing.py); try 0.6",
+    )
+    ap.add_argument(
+        "--stagger-v",
+        type=float,
+        default=0.0,
+        help="a head shot this fast (m/s) holds the taker's drives down for a moment; try 5",
+    )
+    ap.add_argument(
+        "--hurt-full",
+        type=float,
+        default=0.0,
+        help="punishment that lasts: m/s of punches taken for the full effect; try 400",
+    )
+    ap.add_argument(
+        "--body-drain",
+        type=float,
+        default=0.0,
+        help="a body shot takes this much of the taker's reserve per m/s (envs/boxing.py); try 0.0025",
+    )
+    ap.add_argument(
+        "--obs-state",
+        action="store_true",
+        help="match: the learner reads its reserve, its daze and the opponent's in the command's three numbers",
+    )
+    ap.add_argument(
+        "--selfcontact-w",
+        type=float,
+        default=0.0,
+        help="charge per cm of the learner's own parts pressed into each other (envs/boxing.py); try 0.02",
+    )
+    ap.add_argument(
+        "--repeat-decay",
+        type=float,
+        default=1.0,
+        help="the same punch again (hand and zone) is worth this times the last one's pay; 1 = off, try 0.6",
+    )
+    ap.add_argument(
+        "--combo-w",
+        type=float,
+        default=0.0,
+        help="pay per m/s of a punch landed within --combo-s of one from the other hand; try 0.1",
+    )
     ap.add_argument("--combo-s", type=float, default=0.8)
-    ap.add_argument("--hurt-start", type=float, default=0.0, help="share of episodes that begin dazed, 55-90%% of the way to the legs going (needs --daze); try 0.25")
-    ap.add_argument("--slow-v", type=float, default=0.0, help="a landed punch slower than this (m/s) pays (speed / slow_v)^2 of its worth; try 4")
-    ap.add_argument("--fatigue-ceiling", action="store_true", help="a tired drive's torque is capped at what is left of its force range, not its spring weakened")
-    ap.add_argument("--done-when", default="", help="stop once these hold for --done-window iterations in a row, e.g. "
-                                                    "'hits_per_s>=1.5,falls<=0.03,repeat_share<=0.5' (the learner's numbers, as logged under env/)")
+    ap.add_argument(
+        "--hurt-start",
+        type=float,
+        default=0.0,
+        help="share of episodes that begin dazed, 55-90%% of the way to the legs going (needs --daze); try 0.25",
+    )
+    ap.add_argument(
+        "--slow-v",
+        type=float,
+        default=0.0,
+        help="a landed punch slower than this (m/s) pays (speed / slow_v)^2 of its worth; try 4",
+    )
+    ap.add_argument(
+        "--fatigue-ceiling",
+        action="store_true",
+        help="a tired drive's torque is capped at what is left of its force range, not its spring weakened",
+    )
+    ap.add_argument(
+        "--done-when",
+        default="",
+        help="stop once these hold for --done-window iterations in a row, e.g. "
+        "'hits_per_s>=1.5,falls<=0.03,repeat_share<=0.5' (the learner's numbers, as logged under env/)",
+    )
     ap.add_argument("--done-window", type=int, default=40)
-    ap.add_argument("--value-huber", type=float, default=0.0, help="train the critic on a Huber loss with this delta "
-                    "(ppo.py PPOConfig.value_huber; 0 = plain MSE)")
-    ap.add_argument("--vloss-guard", type=float, default=10.0, help="stop, without saving, once the value loss has stayed above "
-                    "this many times its baseline (median of the run's iterations 50-150) for --vloss-window iterations: "
-                    "the critic is diverging and the last save is the good one (2026-11-15, v3m2_grandma/grandpa). 0 = off")
+    ap.add_argument(
+        "--value-huber",
+        type=float,
+        default=0.0,
+        help="train the critic on a Huber loss with this delta (ppo.py PPOConfig.value_huber; 0 = plain MSE)",
+    )
+    ap.add_argument(
+        "--vloss-guard",
+        type=float,
+        default=10.0,
+        help="stop, without saving, once the value loss has stayed above "
+        "this many times its baseline (median of the run's iterations 50-150) for --vloss-window iterations: "
+        "the critic is diverging and the last save is the good one (2026-11-15, v3m2_grandma/grandpa). 0 = off",
+    )
     ap.add_argument("--vloss-window", type=int, default=10)
-    ap.add_argument("--no-cut-bootstrap", action="store_true", help="value time-outs and survivor cuts as terminal "
-                    "(ppo.py PPOConfig.bootstrap_cuts; a test of the critic runaway, 2026-11-15)")
+    ap.add_argument(
+        "--no-cut-bootstrap",
+        action="store_true",
+        help="value time-outs and survivor cuts as terminal "
+        "(ppo.py PPOConfig.bootstrap_cuts; a test of the critic runaway, 2026-11-15)",
+    )
     args = ap.parse_args()
 
     torch.manual_seed(args.seed)
@@ -202,46 +405,113 @@ def main() -> None:
     def reads_state(ck):
         # An opponent whose brain was trained reading its reserve and daze (as the game gives every shipped brain).
         path = ck if os.path.isabs(ck) else os.path.join(HERE, ck)
-        return bool(torch.load(path, map_location="cpu", weights_only=False).get("extra", {}).get("env", {}).get("obs_state", False))
+        return bool(
+            torch.load(path, map_location="cpu", weights_only=False)
+            .get("extra", {})
+            .get("env", {})
+            .get("obs_state", False)
+        )
 
     envs, side, foes = [], [], []
     for i, ((opp, ck), n) in enumerate(zip(opponents, counts)):
         xml = pair_xml(args.name, opp, args.models)
         extra_env = {"randomise": args.randomise, "obs_bodies": args.obs_bodies} if args.stage == "match" else {}
-        env = (MatchEnv if args.stage == "match" else BoxingEnv)(xml, int(n), device=dev, seed=args.seed + i, episode_len_s=args.episode_s, obs_noise=args.obs_noise,
-                        push_vel=args.push_vel, hit_w=args.hit_w, taken_w=args.taken_w, fall_penalty=args.fall_penalty,
-                        ko_bonus=args.ko_bonus, survivor_bootstrap=not args.no_survivor_bootstrap, daze=args.daze,
-                        daze_tau=args.daze_tau, daze_lo=args.daze_lo, daze_hi=args.daze_hi, daze_weak=args.daze_weak, daze_body=args.daze_body, block_w=args.block_w,
-                        handover={args.name: args.handover if os.path.isabs(args.handover) else os.path.join(HERE, args.handover)} if args.handover else None,
-                        handover_share=args.handover_share, start_spread=args.start_spread, sep_hi=args.sep_max, speed_limit=args.speed_limit, fatigue_j=args.fatigue_j,
-                        rope_w=args.rope_w, cutoff_w=args.cutoff_w, clinch_w=args.clinch_w, action_rate_w=args.action_rate_w, obs_delay_max=args.obs_delay_max,
-                        seek_w=args.seek_w, ropes_start=args.ropes_start, hit_push=args.hit_push, stagger_v=args.stagger_v,
-                        hurt_full=args.hurt_full, body_drain=args.body_drain,
-                        obs_state=((args.name,) if args.obs_state else ()) + ((opp,) if args.foe_state and reads_state(ck) else ()),
-                        selfcontact_w=args.selfcontact_w, repeat_decay=args.repeat_decay, combo_w=args.combo_w, combo_s=args.combo_s,
-                        hurt_start=args.hurt_start, fatigue_ceiling=args.fatigue_ceiling, slow_v=args.slow_v,
-                        head_mult=args.head_mult, arms_w=args.arms_w, bodies=args.bodies, body_mult=args.body_mult, head_aim_w=args.head_aim_w,
-                        style_over={args.name: {s.split("=")[0]: float(s.split("=")[1]) for s in args.style}} if args.style else None,
-                        escape_w=args.escape_w, flail_w=args.flail_w, action_filter=args.action_filter, blend_steps=args.blend_steps, obs_delay=args.obs_delay,
-                        realism_for=(args.name,), default_rules=not args.legacy_rules,
-                        recover_w=args.recover_w, recover_s=args.recover_s, handover_reserve=args.handover_reserve,
-                        handover_yaw=args.handover_yaw, **extra_env)
+        env = (MatchEnv if args.stage == "match" else BoxingEnv)(
+            xml,
+            int(n),
+            device=dev,
+            seed=args.seed + i,
+            episode_len_s=args.episode_s,
+            obs_noise=args.obs_noise,
+            push_vel=args.push_vel,
+            hit_w=args.hit_w,
+            taken_w=args.taken_w,
+            fall_penalty=args.fall_penalty,
+            ko_bonus=args.ko_bonus,
+            survivor_bootstrap=not args.no_survivor_bootstrap,
+            daze=args.daze,
+            daze_tau=args.daze_tau,
+            daze_lo=args.daze_lo,
+            daze_hi=args.daze_hi,
+            daze_weak=args.daze_weak,
+            daze_body=args.daze_body,
+            block_w=args.block_w,
+            handover={args.name: args.handover if os.path.isabs(args.handover) else os.path.join(HERE, args.handover)}
+            if args.handover
+            else None,
+            handover_share=args.handover_share,
+            start_spread=args.start_spread,
+            sep_hi=args.sep_max,
+            speed_limit=args.speed_limit,
+            fatigue_j=args.fatigue_j,
+            rope_w=args.rope_w,
+            cutoff_w=args.cutoff_w,
+            clinch_w=args.clinch_w,
+            action_rate_w=args.action_rate_w,
+            obs_delay_max=args.obs_delay_max,
+            seek_w=args.seek_w,
+            ropes_start=args.ropes_start,
+            hit_push=args.hit_push,
+            stagger_v=args.stagger_v,
+            hurt_full=args.hurt_full,
+            body_drain=args.body_drain,
+            obs_state=((args.name,) if args.obs_state else ()) + ((opp,) if args.foe_state and reads_state(ck) else ()),
+            selfcontact_w=args.selfcontact_w,
+            repeat_decay=args.repeat_decay,
+            combo_w=args.combo_w,
+            combo_s=args.combo_s,
+            hurt_start=args.hurt_start,
+            fatigue_ceiling=args.fatigue_ceiling,
+            slow_v=args.slow_v,
+            head_mult=args.head_mult,
+            arms_w=args.arms_w,
+            bodies=args.bodies,
+            body_mult=args.body_mult,
+            head_aim_w=args.head_aim_w,
+            style_over={args.name: {s.split("=")[0]: float(s.split("=")[1]) for s in args.style}}
+            if args.style
+            else None,
+            escape_w=args.escape_w,
+            flail_w=args.flail_w,
+            action_filter=args.action_filter,
+            blend_steps=args.blend_steps,
+            obs_delay=args.obs_delay,
+            realism_for=(args.name,),
+            default_rules=not args.legacy_rules,
+            recover_w=args.recover_w,
+            recover_s=args.recover_s,
+            handover_reserve=args.handover_reserve,
+            handover_yaw=args.handover_yaw,
+            **extra_env,
+        )
         assert env.hetero and args.name in env.names and opp in env.names, f"{xml} holds {env.names}"
         envs.append(env)
         side.append(env.names.index(args.name))
         ck_path = ck if os.path.isabs(ck) else os.path.join(HERE, ck)
-        foe = PPO(min(env.obs_dim, obs_dim_of(ck_path)), env.A, 1, dev, PPOConfig())     # a 103 brain reads the first 103
+        foe = PPO(min(env.obs_dim, obs_dim_of(ck_path)), env.A, 1, dev, PPOConfig())  # a 103 brain reads the first 103
         foe.load(ck_path)
         foes.append(foe)
         print(f"  against {opp}: {int(n)} rings of {os.path.relpath(xml, HERE)}, its policy {ck}", flush=True)
     D, A = envs[0].obs_dim, envs[0].A
     total_n = int(sum(e.N for e in envs))
     minibatches = max(1, round(args.steps * total_n / 24576))
-    cfg = PPOConfig(steps_per_env=args.steps, lr=args.lr, entropy_coef=args.entropy_coef, minibatches=minibatches, lr_adapt=1.2,
-                    init_std=0.5, max_std=args.max_std, lr_max=args.lr_max, gamma=args.gamma, value_huber=args.value_huber,
-                    bootstrap_cuts=not args.no_cut_bootstrap)
+    cfg = PPOConfig(
+        steps_per_env=args.steps,
+        lr=args.lr,
+        entropy_coef=args.entropy_coef,
+        minibatches=minibatches,
+        lr_adapt=1.2,
+        init_std=0.5,
+        max_std=args.max_std,
+        lr_max=args.lr_max,
+        gamma=args.gamma,
+        value_huber=args.value_huber,
+        bootstrap_cuts=not args.no_cut_bootstrap,
+    )
     ppo = PPO(D, A, total_n, dev, cfg)
-    extra = ppo.load(args.resume if os.path.isabs(args.resume) else os.path.join(HERE, args.resume), widen=args.obs_bodies)
+    extra = ppo.load(
+        args.resume if os.path.isabs(args.resume) else os.path.join(HERE, args.resume), widen=args.obs_bodies
+    )
     cfg.lr = min(args.lr, args.lr_max)
     if args.obs_state and not extra.get("env", {}).get("obs_state", False):
         # First time with the state in the command's place: those three numbers were always zero, so their scale says
@@ -249,7 +519,7 @@ def main() -> None:
         # never trained. Give them a sensible scale and start
         # their weights at zero, so the policy begins exactly where it was and learns what the numbers mean.
         with torch.no_grad():
-            s = slice(100, 103)          # the command's place (the Melee's three body numbers come after it)
+            s = slice(100, 103)  # the command's place (the Melee's three body numbers come after it)
             ppo.obs_rms.mean[s] = torch.tensor([0.7, 0.3, 0.3], device=ppo.obs_rms.mean.device)
             ppo.obs_rms.var[s] = 0.05
             ppo.model.actor[0].weight[:, s] = 0.0
@@ -273,17 +543,31 @@ def main() -> None:
             ppo.model.log_std.clamp_(max=float(np.log(args.max_std)))
     career = int(extra.get("career", 0))
     start = int(extra.get("iter", 0)) if extra.get("run_name") == run else 0
-    iters = start + args.more_iters if args.more_iters > 0 else 10 ** 9
-    print(f"[run] {run}: {args.name} from {args.resume} ({extra.get('mode', '?')}, iteration {extra.get('iter', 0)}) against "
-          f"{', '.join(o for o, _ in opponents)}; {total_n} rings, batch {args.steps * total_n:,} in {minibatches} minibatches", flush=True)
+    iters = start + args.more_iters if args.more_iters > 0 else 10**9
+    print(
+        f"[run] {run}: {args.name} from {args.resume} ({extra.get('mode', '?')}, iteration {extra.get('iter', 0)}) against "
+        f"{', '.join(o for o, _ in opponents)}; {total_n} rings, batch {args.steps * total_n:,} in {minibatches} minibatches",
+        flush=True,
+    )
 
     os.makedirs(os.path.join(HERE, "logs"), exist_ok=True)
     writer = SummaryWriter(os.path.join(HERE, "logs", "tb", run))
     ck_dir = os.path.join(HERE, "checkpoints", run)
     os.makedirs(ck_dir, exist_ok=True)
     from tools.run_record import brain_rules, write_run_config
-    write_run_config(ck_dir, args, envs, {"run_name": run, "learner": args.name, "against": dict(opponents),
-                                          "rings": {o: e.N for (o, _), e in zip(opponents, envs)}, "resume_from_iteration": start})
+
+    write_run_config(
+        ck_dir,
+        args,
+        envs,
+        {
+            "run_name": run,
+            "learner": args.name,
+            "against": dict(opponents),
+            "rings": {o: e.N for (o, _), e in zip(opponents, envs)},
+            "resume_from_iteration": start,
+        },
+    )
     csv_path = os.path.join(HERE, "logs", f"{run}.csv")
     new_csv = not os.path.exists(csv_path) or os.path.getsize(csv_path) == 0
     csv_f = open(csv_path, "a", newline="", encoding="utf-8")
@@ -291,15 +575,42 @@ def main() -> None:
     keys = None
     stop_file = os.path.join(HERE, "logs", f"{run}.stop")
     with open(os.path.join(HERE, "logs", f"{run}.args.json"), "w", encoding="utf-8") as fh:
-        json.dump({"argv": sys.argv[1:], "args": vars(args), "mode": args.stage, "fighters": [args.name], "against": [o for o, _ in opponents],
-                   "started": time.strftime("%Y-%m-%d %H:%M:%S")}, fh, indent=2, sort_keys=True)
+        json.dump(
+            {
+                "argv": sys.argv[1:],
+                "args": vars(args),
+                "mode": args.stage,
+                "fighters": [args.name],
+                "against": [o for o, _ in opponents],
+                "started": time.strftime("%Y-%m-%d %H:%M:%S"),
+            },
+            fh,
+            indent=2,
+            sort_keys=True,
+        )
 
-    def mine(env, k, t):       # the learner's rows of a flat (N*2, ...) tensor
+    def mine(env, k, t):  # the learner's rows of a flat (N*2, ...) tensor
         return t.reshape(env.N, 2, *t.shape[1:])[:, k]
 
     obs = [e.reset() for e in envs]
-    per = ("hits_per_s", "hit_speed", "head_share", "falls", "blocks_per_s", "legs_gone_per_min", "knockdowns_per_min", "reward_per_step", "rope", "cutoff", "clinch",
-           "repeat_share", "combos_per_s", "self_cm", "escape", "flail")
+    per = (
+        "hits_per_s",
+        "hit_speed",
+        "head_share",
+        "falls",
+        "blocks_per_s",
+        "legs_gone_per_min",
+        "knockdowns_per_min",
+        "reward_per_step",
+        "rope",
+        "cutoff",
+        "clinch",
+        "repeat_share",
+        "combos_per_s",
+        "self_cm",
+        "escape",
+        "flail",
+    )
     done_when = [done_rule(c) for c in args.done_when.split(",") if c.strip()]
     good_for = 0
     vl_base, vl_bad = [], 0
@@ -317,13 +628,15 @@ def main() -> None:
                 rews, dones, cuts = [], [], []
                 at = 0
                 for i, (e, k) in enumerate(zip(envs, side)):
-                    theirs = mine(e, 1 - k, obs[i])[:, :foes[i].obs_rms.mean.shape[0]]
+                    theirs = mine(e, 1 - k, obs[i])[:, : foes[i].obs_rms.mean.shape[0]]
                     a_foe = foes[i].model.actor(foes[i].obs_rms.normalize(theirs, 10.0))
                     pair = [None, None]
-                    pair[k], pair[1 - k] = a_me[at:at + e.N], a_foe
+                    pair[k], pair[1 - k] = a_me[at : at + e.N], a_foe
                     at += e.N
                     obs[i], rew, done, cut = e.step(torch.stack(pair, 1).reshape(e.N * 2, A))
-                    rews.append(mine(e, k, rew)); dones.append(mine(e, k, done)); cuts.append(mine(e, k, cut))
+                    rews.append(mine(e, k, rew))
+                    dones.append(mine(e, k, done))
+                    cuts.append(mine(e, k, cut))
                 ppo.record(torch.cat(rews), torch.cat(dones), torch.cat(cuts))
         stats = ppo.update(torch.cat([mine(e, k, o) for e, k, o in zip(envs, side, obs)]))
         total += args.steps * total_n
@@ -331,11 +644,16 @@ def main() -> None:
         rows, terms = {}, {}
         for (opp, _), e in zip(opponents, envs):
             s = e.get_stats()
-            for k in e.TERMS:      # the reward's terms, both fighters' mean, weighted by rings (as train_box.py logs them)
+            for k in e.TERMS:  # the reward's terms, both fighters' mean, weighted by rings (as train_box.py logs them)
                 terms[k] = terms.get(k, 0.0) + s[f"rt_{k}"] * e.N / total_n
-            rows[opp] = {"fall_rate": s["fall_rate"], "ep_return": s["ep_return"], "their_hits_per_s": s[f"{opp}_hits_per_s"],
-                         "their_falls": s[f"{opp}_falls"], "their_head_share": s[f"{opp}_head_share"],
-                         "carry_on": s["carry_on"]}   # only the learner starts from its hand-over bank
+            rows[opp] = {
+                "fall_rate": s["fall_rate"],
+                "ep_return": s["ep_return"],
+                "their_hits_per_s": s[f"{opp}_hits_per_s"],
+                "their_falls": s[f"{opp}_falls"],
+                "their_head_share": s[f"{opp}_head_share"],
+                "carry_on": s["carry_on"],
+            }  # only the learner starts from its hand-over bank
             rows[opp].update({k: s[f"{args.name}_{k}"] for k in per})
         w = {o: e.N / total_n for (o, _), e in zip(opponents, envs)}
         mean = {k: sum(rows[o][k] * w[o] for o in rows) for k in next(iter(rows.values()))}
@@ -347,9 +665,25 @@ def main() -> None:
         if keys is None:
             keys = sorted(mean.keys())
             if new_csv:
-                csv_w.writerow(["iter", "hours", "steps", "fps", "kl", "lr", "std", "value_loss"] + keys + [f"{o}:{k}" for o in rows for k in keys])
-        csv_w.writerow([it, f"{hours:.4f}", total, int(sps), f"{stats['kl']:.5f}", f"{stats['lr']:.2e}", f"{stats['action_std']:.4f}",
-                        f"{stats['value_loss']:.4f}"] + [f"{mean[k]:.5f}" for k in keys] + [f"{rows[o][k]:.5f}" for o in rows for k in keys])
+                csv_w.writerow(
+                    ["iter", "hours", "steps", "fps", "kl", "lr", "std", "value_loss"]
+                    + keys
+                    + [f"{o}:{k}" for o in rows for k in keys]
+                )
+        csv_w.writerow(
+            [
+                it,
+                f"{hours:.4f}",
+                total,
+                int(sps),
+                f"{stats['kl']:.5f}",
+                f"{stats['lr']:.2e}",
+                f"{stats['action_std']:.4f}",
+                f"{stats['value_loss']:.4f}",
+            ]
+            + [f"{mean[k]:.5f}" for k in keys]
+            + [f"{rows[o][k]:.5f}" for o in rows for k in keys]
+        )
         csv_f.flush()
         if args.vloss_guard > 0.0:
             rel = it - start
@@ -359,9 +693,12 @@ def main() -> None:
                 base = float(np.median(vl_base))
                 vl_bad = vl_bad + 1 if stats["value_loss"] > args.vloss_guard * base else 0
                 if vl_bad >= args.vloss_window:
-                    print(f"[abort] critic diverging at iteration {it}: value loss {stats['value_loss']:.1f}, over "
-                          f"{args.vloss_guard:g}x its baseline {base:.1f} for {vl_bad} iterations; not saved, the last "
-                          f"checkpoint is the one to keep", flush=True)
+                    print(
+                        f"[abort] critic diverging at iteration {it}: value loss {stats['value_loss']:.1f}, over "
+                        f"{args.vloss_guard:g}x its baseline {base:.1f} for {vl_bad} iterations; not saved, the last "
+                        f"checkpoint is the one to keep",
+                        flush=True,
+                    )
                     break
         for k, v in mean.items():
             writer.add_scalar(f"env/{k}", v, it)
@@ -374,41 +711,127 @@ def main() -> None:
             writer.add_scalar(f"reward/{k}", v, it)
         writer.add_scalar("perf/fps", sps, it)
         if it % 10 == 0:
-            print(f"it {it:6d} | {sps:7.0f} sps | {args.name}: {mean['hits_per_s']:.2f} hits/s at {mean['hit_speed']:.1f} m/s, down {mean['falls']:.0%}, "
-                  f"{mean['blocks_per_s']:.2f} blocks/s, legs {mean['legs_gone_per_min']:.2f}/min | "
-                  + " | ".join(f"{o}: {rows[o]['hits_per_s']:.2f}/s v {rows[o]['their_hits_per_s']:.2f}/s, down {rows[o]['falls']:.0%} v {rows[o]['their_falls']:.0%}" for o in rows)
-                  + f" | kl {stats['kl']:.4f} lr {stats['lr']:.1e} std {stats['action_std']:.2f} | {hours * 60:5.1f} min", flush=True)
+            print(
+                f"it {it:6d} | {sps:7.0f} sps | {args.name}: {mean['hits_per_s']:.2f} hits/s at {mean['hit_speed']:.1f} m/s, down {mean['falls']:.0%}, "
+                f"{mean['blocks_per_s']:.2f} blocks/s, legs {mean['legs_gone_per_min']:.2f}/min | "
+                + " | ".join(
+                    f"{o}: {rows[o]['hits_per_s']:.2f}/s v {rows[o]['their_hits_per_s']:.2f}/s, down {rows[o]['falls']:.0%} v {rows[o]['their_falls']:.0%}"
+                    for o in rows
+                )
+                + f" | kl {stats['kl']:.4f} lr {stats['lr']:.1e} std {stats['action_std']:.2f} | {hours * 60:5.1f} min",
+                flush=True,
+            )
             with open(os.path.join(HERE, "logs", f"{run}.status.json"), "w", encoding="utf-8") as fh:
-                json.dump({"run": run, "mode": args.stage, "fighters": [args.name], "iter": it, "hours": hours, "fps": sps, "max_hours": args.max_hours,
-                           "updated": time.strftime("%Y-%m-%d %H:%M:%S"), "ppo": stats, "env": mean, "against": rows}, fh, indent=2)
+                json.dump(
+                    {
+                        "run": run,
+                        "mode": args.stage,
+                        "fighters": [args.name],
+                        "iter": it,
+                        "hours": hours,
+                        "fps": sps,
+                        "max_hours": args.max_hours,
+                        "updated": time.strftime("%Y-%m-%d %H:%M:%S"),
+                        "ppo": stats,
+                        "env": mean,
+                        "against": rows,
+                    },
+                    fh,
+                    indent=2,
+                )
         if done_when:
             good_for = good_for + 1 if all(rule(mean) for rule in done_when) else 0
-        stopping = os.path.exists(stop_file) or (args.max_hours > 0.0 and hours >= args.max_hours) or (done_when and good_for >= args.done_window)
+        stopping = (
+            os.path.exists(stop_file)
+            or (args.max_hours > 0.0 and hours >= args.max_hours)
+            or (done_when and good_for >= args.done_window)
+        )
         if (it + 1) % args.save_every == 0 or it + 1 == iters or stopping:
             ck = os.path.join(ck_dir, f"model_{it + 1:06d}_{args.name}.pt")
             # The first opponent's policy is kept beside it, so the viewer has a pair to show (as train_box.py
             # does for a frozen partner); there is no latest_* for it, so nothing takes it for a new policy.
-            foes[0].save(os.path.join(ck_dir, f"model_{it + 1:06d}_{opponents[0][0]}.pt"),
-                         {"iter": it + 1, "mode": args.stage, "fighters": envs[0].names, "fighter": opponents[0][0], "run_name": run,
-                          "xml": os.path.abspath(pair_xml(args.name, opponents[0][0], args.models))})
-            ppo.save(ck, {"iter": it + 1, "mode": args.stage, "fighters": envs[0].names, "fighter": args.name, "obs_dim": D, "act_dim": A,
-                          "action_scale": envs[0].action_scale, "run_name": run, "career": career, "against": [o for o, _ in opponents],
-                          "xml": os.path.abspath(pair_xml(args.name, opponents[0][0], args.models)),
-                          "env": {"daze": args.daze, "daze_tau": args.daze_tau, "daze_lo": args.daze_lo, "daze_hi": args.daze_hi,
-                                  "daze_weak": args.daze_weak, "daze_body": args.daze_body, "obs_bodies": args.obs_bodies, "bodies": args.bodies, "block_w": args.block_w, "rope_w": args.rope_w, "cutoff_w": args.cutoff_w, "clinch_w": args.clinch_w, "seek_w": args.seek_w, "speed_limit": envs[0].speed_limit, "fatigue_j": args.fatigue_j,
-                                  "hit_push": args.hit_push, "stagger_v": args.stagger_v, "hurt_full": args.hurt_full, "body_drain": args.body_drain,
-                                  "obs_state": args.obs_state, "selfcontact_w": args.selfcontact_w, "repeat_decay": args.repeat_decay,
-                                  "combo_w": args.combo_w, "hurt_start": args.hurt_start, "fatigue_ceiling": args.fatigue_ceiling, "slow_v": args.slow_v,
-                                  "escape_w": args.escape_w, "flail_w": args.flail_w, "rules": brain_rules(envs[0], side[0])}})
+            foes[0].save(
+                os.path.join(ck_dir, f"model_{it + 1:06d}_{opponents[0][0]}.pt"),
+                {
+                    "iter": it + 1,
+                    "mode": args.stage,
+                    "fighters": envs[0].names,
+                    "fighter": opponents[0][0],
+                    "run_name": run,
+                    "xml": os.path.abspath(pair_xml(args.name, opponents[0][0], args.models)),
+                },
+            )
+            ppo.save(
+                ck,
+                {
+                    "iter": it + 1,
+                    "mode": args.stage,
+                    "fighters": envs[0].names,
+                    "fighter": args.name,
+                    "obs_dim": D,
+                    "act_dim": A,
+                    "action_scale": envs[0].action_scale,
+                    "run_name": run,
+                    "career": career,
+                    "against": [o for o, _ in opponents],
+                    "xml": os.path.abspath(pair_xml(args.name, opponents[0][0], args.models)),
+                    "env": {
+                        "daze": args.daze,
+                        "daze_tau": args.daze_tau,
+                        "daze_lo": args.daze_lo,
+                        "daze_hi": args.daze_hi,
+                        "daze_weak": args.daze_weak,
+                        "daze_body": args.daze_body,
+                        "obs_bodies": args.obs_bodies,
+                        "bodies": args.bodies,
+                        "block_w": args.block_w,
+                        "rope_w": args.rope_w,
+                        "cutoff_w": args.cutoff_w,
+                        "clinch_w": args.clinch_w,
+                        "seek_w": args.seek_w,
+                        "speed_limit": envs[0].speed_limit,
+                        "fatigue_j": args.fatigue_j,
+                        "hit_push": args.hit_push,
+                        "stagger_v": args.stagger_v,
+                        "hurt_full": args.hurt_full,
+                        "body_drain": args.body_drain,
+                        "obs_state": args.obs_state,
+                        "selfcontact_w": args.selfcontact_w,
+                        "repeat_decay": args.repeat_decay,
+                        "combo_w": args.combo_w,
+                        "hurt_start": args.hurt_start,
+                        "fatigue_ceiling": args.fatigue_ceiling,
+                        "slow_v": args.slow_v,
+                        "escape_w": args.escape_w,
+                        "flail_w": args.flail_w,
+                        "rules": brain_rules(envs[0], side[0]),
+                    },
+                },
+            )
             shutil.copyfile(ck, os.path.join(ck_dir, f"latest_{args.name}.pt"))
             if not args.no_onnx:
                 try:
-                    export_onnx(ppo, os.path.join(ck_dir, f"latest_{args.name}.onnx"), D, fixed_batch=args.stage == "match")
+                    export_onnx(
+                        ppo, os.path.join(ck_dir, f"latest_{args.name}.onnx"), D, fixed_batch=args.stage == "match"
+                    )
                     manifest = dict(envs[0].cfgs[side[0]])
                     # The rules this brain was trained under, as the game reads them (speed_limit, fatigue_j, rules_match).
-                    manifest.update({"action_scale": envs[0].action_scale, "observation_size": D, **brain_rules(envs[0], side[0]),
-                                     "trained_by": {"run": run, "mode": args.stage, "against": [o for o, _ in opponents], "iterations": it + 1}})
-                    with open(os.path.join(ck_dir, f"latest_{args.name}_policy_config.json"), "w", encoding="utf-8") as fh:
+                    manifest.update(
+                        {
+                            "action_scale": envs[0].action_scale,
+                            "observation_size": D,
+                            **brain_rules(envs[0], side[0]),
+                            "trained_by": {
+                                "run": run,
+                                "mode": args.stage,
+                                "against": [o for o, _ in opponents],
+                                "iterations": it + 1,
+                            },
+                        }
+                    )
+                    with open(
+                        os.path.join(ck_dir, f"latest_{args.name}_policy_config.json"), "w", encoding="utf-8"
+                    ) as fh:
                         json.dump(manifest, fh, indent=2)
                 except Exception as e:
                     print(f"[onnx] export failed: {e}", flush=True)
@@ -419,7 +842,11 @@ def main() -> None:
                     os.remove(os.path.join(ck_dir, f))
             print(f"saved iteration {it + 1} to {ck_dir}", flush=True)
         if stopping:
-            why = f", {args.done_when} held for {good_for} iterations" if done_when and good_for >= args.done_window else ""
+            why = (
+                f", {args.done_when} held for {good_for} iterations"
+                if done_when and good_for >= args.done_window
+                else ""
+            )
             print(f"[stop] after iteration {it + 1}, {hours:.2f} h{why}", flush=True)
             break
     writer.close()

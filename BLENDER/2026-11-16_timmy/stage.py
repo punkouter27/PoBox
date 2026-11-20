@@ -12,13 +12,14 @@ What the FBX needed:
     down -Y (the rig pipeline's frame) and scaled to <height_m>, feet on z = 0, centred. Object transforms are left
     for the glTF exporter to write (applying them on a skinned armature moved the mesh twice).
 """
+
 import math
 import sys
 
 import bpy
 from mathutils import Matrix, Vector
 
-fbx, glb, blend, height = sys.argv[sys.argv.index("--") + 1:]
+fbx, glb, blend, height = sys.argv[sys.argv.index("--") + 1 :]
 height = float(height)
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -49,9 +50,24 @@ def bounds():
 # weighted centre of the vertices it drives. A similarity transform (turn, scale, shift; Umeyama) fitted between the
 # two sets of points, and the residual reported.
 import numpy as np
-BONES = ["CC_Base_Head", "CC_Base_Spine02", "CC_Base_Pelvis", "CC_Base_L_Thigh", "CC_Base_R_Thigh", "CC_Base_L_Calf",
-         "CC_Base_R_Calf", "CC_Base_L_Foot", "CC_Base_R_Foot", "CC_Base_L_Upperarm", "CC_Base_R_Upperarm",
-         "CC_Base_L_Forearm", "CC_Base_R_Forearm", "CC_Base_L_Hand", "CC_Base_R_Hand"]
+
+BONES = [
+    "CC_Base_Head",
+    "CC_Base_Spine02",
+    "CC_Base_Pelvis",
+    "CC_Base_L_Thigh",
+    "CC_Base_R_Thigh",
+    "CC_Base_L_Calf",
+    "CC_Base_R_Calf",
+    "CC_Base_L_Foot",
+    "CC_Base_R_Foot",
+    "CC_Base_L_Upperarm",
+    "CC_Base_R_Upperarm",
+    "CC_Base_L_Forearm",
+    "CC_Base_R_Forearm",
+    "CC_Base_L_Hand",
+    "CC_Base_R_Hand",
+]
 src, dst = [], []
 for name in BONES:
     b = arm.data.bones.get(name)
@@ -74,13 +90,22 @@ for name in BONES:
 A, Bm = np.array([list(p) for p in src]), np.array([list(p) for p in dst])
 ma, mb = A.mean(0), Bm.mean(0)
 U, S, Vt = np.linalg.svd((Bm - mb).T @ (A - ma) / len(A))
-D = np.eye(3); D[2, 2] = np.sign(np.linalg.det(U @ Vt))
+D = np.eye(3)
+D[2, 2] = np.sign(np.linalg.det(U @ Vt))
 Rn = U @ D @ Vt
 scale = float(np.trace(np.diag(S) @ D) / ((A - ma) ** 2).sum(1).mean())
 tn = mb - scale * Rn @ ma
 fitted = (scale * (Rn @ A.T)).T + tn
-print("MESH_ON_BONES bones", len(A), "residual before", round(float(np.linalg.norm(A - Bm, axis=1).mean()), 4),
-      "after", round(float(np.linalg.norm(fitted - Bm, axis=1).mean()), 4), "scale", round(scale, 4))
+print(
+    "MESH_ON_BONES bones",
+    len(A),
+    "residual before",
+    round(float(np.linalg.norm(A - Bm, axis=1).mean()), 4),
+    "after",
+    round(float(np.linalg.norm(fitted - Bm, axis=1).mean()), 4),
+    "scale",
+    round(scale, 4),
+)
 T = Matrix.Translation(Vector(tn)) @ Matrix(Rn.tolist()).to_4x4() @ Matrix.Scale(scale, 4)
 for m in meshes:
     m.matrix_world = T @ m.matrix_world
@@ -106,7 +131,7 @@ for side in ("L", "R"):
     thigh = arm.pose.bones[f"CC_Base_{side}_Thigh"]
     hip, ankle = pose_head(thigh.name), pose_head(f"CC_Base_{side}_Foot")
     d = ankle - hip
-    target = d - d.dot(left) * left                    # the same leg with its sideways lean taken out
+    target = d - d.dot(left) * left  # the same leg with its sideways lean taken out
     print(f"{side} leg splay {math.degrees(d.angle(target)):.1f} deg")
     q = d.rotation_difference(target).to_matrix().to_4x4()
     rot = Matrix.Translation(hip) @ q @ Matrix.Translation(-hip)
@@ -150,11 +175,22 @@ lo, hi = bounds()
 arm.matrix_world = Matrix.Translation((-(lo.x + hi.x) / 2, -(lo.y + hi.y) / 2, -lo.z)) @ arm.matrix_world
 lo, hi = bounds()
 print("FINAL_BOUNDS", tuple(round(x, 3) for x in lo), tuple(round(x, 3) for x in hi))
-for n in ("CC_Base_L_Thigh", "CC_Base_L_Foot", "CC_Base_R_Thigh", "CC_Base_R_Foot", "CC_Base_Head", "CC_Base_L_Eye", "CC_Base_L_Hand", "CC_Base_R_Hand"):
+for n in (
+    "CC_Base_L_Thigh",
+    "CC_Base_L_Foot",
+    "CC_Base_R_Thigh",
+    "CC_Base_R_Foot",
+    "CC_Base_Head",
+    "CC_Base_L_Eye",
+    "CC_Base_L_Hand",
+    "CC_Base_R_Hand",
+):
     print("BONE", n, tuple(round(v, 3) for v in pose_head(n)))
 for m in meshes:
     m.name = "Timmy"
 arm.name = "Timmy_Armature"
 bpy.ops.wm.save_as_mainfile(filepath=blend)
-bpy.ops.export_scene.gltf(filepath=glb, export_format="GLB", export_skins=True, export_animations=False, export_yup=True)
+bpy.ops.export_scene.gltf(
+    filepath=glb, export_format="GLB", export_skins=True, export_animations=False, export_yup=True
+)
 print("WROTE", glb)

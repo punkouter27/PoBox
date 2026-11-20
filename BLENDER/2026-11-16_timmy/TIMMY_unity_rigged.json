@@ -5,7 +5,7 @@
             "Name": true,
             "SupportShaderSelect": true
         },
-        "Export Directory": "C:/Users/punko/Downloads",
+        "Export Directory": ".",
         "Object": {
             "TIMMY_unity_rigged": {
                 "Generation": "AccuRig",

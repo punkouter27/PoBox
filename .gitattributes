@@ -1,4 +1,4 @@
-# Same line-ending rule in every Po repo: text is stored with LF and checked out native; binaries are left alone.
+# Line endings: text is stored with LF and checked out native; binaries are left alone.
 * text=auto
 *.sh text eol=lf
 *.bat text eol=crlf

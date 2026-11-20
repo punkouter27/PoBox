@@ -7,19 +7,28 @@
 #   T_Crowd_Normal.png  linear, impostor/view-space normal * 0.5 + 0.5 (x = +u, y = +v, z = out of the quad, towards the viewer), A = coverage
 #   T_Crowd_Mask.png    linear, R = recolour (garment), G = skin, B = light spot (hands; the phone in the phone rows), A = ambient occlusion
 #   crowd_stand_preview.png
-import bpy, os, sys, math
+import bpy
+import os
+import sys
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+argv = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
 RENDER_DIR = argv[0] if argv else os.path.join(ROOT, "renders")
 
 CW, CH, COLS, ROWS = 256, 512, 16, 8
 W, Hh = CW * COLS, CH * ROWS
-ROWNAMES = [("seated", "front"), ("seated", "noseL"), ("seated", "noseR"),
-            ("cheer", "front"), ("cheer", "noseL"), ("cheer", "noseR"),
-            ("phone", "front"), ("phone", "noseR")]
+ROWNAMES = [
+    ("seated", "front"),
+    ("seated", "noseL"),
+    ("seated", "noseR"),
+    ("cheer", "front"),
+    ("cheer", "noseL"),
+    ("cheer", "noseR"),
+    ("phone", "front"),
+    ("phone", "noseR"),
+]
 
 
 def load(path):
@@ -28,7 +37,7 @@ def load(path):
     a = np.empty(w * h * 4, dtype=np.float32)
     img.pixels.foreach_get(a)
     bpy.data.images.remove(img)
-    return a.reshape(h, w, 4)     # row 0 = bottom
+    return a.reshape(h, w, 4)  # row 0 = bottom
 
 
 def save(path, arr, srgb):
@@ -57,9 +66,10 @@ def unpremul(px):
 def dilate(rgb, a, iters=12):
     """Push colours into the transparent pixels so bilinear/mip sampling has no dark fringe."""
     rgb = rgb.copy()
-    filled = (a[..., 0] > 0.0)
+    filled = a[..., 0] > 0.0
     for _ in range(iters):
-        acc = np.zeros_like(rgb); cnt = np.zeros(filled.shape, np.float32)
+        acc = np.zeros_like(rgb)
+        cnt = np.zeros(filled.shape, np.float32)
         for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
             f = np.roll(filled, (dy, dx), (0, 1))
             acc += np.roll(rgb, (dy, dx), (0, 1)) * f[..., None]
@@ -79,17 +89,20 @@ mask[..., 3] = 1.0
 for ri, (pose, view) in enumerate(ROWNAMES):
     base = os.path.join(RENDER_DIR, f"row{ri}_{pose}_{view}_")
     if not os.path.exists(base + "albedo.exr"):
-        print("missing row", ri); continue
-    y0 = Hh - (ri + 1) * CH            # PNG row ri counted from the top; numpy row 0 = bottom
+        print("missing row", ri)
+        continue
+    y0 = Hh - (ri + 1) * CH  # PNG row ri counted from the top; numpy row 0 = bottom
     sl = slice(y0, y0 + CH)
     rgb, a = unpremul(load(base + "albedo.exr"))
-    albedo[sl, :, :3] = to_srgb(rgb); albedo[sl, :, 3:] = a
+    albedo[sl, :, :3] = to_srgb(rgb)
+    albedo[sl, :, 3:] = a
     if os.path.exists(base + "normal.exr"):
         n, _ = unpremul(load(base + "normal.exr"))
         v = n * 2 - 1
         v /= np.maximum(np.linalg.norm(v, axis=-1, keepdims=True), 1e-6)
         v[a[..., 0] <= 0] = (0, 0, 1)
-        normal[sl, :, :3] = v * 0.5 + 0.5; normal[sl, :, 3:] = a
+        normal[sl, :, :3] = v * 0.5 + 0.5
+        normal[sl, :, 3:] = a
     if os.path.exists(base + "mask.exr"):
         m, _ = unpremul(load(base + "mask.exr"))
         mask[sl, :, :3] = m
@@ -108,40 +121,70 @@ save(os.path.join(ROOT, "T_Crowd_Normal.png"), normal, False)
 save(os.path.join(ROOT, "T_Crowd_Mask.png"), mask, False)
 print("atlases written")
 
+
 # ---------------------------------------------------------------- stand preview (emulates the suggested shader)
 def lin(x):
     x = np.clip(x, 0, 1)
     return np.where(x <= 0.04045, x / 12.92, np.power((x + 0.055) / 1.055, 2.4))
 
-ALB = lin(albedo[..., :3]); COV = albedo[..., 3]; NRM = normal[..., :3] * 2 - 1; MSK = mask
+
+ALB = lin(albedo[..., :3])
+COV = albedo[..., 3]
+NRM = normal[..., :3] * 2 - 1
+MSK = mask
+
 
 def cell(person, row):
     y0 = Hh - (row + 1) * CH
     s = (slice(y0, y0 + CH), slice(person * CW, (person + 1) * CW))
     return ALB[s], COV[s], NRM[s], MSK[s]
 
+
 def resize(arr, f):
     """Box-filter downscale by f (<=1) via area averaging on an integer-supersampled grid."""
     h, w = arr.shape[:2]
     nh, nw = max(1, int(round(h * f))), max(1, int(round(w * f)))
-    yi = (np.arange(nh + 1) * h / nh).astype(int); xi = (np.arange(nw + 1) * w / nw).astype(int)
+    yi = (np.arange(nh + 1) * h / nh).astype(int)
+    xi = (np.arange(nw + 1) * w / nw).astype(int)
     c = np.cumsum(np.cumsum(np.pad(arr, ((1, 0), (1, 0)) + ((0, 0),) * (arr.ndim - 2)), 0), 1)
     tot = c[yi[1:]][:, xi[1:]] - c[yi[:-1]][:, xi[1:]] - c[yi[1:]][:, xi[:-1]] + c[yi[:-1]][:, xi[:-1]]
     area = ((yi[1:] - yi[:-1])[:, None] * (xi[1:] - xi[:-1])[None, :]).astype(np.float32)
     return tot / (area[..., None] if arr.ndim == 3 else area)
 
+
 rng = np.random.default_rng(7)
 PW, PH = 2048, 1152
 canvas = np.zeros((PH, PW, 3), np.float32)
 canvas[:] = lin(np.array([0.05, 0.05, 0.07]))
-PALETTE = lin(np.array([[0.89, 0.24, 0.24], [0.20, 0.49, 0.94], [0.15, 0.15, 0.17], [0.85, 0.85, 0.82], [0.95, 0.75, 0.15],
-                        [0.25, 0.55, 0.30], [0.55, 0.20, 0.55], [0.35, 0.35, 0.38], [0.90, 0.45, 0.15], [0.20, 0.25, 0.45]]))
-L = np.array([0.25, 0.55, 0.80]); L /= np.linalg.norm(L)      # house light: above and in front (impostor space)
-PXM = 222.6     # atlas px per metre
+PALETTE = lin(
+    np.array(
+        [
+            [0.89, 0.24, 0.24],
+            [0.20, 0.49, 0.94],
+            [0.15, 0.15, 0.17],
+            [0.85, 0.85, 0.82],
+            [0.95, 0.75, 0.15],
+            [0.25, 0.55, 0.30],
+            [0.55, 0.20, 0.55],
+            [0.35, 0.35, 0.38],
+            [0.90, 0.45, 0.15],
+            [0.20, 0.25, 0.45],
+        ]
+    )
+)
+L = np.array([0.25, 0.55, 0.80])
+L /= np.linalg.norm(L)  # house light: above and in front (impostor space)
+PXM = 222.6  # atlas px per metre
 
 # rows from the back (far, small, high on screen) to the front (near, big, low on screen)
 tiers = [  # px per metre on the preview, baseline y (from top), stand fraction
-    (70, 300, 0.30), (85, 420, 0.25), (105, 560, 0.20), (130, 720, 0.15), (165, 900, 0.10), (210, 1120, 0.05)]
+    (70, 300, 0.30),
+    (85, 420, 0.25),
+    (105, 560, 0.20),
+    (130, 720, 0.15),
+    (165, 900, 0.10),
+    (210, 1120, 0.05),
+]
 for scale, base_y, standing_share in tiers:
     f = scale / PXM
     spacing = 0.62 * scale
@@ -150,7 +193,7 @@ for scale, base_y, standing_share in tiers:
         person = int(rng.integers(0, 16))
         stand = rng.random() < standing_share
         phone = (not stand) and rng.random() < 0.05
-        yaw = (x / PW - 0.5) * 2          # left of frame sees figures turned to image right, etc.
+        yaw = (x / PW - 0.5) * 2  # left of frame sees figures turned to image right, etc.
         view = 0 if abs(yaw) < 0.33 else (2 if yaw < 0 else 1)
         if phone:
             row = 6 if view == 0 else 7
@@ -166,24 +209,25 @@ for scale, base_y, standing_share in tiers:
         col = a_ * (1 - m_[..., 0:1] + m_[..., 0:1] * tint)
         ndl = np.clip((n_ * L).sum(-1), 0, 1)
         light = (0.30 * m_[..., 3] + 0.95 * ndl * (0.5 + 0.5 * m_[..., 3]))[..., None]
-        shade = col * light * (1.0 - 0.35 * (1 - (scale - 70) / 140))   # far rows a touch darker
+        shade = col * light * (1.0 - 0.35 * (1 - (scale - 70) / 140))  # far rows a touch darker
         if phone:
             shade += m_[..., 2:3] * np.array([0.85, 0.92, 1.0]) * 2.0
         sh = resize(np.concatenate([shade, c_[..., None]], -1), f)
         h, w = sh.shape[:2]
         # pivot: cell (0.5, 0.2174) sits at (x, base_y); 'bounce' a standing figure up a little
-        px = int(x - w / 2); py = int(base_y - h * (1 - 0.2174))
+        px = int(x - w / 2)
+        py = int(base_y - h * (1 - 0.2174))
         ys, xs = max(0, py), max(0, px)
         ye, xe = min(PH, py + h), min(PW, px + w)
         if ye > ys and xe > xs:
-            sub = sh[::-1][ys - py:ye - py, xs - px:xe - px]   # flip: numpy row 0 = bottom
+            sub = sh[::-1][ys - py : ye - py, xs - px : xe - px]  # flip: numpy row 0 = bottom
             al = sub[..., 3:4]
             canvas[ys:ye, xs:xe] = canvas[ys:ye, xs:xe] * (1 - al) + sub[..., :3] * al
         x += spacing * rng.uniform(0.85, 1.15)
     # the seat-back row in front of this tier hides legs: a dark rail
     rail_top = int(base_y + 0.05 * scale)
-    canvas[rail_top:rail_top + int(0.42 * scale)] = lin(np.array([0.07, 0.07, 0.09]))
+    canvas[rail_top : rail_top + int(0.42 * scale)] = lin(np.array([0.07, 0.07, 0.09]))
 
-out = np.concatenate([to_srgb(canvas), np.ones((PH, PW, 1), np.float32)], -1)[::-1]   # to bottom-up for Blender
+out = np.concatenate([to_srgb(canvas), np.ones((PH, PW, 1), np.float32)], -1)[::-1]  # to bottom-up for Blender
 save(os.path.join(ROOT, "crowd_stand_preview.png"), out, True)
 print("preview written")

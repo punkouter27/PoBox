@@ -19,6 +19,7 @@ logs/queue.hold exists (the other session's Play-mode checks, say).
 
 House rules kept here: TensorBoard is started if it is not up; the viewer is opened on every run.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -32,7 +33,11 @@ import time
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LOGS = os.path.join(HERE, "logs")
-QUEUE, STATE, LOG = os.path.join(LOGS, "queue.json"), os.path.join(LOGS, "queue.state.json"), os.path.join(LOGS, "queue.log")
+QUEUE, STATE, LOG = (
+    os.path.join(LOGS, "queue.json"),
+    os.path.join(LOGS, "queue.state.json"),
+    os.path.join(LOGS, "queue.log"),
+)
 
 
 def log(msg: str) -> None:
@@ -53,10 +58,18 @@ def read(path: str, default):
 def leash(pid: int) -> None:
     """Idle priority and two logical cores: a viewer left to itself takes most of the machine."""
     try:
-        subprocess.run(["powershell", "-NoProfile", "-Command",
-                        f"$p = Get-Process -Id {pid}; $p.PriorityClass = 'Idle'; $p.ProcessorAffinity = 0x300;"
-                        f"Get-CimInstance Win32_Process -Filter 'ParentProcessId={pid}' | ForEach-Object {{ $c = Get-Process -Id $_.ProcessId; "
-                        f"$c.PriorityClass = 'Idle'; $c.ProcessorAffinity = 0x300 }}"], capture_output=True, timeout=30)
+        subprocess.run(
+            [
+                "powershell",
+                "-NoProfile",
+                "-Command",
+                f"$p = Get-Process -Id {pid}; $p.PriorityClass = 'Idle'; $p.ProcessorAffinity = 0x300;"
+                f"Get-CimInstance Win32_Process -Filter 'ParentProcessId={pid}' | ForEach-Object {{ $c = Get-Process -Id $_.ProcessId; "
+                f"$c.PriorityClass = 'Idle'; $c.ProcessorAffinity = 0x300 }}",
+            ],
+            capture_output=True,
+            timeout=30,
+        )
     except Exception as e:
         log(f"viewer leash failed: {e}")
 
@@ -67,8 +80,12 @@ def gpu_busy() -> int:
     try:
         reads = []
         for _ in range(3):
-            out = subprocess.run(["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"],
-                                 capture_output=True, text=True, timeout=20).stdout
+            out = subprocess.run(
+                ["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader,nounits"],
+                capture_output=True,
+                text=True,
+                timeout=20,
+            ).stdout
             reads.append(int(out.split()[0]))
             time.sleep(1.0)
         return min(reads)
@@ -79,7 +96,11 @@ def gpu_busy() -> int:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--after", default="", help="do nothing until this file exists")
-    ap.add_argument("--queue", default="", help="another list (e.g. logs/queue_night.json), with its own NAME.state.json and NAME.stop")
+    ap.add_argument(
+        "--queue",
+        default="",
+        help="another list (e.g. logs/queue_night.json), with its own NAME.state.json and NAME.stop",
+    )
     args = ap.parse_args()
     global QUEUE, STATE
     stop = os.path.join(LOGS, "queue.stop")
@@ -100,8 +121,21 @@ def main() -> None:
         s.settimeout(1.0)
         up = s.connect_ex(("127.0.0.1", 6006)) == 0
     if not up:
-        subprocess.Popen([sys.executable, "-m", "tensorboard.main", "--logdir", os.path.join(LOGS, "tb"), "--port", "6006", "--bind_all"],
-                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0))
+        subprocess.Popen(
+            [
+                sys.executable,
+                "-m",
+                "tensorboard.main",
+                "--logdir",
+                os.path.join(LOGS, "tb"),
+                "--port",
+                "6006",
+                "--bind_all",
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0),
+        )
     log(f"tensorboard: {'already up' if up else 'started'} on http://localhost:6006")
 
     viewer = None
@@ -116,9 +150,11 @@ def main() -> None:
             time.sleep(15.0)
             continue
         busy = gpu_busy()
-        if busy >= 25:       # ponytail: one threshold for everything; a job that should share the GPU needs a flag
+        if busy >= 25:  # ponytail: one threshold for everything; a job that should share the GPU needs a flag
             if not idle_said:
-                log(f"the GPU is {busy}% busy with something else (the editor in Play mode, a game, another run); waiting")
+                log(
+                    f"the GPU is {busy}% busy with something else (the editor in Play mode, a game, another run); waiting"
+                )
                 idle_said = True
             time.sleep(15.0)
             continue
@@ -131,24 +167,38 @@ def main() -> None:
                 t0 = time.time()
                 while os.path.exists(os.path.join(LOGS, f"{cpu}.stop")) and time.time() - t0 < 240.0:
                     time.sleep(3.0)
-                log(f"stopped the CPU trainer {cpu}" if not os.path.exists(os.path.join(LOGS, f"{cpu}.stop")) else f"{cpu} did not answer its stop file")
+                log(
+                    f"stopped the CPU trainer {cpu}"
+                    if not os.path.exists(os.path.join(LOGS, f"{cpu}.stop"))
+                    else f"{cpu} did not answer its stop file"
+                )
         cmd = [sys.executable] + [str(c) for c in job["cmd"]]
         log(f"start  {run}: {' '.join(str(c) for c in job['cmd'])}")
         with open(os.path.join(LOGS, f"{run}.log"), "a", encoding="utf-8") as out:
             # A job's "env" (e.g. PYTHONPATH=.mj350 for an exam on the game's MuJoCo) is added to ours.
-            p = subprocess.Popen(cmd, cwd=HERE, stdout=out, stderr=subprocess.STDOUT, env={**os.environ, **job.get("env", {})})
+            p = subprocess.Popen(
+                cmd, cwd=HERE, stdout=out, stderr=subprocess.STDOUT, env={**os.environ, **job.get("env", {})}
+            )
             with open(os.path.join(LOGS, f"{run}.pid"), "w") as f:
                 f.write(str(p.pid))
             shown = False
             while p.poll() is None:
                 time.sleep(10.0)
-                if job.get("viewer", True) and not shown and glob.glob(os.path.join(HERE, "checkpoints", run, "model_*.pt")):
+                if (
+                    job.get("viewer", True)
+                    and not shown
+                    and glob.glob(os.path.join(HERE, "checkpoints", run, "model_*.pt"))
+                ):
                     shown = True
                     if viewer is not None and viewer.poll() is None:
                         viewer.terminate()
                     try:
-                        viewer = subprocess.Popen([sys.executable, os.path.join(HERE, "view_box.py"), "--run", run], cwd=HERE,
-                                                  stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        viewer = subprocess.Popen(
+                            [sys.executable, os.path.join(HERE, "view_box.py"), "--run", run],
+                            cwd=HERE,
+                            stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL,
+                        )
                         time.sleep(20.0)
                         leash(viewer.pid)
                         log(f"viewer on {run}")

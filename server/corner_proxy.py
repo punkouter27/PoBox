@@ -18,6 +18,7 @@ request every 2 seconds is turned away, so a proxy left open on a network cannot
 Network binds require TLS and a token. The token is accepted only in the x-pobox-token header; URL query strings are
 rejected, and access logs never include request paths.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -63,18 +64,23 @@ def ask(kind: str, facts: dict, timeout_s: float) -> str:
         raise RuntimeError("ANTHROPIC_API_KEY is not set")
     body = {
         "model": MODEL,
-        "max_tokens": 2000,                       # thinking is always on for this model and counts towards it
+        "max_tokens": 2000,  # thinking is always on for this model and counts towards it
         "output_config": {"effort": "low"},
         "fallbacks": "default",
         "system": SYSTEM[kind],
         "messages": [{"role": "user", "content": json.dumps(facts, sort_keys=True)}],
     }
-    req = urllib.request.Request(API, data=json.dumps(body).encode("utf-8"), method="POST", headers={
-        "content-type": "application/json",
-        "x-api-key": key,
-        "anthropic-version": "2023-06-01",
-        "anthropic-beta": "server-side-fallback-2026-07-01",
-    })
+    req = urllib.request.Request(
+        API,
+        data=json.dumps(body).encode("utf-8"),
+        method="POST",
+        headers={
+            "content-type": "application/json",
+            "x-api-key": key,
+            "anthropic-version": "2023-06-01",
+            "anthropic-beta": "server-side-fallback-2026-07-01",
+        },
+    )
     with urllib.request.urlopen(req, timeout=timeout_s) as r:
         msg = json.loads(r.read().decode("utf-8"))
     if msg.get("stop_reason") == "refusal":
@@ -170,7 +176,9 @@ def main() -> None:
         context.load_cert_chain(args.certfile, args.keyfile)
         server.socket = context.wrap_socket(server.socket, server_side=True)
     scheme = "https" if args.certfile else "http"
-    print(f"corner proxy on {scheme}://{args.host}:{args.port}/corner ({MODEL}); key {'set' if os.environ.get('ANTHROPIC_API_KEY') else 'NOT SET'}")
+    print(
+        f"corner proxy on {scheme}://{args.host}:{args.port}/corner ({MODEL}); key {'set' if os.environ.get('ANTHROPIC_API_KEY') else 'NOT SET'}"
+    )
     server.serve_forever()
 
 

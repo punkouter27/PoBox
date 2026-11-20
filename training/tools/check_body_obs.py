@@ -3,6 +3,7 @@ game's spec) on the same states, and are zero with no body within 3 m. CPU (Warp
 
     CUDA_VISIBLE_DEVICES=-1 python tools/check_body_obs.py
 """
+
 from __future__ import annotations
 
 import math
@@ -35,7 +36,14 @@ def spec(pos, q, mp, mq):
 
 
 def main() -> None:
-    env = MatchEnv(os.path.join(HERE, "models", "v2", "matt_vs_zombie_spar.xml"), 16, device="cpu", cuda_graph=False, bodies=2, obs_bodies=True)
+    env = MatchEnv(
+        os.path.join(HERE, "models", "v2", "matt_vs_zombie_spar.xml"),
+        16,
+        device="cpu",
+        cuda_graph=False,
+        bodies=2,
+        obs_bodies=True,
+    )
     assert env.obs_dim == 106
     seen = 0
     for _ in range(3):
@@ -51,7 +59,9 @@ def main() -> None:
     env.mocap_pos[:] = torch.tensor([30.0, 30.0, 0.0])
     o = env._observe(env._geometry()).reshape(env.N, 2, 106)
     assert float(o[..., 103:].abs().max()) == 0.0
-    print(f"body numbers match the spec on {env.N * 2 * 3} fighter states ({seen} with a body in sight); zeros with none")
+    print(
+        f"body numbers match the spec on {env.N * 2 * 3} fighter states ({seen} with a body in sight); zeros with none"
+    )
 
 
 if __name__ == "__main__":
