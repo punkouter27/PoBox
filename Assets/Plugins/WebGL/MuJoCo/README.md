@@ -1,4 +1,4 @@
-# MuJoCo 3.5.0 for WebGL
+# MuJoCo 3.15.0 for WebGL
 
 Static wasm libraries for the browser build (Builds/WebGL, the WebGL builder in Assets/Editor).
 Unity links them into the player; org.mujoco's `MujocoLib` binds to `"__Internal"` on WebGL
@@ -11,7 +11,7 @@ other exception model), single-threaded (Unity WebGL has no pthreads):
 
     E="C:/Program Files/Unity/Hub/Editor/6000.6.0f1/Editor/Data/PlaybackEngines/WebGLSupport/BuildTools/Emscripten"
     export EM_CONFIG="$E/.emscripten"
-    git clone --depth 1 --branch 3.5.0 https://github.com/google-deepmind/mujoco.git src
+    git clone --depth 1 --branch 3.15.0 https://github.com/google-deepmind/mujoco.git src
     # 3.5.0 only: delete the two " -pthread" in src/CMakeLists.txt lines 55-56 (hardcoded there)
     F="-mbulk-memory -mbulk-memory-opt -mnontrapping-fptoint -fwasm-exceptions -sSUPPORT_LONGJMP=wasm -msimd128 -sWASM_LEGACY_EXCEPTIONS=1"
     cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE="$E/emscripten/cmake/Modules/Platform/Emscripten.cmake" \

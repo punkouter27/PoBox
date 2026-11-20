@@ -1,11 +1,5 @@
 {
   "dependencies": {
-    "bin.mujoco": {
-      "version": "file:bin.mujoco",
-      "depth": 0,
-      "source": "embedded",
-      "dependencies": {}
-    },
     "com.unity.ai.inference": {
       "version": "2.6.1",
       "depth": 0,

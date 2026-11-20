@@ -21,7 +21,11 @@ namespace PoBox.EditorTools
     {
         /// PERMANENT once the first bundle is uploaded: Play keys the app on it.
         public const string APP_ID = "com.punkoutersoftware.pobox";
-        const string KEYSTORE = "C:/Users/punko/OneDrive/VAULT/_CODE/pobox-upload.jks";
+        /// The upload key, outside the repo: POBOX_KEYSTORE, else OneDrive/VAULT/_CODE/pobox-upload.jks in the user's folder.
+        static string KEYSTORE => (System.Environment.GetEnvironmentVariable("POBOX_KEYSTORE") is string k && k.Length > 0
+            ? k
+            : Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile), "OneDrive", "VAULT", "_CODE", "pobox-upload.jks"))
+            .Replace('\\', '/');
         const string ALIAS = "pobox-upload";
         const string OUTPUT = "Build/Android/PoBox.aab";
 

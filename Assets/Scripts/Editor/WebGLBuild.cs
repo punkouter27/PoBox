@@ -9,13 +9,16 @@ namespace PoBox.EditorTools
 {
     /// <summary>
     /// The game in a browser: a WebGL player in Builds/WebGL, served from the Azure Static Web App
-    /// "pobox" (resource group PoBox) by Tools/deploy_webgl.ps1. Menu Tools/PoBox/Build WebGL (browser), or headless:
+    /// "pobox" (resource group PoBox) through scripts/publish_webgl.ps1 (a webgl-* release, deployed by CI) or
+    /// scripts/deploy_webgl.ps1. Menu Tools/PoBox/Build WebGL (browser), or headless:
     ///   Unity.exe -batchmode -quit -projectPath . -buildTarget WebGL -executeMethod PoBox.EditorTools.WebGLBuild.Build
     /// The outcome is the "WEBGL BUILD RESULT:" log line (and the exit code in batch mode).
     ///
     /// Gzip with the decompression fallback: Static Web Apps does not send the Content-Encoding
     /// header a compressed Unity build otherwise needs, so the loader unpacks the files itself.
-    /// The canvas is 540 x 960.
+    /// The page (WebGLTemplates/Po) sizes the canvas to the window between its top bar and footer, any shape; the
+    /// default size below only matters to a page that does not. The version is stamped by WebGLBuildStamp and put
+    /// back afterwards, so a build leaves ProjectSettings as it found it.
     /// The MCP bridge's UNITY_MCP_* defines are stripped for the build, as for Android, so its
     /// runtime (and the NuGet closure behind it) stays out of the player.
     ///
@@ -51,18 +54,22 @@ namespace PoBox.EditorTools
                     ? "--bind"
                     : prevEmscriptenArgs + " --bind";
             BuildSummary summary;
+            string prevVersion = PlayerSettings.bundleVersion;
+            string builtVersion = prevVersion;
             try
             {
                 ShrinkGlbTextures();
                 summary = BuildPipeline.BuildPlayer(scenes, OUTPUT, BuildTarget.WebGL, BuildOptions.None).summary;
+                builtVersion = PlayerSettings.bundleVersion;
             }
             finally
             {
                 RestoreGlbs();
+                PlayerSettings.bundleVersion = prevVersion;
                 PlayerSettings.WebGL.emscriptenArgs = prevEmscriptenArgs;
                 PlayerSettings.SetScriptingDefineSymbols(NamedBuildTarget.WebGL, defines);
             }
-            Finish($"{summary.result} | v{PlayerSettings.bundleVersion} | {scenes.Length} scenes | {summary.totalErrors} errors | " +
+            Finish($"{summary.result} | v{builtVersion} | {scenes.Length} scenes | {summary.totalErrors} errors | " +
                    $"{summary.totalSize / (1024 * 1024)} MB | {summary.totalTime.TotalMinutes:0.0} min | {OUTPUT}",
                    summary.result == BuildResult.Succeeded);
         }

@@ -63,7 +63,8 @@ public struct MjcfOptionFlag {
   public EnableDisableFlag FrictionLoss;
   public EnableDisableFlag Limit;
   public EnableDisableFlag Contact;
-  public EnableDisableFlag Passive;
+  public EnableDisableFlag Spring;
+  public EnableDisableFlag Damper;
   public EnableDisableFlag Gravity;
   public EnableDisableFlag ClampCtrl;
   public EnableDisableFlag WarmStart;
@@ -74,7 +75,7 @@ public struct MjcfOptionFlag {
   public EnableDisableFlag Energy;
   public EnableDisableFlag FwdInv;
   public EnableDisableFlag MultiCCD;
-  // PoBox: the trainer's models switch this off; the plugin did not know the flag.
+  // PoBox: the trainer's models switch this off; the plugin does not know the flag.
   public EnableDisableFlag EulerDamp;
   public static MjcfOptionFlag Default = new MjcfOptionFlag() {
     Constraint = EnableDisableFlag.enable,
@@ -82,7 +83,8 @@ public struct MjcfOptionFlag {
     FrictionLoss = EnableDisableFlag.enable,
     Limit = EnableDisableFlag.enable,
     Contact = EnableDisableFlag.enable,
-    Passive = EnableDisableFlag.enable,
+    Spring = EnableDisableFlag.enable,
+    Damper = EnableDisableFlag.enable,
     Gravity = EnableDisableFlag.enable,
     ClampCtrl = EnableDisableFlag.enable,
     WarmStart = EnableDisableFlag.enable,
@@ -92,7 +94,7 @@ public struct MjcfOptionFlag {
     Override = EnableDisableFlag.disable,
     Energy = EnableDisableFlag.disable,
     FwdInv = EnableDisableFlag.disable,
-    MultiCCD = EnableDisableFlag.disable,
+    MultiCCD = EnableDisableFlag.enable,
     EulerDamp = EnableDisableFlag.enable
   };
 
@@ -104,7 +106,8 @@ public struct MjcfOptionFlag {
                                                             localDefault.FrictionLoss);
     Limit = mjcf.GetEnumAttribute<EnableDisableFlag>("limit", localDefault.Limit);
     Contact = mjcf.GetEnumAttribute<EnableDisableFlag>("contact", localDefault.Contact);
-    Passive = mjcf.GetEnumAttribute<EnableDisableFlag>("passive", localDefault.Passive);
+    Spring = mjcf.GetEnumAttribute<EnableDisableFlag>("spring", localDefault.Spring);
+    Damper = mjcf.GetEnumAttribute<EnableDisableFlag>("damper", localDefault.Damper);
     Gravity = mjcf.GetEnumAttribute<EnableDisableFlag>("gravity", localDefault.Gravity);
     ClampCtrl = mjcf.GetEnumAttribute<EnableDisableFlag>("clampctrl", localDefault.ClampCtrl);
     WarmStart = mjcf.GetEnumAttribute<EnableDisableFlag>("warmstart", localDefault.WarmStart);
@@ -125,8 +128,8 @@ public struct MjcfOptionFlag {
     mjcf.SetAttribute("frictionloss", FrictionLoss.ToString());
     mjcf.SetAttribute("limit", Limit.ToString());
     mjcf.SetAttribute("contact", Contact.ToString());
-    // PoBox: MuJoCo 3.5.0 has no "passive" flag any more and refuses a scene that names it; it is not written.
-    mjcf.SetAttribute("eulerdamp", EulerDamp.ToString());
+    mjcf.SetAttribute("spring", Spring.ToString());
+    mjcf.SetAttribute("damper", Damper.ToString());
     mjcf.SetAttribute("gravity", Gravity.ToString());
     mjcf.SetAttribute("clampctrl", ClampCtrl.ToString());
     mjcf.SetAttribute("warmstart", WarmStart.ToString());
@@ -137,6 +140,7 @@ public struct MjcfOptionFlag {
     mjcf.SetAttribute("energy", Energy.ToString());
     mjcf.SetAttribute("fwdinv", FwdInv.ToString());
     mjcf.SetAttribute("multiccd", MultiCCD.ToString());
+    mjcf.SetAttribute("eulerdamp", EulerDamp.ToString());
   }
 }
 
@@ -187,11 +191,11 @@ public struct MjOptionStruct {
   public ConstraintSolverType Solver;
   [Tooltip("Maximum iterations for the constraint solver.")]
   public int Iterations;
-  [Tooltip("Threshold used for early termination of the constraint solver.")]
-  public float Tolerance;
   // PoBox: the trainer's models set this; the plugin left it at MuJoCo's default.
   [Tooltip("Maximum iterations of the solver's line search.")]
   public int LsIterations;
+  [Tooltip("Threshold used for early termination of the constraint solver.")]
+  public float Tolerance;
   [Tooltip("Maximum iterations for the no-slip phase of the constraint solver.")]
   public int NoSlipIterations;
   [Tooltip("Threshold used for early termination of the Noslip solver.")]
@@ -262,8 +266,8 @@ public struct MjOptionStruct {
     Solver = mjcf.GetEnumAttribute<ConstraintSolverType>("solver", localDefault.Solver);
 
     Iterations = (int)mjcf.GetFloatAttribute("iterations", localDefault.Iterations);
-    Tolerance = mjcf.GetFloatAttribute("tolerance", localDefault.Tolerance);
     LsIterations = (int)mjcf.GetFloatAttribute("ls_iterations", localDefault.LsIterations);
+    Tolerance = mjcf.GetFloatAttribute("tolerance", localDefault.Tolerance);
     NoSlipIterations = (int)mjcf.GetFloatAttribute(
         "noslip_iterations", localDefault.NoSlipIterations);
     NoSlipTolerance = mjcf.GetFloatAttribute("noslip_tolerance", localDefault.NoSlipTolerance);
@@ -280,10 +284,9 @@ public struct MjOptionStruct {
 
   public XmlElement ToMjcf(XmlElement mjcf) {
     mjcf.SetAttribute("impratio", MjEngineTool.MakeLocaleInvariant($"{ImpRatio}"));
-
-    mjcf.SetAttribute("magnetic", MjEngineTool.MakeLocaleInvariant($"{Magnetic.x} {Magnetic.y} {Magnetic.z}"));
+    mjcf.SetAttribute("magnetic",
+        MjEngineTool.MakeLocaleInvariant($"{Magnetic.x} {Magnetic.y} {Magnetic.z}"));
     mjcf.SetAttribute("wind", MjEngineTool.MakeLocaleInvariant($"{Wind.x} {Wind.y} {Wind.z}"));
-
     mjcf.SetAttribute("density", MjEngineTool.MakeLocaleInvariant($"{Density}"));
     mjcf.SetAttribute("viscosity", MjEngineTool.MakeLocaleInvariant($"{Viscosity}"));
     mjcf.SetAttribute("o_margin", MjEngineTool.MakeLocaleInvariant($"{OverrideMargin}"));
@@ -295,10 +298,9 @@ public struct MjOptionStruct {
     mjcf.SetAttribute("cone", Cone.ToString());
     mjcf.SetAttribute("jacobian", Jacobian.ToString());
     mjcf.SetAttribute("solver", Solver.ToString());
-
     mjcf.SetAttribute("iterations", MjEngineTool.MakeLocaleInvariant($"{Iterations}"));
-    mjcf.SetAttribute("tolerance", MjEngineTool.MakeLocaleInvariant($"{Tolerance}"));
     mjcf.SetAttribute("ls_iterations", MjEngineTool.MakeLocaleInvariant($"{LsIterations}"));
+    mjcf.SetAttribute("tolerance", MjEngineTool.MakeLocaleInvariant($"{Tolerance}"));
     mjcf.SetAttribute("noslip_iterations", MjEngineTool.MakeLocaleInvariant($"{NoSlipIterations}"));
     mjcf.SetAttribute("noslip_tolerance", MjEngineTool.MakeLocaleInvariant($"{NoSlipTolerance}"));
     mjcf.SetAttribute("ccd_iterations", MjEngineTool.MakeLocaleInvariant($"{CcdIterations}"));
@@ -338,7 +340,7 @@ public class MjGlobalSettings : MonoBehaviour {
   public static MjGlobalSettings Instance {
     get {
      if (_instance == null) {
-        var instances = FindObjectsOfType<MjGlobalSettings>();
+        var instances = FindObjectsByType<MjGlobalSettings>(FindObjectsSortMode.None);
         if (instances.Length > 1) {
           throw new InvalidOperationException(
               "Only one MjGlobalSettings instance is allowed - please resolve manually.");

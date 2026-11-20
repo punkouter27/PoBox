@@ -181,7 +181,7 @@ namespace PoBox.UI
             if (!Application.isPlaying) return;
 
             if (Input.GetKeyDown(KeyCode.Escape)) Back();
-            if (Input.GetKeyDown(KeyCode.Tab)) SettingsPage.ToggleStats();
+            if (Input.GetKeyDown(KeyCode.F3)) SettingsPage.ToggleStats();     // Tab is the diagnostics overlay's (DiagOverlay)
             if (_leaving) Set(_busyWord, _busyBase + BusyDots[(int)(Time.unscaledTime * 3f) % BusyDots.Length]);
             CupCountdown();
             _smoothed = Mathf.Lerp(_smoothed, Time.unscaledDeltaTime, 0.05f);
@@ -352,6 +352,16 @@ namespace PoBox.UI
                 Set(_tags[i], i == Red ? "RED" : i == Blue ? "BLUE" : "");
             }
             if (_versus != null && boxers.Length > 0) _versus.text = $"{boxers[Red].displayName}  v  {boxers[Blue].displayName}";
+        }
+
+        /// <summary>FIGHT with this pair in the corners (demo mode's random bouts).</summary>
+        public void FightPair(int red, int blue)
+        {
+            if (red < 0 || blue < 0 || red >= boxers.Length || blue >= boxers.Length || red == blue) return;
+            Red = red;
+            Blue = blue;
+            Refresh();
+            Fight();
         }
 
         public void Fight()

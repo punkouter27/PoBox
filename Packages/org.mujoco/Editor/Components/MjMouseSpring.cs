@@ -26,18 +26,15 @@ namespace Mujoco {
   public class MjMouseSpring : Editor {
     private bool _lastShiftKeyState = false;
 
+    private int _controlID = -1;
     private Plane _mouseDragPlane;
     private Vector3 _mouseDragCurrentPoint = Vector3.negativeInfinity;
 
     private Color _translucentRed = new Color(1, 0, 0, 0.1f);
 
     public void OnDisable() {
-      // PoBox: outside OnGUI (a domain reload with a body selected) a control ID cannot be asked for, and
-      // asking threw an ArgumentException into the console at every recompile and every Play.
-      if (UnityEngine.Event.current == null) return;
       // If we're still the hot control at this stage, we need to release.
-      int uniqueID = GUIUtility.GetControlID(FocusType.Passive);
-      if (GUIUtility.hotControl == uniqueID) {
+      if (GUIUtility.hotControl == _controlID) {
         GUIUtility.hotControl = 0;
       }
     }
@@ -89,6 +86,7 @@ namespace Mujoco {
 
       // Cache the hot control to determine whether we're currently capturing mouse input.
       int uniqueID = GUIUtility.GetControlID(FocusType.Passive);
+      _controlID = uniqueID;
 
       // Mouse spring is active if the control key is held down and the user is dragging the
       // left mouse button, or if we're already in the process of capturing mouse input.

@@ -9,11 +9,10 @@ namespace PoBox.EditorTools
     /// <summary>
     /// Getting the game onto an Android phone with its fight still running on MuJoCo.
     ///
-    /// The fight is stepped by MuJoCo's own library, from the embedded package Packages/bin.mujoco
-    /// (joanllobera/mujoco-bin#3.5.0, the house rule). That tag's Android library is MuJoCo 3.3.7, where the plugin
-    /// and the Windows library are 3.5.0, and the two lay mjModel and mjData out differently; the one here is 3.5.0,
-    /// built for arm64 with the NDK (Packages/bin.mujoco/README-PoBox.md). The report reads the version out of the
-    /// library itself, so a 3.3.7 one put back by a package update is caught.
+    /// The fight is stepped by MuJoCo's own library: on a phone Assets/Plugins/MuJoCo/Android/arm64-v8a/libmujoco.so,
+    /// MuJoCo 3.15.0 built for arm64 with the NDK, the same version as the plugin (Packages/org.mujoco) and the
+    /// editor's mujoco.dll; mismatched versions lay mjModel and mjData out differently. The report reads the version
+    /// out of the library itself, so a library of another version is caught.
     ///
     /// <c>PoBox/Android/Prepare</c> sets the plug-ins' platforms and the player settings a phone build needs
     /// and says what is still missing. <c>PoBox/Android/Build APK</c> builds, and switches the editor to the
@@ -21,8 +20,9 @@ namespace PoBox.EditorTools
     /// </summary>
     public static class AndroidPrep
     {
-        public const string Library = "Packages/bin.mujoco/Runtime/Plugins/Android/libmujoco.so";
-        const string WindowsLibrary = "Packages/bin.mujoco/Runtime/Plugins/x86_64/mujoco.dll";
+        public const string Library = "Assets/Plugins/MuJoCo/Android/arm64-v8a/libmujoco.so";
+        const string WindowsLibrary = "Packages/org.mujoco/mujoco.dll";
+        const string Version = "3.15.0";
 
         [MenuItem("PoBox/Android/Prepare", priority = 60)]
         public static void Prepare() => Debug.Log("[PoBox] Android: " + Report(true));
@@ -54,11 +54,11 @@ namespace PoBox.EditorTools
                         windows.SaveAndReimport();
                     }
                 }
-                string version = System.Text.Encoding.ASCII.GetString(File.ReadAllBytes(Library)).Contains("3.5.0") ? "3.5.0" : null;
+                string version = System.Text.Encoding.ASCII.GetString(File.ReadAllBytes(Library)).Contains(Version) ? Version : null;
                 if (version != null) ready.Add($"MuJoCo {version} library for arm64 ({new FileInfo(Library).Length / (1024 * 1024)} MB)");
-                else missing.Add("a MuJoCo 3.5.0 library for arm64 (" + Library + " is another version; Packages/bin.mujoco/README-PoBox.md)");
+                else missing.Add($"a MuJoCo {Version} library for arm64 ({Library} is another version; Packages/org.mujoco/POBOX_PATCHES.md)");
             }
-            else missing.Add("the MuJoCo library (" + Library + ", Packages/bin.mujoco/README-PoBox.md)");
+            else missing.Add("the MuJoCo library (" + Library + ", Packages/org.mujoco/POBOX_PATCHES.md)");
 
 
             if (apply)

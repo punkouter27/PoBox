@@ -1,4 +1,4 @@
-Recordings imported by PoDecath/Audio/Import Sound Pack from C:/Users/punko/AppData/Local/Temp/claude/c--Users-punko-Downloads-PoDecath/839d3115-f355-4e29-9f53-6f0d126cdd0b/scratchpad/soundpack
+Recordings imported by PoDecath/Audio/Import Sound Pack from a temporary download folder
 Licences and sources: see LICENSES.md beside this file.
 
 crowdBed.wav  <-  Stadium Crowd Ambience Loop.wav

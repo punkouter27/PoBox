@@ -327,6 +327,7 @@ namespace PoBox.Mj
         /// <summary>Standing in the guard at (x, y), facing yaw: the first moment of every training episode, without its noise.</summary>
         public void ResetToGuard(double x, double y, double yaw)
         {
+            ResetEpisodeReward();
             double* q = _d->qpos + _rootQ;
             q[0] = x; q[1] = y; q[2] = Config.stand_height + 0.002;
             q[3] = Math.Cos(yaw / 2); q[4] = 0; q[5] = 0; q[6] = Math.Sin(yaw / 2);
@@ -378,6 +379,7 @@ namespace PoBox.Mj
         /// <summary>Held in a pose at (x, y), facing yaw, nothing moving: the joints as given, the body lowered or raised until the lower sole is on the floor.</summary>
         public void ResetToPose(double x, double y, double yaw, double[] joints)
         {
+            ResetEpisodeReward();
             double* q = _d->qpos + _rootQ;
             q[0] = x; q[1] = y; q[2] = Config.stand_height;
             q[3] = Math.Cos(yaw / 2); q[4] = 0; q[5] = 0; q[6] = Math.Sin(yaw / 2);
@@ -566,7 +568,9 @@ namespace PoBox.Mj
         public void Infer()
         {
             if (_worker == null) { Array.Clear(Action, 0, Joints); return; }
-            long start = System.Diagnostics.Stopwatch.GetTimestamp();
+            // Time.realtimeSinceStartupAsDouble, not Stopwatch: a WebGL Stopwatch counts whole milliseconds, which
+            // read every sub-millisecond inference as 0 (the overlay showed 0.00 ms in the browser).
+            double start = Time.realtimeSinceStartupAsDouble;
             float[] buffer = _inputSize == WideObservationSize ? _obsWide : _obsF;
             for (int i = 0; i < _inputSize; i++) buffer[i] = (float)Obs[i];
             if (DirectBrains && _mlp != null)
@@ -577,7 +581,7 @@ namespace PoBox.Mj
                     if (float.IsFinite(_actF[i])) Action[i] = _actF[i];
                     else { NanInfCount++; Action[i] = 0.0; }
                 }
-                _inferSeconds += (System.Diagnostics.Stopwatch.GetTimestamp() - start) / (double)System.Diagnostics.Stopwatch.Frequency;
+                _inferSeconds += Time.realtimeSinceStartupAsDouble - start;
                 return;
             }
             _input.Upload(buffer);
@@ -597,7 +601,7 @@ namespace PoBox.Mj
                     else { NanInfCount++; Action[i] = 0.0; }
                 }
             }
-            _inferSeconds += (System.Diagnostics.Stopwatch.GetTimestamp() - start) / (double)System.Diagnostics.Stopwatch.Frequency;
+            _inferSeconds += Time.realtimeSinceStartupAsDouble - start;
         }
 
         /// <summary>The policy's answer to any 103 numbers, without touching the body: for checking it against the trainer's.</summary>
@@ -700,12 +704,48 @@ namespace PoBox.Mj
         /// <summary>Once a control step is over: how fast the stand-in's head moved, which the next observation holds.</summary>
         public void AfterStep(double dt)
         {
+            ChargePenalties(RewardWeights.Current);
             StandIn();
             for (int k = 0; k < 3; k++)
             {
                 _headVel[k] = (_standIn[0][k] - _prevHead[k]) / dt;
                 _prevHead[k] = _standIn[0][k];
             }
+        }
+
+        /// <summary>
+        /// This episode's reward as far as the game can count it: the training config's penalty terms (RewardWeights,
+        /// the copy of training/config/reward.json), charged once a control step as envs/boxing.py charges them. The
+        /// Tab overlay shows it; it starts again with every episode (ResetToGuard / ResetToPose).
+        /// </summary>
+        public double EpisodeReward { get; private set; }
+        public void ResetEpisodeReward() { EpisodeReward = 0.0; _rateFrom = false; }
+        readonly double[] _lastAction = new double[64];
+        bool _rateFrom;
+
+        void ChargePenalties(RewardWeights w)
+        {
+            if (w == null || !Bound || Action == null) return;
+            double torque = 0.0, speed = 0.0, rate = 0.0, slip = 0.0;
+            for (int i = 0; i < Joints; i++)
+            {
+                double t = _d->actuator_force[_act[i]], v = _d->qvel[_jv[i]], a = Action[i];
+                torque += t * t;
+                speed += v * v;
+                if (_rateFrom) rate += (a - _lastAction[i]) * (a - _lastAction[i]);
+                _lastAction[i] = a;
+            }
+            _rateFrom = true;
+            double wx = _d->qvel[_rootV + 3], wy = _d->qvel[_rootV + 4];   // a free joint's turn rates are in the body's frame
+            double* fv = stackalloc double[6];
+            for (int f = 0; f < 2; f++)
+            {
+                if (!FootDown(f)) continue;
+                MujocoLib.mj_objectVelocity(_m, _d, (int)MujocoLib.mjtObj.mjOBJ_GEOM, _foot[f], fv, 0);
+                slip += Math.Min(25.0, fv[3] * fv[3] + fv[4] * fv[4]);
+            }
+            double r = -(w.torqueSq * torque + w.jointVelSq * speed + w.angVelSq * (wx * wx + wy * wy) + w.actionRate * rate + w.footSlip * slip);
+            if (double.IsFinite(r)) EpisodeReward += r;
         }
 
         public double PelvisHeight => _d->xpos[3 * _pelvis + 2];

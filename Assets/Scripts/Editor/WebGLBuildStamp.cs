@@ -7,9 +7,10 @@ using UnityEditor.Build.Reporting;
 namespace PoBox.EditorTools
 {
     /// <summary>
-    /// Stamps PlayerSettings.bundleVersion with YYMMDD (UTC) before a WebGL build, because the Po
-    /// WebGL page template prints v{PRODUCT_VERSION} in the lower-right corner. Android builds keep
-    /// the version AndroidPrep gives them.
+    /// Stamps PlayerSettings.bundleVersion with the build's one version, UTC yyMMdd, before a WebGL build: the page
+    /// template prints v{PRODUCT_VERSION} in its footer and Application.version carries it. scripts/publish_webgl.ps1
+    /// computes the stamp once and passes it in PO_BUILD_STAMP, so the player, index.html and diag.html agree even
+    /// across midnight; a build from the menu stamps today (UTC). Android builds keep the version AndroidPrep gives them.
     /// </summary>
     public sealed class WebGLBuildStamp : IPreprocessBuildWithReport
     {
@@ -21,7 +22,10 @@ namespace PoBox.EditorTools
             {
                 return;
             }
-            PlayerSettings.bundleVersion = DateTime.UtcNow.ToString("yyMMdd", CultureInfo.InvariantCulture);
+            string given = Environment.GetEnvironmentVariable("PO_BUILD_STAMP");
+            PlayerSettings.bundleVersion = !string.IsNullOrEmpty(given) && given.Length == 6 && int.TryParse(given, out _)
+                ? given
+                : DateTime.UtcNow.ToString("yyMMdd", CultureInfo.InvariantCulture);
         }
     }
 }

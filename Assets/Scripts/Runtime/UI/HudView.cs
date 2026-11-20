@@ -354,7 +354,7 @@ namespace PoBox.UI
             if (_root == null) return;
             _safeArea.Fit(_root, _safe);
             if (Input.GetKeyDown(KeyCode.Escape)) Back();
-            if (Input.GetKeyDown(KeyCode.Tab) || Input.GetKeyDown(KeyCode.F3)) ToggleDebug();
+            if (Input.GetKeyDown(KeyCode.F3)) ToggleDebug();     // Tab is the diagnostics overlay's (DiagOverlay)
             if (Input.GetKeyDown(KeyCode.F1))
             {
                 CurrentMode = (AppMode)(((int)CurrentMode + 1) % 3);

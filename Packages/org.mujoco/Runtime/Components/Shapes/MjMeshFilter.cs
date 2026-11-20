@@ -58,8 +58,8 @@ public class MjMeshFilter : MonoBehaviour {
 
     var mesh = new Mesh();
     // Name this mesh to easily track resources in Unity analysis tools.
-    // PoBox: Object.GetInstanceID() is an error in Unity 6000.6; the id was only part of a debug name.
-    mesh.name = $"Mujoco mesh for {gameObject.name}";
+    // PoBox: Object.GetInstanceID() is an error in Unity 6000.6.
+    mesh.name = $"Mujoco mesh for {gameObject.name}, id:{mesh.GetEntityId()}";
     _meshFilter.sharedMesh = mesh;
     mesh.vertices = meshData.Item1;
     mesh.triangles = meshData.Item2;

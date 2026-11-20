@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 43472d6a0f2b44cca7e1a87e5073152b, type: 3}
+  m_Name: ShowcaseSettings
+  m_EditorClassIdentifier: PoBox.Runtime::PoBox.UI.ShowcaseSettings
+  idleSeconds: 30
+  cameras:
+  - 0
+  - 1
+  - 2
+  - 4
+  - 3
+  - 5
+  - 7
+  cameraDwellSeconds: 7
+  resultSeconds: 8
+  runInEditor: 0
+  panelSettings: {fileID: 11400000, guid: 962bd77d8f5446b45a1ec51a43aefac8, type: 2}
+  sortingOrder: 100

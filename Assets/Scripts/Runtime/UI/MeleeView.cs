@@ -181,7 +181,7 @@ namespace PoBox.UI
             if (_root == null) return;
             _safeArea.Fit(_root, _safe);
             if (Input.GetKeyDown(KeyCode.Escape)) Back();
-            if (Input.GetKeyDown(KeyCode.Tab)) SettingsPage.ToggleStats();
+            if (Input.GetKeyDown(KeyCode.F3)) SettingsPage.ToggleStats();     // Tab is the diagnostics overlay's (DiagOverlay)
             _call.EnableInClassList("hidden", Time.unscaledTime >= _callUntil);
 
             if (Time.unscaledTime < _nextText) return;

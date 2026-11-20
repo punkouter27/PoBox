@@ -1,7 +1,7 @@
 {
   "name": "cardwalker",
   "rig": "cardwalker.json",
-  "source_mesh": "C:/Users/punko/Downloads/PoBox/Assets/Art/Exports/GLB/SK_RingCardWalker.glb",
+  "source_mesh": "Assets/Art/Exports/GLB/SK_RingCardWalker.glb",
   "joint_order": [
     "abdomen_z",
     "abdomen_y",

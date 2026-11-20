@@ -245,10 +245,17 @@ One GPU job at a time: before training, check `nvidia-smi`, running
   recordings in `Assets/Boxers/NAME`; `-m train` = the trainer's stack). Config: `pyproject.toml`.
 - **Reward penalties** (torque², joint speed², pelvis angular velocity², action rate, foot slip) have their weights in
   `training/config/reward.json` (read by `training/envs/reward_config.py`); the game's copy for the Tab overlay is
-  `Assets/Settings/RewardWeights.asset`, kept equal by the EditMode test `RewardWeightsTests`. Every shipped brain
+  `Assets/Resources/RewardWeights.asset`, kept equal by the EditMode test `ShowcaseTests.RewardWeightsAreTheTrainingConfigs`. Every shipped brain
   predates the torque² and joint-speed² terms (added 2026-11-20, no retraining).
-- **Unity** 6000.6.9f1 exactly. EditMode tests: `Unity.exe -batchmode -nographics -projectPath . -runTests
-  -testPlatform EditMode -testResults <xml>`; play-mode fixtures through `scripts/run_tests.ps1` (editor open).
+- **Unity** 6000.6.9f1 exactly. EditMode tests (`Assets/Scripts/EditorTests`, plain logic and asset checks):
+  `Unity.exe -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults <xml>`. The fight's
+  fixtures (`Assets/Scripts/Tests`: parity, gate, collision, layout, flow) are play-mode tests: the same command with
+  `-testPlatform PlayMode` (no `-nographics`), or `scripts/run_tests.ps1` against an open editor.
+- **Tab overlay and demo mode** (`Assets/Scripts/Runtime/UI/DiagOverlay.cs`, `DemoMode.cs`): Tab or the 44 px corner
+  button on a touch screen shows FPS, each boxer's episode reward (the penalty terms), inference ms and the curriculum
+  stage of the running brain; after 30 s without input the HUD steps aside and random bouts run with the showcase
+  shots cycling. Tunables: `Assets/Resources/ShowcaseSettings.asset` (idle seconds, shots, dwell, result hold; off in
+  the editor unless `runInEditor`). F3 opens the older debug grid.
 - **WebGL** is built **locally** and deployed by CI: `pwsh -File scripts/publish_webgl.ps1` runs the EditMode tests,
   builds `Builds/WebGL` with this PC's Unity (build method and `/diag` checks from `scripts/webgl.json`), writes
   `diag.html`, zips it and publishes a GitHub Release tagged `webgl-<yyMMdd-HHmm>-<sha>` (HEAD must be pushed
