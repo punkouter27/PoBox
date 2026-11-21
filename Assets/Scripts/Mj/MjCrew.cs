@@ -80,7 +80,7 @@ namespace PoBox.Mj
             if (_geoms != null) foreach (int g in _geoms) mine.Add(g);
             else foreach (MjGeom g in body.GetComponentsInChildren<MjGeom>()) if (g.MujocoId >= 0) mine.Add(g.MujocoId);
             int bits = collideWithBoxers ? (1 | Layer) : Layer;
-            for (int g = 0; g < _m->ngeom; g++)
+            for (int g = 0; g < (int)_m->ngeom; g++)
             {
                 if (mine.Contains(g)) { _m->geom_contype[g] = bits; _m->geom_conaffinity[g] = bits; }
                 else if ((_m->geom_contype[g] & 3) == 3) _m->geom_conaffinity[g] |= Layer;

@@ -189,7 +189,7 @@ namespace PoBox.Mj
                 _target[k] = Target(k);
             }
             _owner = new int[_m->ngeom]; _load = new double[_m->ngeom]; _clear = new double[_m->ngeom]; _at = new double[3 * _m->ngeom];
-            for (int g = 0; g < _m->ngeom; g++) { _owner[g] = -1; _clear[g] = 1.0; }
+            for (int g = 0; g < (int)_m->ngeom; g++) { _owner[g] = -1; _clear[g] = 1.0; }
             for (int k = 0; k < n; k++)
                 foreach (int g in _geoms[k])
                     if (g != _b[k].FootGeom(0) && g != _b[k].FootGeom(1)) _owner[g] = k;
@@ -205,7 +205,7 @@ namespace PoBox.Mj
             var floors = new System.Collections.Generic.HashSet<int>();
             foreach (MjGeom s in FindObjectsByType<MjGeom>(FindObjectsInactive.Exclude))
                 if (s.name == "floor" && s.MujocoId >= 0) floors.Add(s.MujocoId);
-            for (int g = 0; g < _m->ngeom; g++)
+            for (int g = 0; g < (int)_m->ngeom; g++)
                 if (!mine.Contains(g))
                 {
                     int layers = floors.Contains(g) ? 3 | Leaving : 3;

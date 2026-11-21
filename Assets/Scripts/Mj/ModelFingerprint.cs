@@ -145,7 +145,7 @@ namespace PoBox.Mj
             }
 
             var have = new HashSet<int>();
-            for (int i = 0; i < m->nexclude; i++) have.Add(m->exclude_signature[i]);
+            for (int i = 0; i < (int)m->nexclude; i++) have.Add(m->exclude_signature[i]);
             foreach (var p in excludes)
             {
                 int a = Id(MujocoLib.mjtObj.mjOBJ_BODY, p.a), b = Id(MujocoLib.mjtObj.mjOBJ_BODY, p.b);
