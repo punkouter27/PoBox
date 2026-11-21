@@ -115,6 +115,8 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError:
             return self.reply(400, error="invalid content length")
         if n <= 0 or n > MAX_BODY:
+            if n > 0:
+                self.rfile.read(min(n, MAX_BODY * 4))
             return self.reply(413, error="body too big or empty")
         if url.query or url.fragment:
             self.rfile.read(n)
