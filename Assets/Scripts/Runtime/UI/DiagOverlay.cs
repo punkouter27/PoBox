@@ -154,7 +154,7 @@ namespace PoBox.UI
             _sb.Clear();
             _sb.Append("FPS  ").Append((perf != null && perf.Fps > 0f ? perf.Fps : _fps).ToString("0")).Append('\n');
             _sb.Append("Inference  ").Append(perf != null ? perf.InferMs.ToString("0.00") + " ms / frame (avg)" : "no brains running").Append('\n');
-            MjBoxer[] boxers = FindObjectsByType<MjBoxer>(FindObjectsSortMode.InstanceID);
+            MjBoxer[] boxers = FindObjectsByType<MjBoxer>(FindObjectsSortMode.None);
             int shown = 0;
             foreach (MjBoxer b in boxers)
             {
