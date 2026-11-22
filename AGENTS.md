@@ -89,6 +89,19 @@ penalty does not retrain shipped policies — note this in docs when shipped mod
 Python: real pytest tests (collected by pytest, not ad-hoc scripts), ruff clean. Unity: EditMode tests pass before
 every publish. Tests never write into tracked files.
 
+### Deliberate deviations
+
+| Deviation | Why | Commit sha / date | How to undo |
+|---|---|---|---|
+| Layout moved to `Assets/_Project/...` + `/Training`, overriding the owner's 2026-10-30 note that top-level `Assets/` folders stay | the v3 layout rule is newer; every path was updated with the move | `b3e146c` 2026-11-22 | `git revert b3e146c` |
+| `Assets/Art/{Raw,Exports}`, `Assets/Plugins`, `Assets/WebGLTemplates` stay at the top level | the platform matrix and Blender scripts use those paths; Unity requires the others | `b3e146c` 2026-11-22 | — |
+| Unity build and tests run locally only; CI runs the Python checks and deploys the locally built release | Unity cannot be licensed in CI (owner design) | `7045f65` 2026-11-22 | — |
+| PlayMode tests run with `-force-d3d11` | D3D12 lost the GPU device mid-run on this PC (DXGI 887a0006) | 2026-11-22 | drop the flag |
+| Tab corner button is 34 px, not 44 px | fits above the menu cards on a phone | `dd8f197` 2026-11-22 | resize in `DiagOverlay.cs` |
+| /diag: leaderboard table (no storage account; `stpobox2` does not exist) and cornerman proxy show a neutral **Off** | switched off on purpose; not counted in the banner | `7045f65` 2026-11-22 | provision the table, set its check back to a live probe in `scripts/webgl.json` |
+| /diag on phones (<= 600px): the version stamp follows the content | a fixed stamp covered the rows | `401dc99` 2026-11-22 | `git revert 401dc99` |
+| Shipped brains predate the torque² / joint-speed² penalty terms | retraining is a multi-hour GPU run, not started | 2026-11-20 | retrain |
+
 ## 2. PoBox house rules and notes
 
 Read before starting: `git log -8`, the top of `docs/README.md` (running history) and `docs/tasks.md` (live plan).
@@ -264,10 +277,20 @@ One GPU job at a time: before training, check `nvidia-smi`, running
   disk while the editor has it open.
 - **One game engine or headless browser at a time** on this PC, and **one GPU job at a time** (`nvidia-smi`, running
   `train_*.py`, `Training/logs/queue.log`; `logs/queue.hold` pauses the queue runner). Close the editor for long training.
-- Never run full browser suites against the live site (Static Web App, Free tier): a handful of page loads only.
+- **Hosting:** Azure Static Web App `pobox`, Free tier. Never run test suites against the live site; live checks = at
+  most 6 page loads + /diag + X-Commit.
 - Generated output stays out of git (`Builds/`, `Library/`, `Temp/`, `Training/checkpoints/`, `Training/logs/`).
 
 ## 4. Build, test, deploy (exact commands)
+
+One command sequence verifies the repo (Python checks, then every PlayMode fixture in batchmode, about 25 min; close
+the editor on this project first):
+
+```powershell
+uv run ruff check . && uv run ruff format --check . && uv run pytest && Unity.exe -batchmode -force-d3d11 -projectPath . -runTests -testPlatform PlayMode -assemblyNames PoBox.Tests -testResults playmode.xml -logFile playmode.log
+```
+
+Last full run (2026-11-22): pytest 31 passed, EditMode 2/2, PlayMode 134/134, 0 `warning CS`.
 
 - **Python** (one environment of PoBox's own, `uv`, Python 3.11; no sibling project's venv): `uv sync` (ruff + pytest),
   `uv sync --group physics` (+ C MuJoCo, the version the game runs), `uv sync --group train` (+ MuJoCo Warp, torch,
