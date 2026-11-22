@@ -287,7 +287,7 @@ One GPU job at a time: before training, check `nvidia-smi`, running
   `ShowcasePlayTests` checks the Po standard's runtime pieces for real: every reward penalty term is charged, the Tab
   overlay's readout and its benchmark button, and demo mode starting after 30 s idle. The compile must show 0
   `warning CS` from `Assets/` in the log.
-- **Tab overlay and demo mode** (`Assets/_Project/Core/Scripts/Runtime/UI/DiagOverlay.cs`, `DemoMode.cs`): Tab or the 44 px corner
+- **Tab overlay and demo mode** (`Assets/_Project/Core/Scripts/Runtime/UI/DiagOverlay.cs`, `DemoMode.cs`): Tab or the 34 px corner
   button on a touch screen shows FPS, each boxer's episode reward (and each penalty term), inference ms and the curriculum
   stage of the running brain, and a **Benchmark training speed** button (`Mj/SimBenchmark.cs`: a copy of the running
   fight's MuJoCo world stepped flat out for 3 s on this device; physics steps/s and samples/s. Real training is MuJoCo

@@ -7,7 +7,7 @@ using UnityEngine.UIElements;
 namespace PoBox.UI
 {
     /// <summary>
-    /// The in-game diagnostics overlay: Tab (or the 44 px corner button on a touch screen) shows, on an opaque panel,
+    /// The in-game diagnostics overlay: Tab (or the corner button on a touch screen) shows, on an opaque panel,
     /// the frame rate, each boxer's reward this episode (the training config's penalty terms, <see cref="RewardWeights"/>),
     /// the brains' inference time (ms a frame, rolling average) and the curriculum stage each boxer's running brain
     /// comes from (footwork R0-R2, get-up R3, boxing R4-R7). Its benchmark button measures training speed as far as this
@@ -34,6 +34,7 @@ namespace PoBox.UI
         /// <summary>The overlay's current readout (what the panel shows).</summary>
         public string ReadoutText => Readout();
         float _fps = 60f, _nextRefresh;
+        bool _touched;
         readonly StringBuilder _sb = new StringBuilder(256);
 
         void Awake()
@@ -118,9 +119,10 @@ namespace PoBox.UI
         {
             if (_root == null) return;
             Rect sa = SafeArea.Current;
-            float left = Px(8f) + sa.xMin / Mathf.Max(0.01f, _root.panel?.scaledPixelsPerPoint ?? 1f);
-            float top = Px(8f) + (Screen.height - sa.yMax) / Mathf.Max(0.01f, _root.panel?.scaledPixelsPerPoint ?? 1f);
-            float size = Px(44f);
+            // The corner button sits in the band above the menu's cards (they start ~38 px down), so it never covers them.
+            float left = Px(6f) + sa.xMin / Mathf.Max(0.01f, _root.panel?.scaledPixelsPerPoint ?? 1f);
+            float top = Px(2f) + (Screen.height - sa.yMax) / Mathf.Max(0.01f, _root.panel?.scaledPixelsPerPoint ?? 1f);
+            float size = Px(34f);
             _button.style.left = left; _button.style.top = top;
             _button.style.width = size; _button.style.height = size;
             _button.style.fontSize = Px(18f);
@@ -178,7 +180,9 @@ namespace PoBox.UI
                 if (_benchResult != null) _benchResult.text = _benchmark.Summary();
             }
 
-            bool touch = Input.touchSupported || Application.isMobilePlatform;
+            // The corner button is for touch screens (a phone, or once a touch is seen); a keyboard has Tab.
+            _touched |= Input.touchCount > 0;
+            bool touch = Application.isMobilePlatform || _touched;
             _button.style.display = touch || Visible ? DisplayStyle.Flex : DisplayStyle.None;
             _panel.style.display = Visible ? DisplayStyle.Flex : DisplayStyle.None;
             _caption.style.display = DemoMode.Active ? DisplayStyle.Flex : DisplayStyle.None;
