@@ -1,8 +1,8 @@
 """The physics tier: the game's MuJoCo (the version pinned in pyproject.toml, which must be the one
-Packages/org.mujoco runs) against the C MuJoCo recordings every shipped boxer carries in Assets/Boxers/NAME/.
+Packages/org.mujoco runs) against the C MuJoCo recordings every shipped boxer carries in Assets/_Project/Agents/Boxers/NAME/.
 
-Each recording (training/tools/footwork_c.py --reference) is one run from the keyframe, a row a control step,
-with the controls MuJoCo was given. Replaying those controls on the game's body (training/models/v3, the boxer's
+Each recording (Training/tools/footwork_c.py --reference) is one run from the keyframe, a row a control step,
+with the controls MuJoCo was given. Replaying those controls on the game's body (Training/models/v3, the boxer's
 own config.json) must give the same body: every joint within 0.01 rad of the recording over the whole run and the
 pelvis within 3 mm in the first second, the bars Unity's own gate uses (MjParityTests). A MuJoCo upgrade that moves
 the physics fails here first, before the Unity gates or a browser. (MuJoCo 3.15.0 replays the 3.5.0 recordings to
@@ -18,13 +18,13 @@ import pytest
 np = pytest.importorskip("numpy")
 mujoco = pytest.importorskip("mujoco")
 
-import footwork_c as F  # noqa: E402  (training/tools; plain MuJoCo + numpy)
+import footwork_c as F  # noqa: E402  (Training/tools; plain MuJoCo + numpy)
 
 pytestmark = pytest.mark.physics
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODELS = os.path.join(ROOT, "training", "models", "v3")
-RECORDINGS = sorted(glob.glob(os.path.join(ROOT, "Assets", "Boxers", "*", "reference_*.json")))
+MODELS = os.path.join(ROOT, "Training", "models", "v3")
+RECORDINGS = sorted(glob.glob(os.path.join(ROOT, "Assets", "_Project", "Agents", "Boxers", "*", "reference_*.json")))
 JOINT_RAD, PELVIS_M = 0.01, 0.003
 
 

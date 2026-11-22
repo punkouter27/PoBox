@@ -1,0 +1,96 @@
+{
+  "about": "The boxers built from the owner's meshes on 2026-10-01, and what makes each one itself. tools/build_roster.py reads this. 'age' is muscle strength beside a trained adult's and 'speed' is joint speed beside one's (1.0 = the same); strength also follows the square of height. 'style' is how the boxer is paid in training: the keys are listed in envs/boxing.py where they are read.",
+  "veterans_about": "Matt and Zombie were trained before the roster existed, from rigs read off the skeleton alone. 'build_roster.py --all' derives them from their meshes like everybody else. Zombie's height is the one his first rig had: his file is not in metres. Matt's mass is given (the owner's choice, 2026-10-02): his mesh has surfaces inside it and measures 147 litres, where the shapes fitted inside it hold 85.",
+  "veterans": {
+    "matt": {"display": "MATT", "glb": "../Assets/_Project/Environments/Models/Matt.glb", "mass": 84, "persona": "veteran", "age": 1.0, "speed": 1.0},
+    "zombie": {"display": "ZOMBIE", "glb": "../Assets/_Project/Environments/Models/Zombie.glb", "height": 1.816, "persona": "veteran", "age": 1.0, "speed": 1.0}
+  },
+  "boxers": {
+    "trump": {
+      "display": "TRUMP",
+      "glb": "../Assets/_Project/Environments/Models/Trump.glb",
+      "height": 1.90,
+      "persona": "brawler",
+      "says": "comes forward, big slow shots to the head, little guard",
+      "age": 1.0,
+      "speed": 1.0,
+      "style": {"head": 1.8, "body": 0.8, "power": 1.8, "pace_s": 0.9, "taken": 0.4, "block_w": 0.0, "range_m": 0.60, "press": 0.4, "energy": 0.8},
+      "style_note": "2026-10-03 17:05, the new mesh after its first match round: range 0.72 -> 0.60 and press 0.25 -> 0.4. Shoulder to wrist is 0.44 m, the shortest in the roster (the others 0.48 to 0.54); at 0.72 he landed 1.09 a second on Zombie and 0.71 on Nick, who come to him, and 0.00 to 0.02 on Matt, Grandma and Grandpa, who do not."
+    },
+    "grandma": {
+      "display": "GRANDMA",
+      "glb": "../Assets/_Project/Environments/Models/Grandma.glb",
+      "persona": "counter-puncher",
+      "says": "tight guard, stops the punch, answers with quick shots to the body",
+      "age": 0.6,
+      "speed": 0.75,
+      "style": {"head": 1.0, "body": 1.6, "pace_s": 0.5, "taken": 1.4, "block_w": 0.08, "counter": 1.8, "range_m": 0.80, "energy": 1.2}
+    },
+    "grandpa": {
+      "display": "GRANDPA",
+      "glb": "../Assets/_Project/Environments/Models/Grandpa.glb",
+      "persona": "out-boxer",
+      "says": "stays at the end of his reach, patient, works behind the left hand",
+      "age": 0.6,
+      "speed": 0.75,
+      "style": {"hand_l": 1.4, "hand_r": 0.8, "pace_s": 0.8, "taken": 1.0, "block_w": 0.04, "range_m": 0.90, "crowd": 0.5, "energy": 1.3},
+      "style_note": "2026-10-02 04:00, after round 3: taken 1.4 -> 1.0 and crowd 0.8 -> 0.5. As first written he stopped punching in two sessions out of three (with Grandma, then with Lil Matt): a boxer charged that much for a punch taken, at a range few opponents can reach, does best by doing nothing."
+    },
+    "nick": {
+      "display": "NICK",
+      "glb": "../Assets/_Project/Environments/Models/Nick.glb",
+      "persona": "swarmer",
+      "says": "always closing, many light fast punches",
+      "age": 1.0,
+      "speed": 1.0,
+      "style": {"head": 1.3, "body": 1.2, "power": 0.7, "pace_s": 0.3, "taken": 0.6, "range_m": 0.66, "press": 0.3, "energy": 0.6}
+    },
+    "kim": {
+      "display": "KIM",
+      "glb": "../Assets/_Project/Environments/Models/Kim.glb",
+      "height": 1.65,
+      "mass": 54,
+      "persona": "hit-and-move",
+      "says": "fast and agile: quick light combinations from the end of her reach, then gone; circles off the ropes",
+      "age": 0.85,
+      "speed": 1.1,
+      "style": {"head": 1.3, "body": 0.9, "power": 1.0, "pace_s": 0.25, "taken": 0.9, "block_w": 0.02, "counter": 1.4, "range_m": 0.72, "press": 0.6, "crowd": 0.2, "energy": 0.7},
+      "style_note": "2026-10-14, the owner: 'a fast and agile woman'. Mass 54 kg as PoOlympic has her (the mesh's volume, with its loose top, reads 106 litres); height 1.65 m chosen, the file is not in metres. Her gauntlet also runs the ring-craft rope charge (--rope-w), which no other boxer trains with. 2026-10-15 00:00, after m1_kim (attack 0.14 a second at 1.1 m/s; footing, guard, chin, get-up and carrying on passed): power 0.6 -> 1.0, taken 1.5 -> 0.9, crowd 0.6 -> 0.2, press 0.1 -> 0.3, range 0.78 -> 0.72. As first written she guarded (71% of head shots stopped) and hardly punched: Grandpa's lesson again. 02:50, after m3_kim (bag first; 1.11 a second, but at 3.4 m/s: 2.7 to 3.1 a second on Nick and Trump, nothing on Grandma, Grandpa and Matt, who stand off): press 0.3 -> 0.6."
+    },
+    "sokol": {
+      "display": "SOKOL",
+      "glb": "../Assets/_Project/Environments/Models/Sokol.glb",
+      "mass": 82,
+      "persona": "boxer-puncher",
+      "says": "a stiff jab and the straight right behind it; balanced, walks his man down to the ropes",
+      "age": 1.0,
+      "speed": 1.0,
+      "style": {"head": 1.3, "body": 1.0, "power": 1.3, "pace_s": 0.5, "taken": 0.8, "block_w": 0.03, "range_m": 0.72, "press": 0.5, "energy": 1.0},
+      "style_note": "2026-10-15, the owner's Sokol_TPose character (plaid shirt, jeans); in metres, 1.83 m. Mass 82 kg given: the mesh's volume reads 123 litres (BMI 36). Persona chosen to fill the roster's gap; Kim's lessons kept from the start: power and press up, taken under 1, so standing off does not pay."
+    },
+    "timmy": {
+      "display": "TIMMY",
+      "glb": "../Assets/_Project/Environments/Models/Timmy.glb",
+      "height": 1.76,
+      "mass": 72,
+      "persona": "infighter",
+      "says": "the body-snatcher: slips inside, lives at close range and digs hooks to the body off the lead hand",
+      "age": 1.0,
+      "speed": 1.0,
+      "style": {"head": 0.7, "body": 2.0, "hand_l": 1.3, "hand_r": 1.0, "power": 1.5, "pace_s": 0.45, "taken": 0.7, "block_w": 0.03, "counter": 1.2, "range_m": 0.56, "press": 0.8, "crowd": 0.0, "energy": 0.9},
+      "style_note": "2026-11-16, the owner's TIMMY_unity_rigged (AccuRig FBX, staged in BLENDER/2026-11-16_timmy/stage.py: animation dropped, mesh moved onto its skeleton by the skin weights, legs straightened from 27 degrees apart, 1.76 m). Persona chosen to fill the roster's gap: no one else lives inside (range 0.56 m, the shortest) or is paid most for the body (2.0) and the lead hand (1.3). Kim's and Grandpa's lessons kept from the start: taken 0.7 and press 0.8, so standing off does not pay."
+    },
+    "soldat": {
+      "display": "SOLDAT",
+      "glb": "../Assets/_Project/Environments/Models/Soldat.glb",
+      "height": 1.84,
+      "mass": 86,
+      "persona": "marksman",
+      "says": "the sniper: disciplined, long and upright, picks his shot and fires the straight right hand to the head",
+      "age": 1.0,
+      "speed": 1.0,
+      "style": {"head": 1.7, "body": 0.6, "hand_l": 0.8, "hand_r": 1.6, "power": 1.4, "pace_s": 0.6, "taken": 1.0, "block_w": 0.05, "counter": 1.3, "range_m": 0.84, "press": 0.3, "crowd": 0.4, "energy": 1.1},
+      "style_note": "2026-11-16, the owner's soldat_unity.fbx: no skeleton and no weights, rigged in BLENDER/2026-11-16_soldat/rig.py (joints found from the mesh, Mixamo names, heat weights; hip and knee at the usual fractions of height because the trouser legs touch high on the thigh), 1.84 m. Persona chosen to fill the roster's gap: no one else is paid for the rear hand (hand_r 1.6) or works from as far out with it (0.84 m). Grandpa's lesson kept: taken 1.0 and press 0.3, so standing off at a range nobody reaches does not pay."
+    }
+  }
+}

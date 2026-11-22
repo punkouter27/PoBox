@@ -1,7 +1,7 @@
 # Crowd impostor atlas (2026-10-31)
 
 Sixteen low-poly spectators baked to impostor cards for `PoBox/Crowd` (today: procedural head-and-shoulders
-blobs in `Assets/Shaders/Crowd.shader`). Nothing here is imported into Unity yet: copy the three `T_Crowd_*.png`
+blobs in `Assets/_Project/Environments/Shaders/Crowd.shader`). Nothing here is imported into Unity yet: copy the three `T_Crowd_*.png`
 into the project when the editor is free and wire the shader as described below.
 
 | File | What |

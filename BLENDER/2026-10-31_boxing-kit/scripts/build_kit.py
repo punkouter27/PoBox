@@ -1,6 +1,6 @@
 """Builds Kit_<Name>.glb (satin trunks + high-top boots) for each PoBox boxer.
 Run: blender -b --python build_kit.py -- [Name ...]
-Reads Assets/Models/<Name>.glb (never writes it). Writes only under BLENDER/2026-10-31_boxing-kit/.
+Reads Assets/_Project/Environments/Models/<Name>.glb (never writes it). Writes only under BLENDER/2026-10-31_boxing-kit/.
 
 Method: each garment piece is a loft of rings. Every ring vertex is placed by casting a ray from outside
 toward the ring centre onto the boxer's own lower-body surface (arm and head vertices removed by their
@@ -21,7 +21,7 @@ ROOT = (
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..")).replace("\\", "/") + "/"
 )  # the repo root
 OUT = ROOT + "BLENDER/2026-10-31_boxing-kit/"
-MODELS = ROOT + "Assets/Models/"
+MODELS = ROOT + "Assets/_Project/Environments/Models/"
 
 
 def legs(t, s, f, toe):

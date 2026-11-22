@@ -27,7 +27,7 @@ package = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = [".", "server", "training", "training/tools"]
+pythonpath = [".", "server", "Training", "Training/tools"]
 markers = [
     "physics: needs plain MuJoCo + numpy (uv sync --group physics)",
     "train: needs the trainer's stack (torch; uv sync --group train)",
@@ -38,9 +38,9 @@ addopts = "-ra"
 line-length = 120
 target-version = "py311"
 extend-exclude = [
-    "training/.mj350",
-    "training/checkpoints",
-    "training/logs",
+    "Training/.mj350",
+    "Training/checkpoints",
+    "Training/logs",
     "Library",
     "Temp",
     "Builds",

@@ -1,5 +1,5 @@
 """Checks that each Kit_<Name>.glb binds to the boxer's own skeleton: for every joint the kit uses, its inverse
-bind matrix must equal the one in Assets/Models/<Name>.glb, and every vertex's joints must name bones the boxer has.
+bind matrix must equal the one in Assets/_Project/Environments/Models/<Name>.glb, and every vertex's joints must name bones the boxer has.
 Run: blender -b --python check_bind.py"""
 
 import json
@@ -45,7 +45,7 @@ for n in ["Matt", "Zombie", "Nick", "Trump", "Grandma", "Grandpa", "Kim", "Sokol
         kj, kb = glb(ROOT + "BLENDER/2026-10-31_boxing-kit/Kit_%s.glb" % n)
     except FileNotFoundError:
         continue
-    oj, ob = glb(ROOT + "Assets/Models/%s.glb" % n)
+    oj, ob = glb(ROOT + "Assets/_Project/Environments/Models/%s.glb" % n)
     ki, oi = ibms(kj, kb), ibms(oj, ob)
     onodes = {nd.get("name") for nd in oj["nodes"]}
     # joints actually weighted

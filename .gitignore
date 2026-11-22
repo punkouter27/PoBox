@@ -3,7 +3,7 @@
 [Tt]emp/
 [Oo]bj/
 # Anchored to the repo root. Unanchored, "[Bb]uild/" also matched
-# Assets/Scripts/Editor/Build/, which quietly kept Build_Android.cs -- the
+# Assets/_Project/Core/Scripts/Editor/Build/, which quietly kept Build_Android.cs -- the
 # file that produces the Play artifact, holds the keystore paths and owns
 # SHIP_SCENES -- out of version control entirely. A fresh clone could not
 # build for Android and nothing said so.
@@ -81,16 +81,16 @@ shots/
 
 # MuJoCo plugin's runtime log and trainer stderr dumps — run artifacts.
 MUJOCO_LOG.TXT
-training/*.err
+Training/*.err
 
-# PoBox trainer (training/): checkpoints are hundreds of 5 MB files a run; the policies the game
-# plays are copied to Assets/Entrants by PoBox/Import Trained Entrants. training/logs is covered by [Ll]ogs/.
-/training/checkpoints/
+# PoBox trainer (Training/): checkpoints are hundreds of 5 MB files a run; the policies the game
+# plays are copied to Assets/Entrants by PoBox/Import Trained Entrants. Training/logs is covered by [Ll]ogs/.
+/Training/checkpoints/
 # MuJoCo 3.5.0 for Python, the version Unity runs (pip install --no-deps --target): PYTHONPATH points here
 # for reference runs and the exam.
-/training/.mj350/
-# CMU motion-capture BVH files fetched by training/tools/retarget_clips.py; the retargeted clips/walk_turn.npz is versioned.
-/training/clips/cmu/
+/Training/.mj350/
+# CMU motion-capture BVH files fetched by Training/tools/retarget_clips.py; the retargeted clips/walk_turn.npz is versioned.
+/Training/clips/cmu/
 
 # WebGL build: Burst output Unity writes beside the project
 /Data/

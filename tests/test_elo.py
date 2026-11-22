@@ -1,4 +1,4 @@
-"""training/tools/elo.py: the judges' ten-point card and the Bradley-Terry rating fit (no MuJoCo run).
+"""Training/tools/elo.py: the judges' ten-point card and the Bradley-Terry rating fit (no MuJoCo run).
 
 elo.py imports the exams, which need the trainer's stack (torch + MuJoCo): the `train` tier."""
 

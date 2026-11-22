@@ -4,7 +4,9 @@ from mathutils import Vector
 import os  # noqa: E402
 
 M = (
-    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "Assets", "Models")).replace("\\", "/")
+    os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "..", "Assets", "_Project", "Environments", "Models")
+    ).replace("\\", "/")
     + "/"
 )
 for n in ["Matt", "Zombie", "Nick", "Trump", "Grandma", "Grandpa", "Kim", "Sokol"]:

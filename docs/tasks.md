@@ -13,7 +13,7 @@ logs and reports cite them. What was measured, run by run, is `rl_optimization_l
 - The referee and the ring-card walker are in the game on trained footwork.
 - Open on v3: Trump's attack (0.11/s, mark 0.5), Kim's footing and carrying on, the under-pressure line for
   everyone, the grandparents' get-up.
-- This PC (2026-11-13) is a fresh clone: no checkpoints, no `training/.mj350` until installed, no Unity `Library`,
+- This PC (2026-11-13) is a fresh clone: no checkpoints, no `Training/.mj350` until installed, no Unity `Library`,
   an RTX 2060 with 6 GB. See CLAUDE.md for the trainer's Python.
 
 ## Rules while working
@@ -29,9 +29,9 @@ logs and reports cite them. What was measured, run by run, is `rl_optimization_l
 
 ## Exam lines and pass marks
 
-The boxing exam (`training/tools/exam.py`, C MuJoCo 3.5.0) has seven lines: footing, attack, guard, chin, getting
+The boxing exam (`Training/tools/exam.py`, C MuJoCo 3.5.0) has seven lines: footing, attack, guard, chin, getting
 up, carrying on, and under pressure (since 2026-11-03: at least 0.25 punches landed a second against the boxer's
-hardest opponent). The footwork exam is `training/tools/footwork_c.py --exam`.
+hardest opponent). The footwork exam is `Training/tools/footwork_c.py --exam`.
 
 | Rung | Behaviour | Pass mark |
 |---|---|---|
@@ -62,7 +62,7 @@ Every rung also has to keep each joint's 99th-percentile speed under its human l
       `v3f2` were worse.
 - [ ] V4 Under pressure: 0 of 8 passed on 2026-11-03. Matt and Zombie land 0.02/s on each other (a stand-off).
 - [x] V5 Nick, Sokol, Matt, Zombie: re-run the CPU Elo (`tools/elo.py`) after the November promotions.
-      2026-11-13: 112-bout `tools/elo.py` run written to `Assets/Resources/cpu_elo.json` (`Nick 1448`, `Kim 1334`,
+      2026-11-13: 112-bout `tools/elo.py` run written to `Assets/_Project/Data/Resources/cpu_elo.json` (`Nick 1448`, `Kim 1334`,
       `Sokol 1334`, `Matt 1075`, `Zombie 830`, `Grandpa 773`, `Trump 734`, `Grandma 471`; `Grandma/match.onnx`
       currently holds `v3m_grandma` which scored `1-26-1`).
 
@@ -86,7 +86,7 @@ Their notes are in the archive.
 
 ## Phase F: the free-for-all (owner, 2026-10-15)
 
-The free-for-all (`Assets/Scenes/Melee.unity`, `FreeForAll`) runs the 1-on-1 brains in a crowd: each sees one
+The free-for-all (`Assets/_Project/Scenes/Melee.unity`, `FreeForAll`) runs the 1-on-1 brains in a crowd: each sees one
 opponent (the nearest on its feet), every body is solid, and bodies pile. Bumping into a third boxer (never seen
 in training) makes them fall, and a get-up policy taught with one opponent standing clear often cannot rise beside
 other bodies. The game works round it. Training is the real fix. The owner's ask: **a motivation to seek out where
@@ -106,7 +106,7 @@ the closest opponent is and move forward to attack.**
       beaten the count, punches landed per minute; pass marks to be set from the first run.
 - [ ] G11 Free-for-all slips in the first 20 s: needs the crowd training above.
 - [ ] R12 Train boxers to step round bodies on the canvas: `--bodies N` built and staged
-      (`training/queues/queue_melee_staged.json`); `--obs-bodies` exists in `train_gauntlet.py`. Not run on v3.
+      (`Training/queues/queue_melee_staged.json`); `--obs-bodies` exists in `train_gauntlet.py`. Not run on v3.
 
 ## Boxing quality
 

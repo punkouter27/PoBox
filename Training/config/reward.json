@@ -1,0 +1,6 @@
+{
+  "_doc": "Reward penalty weights per environment (envs/boxing.py, envs/footwork.py, envs/getup.py), read by Training/envs/reward_config.py. Each is charged as -weight * term per control step; torque_sq = sum of actuator torque squared (N m)^2, joint_vel_sq = sum of joint speed squared (rad/s)^2, ang_vel_sq = pelvis roll/pitch angular velocity squared, action_rate = |a_t - a_(t-1)|^2, foot_slip = foot planar speed squared while in contact. torque_sq and joint_vel_sq were added 2026-11-20: every shipped brain was trained without them (no retraining). The game's copy for the Tab overlay is Assets/_Project/Data/Resources/RewardWeights.asset (kept equal by the EditMode test ShowcaseTests).",
+  "boxing":   {"torque_sq": 1e-06, "joint_vel_sq": 0.0001, "ang_vel_sq": 0.02, "action_rate": 0.01,  "foot_slip": 0.2},
+  "footwork": {"torque_sq": 1e-06, "joint_vel_sq": 0.0001, "ang_vel_sq": 0.02, "action_rate": 0.01,  "foot_slip": 0.2},
+  "getup":    {"torque_sq": 1e-06, "joint_vel_sq": 0.0001, "ang_vel_sq": 0.0,  "action_rate": 0.005, "foot_slip": 0.1}
+}

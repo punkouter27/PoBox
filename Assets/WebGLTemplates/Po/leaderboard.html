@@ -4,7 +4,7 @@
 
     Reads, in order:
       leaderboard.html#table=<the Azure Table's URL with a SAS token that may read (sp=r)>   rated here, live
-      leaderboard.json beside this page (training/tools/leaderboard.py --out)               rated by the tool
+      leaderboard.json beside this page (Training/tools/leaderboard.py --out)               rated by the tool
     The game posts each bout to the table (Online/Leaderboard.cs, the settings' BOARD). The rating is the one
     tools/leaderboard.py and tools/elo.py use: a Bradley-Terry fit on the Elo scale, mean 1000, a draw half a win.
     The token sits after the #, so it is never sent to this site's server. The table needs CORS for this site's origin.
@@ -46,7 +46,7 @@
 <script>
 "use strict";
 
-// Every fighter's strength by the minorise-maximise fit (Hunter 2004), as training/tools/leaderboard.py does it:
+// Every fighter's strength by the minorise-maximise fit (Hunter 2004), as Training/tools/leaderboard.py does it:
 // half a draw against a 1000 ghost each, so an unbeaten fighter stays finite; Elo scale, mean 1000.
 function bradleyTerry(names, bouts, iters = 2000) {
   const k = new Map(names.map((n, i) => [n, i])), n = names.length;

@@ -1,11 +1,26 @@
 # AGENTS.md — PoBox
 
-Read this before working in the repo (CLAUDE.md only points here). Section 1 is the Po game standard this repo
-follows; section 2 holds PoBox's own house rules and working notes; section 3 is how it is built, tested and deployed.
+Read this before working in the repo (CLAUDE.md only points here). Three parts: the **coding standard** (section 1,
+the Po game standard, and section 2, PoBox's own house rules and notes), **concurrent work** (section 3) and the
+**exact commands to verify the repo** (section 4: how it is built, tested and deployed).
 
 > **ML-Agents exception:** ignore the MuJoCo rules if a project uses ML-Agents (`mlagents` / `com.unity.ml-agents`). PoBox does not.
 
-## 1. Po Game Standard (Unity / Unreal RL games)
+## 1. Coding standard: the Po game standard (Unity / Unreal RL games)
+
+### Layout (Unity)
+`Assets/_Project/{Agents,Core,Data,Environments,RL_Models,Scenes,UI}` plus `/Training/` at the repo root (moved there
+2026-11-22 with `git mv`, `.meta` files and GUIDs kept). Here: `Agents/Boxers/NAME` and `Agents/Crew/NAME` (prefabs,
+`config.json`, the C MuJoCo reference recordings), `RL_Models/NAME/{policy,match,getup}.onnx` (the trained brains,
+`zero_policy.onnx` beside them), `Core/Scripts` (all C#, every asmdef), `Data/{Resources,League,Settings}`,
+`Environments/{Announcer,Audio,Materials,Meshes,Models,Prefabs,Shaders,Textures,Timeline}`, `Scenes`, `UI`. Unity-required
+or third-party folders stay where Unity wants them: `Assets/Plugins`, `Assets/WebGLTemplates`, and `Assets/Art/{Raw,Exports}`
+(the platform matrix's raw/exported art paths, which the Blender scripts write to).
+
+### C# and Python
+C#: one class a file, PascalCase, `[SerializeField]`/ScriptableObjects for anything tunable, no compiler warnings
+(the batchmode log must show 0 `warning CS` from `Assets/`). Python: ruff (`ruff check`, `ruff format`), real pytest
+tests. No absolute local paths in code or tests.
 
 This repo is one of several independent Po games. It follows the conventions below, but it owns every file:
 nothing is generated from, synced with, or required to stay identical to another repository (no "same file in
@@ -106,33 +121,33 @@ three is in `docs/archive/`. The owner often runs several Claude sessions on thi
 ### 2.2 Training & Resources
 
 - **Engine & model pipeline:** Train in MuJoCo/Newton. Ask for a skinned mesh before training; validate it, extract its rig hierarchy and import it into MuJoCo.
-  *Here: MuJoCo Warp in `training/`; `glb_to_rig.py` → `rig_to_mjcf.py`, roster in `training/roster.json`.*
+  *Here: MuJoCo Warp in `Training/`; `glb_to_rig.py` → `rig_to_mjcf.py`, roster in `Training/roster.json`.*
 - **Execution & cleanup:** Close the editor for pure RL runs or runs over 30 min when that speeds training up, and say when it can be reopened. Delete abandoned run folders, dummy checkpoints and TensorBoard logs under 5,000 steps.
-  *Here: Unity in play mode cuts Warp from ~60k to ~12k samples/s. One GPU job at a time (check `nvidia-smi`, `train_*.py` processes and `training/logs/queue.log`).*
+  *Here: Unity in play mode cuts Warp from ~60k to ~12k samples/s. One GPU job at a time (check `nvidia-smi`, `train_*.py` processes and `Training/logs/queue.log`).*
 - **Simulation UI & TensorBoard:** Show the MuJoCo UI during and after training so the movement can be watched. Start TensorBoard as soon as training starts.
-  *Here: `training/view_box.py`; `training/tools/viewer_leash.ps1`.*
+  *Here: `Training/view_box.py`; `Training/tools/viewer_leash.ps1`.*
 - **Tracking & logs:** Log training metrics, decisions and updates so later agents can track progress. Send data to Azure Table Storage when needed.
   *Here: `docs/rl_optimization_log.md` (run by run) and the dated entries in `docs/README.md`.*
 - **Telemetry:** Stream agent actions, win/loss stats and kinematics to local files (or Azure Tables) to analyse movement profiles and results over time.
   *Here: `FightLog` writes every bout to `persistentDataPath/fightlog.ndjson`; `PerfTelemetry` for frame cost.*
 - **Progress updates:** Estimate training time at startup, then send hourly updates with a status grid (run, iteration, key metrics), key improvements and a short summary.
-  *Here: `training/tools/status.ps1 <run>` reads the status file the trainer writes every ten iterations.*
+  *Here: `Training/tools/status.ps1 <run>` reads the status file the trainer writes every ten iterations.*
 
 ### 2.3 Physics & Quality Checks
 
 - **Physical fidelity:** Earth gravity (−9.81 m/s²), mass according to size, realistic joint ranges. Human joints move at human speed and force.
 - **Muscle rules:** Every new creature trains from the start with a muscle-like speed limit (joint torque falls to nothing at the joint's speed limit) and fatigue (drives weaken as energy is spent and recover with rest). The game runs under the same rules.
 - **Collision:** Simple primitive shapes (capsules, boxes, spheres) fitted inside the skinned mesh; never the visual mesh or the bones. All parts collide with each other and the world except parent–child pairs and pairs that overlap in the default stance (joint limits handle those). Clear mesh separation: before training, verify no pair touches in the T-pose, the default stance and a normal arm and leg swing.
-  *Here: `training/tools/check_self_collision.py`.*
+  *Here: `Training/tools/check_self_collision.py`.*
 - **Self-contact:** Never ends an episode. If the policy leans on it, add a small self-contact force penalty.
 - **Action smoothing:** Promote human-like, fluid joint motion without jitter: torque/action-rate penalties, low-pass filtering of actions, or jerk minimisation in the reward.
   *Here: every env charges the squared action change (`r["rate"]` in `envs/footwork.py`, `getup.py`, `boxing.py`); `train_box.py --action-rate-w` adds more. Low-pass action smoothing (`--action-filter`, `action_filter` / `drive_filter`) and observation delay (`--obs-delay-max`, `obs_delay_steps`) live in `envs/boxing.py`, `MjBoxer.Drive`, and `tools/set_brain_rules.py`.*
 - **Warm start:** Train a new skill from a warm start (a brain trained without self-collision, or the previous rung), not from scratch.
-  *Here: rebuild warm starts from shipped brains with `training/tools/onnx_to_pt.py`.*
+  *Here: rebuild warm starts from shipped brains with `Training/tools/onnx_to_pt.py`.*
 - **Export gate:** Export ONNX only after the policy reaches the target score for 100 consecutive episodes with zero NaN gradients or errors.
   *Here: then the exams (`footwork_c.py --exam`, `exam_v2.py`) in C MuJoCo (the game's version, 3.15.0) and Unity parity (`MjParityTests`, `MjGateTests`) before `MjRetrofit.Promote`.*
 - **Reports:** For runs over 30 min, write an HTML report with the 3 most consequential metric charts, a comparison to previous runs (better or worse, and why), and each chart explained at 3 levels: toddler, child, adult.
-  *Here: `training/tools/day_charts.py`, `training/tools/tb_shot.ps1`; reports in `docs/reports/`.*
+  *Here: `Training/tools/day_charts.py`, `Training/tools/tb_shot.ps1`; reports in `docs/reports/`.*
 
 ### 2.4 Communication Rules
 
@@ -145,34 +160,36 @@ three is in `docs/archive/`. The owner often runs several Claude sessions on thi
 A portrait mobile boxing broadcast: two physics-driven boxers (no animation) fight while the game films,
 scores and commentates. Unity 6000.6.9f1, URP 17.6, Cinemachine, UI Toolkit, Unity Inference Engine (Sentis)
 for the brains, the official MuJoCo Unity plugin 3.15.0 for the fight's physics. **No PhysX in the fight**: the
-arena holds no Rigidbody, Collider, Joint or ArticulationBody. The trainer is Python + MuJoCo Warp in `training/`.
+arena holds no Rigidbody, Collider, Joint or ArticulationBody. The trainer is Python + MuJoCo Warp in `Training/`.
 No ML-Agents.
 
 ### Architecture (the parts that span files)
 
-- **Decision loop, every 0.02 s, red then blue** (`Assets/Scripts/Mj`): `MjBoxer.Observe` reads `mjData` (103
+- **Decision loop, every 0.02 s, red then blue** (`Assets/_Project/Core/Scripts/Mj`): `MjBoxer.Observe` reads `mjData` (103
   numbers) -> `MjBoxer.Infer` (Inference Engine worker, CPU) -> `MjBoxer.Drive` writes 21 PD joint targets to
   `mjData.ctrl` -> the plugin's `MjScene` steps 4 x 0.005 s -> `MjRing.AfterPhysics` measures punches and falls.
-- **Game layer** (`Assets/Scripts/Runtime`): `Sim/MjBrain.cs` sits between a `Fighter` (damage, daze, down) and
+- **Game layer** (`Assets/_Project/Core/Scripts/Runtime`): `Sim/MjBrain.cs` sits between a `Fighter` (damage, daze, down) and
   its `MjBoxer` (drive strength, get-up brain swap, punch naming). `Fighter` publishes on `SimBus` (Hit,
   Knockdown, GotUp); `Bout` + judges run rounds and counts and place boxers; HUD, cameras (`Broadcast`),
   commentary, sound and effects (`Fx`) only listen to `SimBus`.
-- **Three brains per boxer** in `Assets/Boxers/NAME/`: `policy.onnx` (footwork), `match.onnx`, `getup.onnx`,
+- **Three brains per boxer** in `Assets/_Project/Agents/Boxers/NAME/`: `policy.onnx` (footwork), `match.onnx`, `getup.onnx`,
   plus `config.json` and C MuJoCo reference recordings used by the gate tests. `MjRetrofit.Promote(name, run)`
   copies a training run's policy and recordings there.
 - **One body file on both sides**: Unity's boxer prefabs compile to exactly the trainer's MJCF
-  (`training/models/v2`, rigs in `training/rigs/v2`). Parity is the core invariant: if a boxer stands in C MuJoCo
+  (`Training/models/v2`, rigs in `Training/rigs/v2`). Parity is the core invariant: if a boxer stands in C MuJoCo
   and falls in Unity, stop and fix the cause before training more. Check with menu
   `PoBox/Mj/Check Every Boxer Against Training` and the play-mode tests `MjParityTests` / `MjGateTests`.
-- **Scenes are authored from prefabs**, not generated at runtime: `Assets/Scenes/Menu.unity` (pick boxers),
+- **Scenes are authored from prefabs**, not generated at runtime: `Assets/_Project/Scenes/Menu.unity` (pick boxers),
   `Arena.unity` (every boxer as switched-off `NAME Red`/`NAME Blue` prefabs; `MatchSetup` enables the picked pair
   before MuJoCo compiles), `Melee.unity` (free-for-all, menu ALL: `FreeForAll` replaces `Bout` + `MatchSetup`,
   gives the eight boxers prefixes `a_`..`h_` before compile; `MjRing` handles more than two), `Testbed.unity`
   (one boxer, shoves, a pool of 8 cubes). Eight boxers: Matt, Zombie, Nick, Trump, Grandma, Grandpa, Kim, Sokol.
 - **Naming new assets** (from 2026-10-30; existing names stay, a rename breaks scene and trainer references): PascalCase
   with a type prefix: `PF_` prefab, `M_` material, `SM_` static mesh, `SK_` skinned mesh, `T_` texture, `A_` audio clip,
-  `VP_` volume profile. Scripts are plain PascalCase, one class a file. Top-level `Assets/` folders stay as they are: the
-  trainer, `MjRetrofit` and the build settings find `Assets/Boxers` and `Assets/Scenes` by path.
+  `VP_` volume profile. Scripts are plain PascalCase, one class a file. Folders follow the layout in section 1 (moved
+  2026-11-22; before that the top-level `Assets/` folders were kept on purpose). The trainer, `MjRetrofit`, the tests and
+  the build settings find `Assets/_Project/Agents/Boxers`, `Assets/_Project/RL_Models` and `Assets/_Project/Scenes` by
+  path: change them together.
 - **Plugin quirks**: `Packages/org.mujoco` (MuJoCo 3.15.0, with its Windows `mujoco.dll`) is embedded with local
   changes marked `PoBox:` (listed in `Packages/org.mujoco/POBOX_PATCHES.md`); the Android library is
   `Assets/Plugins/MuJoCo/Android/arm64-v8a/libmujoco.so` and the browser's is `Assets/Plugins/WebGL/MuJoCo` (README
@@ -181,7 +198,7 @@ No ML-Agents.
   step, so targets are rewritten before each step; `mj_step` leaves body positions one step behind `qpos`, so
   `mj_kinematics` runs before observing (as the trainer does). Don't add a git entry for MuJoCo to
   `Packages/manifest.json`.
-- **Training** (`training/`): envs `envs/footwork.py` (stand/walk/turn, style reward from CMU clips via
+- **Training** (`Training/`): envs `envs/footwork.py` (stand/walk/turn, style reward from CMU clips via
   `style.py`), `envs/getup.py`, `envs/match.py`; PPO in `ppo.py`; entry point `train_box.py --stage
   {auto,getup,footwork,v2}`. Mesh to body: `glb_to_rig.py` -> `rig_to_mjcf.py` (roster in `roster.json`,
   `tools/build_roster.py`). A checkpoint folder holding `REJECTED.txt` is skipped by the exams and the importer.
@@ -208,7 +225,7 @@ unity command menu --path "PoBox/Dev/Run Script"   # runs Temp/pobox-dev.txt, ou
   blocks its main thread, and every CLI command times out until someone clicks Reload. Edit scenes through `eval`.
 - Compile-check C# without touching the editor: `dotnet build PoBox.Mj.csproj -nologo -v q -o "$TEMP/pobox_csbuild"`.
 - Dev script commands (`play`, `stop`, `shot-begin 1080 1920` / `shot-end name`, `call MenuView Fight`, ...) are
-  listed at the top of `Assets/Scripts/Editor/DevTools.cs`.
+  listed at the top of `Assets/_Project/Core/Scripts/Editor/DevTools.cs`.
 - Android: menu `PoBox/Android/Prepare`, then `PoBox/Android/Build APK` (arm64).
 - Unity 6.6 writes two-line `.cs.meta` files (fileFormatVersion + guid); that is normal. A new script the compiler
   silently leaves out of its assembly (missing from `Library/Bee/artifacts/*/PoBox.Runtime.rsp`) was fixed once
@@ -229,32 +246,53 @@ uv run python tools/queue_runner.py          # works through logs/queue.json
 ```
 
 Moved-not-deleted files from cleanups live in `../PoBox_quarantine_<date>/` (MANIFEST.md inside). Staged, not-yet-run
-jobs are `training/queues/queue_*_staged.json`; copy entries into `logs/queue.json` to run them. `logs/queue.hold` pauses the
+jobs are `Training/queues/queue_*_staged.json`; copy entries into `logs/queue.json` to run them. `logs/queue.hold` pauses the
 runner; it also waits while the GPU is over 25% busy (Unity in play mode).
 
 One GPU job at a time: before training, check `nvidia-smi`, running
-`train_*.py` processes and `training/logs/queue.log`. Unity in play mode on the same GPU cuts Warp from ~60k to
+`train_*.py` processes and `Training/logs/queue.log`. Unity in play mode on the same GPU cuts Warp from ~60k to
 ~12k samples a second.
 
-## 3. Build, test, deploy
+## 3. Concurrent work
+
+- The owner often runs several Claude sessions on this repo at once. Before starting: `git status`, `git log -8`,
+  `git stash list`; never commit, stash, revert or reformat files you did not change; stage files by name.
+- `master` is the only branch. Commit your own work before any pull; `git pull --rebase` only rebases your unpushed
+  commits; never force-push or rewrite pushed history.
+- **One Unity instance per project.** A batchmode Unity (tests, WebGL build) cannot open a project the editor has open,
+  and vice versa: check for `Unity.exe` on this project first, and close what you started. Never edit a `.unity` file on
+  disk while the editor has it open.
+- **One game engine or headless browser at a time** on this PC, and **one GPU job at a time** (`nvidia-smi`, running
+  `train_*.py`, `Training/logs/queue.log`; `logs/queue.hold` pauses the queue runner). Close the editor for long training.
+- Never run full browser suites against the live site (Static Web App, Free tier): a handful of page loads only.
+- Generated output stays out of git (`Builds/`, `Library/`, `Temp/`, `Training/checkpoints/`, `Training/logs/`).
+
+## 4. Build, test, deploy (exact commands)
 
 - **Python** (one environment of PoBox's own, `uv`, Python 3.11; no sibling project's venv): `uv sync` (ruff + pytest),
   `uv sync --group physics` (+ C MuJoCo, the version the game runs), `uv sync --group train` (+ MuJoCo Warp, torch,
   onnx; on a GPU PC install the CUDA build of torch into the same venv). Checks: `uv run ruff check .`,
   `uv run ruff format --check .`, `uv run pytest` (tiers: fast = no marker; `-m physics` = C MuJoCo against the
-  recordings in `Assets/Boxers/NAME`; `-m train` = the trainer's stack). Config: `pyproject.toml`.
+  recordings in `Assets/_Project/Agents/Boxers/NAME`; `-m train` = the trainer's stack). Config: `pyproject.toml`.
 - **Reward penalties** (torque², joint speed², pelvis angular velocity², action rate, foot slip) have their weights in
-  `training/config/reward.json` (read by `training/envs/reward_config.py`); the game's copy for the Tab overlay is
-  `Assets/Resources/RewardWeights.asset`, kept equal by the EditMode test `ShowcaseTests.RewardWeightsAreTheTrainingConfigs`. Every shipped brain
+  `Training/config/reward.json` (read by `Training/envs/reward_config.py`); the game's copy for the Tab overlay is
+  `Assets/_Project/Data/Resources/RewardWeights.asset`, kept equal by the EditMode test `ShowcaseTests.RewardWeightsAreTheTrainingConfigs`. Every shipped brain
   predates the torque² and joint-speed² terms (added 2026-11-20, no retraining).
-- **Unity** 6000.6.9f1 exactly. EditMode tests (`Assets/Scripts/EditorTests`, plain logic and asset checks):
+- **Unity** 6000.6.9f1 exactly. EditMode tests (`Assets/_Project/Core/Scripts/EditorTests`, plain logic and asset checks):
   `Unity.exe -batchmode -nographics -projectPath . -runTests -testPlatform EditMode -testResults <xml>`. The fight's
-  fixtures (`Assets/Scripts/Tests`: parity, gate, collision, layout, flow) are play-mode tests: the same command with
-  `-testPlatform PlayMode` (no `-nographics`), or `scripts/run_tests.ps1` against an open editor.
-- **Tab overlay and demo mode** (`Assets/Scripts/Runtime/UI/DiagOverlay.cs`, `DemoMode.cs`): Tab or the 44 px corner
-  button on a touch screen shows FPS, each boxer's episode reward (the penalty terms), inference ms and the curriculum
-  stage of the running brain; after 30 s without input the HUD steps aside and random bouts run with the showcase
-  shots cycling. Tunables: `Assets/Resources/ShowcaseSettings.asset` (idle seconds, shots, dwell, result hold; off in
+  fixtures (`Assets/_Project/Core/Scripts/Tests`: parity, gate, collision, layout, flow) are play-mode tests: the same command with
+  `-testPlatform PlayMode` (no `-nographics`), or `scripts/run_tests.ps1` against an open editor. Exactly (about 25 min;
+  `-force-d3d11` because D3D12 lost the GPU device mid-run on this PC, 2026-11-22):
+  `Unity.exe -batchmode -force-d3d11 -projectPath . -runTests -testPlatform PlayMode -assemblyNames PoBox.Tests -testResults <xml> -logFile <log>`.
+  `ShowcasePlayTests` checks the Po standard's runtime pieces for real: every reward penalty term is charged, the Tab
+  overlay's readout and its benchmark button, and demo mode starting after 30 s idle. The compile must show 0
+  `warning CS` from `Assets/` in the log.
+- **Tab overlay and demo mode** (`Assets/_Project/Core/Scripts/Runtime/UI/DiagOverlay.cs`, `DemoMode.cs`): Tab or the 44 px corner
+  button on a touch screen shows FPS, each boxer's episode reward (and each penalty term), inference ms and the curriculum
+  stage of the running brain, and a **Benchmark training speed** button (`Mj/SimBenchmark.cs`: a copy of the running
+  fight's MuJoCo world stepped flat out for 3 s on this device; physics steps/s and samples/s. Real training is MuJoCo
+  Warp + PPO on a GPU and does not run in the game); after 30 s without input the HUD steps aside and random bouts run with the showcase
+  shots cycling. Tunables: `Assets/_Project/Data/Resources/ShowcaseSettings.asset` (idle seconds, shots, dwell, result hold; off in
   the editor unless `runInEditor`). F3 opens the older debug grid.
 - **WebGL** is built **locally** and deployed by CI: `pwsh -File scripts/publish_webgl.ps1` runs the EditMode tests,
   builds `Builds/WebGL` with this PC's Unity (build method and `/diag` checks from `scripts/webgl.json`), writes
@@ -262,10 +300,13 @@ One GPU job at a time: before training, check `nvidia-smi`, running
   first; it keeps the newest 3). One version stamp, UTC `yyMMdd`, computed by that script, reaches
   `PlayerSettings.bundleVersion` (`Application.version`), `index.html` and `diag.html`. Publishing the release runs
   `.github/workflows/webgl.yml`, which deploys the zip to the Static Web App `pobox` and checks the live page and
-  `/diag`. CI has no Unity licence and needs none. Repo secret: `AZURE_STATIC_WEB_APPS_API_TOKEN`. On a push the
-  same workflow runs the Python checks only. `scripts/deploy_webgl.ps1` deploys `Builds/WebGL` straight from this PC.
-- `/diag` live-probes from the browser: the game page, the leaderboard page, the Azure Table `stpobox2/pobox`
-  (CORS for the site), every file of the build and WebGL2. Add a check to `scripts/webgl.json` → `diagChecks` when
+  `/diag` and that the live `X-Commit` header is the release's commit (the deploy job writes it into
+  `staticwebapp.config.json`). CI has no Unity licence and needs none. Repo secret: `AZURE_STATIC_WEB_APPS_API_TOKEN`.
+  Every push, PR and release runs the Python checks first (`uv sync --group physics`, `ruff format --check`,
+  `ruff check`, `pytest -m "not train"`); the deploy needs them. `scripts/deploy_webgl.ps1` deploys `Builds/WebGL` straight from this PC.
+- `/diag` live-probes from the browser: the game page, the leaderboard page, every file of the build and WebGL2.
+  Services switched off on purpose show a neutral "Off" (`"expect": "off"`) and do not count toward the banner: the
+  leaderboard table (no storage account is provisioned; `stpobox2` does not resolve) and the cornerman proxy. Add a check to `scripts/webgl.json` → `diagChecks` when
   the game starts calling something new.
 - Tests pass on any machine: no drive-letter, temp-folder or working-directory assumptions, and no live config value
   hard-coded as an expected result (read it from the same config the app reads).

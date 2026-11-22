@@ -1,4 +1,4 @@
-"""The training config's reward penalty weights (training/config/reward.json): the fast tier."""
+"""The training config's reward penalty weights (Training/config/reward.json): the fast tier."""
 
 import json
 

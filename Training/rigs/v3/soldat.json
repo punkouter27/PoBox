@@ -1,0 +1,400 @@
+{
+  "source": "Assets/_Project/Environments/Models/Soldat.glb",
+  "frame": "blender_z_up (x = character left, -y = forward, z = up)",
+  "height_m": 1.84,
+  "mass_kg": 86.0,
+  "notes": [
+    "made symmetric: left and right differed by up to 0.5 cm",
+    "arms straightened to a T-pose: they rested 46 degrees below the shoulder line",
+    "v3 (tools/build_v3.py): human force each way, per-joint action scale, head 0.087 m (95% of its half-width), joint_kv standing, trunk bend 60 fwd / 30 back, de Leva segment masses",
+    "joint_kv from tools/pd_sweep.py --loaded (target zeta 0.85)"
+  ],
+  "bones": [
+    {
+      "name": "Hips",
+      "parent": null,
+      "head": [
+        0.0,
+        0.0466,
+        0.9108
+      ],
+      "tail": [
+        0.0,
+        0.0455,
+        1.0488
+      ]
+    },
+    {
+      "name": "LeftUpLeg",
+      "parent": "Hips",
+      "head": [
+        0.1068,
+        0.0437,
+        0.8832
+      ],
+      "tail": [
+        0.1025,
+        0.0539,
+        0.5244
+      ]
+    },
+    {
+      "name": "LeftLeg",
+      "parent": "LeftUpLeg",
+      "head": [
+        0.1025,
+        0.0539,
+        0.5244
+      ],
+      "tail": [
+        0.1071,
+        -0.0087,
+        0.092
+      ]
+    },
+    {
+      "name": "LeftFoot",
+      "parent": "LeftLeg",
+      "head": [
+        0.1071,
+        -0.0087,
+        0.092
+      ],
+      "tail": [
+        0.1071,
+        -0.0961,
+        0.0368
+      ]
+    },
+    {
+      "name": "LeftToeBase",
+      "parent": "LeftFoot",
+      "head": [
+        0.1071,
+        -0.0961,
+        0.0368
+      ],
+      "tail": [
+        0.1071,
+        -0.1224,
+        0.0202
+      ]
+    },
+    {
+      "name": "RightUpLeg",
+      "parent": "Hips",
+      "head": [
+        -0.1068,
+        0.0437,
+        0.8832
+      ],
+      "tail": [
+        -0.1025,
+        0.0539,
+        0.5244
+      ]
+    },
+    {
+      "name": "RightLeg",
+      "parent": "RightUpLeg",
+      "head": [
+        -0.1025,
+        0.0539,
+        0.5244
+      ],
+      "tail": [
+        -0.1071,
+        -0.0087,
+        0.092
+      ]
+    },
+    {
+      "name": "RightFoot",
+      "parent": "RightLeg",
+      "head": [
+        -0.1071,
+        -0.0087,
+        0.092
+      ],
+      "tail": [
+        -0.1071,
+        -0.0961,
+        0.0368
+      ]
+    },
+    {
+      "name": "RightToeBase",
+      "parent": "RightFoot",
+      "head": [
+        -0.1071,
+        -0.0961,
+        0.0368
+      ],
+      "tail": [
+        -0.1071,
+        -0.1224,
+        0.0202
+      ]
+    },
+    {
+      "name": "Spine",
+      "parent": "Hips",
+      "head": [
+        0.0,
+        0.0455,
+        1.0488
+      ],
+      "tail": [
+        0.0,
+        0.0025,
+        1.2144
+      ]
+    },
+    {
+      "name": "Spine2",
+      "parent": "Spine1",
+      "head": [
+        0.0,
+        0.0502,
+        1.3616
+      ],
+      "tail": [
+        0.0,
+        0.099,
+        1.5364
+      ]
+    },
+    {
+      "name": "LeftArm",
+      "parent": "LeftShoulder",
+      "head": [
+        0.2184,
+        0.0849,
+        1.4812
+      ],
+      "tail": [
+        0.4978,
+        0.0849,
+        1.4812
+      ]
+    },
+    {
+      "name": "LeftForeArm",
+      "parent": "LeftArm",
+      "head": [
+        0.4978,
+        0.0849,
+        1.4812
+      ],
+      "tail": [
+        0.7195,
+        0.0849,
+        1.4812
+      ]
+    },
+    {
+      "name": "LeftHand",
+      "parent": "LeftForeArm",
+      "head": [
+        0.7195,
+        0.0849,
+        1.4812
+      ],
+      "tail": [
+        0.8868,
+        0.0849,
+        1.4812
+      ]
+    },
+    {
+      "name": "LeftHandMiddle3",
+      "parent": "LeftHandMiddle2",
+      "head": [
+        0.8668,
+        0.0849,
+        1.4812
+      ],
+      "tail": [
+        0.8868,
+        0.0849,
+        1.4812
+      ]
+    },
+    {
+      "name": "Neck",
+      "parent": "Spine2",
+      "head": [
+        0.0,
+        0.099,
+        1.5364
+      ],
+      "tail": [
+        0.0,
+        0.0253,
+        1.61
+      ]
+    },
+    {
+      "name": "Head",
+      "parent": "Neck",
+      "head": [
+        0.0,
+        0.0253,
+        1.61
+      ],
+      "tail": [
+        0.0,
+        0.0253,
+        1.84
+      ]
+    },
+    {
+      "name": "RightArm",
+      "parent": "RightShoulder",
+      "head": [
+        -0.2184,
+        0.0849,
+        1.4812
+      ],
+      "tail": [
+        -0.4978,
+        0.0849,
+        1.4812
+      ]
+    },
+    {
+      "name": "RightForeArm",
+      "parent": "RightArm",
+      "head": [
+        -0.4978,
+        0.0849,
+        1.4812
+      ],
+      "tail": [
+        -0.7195,
+        0.0849,
+        1.4812
+      ]
+    },
+    {
+      "name": "RightHand",
+      "parent": "RightForeArm",
+      "head": [
+        -0.7195,
+        0.0849,
+        1.4812
+      ],
+      "tail": [
+        -0.8868,
+        0.0849,
+        1.4812
+      ]
+    },
+    {
+      "name": "RightHandMiddle3",
+      "parent": "RightHandMiddle2",
+      "head": [
+        -0.8668,
+        0.0849,
+        1.4812
+      ],
+      "tail": [
+        -0.8868,
+        0.0849,
+        1.4812
+      ]
+    }
+  ],
+  "map": {
+    "pelvis": "Hips",
+    "neck": "Neck",
+    "head": "Head",
+    "spine": "Spine",
+    "torso": "Spine2",
+    "thigh_l": "LeftUpLeg",
+    "shin_l": "LeftLeg",
+    "foot_l": "LeftFoot",
+    "toe_l": "LeftToeBase",
+    "upper_arm_l": "LeftArm",
+    "forearm_l": "LeftForeArm",
+    "hand_l": "LeftHand",
+    "hand_tip_l": "LeftHandMiddle3",
+    "thigh_r": "RightUpLeg",
+    "shin_r": "RightLeg",
+    "foot_r": "RightFoot",
+    "toe_r": "RightToeBase",
+    "upper_arm_r": "RightArm",
+    "forearm_r": "RightForeArm",
+    "hand_r": "RightHand",
+    "hand_tip_r": "RightHandMiddle3"
+  },
+  "all_bones": 28,
+  "radii": {
+    "thigh": 0.0818,
+    "shin": 0.062,
+    "upper_arm": 0.058,
+    "forearm": 0.0416,
+    "torso": 0.1278,
+    "pelvis": 0.1246,
+    "head": 0.0874
+  },
+  "mesh": {
+    "vertices": 31976,
+    "height_m": 1.84,
+    "volume_l": 109.2,
+    "bmi_from_volume": 31.8
+  },
+  "strength": 1.033,
+  "speed": 1.0,
+  "style": {
+    "head": 1.7,
+    "body": 0.6,
+    "hand_l": 0.8,
+    "hand_r": 1.6,
+    "power": 1.4,
+    "pace_s": 0.6,
+    "taken": 1.0,
+    "block_w": 0.05,
+    "counter": 1.3,
+    "range_m": 0.84,
+    "press": 0.3,
+    "crowd": 0.4,
+    "energy": 1.1
+  },
+  "display": "SOLDAT",
+  "persona": "marksman",
+  "says": "the sniper: disciplined, long and upright, picks his shot and fires the straight right hand to the head",
+  "human_force": true,
+  "per_joint_action": true,
+  "ranges_deg": {
+    "abdomen_y": [
+      -30,
+      60
+    ]
+  },
+  "segment_mass_frac": {
+    "pelvis": 0.1117,
+    "torso": 0.3229,
+    "head": 0.0694,
+    "upper_arm": 0.0271,
+    "forearm": 0.0162,
+    "hand": 0.0061,
+    "thigh": 0.1416,
+    "shin": 0.0433,
+    "foot": 0.0137
+  },
+  "joint_kv": {
+    "abdomen_z": 38.8,
+    "abdomen_y": 26.449,
+    "abdomen_x": 30.94,
+    "shoulder_x": 6.949,
+    "shoulder_z": 10.787,
+    "elbow": 5.609,
+    "hip_x": 70.132,
+    "hip_z": 12.396,
+    "hip_y": 70.522,
+    "knee": 20.09,
+    "ankle_y": 12.396,
+    "ankle_x": 2.429
+  }
+}

@@ -12,15 +12,15 @@ the house rules are [AGENTS.md](../AGENTS.md).
 ## Where it stands (2026-11-13)
 
 - **Eight boxers:** Matt, Zombie, Nick, Trump, Grandma, Grandpa, Kim, Sokol. Each has three brains (footwork,
-  boxing, get-up) in `Assets/Boxers/NAME`.
-- **Six are on the v3 body** (`training/models/v3`: human force each way, per-joint action scale, de Leva
+  boxing, get-up) in `Assets/_Project/Agents/Boxers/NAME`.
+- **Six are on the v3 body** (`Training/models/v3`: human force each way, per-joint action scale, de Leva
   masses): Sokol and Nick (2026-11-02), Zombie (2026-11-03), Matt, Trump and Kim (2026-11-04).
 - **Grandma and Grandpa are still on v2.** On v3 they got up 5 and 14 times of 60 (2026-11-03). The last log
   entry says more of the same training will not do it; the approach is the owner's call.
 - **Known weak lines on v3:** Trump's attack (0.11 punches landed a second, mark 0.5), Kim's footing (about
   2 falls a minute) and carrying on, and the under-pressure line, which nobody passed on 2026-11-03.
-- **Crew:** a referee and a ring-card walker are MuJoCo bodies with trained footwork (`Assets/Crew`,
-  `training/models/crew`).
+- **Crew:** a referee and a ring-card walker are MuJoCo bodies with trained footwork (`Assets/_Project/Agents/Crew`,
+  `Training/models/crew`).
 - **Last test counts on record (2026-11-04):** MjParity 3/3, MjGate 24/24, StateFlow 2/2, OneScreen 74/74.
 - The design documents in [20261004](20261004) describe the game as it was on 4 October (six boxers, v2 bodies).
 
@@ -85,7 +85,7 @@ and "Things that cost time, worth knowing". The plan as it stood, with every tic
   Mixamo names, heat weights; 1.84 m, 87 kg). Persona **marksman**: the rear hand 1.6 to the head from 0.84 m. Warm start Matt.
 - Both: v3 bodies, 0 differences Unity against the trainer, corners in Arena, a slot each in the free-for-all (in place of
   GRANDMA II and GRANDPA II), menu cards, ladder entrants, their own procedural voices. **Training is still running**
-  (`training/logs/queue_timmy.json`); until their brains are promoted they run the zero placeholder and fall if picked.
+  (`Training/logs/queue_timmy.json`); until their brains are promoted they run the zero placeholder and fall if picked.
   Timmy's footwork exam: stand, turn and joints pass, walking falls 0.203 a minute (mark 0.2).
 - **Referee raises the winner's hand**: at the result he stands at the winner's left facing the camera the result came up
   on and lifts his right arm with the winner's left (`MjBoxer.RaisedLeft`, `MjBrain.HandRaisedByReferee`); within a metre of
@@ -117,9 +117,9 @@ and "Things that cost time, worth knowing". The plan as it stood, with every tic
 ## Overnight 2: the referee and card walker walk on their own, Matt punches (2026-11-04)
 
 - Report `docs/reports/2026-11-04-overnight.html`; best weights `docs/reports/2026-11-04-overnight-weights.json`.
-- **Crew:** referee and ring-card walker built from the stylised figures (`training/tools/build_crew.py`, models/crew),
+- **Crew:** referee and ring-card walker built from the stylised figures (`Training/tools/build_crew.py`, models/crew),
   footwork trained from Sokol's and Nick's (`crewf1_*`), the referee again with his arm held (`--gesture`, `crewf2`).
-  Every C MuJoCo footwork line passes; both in the game (Assets/Crew, Mj/MjCrew), 0 differences from the trainer.
+  Every C MuJoCo footwork line passes; both in the game (Assets/_Project/Agents/Crew, Mj/MjCrew), 0 differences from the trainer.
   Game-side: the crew changes episode only from standing (MjCrew.GoTo); a fallen referee is stood back up at a quiet moment.
 - **Matt** `v3p2_matt` + `v3u5_matt`: all six original lines pass (attack 0.18 -> 0.66/s); fails only the new
   under-pressure line, on Zombie. Not promoted (owner's call).

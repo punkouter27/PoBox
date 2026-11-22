@@ -24,7 +24,7 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 Push-Location $root
 try {
-    $fixtures = Get-ChildItem (Join-Path $root 'Assets/Scripts/Tests') -Filter '*Tests.cs' |
+    $fixtures = Get-ChildItem (Join-Path $root 'Assets/_Project/Core/Scripts/Tests') -Filter '*Tests.cs' |
         ForEach-Object { 'PoBox.Tests.' + $_.BaseName } | Sort-Object
     if ($Only.Count -gt 0) {
         $wanted = @($Only | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
