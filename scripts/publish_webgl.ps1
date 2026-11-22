@@ -80,7 +80,7 @@ if (-not $SkipBuild) {
 $index = Join-Path $buildDir 'index.html'
 if (-not (Test-Path $index)) { throw "No WebGL build at $buildDir." }
 $pageVersion = [regex]::Match((Get-Content $index -Raw), 'data-version="v(\d{6})"').Groups[1].Value
-if (-not $SkipBuild -and $pageVersion -ne $stamp) { throw "index.html says v$pageVersion, this publish is v$stamp: the stamp did not reach the build." }
+if (-not $SkipBuild -and $pageVersion -ne $stamp) { throw "index.html says v$pageVersion, this publish is v${stamp}: the stamp did not reach the build." }
 if ($SkipBuild -and $pageVersion) { $stamp = $pageVersion }
 
 # Static Web Apps 404s .unityweb without this MIME config.
