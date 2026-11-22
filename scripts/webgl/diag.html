@@ -29,6 +29,8 @@
   .state.ok { color: var(--ok); } .state.warn { color: var(--warn); } .state.bad { color: var(--bad); } .state.wait { color: var(--muted); } .state.off { color: var(--muted); }
   .detail { grid-column: 1 / -1; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
   footer { position: fixed; right: 12px; bottom: 6px; font-size: 11px; color: var(--muted); }
+  /* On a phone the stamp comes after the content, never over a row. */
+  @media (max-width: 600px) { footer { position: static; text-align: right; padding: 0 16px 12px; } main { padding-bottom: 12px; } }
 </style>
 </head>
 <body>
