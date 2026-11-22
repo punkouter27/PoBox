@@ -26,7 +26,7 @@
          display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: center; }
   .name { font-weight: 600; overflow-wrap: anywhere; }
   .state { font-weight: 600; white-space: nowrap; }
-  .state.ok { color: var(--ok); } .state.warn { color: var(--warn); } .state.bad { color: var(--bad); } .state.wait { color: var(--muted); }
+  .state.ok { color: var(--ok); } .state.warn { color: var(--warn); } .state.bad { color: var(--bad); } .state.wait { color: var(--muted); } .state.off { color: var(--muted); }
   .detail { grid-column: 1 / -1; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
   footer { position: fixed; right: 12px; bottom: 6px; font-size: 11px; color: var(--muted); }
 </style>
@@ -53,7 +53,8 @@ function row(check) {
 }
 
 async function probe(check) {
-  if (check.expect === "optional") return { kind: "warn", text: "Not configured", more: "optional" };
+  // Switched off on purpose (nothing hosted to probe): a neutral "Off", never counted against the banner.
+  if (check.expect === "off") return { kind: "off", text: "Off", more: "off on purpose" };
   if (check.expect === "webgl2") {
     const ok = !!document.createElement("canvas").getContext("webgl2");
     return ok ? { kind: "ok", text: "Healthy", more: "WebGL2 context created" } : { kind: "bad", text: "Unavailable", more: "this browser gives no WebGL2 context" };
@@ -80,10 +81,11 @@ async function probe(check) {
     for (const c of mine) { const r = row(c); host.append(r.r); rows.push([c, r]); }
   }
   const results = await Promise.all(rows.map(async ([c, r]) => { const o = await probe(c); r.set(o.kind, o.text, o.more); return o.kind; }));
-  const bad = results.filter(k => k === "bad").length, warn = results.filter(k => k === "warn").length;
+  const bad = results.filter(k => k === "bad").length, off = results.filter(k => k === "off").length;
+  const live = results.length - off;
   const b = document.getElementById("banner");
   b.className = "banner " + (bad ? "bad" : "ok");
-  b.textContent = bad ? `${bad} of ${results.length} checks failing` : `All systems operational (${results.length - warn} live checks${warn ? `, ${warn} optional not configured` : ""})`;
+  b.textContent = bad ? `${bad} of ${live} live checks failing` : `All systems operational (${live} live checks${off ? `, ${off} off on purpose` : ""})`;
 })();
 </script>
 </body>

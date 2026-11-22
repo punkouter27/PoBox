@@ -8,9 +8,8 @@
     {
       "section": "Data",
       "name": "Leaderboard table (Azure Table stpobox2 / pobox)",
-      "url": "https://stpobox2.table.core.windows.net/pobox()?$top=1",
-      "expect": "reachable",
-      "note": "The game posts each bout here (Online/Leaderboard.cs) and leaderboard.html reads it; without a SAS token the table answers 403/404, which proves it is up and CORS lets this site read it."
+      "expect": "off",
+      "note": "Off: no storage account is provisioned (stpobox2 does not resolve; checked 2026-11-22). The game posts a bout only when a table address with a SAS token is typed into Settings (BOARD), and leaderboard.html then reads it from the player's own link. Provision a table and set expect back to a live probe to turn it on."
     },
     {
       "section": "API",
@@ -21,8 +20,8 @@
     {
       "section": "Services",
       "name": "Cornerman proxy (server/corner_proxy.py)",
-      "expect": "optional",
-      "note": "Off unless a proxy address is typed into Settings (CORNER); it runs on the player's own PC, so there is nothing hosted to probe."
+      "expect": "off",
+      "note": "Off: runs on the player's own PC when a proxy address is typed into Settings (CORNER); nothing hosted to probe."
     }
   ]
 }
