@@ -132,12 +132,11 @@ namespace PoBox.Tests
                 HudView hud = Object.FindAnyObjectByType<HudView>();
                 Quick(bout);
                 yield return Until(() => hud.ResultsOpen, 20f, "the cup's bout never put its result card up");
-                // A half-second bout often ends level on the cards: a cup draw decides nothing and stays the cup's by design
-                // (HudView.SettleExtras), so the card says so; any other result is taken.
+                // A half-second bout often ends level on the cards: a cup draw goes to the higher seed (the tournament
+                // standard, HudView.SettleExtras) and the card says so; either way the result is taken.
                 if (bout.Winner == null)
-                    StringAssert.Contains("A DRAW", hud.Root.Q<Label>("res-extra").text, "a drawn cup bout does not say it is fought again");
-                else
-                    Assert.IsFalse(Career.Live, "the cup's result was not taken");
+                    StringAssert.Contains("THROUGH ON SEED", hud.Root.Q<Label>("res-extra").text, "a drawn cup bout does not say the higher seed went through");
+                Assert.IsFalse(Career.Live, "the cup's result was not taken");
                 StringAssert.Contains("CUP", hud.Root.Q<Label>("res-extra").text, "the card does not say what the bout did in the cup");
 
                 // NEXT on the card: the next bout, the card gone.

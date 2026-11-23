@@ -20,6 +20,40 @@ Unity plugin 3.15.0 for the fight's physics, and Unity Inference Engine for the 
 - **A free-for-all**: all eight in the ring at once (menu ALL).
 - **A broadcast**: cameras, a scoreboard, commentary, a crowd, replays and a ring announcer.
 
+## Tournament standard (shared across the Po games, 2026-11-22)
+
+- **BYE**: a slot with nobody in it says BYE, on the first screen's 4x4 grid (`Runtime/UI/MenuView.cs`) and in
+  the cup's bracket.
+- **The cup** (`Runtime/League/Career.cs`, kept in `persistentDataPath/career.json`): 16 slots, single elimination,
+  seeded by rating in the order 1v16, 8v9, 4v13, 5v12, 2v15, 7v10, 3v14, 6v11. BYEs take the bottom seeds; a BYE's
+  opponent goes through unfought; BYE v BYE sends a BYE on; a draw goes to the higher seed; it runs itself bout to bout.
+- **Elo** (`Runtime/League/LeagueTable.cs`, kept in PlayerPrefs): start 1000, K 32. A boxer the trainer's CPU
+  league has rated (`Assets/_Project/Data/Resources/cpu_elo.json`) starts from that rating instead.
+- **Free-for-all** (`Runtime/Sim/FreeForAll.cs`, `Melee.unity`, menu ALL): exactly 8 players (`FreeForAll.Players`).
+  The scene's own boxers are seated first; if there are fewer than eight, twins ("MATT II") fill the open seats.
+
+### Voice matrix: 5 emotions x 5 levels
+
+Every boxer has a 5x5 voice grid: `AudioDirector.Play(fighter, Emotion5, level, volume)` (`Runtime/Audio/`,
+`VoiceMatrix.Pick(boxer, Emotion5, level, ...)`), level 1 (barely) to 5 (all out). Until a WAV is added, each cell
+is played as one of the older emotions, through the old tiers (the boxer's `A_Voice_*` recordings, the shared
+archetype takes, then the procedural `VoiceSynth`, made higher, rougher, louder and longer with the level):
+
+| Emotion5 | Played as | Heard at |
+|---|---|---|
+| angry | Effort (grunt) | a heavy punch thrown (hook/uppercut 3-5, body 2-3) |
+| happy | Triumph, soft and short | a drawn bout (level 2) |
+| hurt | Pain (levels 1-3), Groan (4-5) | a clean hit (level from its impulse), a knockdown (5), groans down or spent (4) |
+| insult | Taunt (laughs) | a far harder punch than usual (2-3), a knockdown scored (4) |
+| celebrate | Triumph | a win (5 by stoppage or last one standing, 4 on the cards) |
+
+Breath, panting, the dazed moan and the loser's sigh stay as they were (Exhale, Pant, Dazed, Defeat).
+
+**Adding recordings**: put WAVs in `Assets/_Project/Data/Resources/Voices/<Boxer>/<emotion>-<level>.wav`, e.g.
+`Voices/Matt/hurt-3.wav`, `Voices/Grandma/celebrate-5.wav` (emotion lower case: angry, happy, hurt, insult,
+celebrate; level 1-5; the folder is the boxer's name, `Matt` or `MATT`). More takes of a cell: `hurt-3_2.wav`,
+`hurt-3_3.wav`. A recorded cell is used as it is; the rest of the grid stays procedural.
+
 ## Where the boxers stand (13 November 2026)
 
 Six boxers are on the v3 body (`Training/models/v3`). Grandma and Grandpa are still on v2: on v3 they got up

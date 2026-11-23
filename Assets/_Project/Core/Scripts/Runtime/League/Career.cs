@@ -18,16 +18,17 @@ namespace PoBox.League
     /// The first screen starts or continues it and fights its next bout (setting <see cref="Live"/>); the arena,
     /// at the result of that bout, reports it (<see cref="Report"/>). With <see cref="auto"/> on (a new cup's
     /// default) the arena goes back to the bracket on its own after the result, and the bracket fights the next
-    /// bout on its own after a countdown, until there is a champion. A draw decides nothing: the bout is fought
-    /// again. Damage and fatigue are not carried from one bout to the next. Cups won are kept per boxer
+    /// bout on its own after a countdown, until there is a champion. A draw goes to the higher seed (the
+    /// tournament standard, 2026-11-22; before, it was fought again). Damage and fatigue are not carried from one bout to the next. Cups won are kept per boxer
     /// (<see cref="Titles"/>); the ratings are the ladder's (<see cref="LeagueTable"/>), which every bout moves.
     /// </summary>
     [Serializable]
     public class Career
     {
         public const int Size = 16, Matches = Size - 1, FirstRound = Size / 2;
-        // Slot k holds seed SeedSlot[k] + 1: 1 v 16, 8 v 9, 5 v 12, 4 v 13, 6 v 11, 3 v 14, 7 v 10, 2 v 15.
-        static readonly int[] SeedSlot = { 0, 15, 7, 8, 4, 11, 3, 12, 5, 10, 2, 13, 6, 9, 1, 14 };
+        // Slot k holds seed SeedSlot[k] + 1, in the tournament standard's order (2026-11-22):
+        // 1 v 16, 8 v 9, 4 v 13, 5 v 12 (the top half), 2 v 15, 7 v 10, 3 v 14, 6 v 11 (the bottom half).
+        static readonly int[] SeedSlot = { 0, 15, 7, 8, 3, 12, 4, 11, 1, 14, 6, 9, 2, 13, 5, 10 };
         // Where each round's matches start: the round of 16 is 0-7, the quarter-finals 8-11, the semis 12-13, the final 14.
         static readonly int[] RoundStart = { 0, 8, 12, 14, 15 };
         static readonly string[] RoundNames = { "R16", "QF", "SF", "FINAL" };
@@ -180,11 +181,26 @@ namespace PoBox.League
         /// <summary>The cup's winner (folder name), or null while it runs.</summary>
         public string Champion => Known(won[Matches - 1]);
 
-        /// <summary>A bout's result: counted if it is the cup's next bout. Winner 0 red, 1 blue, anything else a draw (fought again).</summary>
+        /// <summary>
+        /// A boxer's seed in this cup, 1 (best) to 16, from the slot it was drawn in; int.MaxValue if it is not in it.
+        /// </summary>
+        public int SeedOf(string name)
+        {
+            int k = string.IsNullOrEmpty(name) ? -1 : Array.IndexOf(slots, name);
+            return k < 0 ? int.MaxValue : SeedSlot[k] + 1;
+        }
+
+        /// <summary>The better seed of two (the one through on a draw).</summary>
+        public string HigherSeed(string a, string b) => SeedOf(b) < SeedOf(a) ? b : a;
+
+        /// <summary>
+        /// A bout's result: counted if it is the cup's next bout. Winner 0 red, 1 blue, anything else a draw, which
+        /// goes to the higher seed (the tournament standard).
+        /// </summary>
         public bool Report(string red, string blue, int winner)
         {
-            if (!Next(out int m, out string r, out string b) || r != red || b != blue || (winner != 0 && winner != 1)) return false;
-            won[m] = winner == 0 ? red : blue;
+            if (!Next(out int m, out string r, out string b) || r != red || b != blue) return false;
+            won[m] = winner == 0 ? red : winner == 1 ? blue : HigherSeed(red, blue);
             Resolve();
             if (!string.IsNullOrEmpty(Champion)) { AddTitle(Shown(Champion)); auto = false; }
             Save();

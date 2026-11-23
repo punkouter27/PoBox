@@ -89,8 +89,8 @@ namespace PoBox.Tests
         {
             Career c = Career.New(Entrants(16));
             Assert.AreEqual("", c.ByesLine(), "a full cup has no byes");
-            // Seeds 1 and 2 (the ladder's best two) sit in opposite halves of the draw: slot 0 at the top, slot 14 in the bottom half.
-            float s1 = LeagueTable.SavedElo(c.shown[0]), s2 = LeagueTable.SavedElo(c.shown[14]);
+            // Seeds 1 and 2 (the ladder's best two) sit in opposite halves of the draw: slot 0 at the top, slot 8 at the top of the bottom half.
+            float s1 = LeagueTable.SavedElo(c.shown[0]), s2 = LeagueTable.SavedElo(c.shown[8]);
             for (int k = 0; k < Career.Size; k++)
             {
                 float r = LeagueTable.SavedElo(c.shown[k]);
@@ -98,6 +98,82 @@ namespace PoBox.Tests
                 if (k != 0) Assert.GreaterOrEqual(s2, r, $"slot {k} ({c.shown[k]}) is rated above the second seed");
             }
             Assert.AreEqual(15, PlayOut(c));
+        }
+
+        [Test]
+        public void TheDrawIsTheTournamentStandardsOrder()
+        {
+            Career c = Career.New(Entrants(16));
+            int[,] pairs = { { 1, 16 }, { 8, 9 }, { 4, 13 }, { 5, 12 }, { 2, 15 }, { 7, 10 }, { 3, 14 }, { 6, 11 } };
+            for (int m = 0; m < Career.FirstRound; m++)
+            {
+                Assert.AreEqual(pairs[m, 0], c.SeedOf(c.slots[2 * m]), $"R16 match {m}'s red seed");
+                Assert.AreEqual(pairs[m, 1], c.SeedOf(c.slots[2 * m + 1]), $"R16 match {m}'s blue seed");
+            }
+        }
+
+        [Test]
+        public void ADrawGoesToTheHigherSeed()
+        {
+            Career c = Career.New(Entrants(16));
+            // R16: seed 16 beats seed 1, then 8 v 9 is drawn: seed 8 goes through.
+            Assert.IsTrue(c.Next(out _, out string red, out string blue));
+            Assert.IsTrue(c.Report(red, blue, 1));
+            Assert.IsTrue(c.Next(out _, out red, out blue));
+            Assert.AreEqual(8, c.SeedOf(red));
+            Assert.IsTrue(c.Report(red, blue, -1), "a drawn cup bout was not taken");
+            Assert.AreEqual(red, c.won[1], "the draw did not go to seed 8");
+            while (c.Next(out int m, out red, out blue) && m < Career.FirstRound) Assert.IsTrue(c.Report(red, blue, 0));
+            // The quarter-final: seed 16 (red) v seed 8 (blue), drawn: blue, the higher seed, goes through.
+            Assert.IsTrue(c.Next(out int qf, out red, out blue));
+            Assert.AreEqual("QF", Career.RoundName(qf));
+            Assert.AreEqual(16, c.SeedOf(red));
+            Assert.AreEqual(8, c.SeedOf(blue));
+            Assert.IsTrue(c.Report(red, blue, -1));
+            Assert.AreEqual(blue, c.won[qf], "the quarter-final's draw did not go to the higher seed");
+        }
+
+        [Test]
+        public void TwoByesSendAByeOnAndTheTopSeedWalksThrough()
+        {
+            Career c = Career.New(Entrants(2));
+            Assert.AreEqual("BYE", c.Shown(c.slots[1]), "an empty slot is not shown as BYE");
+            // Seeds 1 and 2 walk to the final; every BYE v BYE sends a BYE on and nobody else fights.
+            Assert.IsTrue(c.Next(out int m, out string red, out string blue));
+            Assert.AreEqual("FINAL", Career.RoundName(m));
+            Assert.AreEqual(1, c.SeedOf(red));
+            Assert.AreEqual(2, c.SeedOf(blue));
+        }
+
+        [Test]
+        public void TheFiveByFiveVoiceGridIsFilledAndNamed()
+        {
+            Assert.IsTrue(VoiceMatrix.Parse5("hurt-3", out Emotion5 e, out int level));
+            Assert.AreEqual(Emotion5.Hurt, e);
+            Assert.AreEqual(3, level);
+            Assert.IsTrue(VoiceMatrix.Parse5("Celebrate-5_02", out e, out level));
+            Assert.AreEqual(Emotion5.Celebrate, e);
+            Assert.AreEqual(5, level);
+            Assert.IsFalse(VoiceMatrix.Parse5("hurt-6", out _, out _));
+            Assert.IsFalse(VoiceMatrix.Parse5("hurt-0", out _, out _));
+            Assert.IsFalse(VoiceMatrix.Parse5("2-3", out _, out _));
+            Assert.IsFalse(VoiceMatrix.Parse5("A_Voice_Matt_Pain_01", out _, out _));
+            Assert.AreEqual(Emotion.Pain, VoiceMatrix.Map(Emotion5.Hurt, 2).emotion);
+            Assert.AreEqual(Emotion.Groan, VoiceMatrix.Map(Emotion5.Hurt, 5).emotion);
+            Assert.AreEqual(Emotion.Taunt, VoiceMatrix.Map(Emotion5.Insult, 1).emotion);
+            Assert.AreEqual(Emotion.Effort, VoiceMatrix.Map(Emotion5.Angry, 4).emotion);
+            Assert.Less(VoiceMatrix.Map(Emotion5.Happy, 5).intensity, VoiceMatrix.Map(Emotion5.Celebrate, 5).intensity, "happy should be the softer triumph");
+            Assert.AreEqual(1, VoiceMatrix.Level(0f));
+            Assert.AreEqual(5, VoiceMatrix.Level(1f));
+            // With nothing recorded, every one of the 25 cells is still filled, procedurally.
+            var m = new VoiceMatrix { proceduralShare = 1f, gridTakes = 1 };
+            VoiceProfile v = VoiceProfile.For("MATT", 80f, false);
+            foreach (Emotion5 x in System.Enum.GetValues(typeof(Emotion5)))
+                for (int l = 1; l <= VoiceMatrix.Levels; l++)
+                {
+                    Assert.IsNotNull(m.Pick("MATT", x, l, null, v), $"{x} {l} is silent");
+                    Assert.AreEqual(VoiceMatrix.Tier.Procedural, m.LastTier);
+                }
         }
 
         [Test]

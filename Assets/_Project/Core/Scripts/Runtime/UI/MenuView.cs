@@ -244,11 +244,11 @@ namespace PoBox.UI
             Grid();
         }
 
-        /// <summary>Slots on the first screen: the roster is sixteen (owner, 2026-11-16), a slot nobody fills says EMPTY.</summary>
+        /// <summary>Slots on the first screen: the roster is sixteen (owner, 2026-11-16), a slot nobody fills says BYE (the tournament standard, as in the cup).</summary>
         public const int Slots = 16;
 
         /// <summary>
-        /// The cards' grid: four by four, sixteen slots (owner, 2026-11-16), the boxers first and then an EMPTY card for each
+        /// The cards' grid: four by four, sixteen slots (owner, 2026-11-16), the boxers first and then a BYE card for each
         /// slot nobody fills yet; more than sixteen boxers add rows of four. Each card is sized from the grid with a gap of
         /// 1.6% between, and the four-wide grid gets the shorter foot and smaller name (picker--dense).
         /// </summary>
@@ -263,7 +263,7 @@ namespace PoBox.UI
                 var empty = new VisualElement { name = "pick-empty-" + i, pickingMode = PickingMode.Ignore };
                 empty.AddToClassList("pick");
                 empty.AddToClassList("pick--empty");
-                var word = new Label("EMPTY") { pickingMode = PickingMode.Ignore };
+                var word = new Label("BYE") { pickingMode = PickingMode.Ignore };
                 word.AddToClassList("pick-empty");
                 empty.Add(word);
                 _picker.Add(empty);

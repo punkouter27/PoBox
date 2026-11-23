@@ -28,7 +28,8 @@ namespace PoBox.Tests
             Assert.AreEqual(FreeForAll.Stage.Fight, rules.Phase, "the free-for-all never started");
 
             Fighter[] all = rules.fighters;
-            Assert.GreaterOrEqual(all.Length, 7, "fewer than seven boxers in the ring");
+            Assert.AreEqual(FreeForAll.Players, all.Length, "a free-for-all is eight players (the tournament standard)");
+            Assert.AreEqual(0, rules.WaitingCount, "nobody should wait off stage with eight seats in a ring of eight");
             Assert.AreEqual(all.Length, all.Select(f => f.boxer.prefix).Distinct().Count(), "two boxers share a prefix: their MuJoCo names collide");
             Assert.IsTrue(all.All(f => f.boxer.Bound), "a boxer was not bound to the compiled model");
             // Every brain hears the ring's punches, or the punches on that boxer are never counted (the twins, 2026-11-16).
