@@ -20,18 +20,27 @@ namespace PoBox.UI
     public static class DemoMode
     {
         public static bool Active { get; private set; }
-        /// <summary>Seconds since the last input (or since the game started).</summary>
-        public static float IdleSeconds => Time.unscaledTime - _lastInput;
+        /// <summary>Idle seconds since the last input (or since the game started), counted frame by frame.</summary>
+        public static float IdleSeconds => _idle;
         public static bool Allowed => !Application.isEditor || ShowcaseSettings.Current.runInEditor;
 
-        static float _lastInput;
+        /// <summary>A frame longer than this (a load, a stall, a tab in the background) does not count as idle time.</summary>
+        public const float LongFrameSeconds = 0.25f;
+
+        static float _idle;
+
+        /// <summary>One frame of no input: its length joins the idle clock unless it is a long frame.</summary>
+        public static void Advance(float frameSeconds)
+        {
+            if (frameSeconds > 0f && frameSeconds <= LongFrameSeconds) _idle += frameSeconds;
+        }
 
         // Play mode may start without a domain reload: statics from the last session would still say "demo".
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStatics()
         {
             Active = false;
-            _lastInput = 0f;
+            _idle = 0f;
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -47,7 +56,7 @@ namespace PoBox.UI
         /// <summary>Input this frame: the idle clock starts again, and a running demo ends.</summary>
         public static void Touched()
         {
-            _lastInput = Time.unscaledTime;
+            _idle = 0f;
             if (Active) Stop();
         }
 
@@ -97,6 +106,7 @@ namespace PoBox.UI
         void Update()
         {
             if (AnyInput()) DemoMode.Touched();
+            else DemoMode.Advance(Time.unscaledDeltaTime);
             ShowcaseSettings s = ShowcaseSettings.Current;
             if (!DemoMode.Active)
             {

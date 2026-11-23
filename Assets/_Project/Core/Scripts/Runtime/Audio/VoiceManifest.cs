@@ -173,8 +173,10 @@ namespace PoBox.Audio
         {
             try
             {
-                var m = JsonUtility.FromJson<VoiceManifest>(json);
-                return m != null && m.schema == Schema && m.characters != null ? m : null;
+                // Start from no schema: FromJson would keep the field's initializer, so "{}" would pass for a manifest.
+                var m = new VoiceManifest { schema = null };
+                JsonUtility.FromJsonOverwrite(json, m);
+                return m.schema == Schema && m.characters != null ? m : null;
             }
             catch (Exception) { return null; }
         }

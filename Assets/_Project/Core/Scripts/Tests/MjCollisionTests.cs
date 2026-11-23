@@ -28,8 +28,11 @@ namespace PoBox.Tests
 
         const double OnTheirFeet = 0.10, OneDown = 0.20;     // metres: half a trunk, and a trunk
         const int Steps = 2500;
+        // Measure waits up to 240 s for the steps and the scene load up to 30 s: the Test Framework's default 180 s
+        // timeout cut the eight-boxer melee short on a busy PC (2026-11-23) before its own limit could report.
+        const int TestTimeoutMs = 360000;
 
-        [UnityTest]
+        [UnityTest, Timeout(TestTimeoutMs)]
         public IEnumerator TwoBoxersDoNotGoThroughEachOther()
         {
             yield return SceneManager.LoadSceneAsync(MatchSelection.ArenaScene, LoadSceneMode.Single);
@@ -41,7 +44,7 @@ namespace PoBox.Tests
             Assert.Less(MjRing.Over3cm, MjRing.OverlapSteps * 0.03, $"{MjRing.Over3cm} of {MjRing.OverlapSteps} control steps had two boxers 3 cm inside each other");
         }
 
-        [UnityTest]
+        [UnityTest, Timeout(TestTimeoutMs)]
         public IEnumerator EightBoxersDoNotGoThroughEachOther()
         {
             if (!Application.CanStreamedLevelBeLoaded(MatchSelection.MeleeScene)) Assert.Ignore("the build has no Melee scene");

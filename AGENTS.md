@@ -100,7 +100,6 @@ every publish. Tests never write into tracked files.
 | Tab corner button is 34 px, not 44 px | fits above the menu cards on a phone | `dd8f197` 2026-11-22 | resize in `DiagOverlay.cs` |
 | /diag: leaderboard table (no storage account; `stpobox2` does not exist) and cornerman proxy show a neutral **Off** | switched off on purpose; not counted in the banner | `7045f65` 2026-11-22 | provision the table, set its check back to a live probe in `scripts/webgl.json` |
 | /diag on phones (<= 600px): the version stamp follows the content | a fixed stamp covered the rows | `401dc99` 2026-11-22 | `git revert 401dc99` |
-| CI runs no `ruff format --check` (lint and pytest only); formatting is checked locally (section 4) | owner's call: a formatting-only failure blocked the deploy | 2026-11-23 | add the step back to `.github/workflows/webgl.yml` |
 | Shipped brains predate the torque² / joint-speed² penalty terms | retraining is a multi-hour GPU run, not started | 2026-11-20 | retrain |
 
 ## 2. PoBox house rules and notes
@@ -297,7 +296,10 @@ Last full run (2026-11-22): pytest 31 passed, EditMode 2/2, PlayMode 134/134, 0 
   `uv sync --group physics` (+ C MuJoCo, the version the game runs), `uv sync --group train` (+ MuJoCo Warp, torch,
   onnx; on a GPU PC install the CUDA build of torch into the same venv). Checks: `uv run ruff check .`,
   `uv run ruff format --check .`, `uv run pytest` (tiers: fast = no marker; `-m physics` = C MuJoCo against the
-  recordings in `Assets/_Project/Agents/Boxers/NAME`; `-m train` = the trainer's stack). Config: `pyproject.toml`.
+  recordings in `Assets/_Project/Agents/Boxers/NAME`, and `tests/test_body_rules.py`: gravity, joint ranges, PD drives,
+  no self-contact in the default stance, friction, on every `Training/models/v3` body; `-m train` = the trainer's stack).
+  On a GPU PC whose venv holds the CUDA build of torch, `uv sync` without `--group train` removes torch (and with it
+  may swap in the locked build); `uv run --no-sync ...` runs the checks on the venv as it is. Config: `pyproject.toml`.
 - **Reward penalties** (torque², joint speed², pelvis angular velocity², action rate, foot slip) have their weights in
   `Training/config/reward.json` (read by `Training/envs/reward_config.py`); the game's copy for the Tab overlay is
   `Assets/_Project/Data/Resources/RewardWeights.asset`, kept equal by the EditMode test `ShowcaseTests.RewardWeightsAreTheTrainingConfigs`. Every shipped brain
@@ -309,7 +311,10 @@ Last full run (2026-11-22): pytest 31 passed, EditMode 2/2, PlayMode 134/134, 0 
   `-force-d3d11` because D3D12 lost the GPU device mid-run on this PC, 2026-11-22):
   `Unity.exe -batchmode -force-d3d11 -projectPath . -runTests -testPlatform PlayMode -assemblyNames PoBox.Tests -testResults <xml> -logFile <log>`.
   `ShowcasePlayTests` checks the Po standard's runtime pieces for real: every reward penalty term is charged, the Tab
-  overlay's readout and its benchmark button, and demo mode starting after 30 s idle. The compile must show 0
+  overlay's readout and its benchmark button, and demo mode starting after 30 s idle. The idle clock adds frame by frame
+  and skips any frame longer than `DemoMode.LongFrameSeconds` (0.25 s: a load, a stall, a background tab), tested by
+  the EditMode test `ShowcaseTests.DemoIdleClockIgnoresLongFrames`. Each boxer logs one `[MjBoxer] NAME: BRAIN inference
+  running (...)` line the first time each brain answers: in a WebGL build it is in the browser console. The compile must show 0
   `warning CS` from `Assets/` in the log.
 - **Tab overlay and demo mode** (`Assets/_Project/Core/Scripts/Runtime/UI/DiagOverlay.cs`, `DemoMode.cs`): Tab or the 34 px corner
   button on a touch screen shows FPS, each boxer's episode reward (and each penalty term), inference ms and the curriculum
@@ -327,8 +332,11 @@ Last full run (2026-11-22): pytest 31 passed, EditMode 2/2, PlayMode 134/134, 0 
   `/diag` and that the live `X-Commit` header is the release's commit (the deploy job writes it into
   `staticwebapp.config.json`). CI has no Unity licence and needs none. Repo secret: `AZURE_STATIC_WEB_APPS_API_TOKEN`.
   Every push, PR and release runs the Python checks first (`uv sync --group physics`,
-  `ruff check`, `pytest -m "not train"`); the deploy needs them. `scripts/deploy_webgl.ps1` deploys `Builds/WebGL` straight from this PC.
-- `/diag` live-probes from the browser: the game page, the leaderboard page, every file of the build and WebGL2.
+  `ruff check`, `ruff format --check`, `pytest -m "not train"`; the format step was dropped in `b70f0f6` and restored by the
+  2026-11-23 audit: run `uv run ruff format .` before pushing Python); the deploy needs them. `scripts/deploy_webgl.ps1` deploys `Builds/WebGL` straight from this PC.
+- `/diag` live-probes from the browser: the game page, the leaderboard page, every file of the build (HEAD) and WebGL2.
+  Results are cached in the tab's `sessionStorage` for 60 s (`CACHE_SECONDS` in `scripts/webgl/diag.html`), so reloads
+  do not re-probe the Free-tier site; `/diag?fresh` probes again at once.
   Services switched off on purpose show a neutral "Off" (`"expect": "off"`) and do not count toward the banner: the
   leaderboard table (no storage account is provisioned; `stpobox2` does not resolve) and the cornerman proxy. Add a check to `scripts/webgl.json` → `diagChecks` when
   the game starts calling something new.

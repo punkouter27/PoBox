@@ -1,7 +1,9 @@
 <!doctype html>
 <!-- /diag of the WebGL site. scripts/publish_webgl.ps1 fills __TITLE__, __VERSION__ and __CHECKS__ (the checks of
      scripts/webgl.json plus the build's own files) and writes it as diag.html beside index.html. Every row is probed
-     live from this browser when the page opens; nothing here says "Ready" on its own. -->
+     live from this browser when the page opens; nothing here says "Ready" on its own. The results are kept in this
+     tab (sessionStorage) for CACHE_SECONDS, so reloading /diag does not re-download or re-probe the site; ?fresh
+     probes again at once. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -45,6 +47,17 @@
 "use strict";
 const CHECKS = __CHECKS__;
 const SECTIONS = ["API", "Data", "Services"];
+const CACHE_KEY = "po-diag-results", CACHE_SECONDS = 60;
+
+/** This tab's results from the last CACHE_SECONDS, or null (none, too old, other checks, or ?fresh). */
+function cachedResults() {
+  if (new URLSearchParams(location.search).has("fresh")) return null;
+  try {
+    const c = JSON.parse(sessionStorage.getItem(CACHE_KEY) || "null");
+    const age = c ? (Date.now() - c.at) / 1000 : Infinity;
+    return age < CACHE_SECONDS && c.n === CHECKS.length ? { age, results: c.results } : null;
+  } catch { return null; }
+}
 
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 
@@ -82,12 +95,17 @@ async function probe(check) {
     host.append(el("h2", null, s));
     for (const c of mine) { const r = row(c); host.append(r.r); rows.push([c, r]); }
   }
-  const results = await Promise.all(rows.map(async ([c, r]) => { const o = await probe(c); r.set(o.kind, o.text, o.more); return o.kind; }));
+  const cached = cachedResults();
+  const outcomes = cached ? cached.results : await Promise.all(rows.map(([c]) => probe(c)));
+  rows.forEach(([, r], i) => r.set(outcomes[i].kind, outcomes[i].text, outcomes[i].more));
+  if (!cached) try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), n: CHECKS.length, results: outcomes })); } catch { /* private mode */ }
+  const results = outcomes.map(o => o.kind);
   const bad = results.filter(k => k === "bad").length, off = results.filter(k => k === "off").length;
   const live = results.length - off;
   const b = document.getElementById("banner");
   b.className = "banner " + (bad ? "bad" : "ok");
-  b.textContent = bad ? `${bad} of ${live} live checks failing` : `All systems operational (${live} live checks${off ? `, ${off} off on purpose` : ""})`;
+  b.textContent = (bad ? `${bad} of ${live} live checks failing` : `All systems operational (${live} live checks${off ? `, ${off} off on purpose` : ""})`) +
+    (cached ? ` · checked ${Math.round(cached.age)} s ago (cached ${CACHE_SECONDS} s; ?fresh to re-check)` : "");
 })();
 </script>
 </body>

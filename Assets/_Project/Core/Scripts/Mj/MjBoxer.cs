@@ -619,6 +619,7 @@ namespace PoBox.Mj
                     else { NanInfCount++; Action[i] = 0.0; }
                 }
                 _inferSeconds += Time.realtimeSinceStartupAsDouble - start;
+                Announce(Time.realtimeSinceStartupAsDouble - start, true);
                 return;
             }
             _input.Upload(buffer);
@@ -639,6 +640,18 @@ namespace PoBox.Mj
                 }
             }
             _inferSeconds += Time.realtimeSinceStartupAsDouble - start;
+            Announce(Time.realtimeSinceStartupAsDouble - start, false);
+        }
+
+        ModelAsset _announced;
+
+        /// <summary>One log line the first time each brain answers: proof in the player's log (the browser console on
+        /// WebGL) that the trained policy is running, not the zero action.</summary>
+        void Announce(double seconds, bool direct)
+        {
+            if (_announced == policy) return;
+            _announced = policy;
+            Debug.Log($"[MjBoxer] {name}: {(policy != null ? policy.name : "no brain")} inference running ({(direct ? "direct MLP" : "Inference Engine")}, {_inputSize} in, {Joints} out, {seconds * 1000.0:0.000} ms)");
         }
 
         /// <summary>The policy's answer to any 103 numbers, without touching the body: for checking it against the trainer's.</summary>

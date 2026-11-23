@@ -100,11 +100,12 @@ namespace PoBox.Tests
                 yield return Load(Menu);
                 Assert.AreEqual(30f, s.idleSeconds, 1e-6f);
                 DemoMode.Touched();
-                float start = Time.unscaledTime;
-                while (Time.unscaledTime - start < s.idleSeconds - 1f) { Assert.IsFalse(DemoMode.Active, $"demo started after {Time.unscaledTime - start:0.0} s"); yield return null; }
-                while (!DemoMode.Active && Time.unscaledTime - start < s.idleSeconds + 3f) yield return null;
-                Assert.IsTrue(DemoMode.Active, "demo did not start after 30 s idle");
-                Debug.Log($"[ShowcasePlayTests] demo on after {Time.unscaledTime - start:0.0} s");
+                float start = Time.unscaledTime, limit = s.idleSeconds + 60f;     // real time, for a stalled clock
+                // The idle clock counts frames of up to DemoMode.LongFrameSeconds, so it is read rather than the wall clock.
+                while (DemoMode.IdleSeconds < s.idleSeconds - 1f && Time.unscaledTime - start < limit) { Assert.IsFalse(DemoMode.Active, $"demo started after {DemoMode.IdleSeconds:0.0} s idle"); yield return null; }
+                while (!DemoMode.Active && DemoMode.IdleSeconds < s.idleSeconds + 1f && Time.unscaledTime - start < limit) yield return null;
+                Assert.IsTrue(DemoMode.Active, $"demo did not start after 30 s idle (idle clock {DemoMode.IdleSeconds:0.0} s)");
+                Debug.Log($"[ShowcasePlayTests] demo on after {DemoMode.IdleSeconds:0.0} s idle ({Time.unscaledTime - start:0.0} s real)");
                 DemoMode.Touched();
                 Assert.IsFalse(DemoMode.Active, "input ends the demo");
             }

@@ -16,6 +16,9 @@
 [Rr]ecordings/
 # Per-build reports written by BuildReportInspector: GUID-named, one per build.
 /[Aa]ssets/BuildReports/
+# The Test Runner's temporary scene (InitTestScene<guid>.unity): left behind when a test run is interrupted.
+/[Aa]ssets/InitTestScene*.unity
+/[Aa]ssets/InitTestScene*.unity.meta
 
 # Old training runs (results/<boxer>/<run>).
 results/

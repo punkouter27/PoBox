@@ -44,5 +44,28 @@ namespace PoBox.EditorTests
             Assert.IsNotNull(s.panelSettings, "the overlay's panel");
             Assert.IsFalse(s.runInEditor, "the demo must not take over editor sessions and tests");
         }
+
+        [Test]
+        public void DemoIdleClockIgnoresLongFrames()
+        {
+            DemoMode.Touched();
+            try
+            {
+                for (int i = 0; i < 10; i++) DemoMode.Advance(0.1f);
+                Assert.AreEqual(1f, DemoMode.IdleSeconds, 1e-4f, "ordinary frames count");
+                DemoMode.Advance(5f);     // a 5 s hitch: a scene load, a stall, a tab in the background
+                Assert.AreEqual(1f, DemoMode.IdleSeconds, 1e-4f, "a long frame counted as idle time");
+                DemoMode.Advance(DemoMode.LongFrameSeconds);
+                Assert.AreEqual(1f + DemoMode.LongFrameSeconds, DemoMode.IdleSeconds, 1e-4f, "a 0.25 s frame still counts");
+                DemoMode.Touched();
+                for (int i = 0; i < 200; i++) DemoMode.Advance(0.3f);     // 60 s of 0.3 s frames
+                Assert.AreEqual(0f, DemoMode.IdleSeconds, 1e-6f, "long frames alone never reach the 30 s threshold");
+                for (int i = 0; i < 1800; i++) DemoMode.Advance(1f / 60f);
+                Assert.AreEqual(30f, DemoMode.IdleSeconds, 1e-2f, "30 s of 60 fps frames is 30 s idle");
+                DemoMode.Touched();
+                Assert.AreEqual(0f, DemoMode.IdleSeconds, "input restarts the clock");
+            }
+            finally { DemoMode.Touched(); }
+        }
     }
 }
