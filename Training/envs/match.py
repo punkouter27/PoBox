@@ -93,7 +93,7 @@ class MatchEnv(_Retrofit, BoxingEnv):
     def _observe(self, g) -> torch.Tensor:
         """A boxer with obs_state (envs/boxing.py) reads its reserve, its daze and the opponent's in the command's place."""
         obs = super()._observe(g)
-        if self.obs_state.any():
+        if self.state_on:
             share = self.daze / self.legs_at.clamp_min(1.0)
             state = torch.stack([self.reserve, share, share.flip(1)], -1) * self.obs_state.view(1, self.K, 1)
             obs[:, self.base_obs_dim :] = state.reshape(-1, CMD)

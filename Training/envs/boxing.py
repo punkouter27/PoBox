@@ -567,6 +567,8 @@ class BoxingEnv(BoxingOpsMixin):
         self.obs_state = torch.tensor(
             [n in obs_state or bool(c.get("obs_state", False)) for n, c in zip(self.names, self.cfgs)], device=device
         )
+        # Read once here: a tensor's .any() in an `if` makes the CPU wait for the GPU, and _observe runs every step.
+        self.state_on = bool(self.obs_state.any())
         self.push_on = bool((self.hit_push > 0.0).any())
         if self.push_on:
             self.xfrc = wp.to_torch(self.dw.xfrc_applied)
