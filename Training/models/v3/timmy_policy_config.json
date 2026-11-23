@@ -315,5 +315,11 @@
     "spar": "timmy_spar.xml"
   },
   "cubes": 8,
-  "fatigue_ceiling": true
+  "fatigue_ceiling": true,
+  "speed_limit": true,
+  "hit_push": 0.6,
+  "stagger_v": 5.0,
+  "hurt_full": 400.0,
+  "body_drain": 0.0025,
+  "fatigue_j": 20000.0
 }

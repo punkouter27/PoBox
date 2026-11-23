@@ -527,3 +527,67 @@ Exam (exam_v2, 60 trials, 12 rounds), round 1 -> round 2:
 - Promoted (uncommitted): `PromoteBoxing` timmy v3m2/v3u2, soldat v3m2/v3u2 (get-up ONNX via `tools/export_getup_v2.py`), and Soldat's own
   footwork `Promote("soldat","v3f_soldat")` (stand 100%, walk pass, turn 83% vs mark 90%) replacing Matt's.
 - Timmy and Soldat were missing from `Testbed.unity`'s roster ("the model has no a_root" in MjGateTests); added. MjGateTests 30/30.
+
+## 2026-11-23 00:10, training as needed, open-ended (owner: "search for what needs training and train indefinitely as needed")
+- PC: RTX 5070 Ti Laptop (12 GB). No checkpoints on disk: the ten shipped brains rebuilt with `tools/onnx_to_pt.py` into
+  `Training/checkpoints/shipped/` (`match_` with obs_state as trained, `match0_` as the game feeds it, `getup_`, `policy_`).
+  Note: `uv run --group train` re-syncs torch to the CPU build; use `uv run --no-sync` after installing the CUDA build.
+- **Baseline exam (exam_v2, models/v3, `--getup-no-drain`, all ten, `logs/exams/base_{game,state}_*.json`), game feed:**
+  Matt 4/7, Zombie 5/7, Nick 4/7, Trump 3/7, Grandma 3/7, Grandpa 3/7, Kim 3/7, Sokol 4/7, Timmy 4/7, Soldat 4/7.
+  Footing collapsed for the old roster **against Timmy and Soldat** (never in their gauntlets): Trump v Soldat 8.7 own +
+  19.3 hit falls a minute, Grandma v Timmy 12.3, Grandpa v Timmy 7.7, Kim v Timmy 3.0. Under pressure: 0 of 10.
+- **obs_state gap:** every v3 promotion (11-02 to 11-13) dropped `"obs_state": true` from the boxer configs while the v3
+  recipe trains with `--obs-state`, so the game feeds zeros (MjBoxer.cs line 538). Measured: state fed vs zeros differs
+  within exam noise (e.g. Matt attack 0.48 v 0.33/s, Sokol 5/7 v 4/7, Trump 3/7 both). Not fixed; owner's call.
+- **Timmy/Soldat rules gap, fixed:** their configs (models/v3 and the game's copy) had no `speed_limit`, `fatigue_j`,
+  `hit_push`, `stagger_v`, `hurt_full`, `body_drain`: trained under default rules + the recipe's punch rules, the game ran
+  them with no speed damping, no fatigue and no hit push. Written in (Matt's values, fatigue 20000 J = DEFAULT_FATIGUE_J).
+  MjParityTests / MjGateTests still to run in Unity for the two.
+- **Round v4 queued** (`logs/make_queue_v4.py`): a gauntlet against all nine others (Timmy and Soldat weighted up),
+  `--reset-critic --no-cut-bootstrap --value-huber 10`, 1.25 h each, then the exam: Trump, Grandpa, Grandma, Kim.
+- **00:28 `v4m_trump` faulted** (CUDA 719, "unspecified launch failure", GPU at 82-86 C: the laptop driver fault of
+  2026-10-02) at iteration 130, save at 125. `tools/train_resilient.py --gauntlet` now wraps every queued run (restart from
+  the last save; it now also drops `--reset-critic` on a restart, which would otherwise throw away the critic each time).
+  Lengths are given as `--more-iters` (about 9.6 iterations a minute; 700 = about 1.2 h), `--max-hours 0`.
+  Trump carries on as `v4m2_trump` from the save at 130, critic kept.
+- 00:35 and 00:53: two more faults (`v4m2_trump`), each logged by Windows as nvlddmkm event 13 then 153 (the driver resets
+  the GPU, which also drives the display). Three faults in 40 min at 4608 rings, 78-86 C. Queue rebuilt at **3072 rings**;
+  Trump carries on as `v4m3_trump` from v4m2's save (about 250 iterations in all so far), 450 more.
+- **01:45 `v4m3_trump` done** (about 450 iterations from shipped, 3072 rings; two more faults at 01:39/01:41, picked up by
+  the wrapper). Exam (`logs/exams/v4m3_trump.json`) v shipped: **footing 2.33 v 8.67 falls a minute** (v Soldat 2.33,
+  was 8.67 own + 19.3 from hits), attack 0.14/s at 1.8 m/s (0.16 at 2.9), guard 47% pass, chin pass, getting up 29/30,
+  carrying on 25/29 (23/28), under pressure 0.00. Still 3/7; footing is the gain. Not promoted. Queued `v4m4_trump` (about
+  700 more from it) after Kim. Exams now run beside the queue (CPU), not as queue jobs that leave the GPU idle 20 min.
+  (A change to `train_resilient.py`'s iteration count was made and taken back: train_gauntlet.py starts a new run name at
+  iteration 0 whatever save it resumes, so the wrapper's total-from-0 count was right.) Restarts now wait 180 s to cool.
+- **03:05 `v4m_grandpa` done** (700 iterations from shipped, 3072 rings, three faults picked up by the wrapper). Exam v
+  shipped: **footing PASS 0.00 falls a minute (7.67; v Timmy 7.67 own + 8.67 hit before)**, guard 26% pass, chin pass (worst
+  2.00 legs/min v Nick), getting up 29/30 in 2.8 s, carrying on 22/29 (22/29), attack 0.04/s (0.06), under pressure 0.00.
+  **4/7, was 3/7, no line worse: a candidate for the game** (not promoted; promotion needs the editor: PromoteBoxing +
+  MjParityTests/MjGateTests). Still no punch: the old note (11-16) stands, it is the recipe, not the arm.
+- **04:28 `v4m_grandma` done** (700 iterations, two faults). Exam v shipped: footing 4.00 v 12.33 falls a minute (v Kim,
+  Soldat, Trump now 0; left: Timmy 4.00, Nick 3.00), attack 0.00, guard 46% pass, chin pass, getting up 26/30 in 4.0 s,
+  carrying on 8/26 (10/26). 3/7 as before; not a candidate. Queued `v4m2_grandma` from it (critic kept, 700 more, weights
+  timmy=4 nick=3 zombie=2 trump=2) after v4m4_trump.
+- **05:50 `v4m_kim` done** (700 iterations). Exam v shipped: footing 2.00 v 3.00 (v Timmy 0.67 v 3.00, v Sokol 2.00 v
+  1.67), but **attack 0.12/s v 0.41/s** (v Nick 0.20 v 1.98), carrying on 24/30 (25/30). Worse as a boxer: shipped Kim
+  stays; the gauntlet trades her punch for footing (as v3m4_kim did on 11-15). Not repeated.
+- Queued `v4m_soldat` after v4m2_grandma: Soldat's attack (0.10/s) with `--hit-w 2.0 --seek-w 0.3`, weights zombie, sokol,
+  matt = 2 (his hardest), fresh critic, 700 iterations.
+- **07:09 `v4m4_trump` done** (700 more from v4m3, no faults). Exam: footing 1.00 falls a minute (v4m3 2.33, shipped 8.67;
+  all v Soldat), attack 0.10/s at 1.6 m/s (0.14, 0.16), carrying on **18/30** (25/29, 23/28), guard 48%, chin, getting up
+  30/30. Mixed: every round makes him more defensive and slower-handed. **Of the Trump brains, `v4m3_trump` is the
+  better candidate** (footing 2.33, carrying on 25/29); still 3/7, not proposed. No more Trump gauntlets on this recipe:
+  his punch (shortest reach, 0.44 m) needs a different lesson.
+- 07:30 hand-over banks `logs/handover_v4_{grandpa,grandma,trump,nick,sokol,kim}.npz` (make_handover_v2, models/v3, the
+  shipped get-up brains, 1500 states each). Queued carry-on runs `v4r_*` (11-02 recipe: `--handover-share 0.5
+  --blend-steps 15 --recover-w 1.0 --handover-reserve 0.5`, 500 iterations; all four configs already blend 15):
+  Grandpa from v4m_grandpa (critic kept), Sokol and Nick from shipped (fresh critic), Trump from v4m3_trump.
+- **08:52 `v4m2_grandma` done** (700 more from v4m_grandma, five faults). Exam: footing 3.00 (v Timmy 0, v Nick 3.00),
+  **guard FAIL 23%** (46%), carrying on 14/26 (8/26; shipped 10/26), attack 0.00, chin and getting up pass. 2/7: not a
+  candidate. Grandma's gauntlets stop here: footing moves, nothing else, and never a punch (tasks.md V1: her body,
+  strength 0.53 / speed 0.75, is the owner's call). Faults are getting closer together (five in 1.7 h, 77-86 C).
+- **09:26 `v4m_soldat` stopped at iteration 250** (of 700): training hits 0.00-0.03/s at 0.6-1.5 m/s from the first
+  iteration on; `--hit-w 2.0 --seek-w 0.3` gives nothing to reinforce when he almost never lands (Grandpa's lesson of
+  11-16 again). Soldat's punch needs a different lesson (a scripted punch to imitate, or a reward for fist speed
+  towards the target before contact), not more hit weight. Carry-on runs `v4r_*` started at 09:26 with Grandpa.
