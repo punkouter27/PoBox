@@ -591,3 +591,13 @@ Exam (exam_v2, 60 trials, 12 rounds), round 1 -> round 2:
   iteration on; `--hit-w 2.0 --seek-w 0.3` gives nothing to reinforce when he almost never lands (Grandpa's lesson of
   11-16 again). Soldat's punch needs a different lesson (a scripted punch to imitate, or a reward for fist speed
   towards the target before contact), not more hit weight. Carry-on runs `v4r_*` started at 09:26 with Grandpa.
+- **10:00 Grandpa promoted into Assets (uncommitted, tests pending):** `v4m_grandpa` exported to ONNX (same 1x103 input,
+  `actions`/`value` outputs as shipped), rebuilt to a checkpoint with obs_state off and examined as the game feeds it
+  (`logs/exams/promote_grandpa_game.json`): footing PASS 0.00, guard 52%, chin, getting up 29/30, carrying on 22/29, attack
+  0.03/s: 4/7, as in training. Copied over `Assets/_Project/RL_Models/Grandpa/match.onnx` (.meta kept, so the prefab's
+  reference holds; the shipped file is kept outside the repo). **MjParityTests / MjGateTests not run:** Unity on this PC
+  stops at "No valid Unity Editor license found" (editor and batchmode alike) until the license is activated in Unity Hub.
+- 10:40 (owner: "finish up in 5 mins"): Unity licensed (Personal) and opened; `Assets/_Project/Core/Scripts/Editor/DevBridge.cs`
+  (a file-polled command bridge in place of the missing Unity CLI) compiled with 0 warnings; its first capture script did not
+  run (a line-count bug, fixed). Editor closed; ProjectSettings churn (a Sentis WebGL define) reverted. Not done: the capture
+  report and MjParityTests/MjGateTests for Grandpa's promoted brain. Queue resumed: v4r_sokol, v4r_nick, v4r_trump.
