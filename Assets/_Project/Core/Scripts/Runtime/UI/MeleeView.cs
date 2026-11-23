@@ -205,8 +205,9 @@ namespace PoBox.UI
                 if (f == null) continue;
                 bool isOut = rules.IsOut(f), waiting = rules.IsWaiting(f), won = over && f == rules.Winner;
                 int count = rules.CountOf(f);
-                // At the end the board is the result's table: each row's punches landed of thrown, beside WIN or OUT.
-                string text = over ? $"{(won ? "WIN · " : isOut ? "OUT · " : "")}{f.stats.landed}/{f.stats.thrown}"
+                // At the end the board is the result's table: each row's punches landed of thrown, beside WIN or OUT, and
+                // the boxer's rating with this result's change ("1016 +16"; a twin shows its boxer's).
+                string text = over ? $"{(won ? "WIN · " : isOut ? "OUT · " : "")}{f.stats.landed}/{f.stats.thrown}{Rating(rules, f)}"
                             : isOut ? "OUT" : waiting ? "NEXT" : count >= 0 ? (count == 0 ? "DOWN" : $"COUNT {count}") : rules.Slipped(f) ? "SLIP" : f == fav ? "AI FAV" : "";
                 Set(_states[i], text);
                 _rows[i].EnableInClassList("ffa-row--fav", f == fav);
@@ -309,6 +310,14 @@ namespace PoBox.UI
             if (_leaving || !MatchSelection.HasMenu) return;
             _leaving = true;
             SceneManager.LoadSceneAsync(MatchSelection.MenuScene);
+        }
+
+        /// <summary>" · 1016 +16" for a boxer the result rated (FreeForAll.RatingChanges), else empty.</summary>
+        static string Rating(FreeForAll rules, Fighter f)
+        {
+            string name = FreeForAll.BaseName(f.displayName);
+            if (rules.RatingChanges == null || !rules.RatingChanges.TryGetValue(name, out float d)) return "";
+            return $" · {League.LeagueTable.SavedElo(name):0} {d:+0;-0;+0}";
         }
     }
 }

@@ -116,6 +116,71 @@ namespace PoBox.Tests
         }
 
         [Test]
+        public void ADemoBoutMovesTheLadderOnceAndAnAbandonedOneDoesNot()
+        {
+            var go = new GameObject("league (test)");
+            go.SetActive(false);
+            var league = go.AddComponent<LeagueTable>();
+            var profiles = new List<PolicyProfile>();
+            foreach (string n in new[] { "MATT", "KIM" })
+            {
+                var p = ScriptableObject.CreateInstance<PolicyProfile>();
+                p.displayName = n;
+                profiles.Add(p);
+            }
+            league.roster = profiles.ToArray();
+            go.SetActive(true);
+            try
+            {
+                // Abandoned (left before its result): its RatedMatch never reports, nothing moves.
+                var abandoned = new RatedMatch();
+                Assert.IsFalse(abandoned.Recorded);
+                Assert.AreEqual(1000f, LeagueTable.SavedElo("MATT"));
+
+                // A completed demo bout: MATT beats KIM from 1000 each, +16 / -16, saved at once.
+                var bout = new RatedMatch();
+                Assert.AreEqual(16f, bout.Report(league, "MATT", "KIM", 1f, false), 1e-3f);
+                Assert.AreEqual(1016f, LeagueTable.SavedElo("MATT"), 1e-3f, "the result was not saved");
+                Assert.AreEqual(984f, LeagueTable.SavedElo("KIM"), 1e-3f);
+                // The same bout again (a replay, a second result) counts for nothing.
+                Assert.AreEqual(0f, bout.Report(league, "MATT", "KIM", 1f, false));
+                Assert.AreEqual(1016f, LeagueTable.SavedElo("MATT"), 1e-3f, "a bout was counted twice");
+
+                // A boxer never plays itself: against its twin nothing moves.
+                Assert.AreEqual(0f, new RatedMatch().Report(league, "MATT", "MATT II", 1f, true));
+                Assert.AreEqual(1016f, LeagueTable.SavedElo("MATT"), 1e-3f, "a boxer was rated against its twin");
+
+                // A draw is half a win each: the higher rated one loses a little.
+                Assert.Less(new RatedMatch().Report(league, "MATT", "KIM", 0.5f, false), 0f);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+                foreach (PolicyProfile p in profiles) Object.DestroyImmediate(p);
+            }
+        }
+
+        [Test]
+        public void AFreeForAllIsPairwiseByPlacingWithTwinsCountedOnce()
+        {
+            // Four at 1000, K 32 shared over 3 opponents: every pair a win for the better placed.
+            Dictionary<string, float> d = new RatedMatch().ReportPlacings(new List<string> { "AA", "BB", "CC", "DD" }, 32f);
+            Assert.AreEqual(16f, d["AA"], 1e-3f);
+            Assert.AreEqual(16f / 3f, d["BB"], 1e-3f);
+            Assert.AreEqual(-16f / 3f, d["CC"], 1e-3f);
+            Assert.AreEqual(-16f, d["DD"], 1e-3f);
+
+            // MATT's twin third: MATT counts once, at first; three boxers, K 32 over 2.
+            var ffa = new RatedMatch();
+            d = ffa.ReportPlacings(new List<string> { "MATT", "KIM", "MATT II", "ZOMBIE" }, 32f);
+            Assert.AreEqual(3, d.Count, "the twin was rated as a boxer of its own");
+            Assert.AreEqual(16f, d["MATT"], 1e-3f);
+            Assert.AreEqual(0f, d["KIM"], 1e-3f);
+            Assert.AreEqual(-16f, d["ZOMBIE"], 1e-3f);
+            Assert.AreEqual(0, ffa.ReportPlacings(new List<string> { "MATT", "KIM" }, 32f).Count, "a free-for-all was counted twice");
+        }
+
+        [Test]
         public void TheDrawIsTheTournamentStandardsOrder()
         {
             Career c = Career.New(Entrants(16));

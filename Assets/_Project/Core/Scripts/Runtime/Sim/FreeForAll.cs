@@ -140,6 +140,11 @@ namespace PoBox.Sim
         public int CountOf(Fighter f) =>
             !_out.Contains(f) && _counted.Contains(f) && _downFor.TryGetValue(f, out float t) ? Mathf.Min(10, Mathf.FloorToInt(t / countInterval)) : -1;
         /// <summary>Down with no count over it (it fell before the bell).</summary>
+        // This free-for-all's rating, recorded once at its result; a new one at every start.
+        PoBox.League.RatedMatch _rating = new PoBox.League.RatedMatch();
+        /// <summary>Each boxer's rating change at the result (by its boxer's name, a twin's is its boxer's); empty before.</summary>
+        public Dictionary<string, float> RatingChanges { get; private set; } = new Dictionary<string, float>();
+
         public bool Slipped(Fighter f) => f != null && f.IsDown && !_out.Contains(f) && !_counted.Contains(f);
         public int Left { get { int n = 0; foreach (Fighter f in fighters) if (f != null && !_out.Contains(f)) n++; return n; } }
 
@@ -243,6 +248,8 @@ namespace PoBox.Sim
             _out.Clear();
             _outOrder.Clear();
             Placings.Clear();
+            _rating = new PoBox.League.RatedMatch();
+            RatingChanges = new Dictionary<string, float>();
             Winner = null;
             Method = "";
             Bout.Clock = 0f;
@@ -593,7 +600,8 @@ namespace PoBox.Sim
             if (!rated || winner == null) return;
             var names = new List<string>();
             foreach (Fighter f in Placings) if (_entered.Contains(f)) names.Add(BaseName(f.displayName));
-            PoBox.League.LeagueTable.ReportPlacings(names, ratingK);
+            // Once a free-for-all (RatedMatch), demo or not; a twin counts once, at its boxer's better placing.
+            RatingChanges = _rating.ReportPlacings(names, ratingK);
         }
 
         // ------------------------------------------------------------ who fights whom

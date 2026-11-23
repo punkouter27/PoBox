@@ -33,6 +33,10 @@ Unity plugin 3.15.0 for the fight's physics, and Unity Inference Engine for the 
   profile, a new boxer or the settings' reset starts at 1000.
 - **Free-for-all** (`Runtime/Sim/FreeForAll.cs`, `Melee.unity`, menu ALL): exactly 8 players (`FreeForAll.Players`).
   The scene's own boxers are seated first; if there are fewer than eight, twins ("MATT II") fill the open seats.
+- **Demo matches are rated** (`Runtime/League/RatedMatch.cs`): every completed bout, demo/attract ones included,
+  moves the same ladder (draw = half a win each, no seed rule); a free-for-all is pairwise by placing with K 32 shared
+  over the N - 1 opponents; a twin is its boxer (never rated against itself, counted once at its better placing).
+  A bout left, restarted or abandoned records nothing, and none counts twice. The FFA board shows each Elo and change.
 
 ### Voice matrix: 5 emotions x 5 levels
 
