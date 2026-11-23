@@ -101,6 +101,21 @@ namespace PoBox.Tests
         }
 
         [Test]
+        public void EveryBoxerStartsAtOneThousand()
+        {
+            // A fresh profile (the ladder cleared in KeepAside): the CPU league's ratings (cpu_elo.json, NICK about 1450)
+            // no longer seed anybody; everybody starts at 1000.
+            foreach (string name in new[] { "NICK", "KIM", "SOKOL", "MATT", "ZOMBIE", "NEWCOMER" })
+                Assert.AreEqual(LeagueTable.Start, LeagueTable.SavedElo(name), $"{name} does not start at 1000");
+            Assert.AreEqual(1000f, LeagueTable.Start);
+            // A first result moves from 1000: two equal ratings, the winner of a 32-K free-for-all of two gains 16.
+            Dictionary<string, float> d = LeagueTable.ReportPlacings(new List<string> { "NICK", "KIM" }, 32f);
+            Assert.AreEqual(16f, d["NICK"], 1e-3f);
+            Assert.AreEqual(1016f, LeagueTable.SavedElo("NICK"), 1e-3f, "the saved rating did not start from 1000");
+            Assert.AreEqual(984f, LeagueTable.SavedElo("KIM"), 1e-3f);
+        }
+
+        [Test]
         public void TheDrawIsTheTournamentStandardsOrder()
         {
             Career c = Career.New(Entrants(16));

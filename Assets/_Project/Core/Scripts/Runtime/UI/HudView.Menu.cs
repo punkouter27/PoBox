@@ -230,7 +230,7 @@ namespace PoBox.UI
                 PolicyProfile p = league.ProfileFor(row.name);
                 _leagueCells[r][0].text = (r + 1).ToString();
                 _leagueCells[r][1].text = row.name;
-                // What the rating started from: the boxer's record in the CPU's bouts (tools/elo.py).
+                // The boxer's record in the CPU league's bouts (tools/elo.py), for reference: ratings start at 1000.
                 string cpu = LeagueTable.CpuRecord(row.name);
                 _leagueCells[r][2].text = cpu.Length > 0 ? "CPU " + cpu : p != null ? p.Badge : "";
                 _leagueCells[r][3].text = row.elo.ToString("0");

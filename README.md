@@ -27,8 +27,10 @@ Unity plugin 3.15.0 for the fight's physics, and Unity Inference Engine for the 
 - **The cup** (`Runtime/League/Career.cs`, kept in `persistentDataPath/career.json`): 16 slots, single elimination,
   seeded by rating in the order 1v16, 8v9, 4v13, 5v12, 2v15, 7v10, 3v14, 6v11. BYEs take the bottom seeds; a BYE's
   opponent goes through unfought; BYE v BYE sends a BYE on; a draw goes to the higher seed; it runs itself bout to bout.
-- **Elo** (`Runtime/League/LeagueTable.cs`, kept in PlayerPrefs): start 1000, K 32. A boxer the trainer's CPU
-  league has rated (`Assets/_Project/Data/Resources/cpu_elo.json`) starts from that rating instead.
+- **Elo** (`Runtime/League/LeagueTable.cs`, kept in PlayerPrefs): every boxer starts at 1000, K 32 (reset to 1000
+  on 2026-11-22: ratings no longer start from the CPU league in `Assets/_Project/Data/Resources/cpu_elo.json`, which
+  is now only shown as each boxer's CPU record on the ladder). Ratings already saved on a device are kept; a fresh
+  profile, a new boxer or the settings' reset starts at 1000.
 - **Free-for-all** (`Runtime/Sim/FreeForAll.cs`, `Melee.unity`, menu ALL): exactly 8 players (`FreeForAll.Players`).
   The scene's own boxers are seated first; if there are fewer than eight, twins ("MATT II") fill the open seats.
 
