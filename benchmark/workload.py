@@ -3,7 +3,7 @@
 Run by serve.py with the repo's training venv:  .venv/Scripts/python.exe benchmark/workload.py
 The recipe is `v3m_matt` in training/queues/queue_v3_staged.json (the committed v3 match gauntlet: Matt learns
 against seven frozen boxers in 4608 rings), with two things a fresh clone cannot have replaced:
-- warm starts: the shipped Assets/Boxers/NAME/match.onnx brains, rebuilt by tools/onnx_to_pt.py into
+- warm starts: the shipped Assets/_Project/RL_Models/NAME/match.onnx brains, rebuilt by tools/onnx_to_pt.py into
   training/checkpoints/_benchmark_warm/ (the recipe resumes from checkpoints/v3/*, made the same way on the old PC);
 - no --handover bank (logs/handover_v3_matt.npz is a run artifact, not in git): every episode starts in the ring.
 The loop has no timing hooks of its own, so PPO is wrapped: Sim time runs from the learner's first act() of an
@@ -57,8 +57,8 @@ def sha(path: Path) -> str:
 
 
 def warm_start(name: str) -> str:
-    """Assets/Boxers/NAME/match.onnx as a checkpoint the gauntlet can resume from or freeze (cached)."""
-    src = ROOT / "Assets" / "Boxers" / name.capitalize() / "match.onnx"
+    """Assets/_Project/RL_Models/NAME/match.onnx as a checkpoint the gauntlet can resume from or freeze (cached)."""
+    src = ROOT / "Assets" / "_Project" / "RL_Models" / name.capitalize() / "match.onnx"
     dst = WARM / f"match_{name}.pt"
     if not dst.exists() or dst.stat().st_mtime < src.stat().st_mtime:
         from tools.onnx_to_pt import convert
@@ -106,11 +106,11 @@ def main() -> None:
                     "xml": {os.path.basename(x): sha(Path(x)) for x in xmls},
                     "reward": sha(TRAINING / "config" / "reward.json"),
                     "brains": {
-                        n: sha(ROOT / "Assets" / "Boxers" / n.capitalize() / "match.onnx") for n in [LEARNER, *FOES]
+                        n: sha(ROOT / "Assets" / "_Project" / "RL_Models" / n.capitalize() / "match.onnx") for n in [LEARNER, *FOES]
                     },
                 }
             ),
-            note="warm starts from the shipped Assets/Boxers/*/match.onnx; no hand-over bank (not in a fresh clone)",
+            note="warm starts from the shipped Assets/_Project/RL_Models/*/match.onnx; no hand-over bank (not in a fresh clone)",
         )
         versions = dict(
             python=sys.version.split()[0],
