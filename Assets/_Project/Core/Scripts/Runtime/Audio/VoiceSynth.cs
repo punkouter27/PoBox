@@ -10,9 +10,10 @@ namespace PoBox.Audio
     /// emotion is a shape: a grunt is short and falls, pain jumps up and falls, a groan is long and low, a dazed moan
     /// wobbles, a taunt is two or three short laughs, triumph rises and holds, defeat sighs down into breath; the
     /// exhale and the panting are breath only. Several takes of each, from different seeds, so no two are alike.
-    /// 16 kHz mono, made once a boxer and emotion, the first time it is heard.
+    /// 16 kHz mono, made once a boxer and emotion, the first time it is heard. The 5x5 layer's richer engine
+    /// (syllables, consonants, per-emotion prosody) is in VoiceSynth.Emotion5.cs.
     /// </summary>
-    public static class VoiceSynth
+    public static partial class VoiceSynth
     {
         public const int Rate = 16000;
 

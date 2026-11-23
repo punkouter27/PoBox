@@ -27,7 +27,10 @@ namespace PoBox.Sim
     ///     gets a minute on the stool (Fighter.Respawn) and goes back to the ropes.
     ///   * The last boxer standing wins. If more than one is in after the last round, the judges give it to the one
     ///     who did the most damage, a knockdown worth a clean round (<see cref="Bout.Score"/>).
-    ///   * Sixteen (2026-11-16): the eight boxers and a twin of each ("MATT II", the boxer's Blue prefab), until there
+    ///   * Eight, fixed (the tournament standard, 2026-11-22; <see cref="Players"/>, <see cref="Seat"/>): the scene's own
+    ///     boxers first, twins only for seats nobody else fills. The tag-in machinery below is kept for maxInRing under
+    ///     the seats, and is idle at eight in a ring of eight.
+    ///   * Before that, sixteen (2026-11-16): the eight boxers and a twin of each ("MATT II", the boxer's Blue prefab), until there
     ///     are sixteen boxers of their own. At most <see cref="maxInRing"/> are in the ring at once (sixteen in a
     ///     six-metre ring was one pile-up, fourteen counted out inside half a round); the rest wait off stage, held
     ///     still, hidden and with their brains not run, and tag in, in the scene's order: one whenever a boxer is
@@ -137,12 +140,41 @@ namespace PoBox.Sim
         public int CountOf(Fighter f) =>
             !_out.Contains(f) && _counted.Contains(f) && _downFor.TryGetValue(f, out float t) ? Mathf.Min(10, Mathf.FloorToInt(t / countInterval)) : -1;
         /// <summary>Down with no count over it (it fell before the bell).</summary>
+        // This free-for-all's rating, recorded once at its result; a new one at every start.
+        PoBox.League.RatedMatch _rating = new PoBox.League.RatedMatch();
+        /// <summary>Each boxer's rating change at the result (by its boxer's name, a twin's is its boxer's); empty before.</summary>
+        public Dictionary<string, float> RatingChanges { get; private set; } = new Dictionary<string, float>();
+
         public bool Slipped(Fighter f) => f != null && f.IsDown && !_out.Contains(f) && !_counted.Contains(f);
         public int Left { get { int n = 0; foreach (Fighter f in fighters) if (f != null && !_out.Contains(f)) n++; return n; } }
+
+        /// <summary>The tournament standard (2026-11-22): a free-for-all is eight players, no more, no fewer.</summary>
+        public const int Players = 8;
+
+        /// <summary>
+        /// The eight seats, from the scene's corner prefabs: every boxer of its own first (in the scene's order), then,
+        /// if fewer than eight boxers are there, twins ("MATT II") fill the open seats in the same order, so the best of
+        /// the scene's boxers get the second bodies. The prefabs not seated stay switched off and out of the ring.
+        /// </summary>
+        public static List<Fighter> Seat(IList<Fighter> pool, int seats = Players)
+        {
+            var seated = new List<Fighter>();
+            foreach (bool twins in new[] { false, true })
+                foreach (Fighter f in pool)
+                {
+                    if (seated.Count >= seats) return seated;
+                    if (f == null || f.boxer == null || seated.Contains(f)) continue;
+                    if ((BaseName(f.displayName) != f.displayName) == twins) seated.Add(f);
+                }
+            return seated;
+        }
 
         void Awake()
         {
             Instance = this;
+            List<Fighter> seated = Seat(fighters);
+            if (seated.Count < Players) Debug.LogWarning($"[FreeForAll] only {seated.Count} of {Players} seats filled: the scene has too few corner prefabs.", this);
+            fighters = seated.ToArray();
             var boxers = new List<MjBoxer>();
             for (int i = 0; i < fighters.Length; i++)
             {
@@ -216,6 +248,8 @@ namespace PoBox.Sim
             _out.Clear();
             _outOrder.Clear();
             Placings.Clear();
+            _rating = new PoBox.League.RatedMatch();
+            RatingChanges = new Dictionary<string, float>();
             Winner = null;
             Method = "";
             Bout.Clock = 0f;
@@ -566,7 +600,8 @@ namespace PoBox.Sim
             if (!rated || winner == null) return;
             var names = new List<string>();
             foreach (Fighter f in Placings) if (_entered.Contains(f)) names.Add(BaseName(f.displayName));
-            PoBox.League.LeagueTable.ReportPlacings(names, ratingK);
+            // Once a free-for-all (RatedMatch), demo or not; a twin counts once, at its boxer's better placing.
+            RatingChanges = _rating.ReportPlacings(names, ratingK);
         }
 
         // ------------------------------------------------------------ who fights whom

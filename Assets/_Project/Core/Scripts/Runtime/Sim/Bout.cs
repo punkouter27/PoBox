@@ -77,6 +77,8 @@ namespace PoBox.Sim
         /// <summary>The bout went to the cards.</summary>
         public bool Decision { get; private set; }
         public float EloDelta { get; private set; }
+        // This bout's rating, recorded once at its result (demo bouts too); a new one at every start.
+        PoBox.League.RatedMatch _rating = new PoBox.League.RatedMatch();
         public int BoutNumber { get; private set; }
         /// <summary>
         /// Real seconds in the present phase. Counted frame by frame with no frame worth more than a tenth
@@ -153,6 +155,7 @@ namespace PoBox.Sim
             Winner = null;
             Method = "";
             EloDelta = 0f;
+            _rating = new PoBox.League.RatedMatch();
             Round = 1;
             Clock = 0f;
             Count = 0;
@@ -182,7 +185,7 @@ namespace PoBox.Sim
         {
             if (red == null || blue == null) return;
             BoutNumber++;
-            Winner = null; Method = ""; EloDelta = 0f; Round = 1; Clock = 0f; Count = 0; Downed = null; AlsoDowned = null; _checking = false;
+            Winner = null; Method = ""; EloDelta = 0f; _rating = new PoBox.League.RatedMatch(); Round = 1; Clock = 0f; Count = 0; Downed = null; AlsoDowned = null; _checking = false;
             Array.Clear(_roundDowns, 0, 2);
             Decision = false;
             judges.Reset();
@@ -393,12 +396,10 @@ namespace PoBox.Sim
         {
             Winner = winner;
             Method = method;
-            // A boxer against a copy of itself is not a result the ladder can hold.
-            if (league != null && red.displayName != blue.displayName)
-            {
-                float score = winner == null ? 0.5f : winner == red ? 1f : 0f;
-                EloDelta = league.Report(red.displayName, blue.displayName, score, knockout);
-            }
+            // Every completed bout moves the ladder, a demo's too, once (RatedMatch); a boxer against a copy of itself
+            // (its twin) is not a result the ladder can hold. A draw is half a win each.
+            float score = winner == null ? 0.5f : winner == red ? 1f : 0f;
+            EloDelta = _rating.Report(league, red.displayName, blue.displayName, score, knockout);
             SimBus.Say(winner != null ? $"{winner.displayName} wins: {method}" : method, 3);
             // Counted out, the loser goes on trying to get up, slowly, while the winner's gloves go up (MjBrain).
             if (knockout && winner != null) Other(winner).Beaten();

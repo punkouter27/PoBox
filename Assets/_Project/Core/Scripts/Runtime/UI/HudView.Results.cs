@@ -133,12 +133,10 @@ namespace PoBox.UI
                 Career.Live = false;
                 Career c = Career.Load();
                 if (c != null && c.Report(MatchSelection.Red, MatchSelection.Blue, winner))
-                    cup = c.Champion != null ? $"CUP WON BY {c.Shown(c.Champion)}" : "CUP · THROUGH TO THE NEXT ROUND";
-                else if (c != null && winner < 0)
                 {
-                    // A draw decides nothing: the bout stays the cup's, so AGAIN (or its countdown) fights it again and that one counts.
-                    Career.Live = true;
-                    cup = "CUP · A DRAW: FIGHT IT AGAIN";
+                    // A draw goes to the higher seed (the tournament standard).
+                    string draw = winner < 0 ? $"CUP · A DRAW: {c.Shown(c.HigherSeed(MatchSelection.Red, MatchSelection.Blue))} THROUGH ON SEED · " : "";
+                    cup = draw + (c.Champion != null ? $"CUP WON BY {c.Shown(c.Champion)}" : draw.Length > 0 ? "NEXT ROUND" : "CUP · THROUGH TO THE NEXT ROUND");
                 }
                 // A cup that runs itself: back to the bracket once the result (and its replay) has been seen.
                 _cupBack = c != null && c.auto && MatchSelection.HasMenu;

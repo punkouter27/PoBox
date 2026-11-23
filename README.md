@@ -20,6 +20,58 @@ Unity plugin 3.15.0 for the fight's physics, and Unity Inference Engine for the 
 - **A free-for-all**: all eight in the ring at once (menu ALL).
 - **A broadcast**: cameras, a scoreboard, commentary, a crowd, replays and a ring announcer.
 
+## Tournament standard (shared across the Po games, 2026-11-22)
+
+- **BYE**: a slot with nobody in it says BYE, on the first screen's 4x4 grid (`Runtime/UI/MenuView.cs`) and in
+  the cup's bracket.
+- **The cup** (`Runtime/League/Career.cs`, kept in `persistentDataPath/career.json`): 16 slots, single elimination,
+  seeded by rating in the order 1v16, 8v9, 4v13, 5v12, 2v15, 7v10, 3v14, 6v11. BYEs take the bottom seeds; a BYE's
+  opponent goes through unfought; BYE v BYE sends a BYE on; a draw goes to the higher seed; it runs itself bout to bout.
+- **Elo** (`Runtime/League/LeagueTable.cs`, kept in PlayerPrefs): every boxer starts at 1000, K 32 (reset to 1000
+  on 2026-11-22: ratings no longer start from the CPU league in `Assets/_Project/Data/Resources/cpu_elo.json`, which
+  is now only shown as each boxer's CPU record on the ladder). Ratings already saved on a device are kept; a fresh
+  profile, a new boxer or the settings' reset starts at 1000.
+- **Free-for-all** (`Runtime/Sim/FreeForAll.cs`, `Melee.unity`, menu ALL): exactly 8 players (`FreeForAll.Players`).
+  The scene's own boxers are seated first; if there are fewer than eight, twins ("MATT II") fill the open seats.
+- **Demo matches are rated** (`Runtime/League/RatedMatch.cs`): every completed bout, demo/attract ones included,
+  moves the same ladder (draw = half a win each, no seed rule); a free-for-all is pairwise by placing with K 32 shared
+  over the N - 1 opponents; a twin is its boxer (never rated against itself, counted once at its better placing).
+  A bout left, restarted or abandoned records nothing, and none counts twice. The FFA board shows each Elo and change.
+
+### Voice matrix: 5 emotions x 5 levels
+
+Every boxer has a 5x5 voice grid: `AudioDirector.Play(fighter, Emotion5, level, volume)` (`Runtime/Audio/`,
+`VoiceMatrix.Pick(boxer, Emotion5, level, voice)`), level 1 (barely) to 5 (all out). A twin ("MATT II") uses its
+boxer's voice.
+
+**The manifest**: `Assets/_Project/Data/Resources/Voices/voices.json` (schema `po-voice-manifest/1`) lists every
+roster boxer (each folder under `Assets/_Project/Agents/Boxers` with a `config.json`) x 5 emotions x 5 levels:
+the WAV each cell uses (`<id>/<emotion>-<level>.wav` under the Voices folder, e.g. `matt/hurt-3.wav`), whether it
+`exists`, and the boxer's procedural `voice` (pitchHz, formantScale, breath, rasp, vibratoHz, vibratoDepth, tempo,
+tremor, growl, timbre). Edit a `voice` there to change how a boxer sounds; never edit `exists` by hand.
+
+**Adding a WAV**: drop it in at the path the manifest lists (e.g. `Resources/Voices/matt/hurt-3.wav`). Importing
+it reruns the generator; menu **PoBox/Voices/Rebuild voices.json** does the same and logs "N of M clips recorded;
+missing: ...". The generator keeps the voices already in the file and adds new roster boxers.
+
+**What plays**, per cell: the WAV if the manifest says it exists; otherwise the boxer's own recording of the older
+emotion the cell maps to (`A_Voice_<Boxer>_<Emotion>_<n>`, if there is one); otherwise the procedural imitation
+(`VoiceSynth.Emotion5.cs`): a Rosenberg glottal pulse with jitter, shimmer and a subharmonic, aspiration noise,
+four gliding formants, 1-4 syllables with consonants, per-emotion prosody, in the boxer's manifest voice;
+deterministic per (boxer, emotion, level, take), made at the walk-on and cached. A missing manifest makes every
+cell procedural (one warning).
+
+| Emotion5 | Imitation (old emotion if recorded) | Heard at |
+|---|---|---|
+| angry | "hup!" / "rraah(-hah)" (Effort) | a heavy punch thrown (hook/uppercut 3-5, body 2-3) |
+| happy | "heh", then laughs (Triumph) | a drawn bout (level 2) |
+| hurt | "oof", gasp + "ugh", gasp + long cry at 5 (Pain 1-3, Groan 4-5) | a clean hit (level from its impulse), a knockdown (5), groans down or spent (4) |
+| insult | "pfft-heh" / "nyah-nyah" (Taunt) | a far harder punch than usual (2-3), a knockdown scored (4) |
+| celebrate | "yeah!" / "woo-hoo!" + laugh (Triumph) | a win (5 by stoppage or last one standing, 4 on the cards) |
+
+Level 1 to 5 raises loudness, length, pitch range, rasp, syllable count and vibrato. Breath, panting, the dazed
+moan and the loser's sigh stay as they were (Exhale, Pant, Dazed, Defeat, with the older synth).
+
 ## Where the boxers stand (13 November 2026)
 
 Six boxers are on the v3 body (`Training/models/v3`). Grandma and Grandpa are still on v2: on v3 they got up

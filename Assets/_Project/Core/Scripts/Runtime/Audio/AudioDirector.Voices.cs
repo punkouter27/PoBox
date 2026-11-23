@@ -20,7 +20,8 @@ namespace PoBox.Audio
         [Range(0f, 1f)] public float tauntChance = 0.6f, bigHitTauntChance = 0.25f;
 
         // Voices said a little later (a laugh after the fall, not with it).
-        readonly List<(float at, Fighter f, Emotion e, float volume)> _later = new List<(float, Fighter, Emotion, float)>();
+        // A 5x5 cue (level 1..5) or, with level 0, an older emotion.
+        readonly List<(float at, Fighter f, Emotion e, Emotion5 e5, int level, float volume)> _later = new List<(float, Fighter, Emotion, Emotion5, int, float)>();
         readonly Dictionary<Fighter, float> _dazedNext = new Dictionary<Fighter, float>();
         readonly HashSet<Fighter> _heardOut = new HashSet<Fighter>();
         readonly Dictionary<Fighter, VoiceProfile> _profiles = new Dictionary<Fighter, VoiceProfile>();
@@ -33,7 +34,8 @@ namespace PoBox.Audio
         VoiceProfile ProfileOf(Fighter f)
         {
             if (!_profiles.TryGetValue(f, out VoiceProfile v))
-                _profiles[f] = v = VoiceProfile.For(Base(f), f.totalMass, System.Array.IndexOf(highVoices, Base(f)) >= 0);
+                // The voice manifest's (Resources/Voices/voices.json) if it lists the boxer, else made from its name and build.
+                _profiles[f] = v = matrix.ProfileFor(Base(f), VoiceProfile.For(Base(f), f.totalMass, System.Array.IndexOf(highVoices, Base(f)) >= 0));
             return v;
         }
 
@@ -52,13 +54,32 @@ namespace PoBox.Audio
             }
         }
 
-        /// <summary>Every procedural cell for this scene's boxers, made before the bell: made mid-fight, the first laugh or roar would hitch a frame.</summary>
+        /// <summary>
+        /// Every procedural cell for this scene's boxers, made before the bell: made mid-fight, the first laugh or roar
+        /// would hitch a frame. The older emotions still said directly (breath, panting, dazed, defeat), and the 5x5 layer.
+        /// </summary>
         void WarmVoices()
         {
             var done = new HashSet<string>();
             foreach (Fighter f in _all)
                 if (f != null && done.Add(Base(f)))
-                    matrix.Warm(Base(f), ProfileOf(f), (Emotion[])System.Enum.GetValues(typeof(Emotion)));
+                {
+                    matrix.Warm(Base(f), ProfileOf(f), Emotion.Exhale, Emotion.Pant, Emotion.Dazed, Emotion.Defeat);
+                    matrix.Warm5(Base(f), ProfileOf(f));
+                }
+        }
+
+        /// <summary>
+        /// The tournament standard's voice API: this boxer says <paramref name="e"/> at intensity
+        /// <paramref name="level"/> 1..5: the WAV voices.json lists as recorded, else its own recording of the older
+        /// emotion it maps to (<see cref="VoiceMatrix.Map"/>), else the procedural imitation in its voice.
+        /// </summary>
+        public void Play(Fighter f, Emotion5 e, int level, float volume, float hold = 0.3f, bool must = false)
+        {
+            if (f == null) return;
+            if (!must && _voiceFree.TryGetValue(f, out float free) && Time.time < free) return;
+            AudioClip clip = matrix.Pick(Base(f), e, level, ProfileOf(f));
+            Say(f, clip, volume, hold, must);
         }
 
         /// <summary>
@@ -71,15 +92,21 @@ namespace PoBox.Audio
             if (f == null) return;
             float now = Time.time;
             if (!must && _voiceFree.TryGetValue(f, out float free) && now < free) return;
-            AudioClip clip = matrix.Pick(Base(f), e, Archetype(f, e), ProfileOf(f));
+            Say(f, matrix.Pick(Base(f), e, Archetype(f, e), ProfileOf(f)), volume, hold, must);
+        }
+
+        /// <summary>A picked take from the boxer's head, keeping the boxer to one sound at a time.</summary>
+        void Say(Fighter f, AudioClip clip, float volume, float hold, bool must)
+        {
             if (clip == null) return;
-            _voiceFree[f] = now + Mathf.Max(hold, must ? 0f : clip.length * 0.6f);
+            _voiceFree[f] = Time.time + Mathf.Max(hold, must ? 0f : clip.length * 0.6f);
             float pitch = matrix.LastTier == VoiceMatrix.Tier.Archetype ? Mathf.Clamp(Mathf.Sqrt(80f / Mathf.Max(40f, f.totalMass)), 0.85f, 1.15f) : 1f;
             pitch *= (1f + 0.04f * ((f.displayName.GetHashCode() & 0xff) / 127.5f - 1f)) * Random.Range(0.96f, 1.04f);
             PlayAt(clip, f.HeadPosition, volume, pitch);
         }
 
-        void Later(float delay, Fighter f, Emotion e, float volume) => _later.Add((Time.time + delay, f, e, volume));
+        void Later(float delay, Fighter f, Emotion e, float volume) => _later.Add((Time.time + delay, f, e, Emotion5.Angry, 0, volume));
+        void Later(float delay, Fighter f, Emotion5 e, int level, float volume) => _later.Add((Time.time + delay, f, Emotion.Effort, e, level, volume));
 
         /// <summary>The emotional reactions, once a frame: what was said for later, dazed moans, and a free-for-all's eliminations.</summary>
         void Feelings()
@@ -90,7 +117,9 @@ namespace PoBox.Audio
                 if (now < _later[i].at) continue;
                 var v = _later[i];
                 _later.RemoveAt(i);
-                if (v.f != null && v.f.isActiveAndEnabled) Voice(v.f, v.e, v.volume, 0.5f, true);
+                if (v.f == null || !v.f.isActiveAndEnabled) continue;
+                if (v.level > 0) Play(v.f, v.e5, v.level, v.volume, 0.5f, true);
+                else Voice(v.f, v.e, v.volume, 0.5f, true);
             }
             if (!Bout.SimRunning) return;
             FreeForAll ffa = FreeForAll.Instance;
@@ -115,17 +144,27 @@ namespace PoBox.Audio
             }
         }
 
-        /// <summary>The result: the winner roars, the loser sighs (a draw, neither); in a free-for-all, the last one standing.</summary>
+        /// <summary>
+        /// The result: the winner celebrates (level 5 for a stoppage or the last one standing in a free-for-all, 4 on
+        /// the cards), the loser sighs; a draw, both a little pleased with it (happy, level 2).
+        /// </summary>
         void ResultVoices()
         {
             Fighter winner = null, loser = null;
+            int level = 5;
             if (bout != null && bout.red != null && bout.blue != null)
             {
                 winner = bout.Winner;
                 if (winner != null) loser = bout.Other(winner);
+                else
+                {
+                    Later(0.6f, bout.red, Emotion5.Happy, 2, triumphVolume * 0.6f);
+                    Later(0.9f, bout.blue, Emotion5.Happy, 2, triumphVolume * 0.6f);
+                }
+                if (bout.Decision) level = 4;
             }
             else if (FreeForAll.Instance != null) winner = FreeForAll.Instance.Winner;
-            if (winner != null) Later(0.6f, winner, Emotion.Triumph, triumphVolume);
+            if (winner != null) Later(0.6f, winner, Emotion5.Celebrate, level, triumphVolume);
             if (loser != null) Later(1.4f, loser, Emotion.Defeat, defeatVolume);
         }
 
@@ -172,7 +211,9 @@ namespace PoBox.Audio
                 if (!_nextBreath.TryGetValue(f, out float next)) { _nextBreath[f] = now + interval * Random.value; continue; }
                 if (now < next) continue;
                 _nextBreath[f] = now + interval;
-                Voice(f, e, volume, 0.4f);
+                // A groan is the 5x5 layer's hurt, level 4 (down, or nearly done); panting stays a breath.
+                if (e == Emotion.Groan) Play(f, Emotion5.Hurt, 4, volume, 0.4f);
+                else Voice(f, e, volume, 0.4f);
             }
         }
     }

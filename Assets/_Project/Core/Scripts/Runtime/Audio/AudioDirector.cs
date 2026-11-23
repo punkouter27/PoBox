@@ -353,7 +353,8 @@ namespace PoBox.Audio
             bool big = type == PunchType.Hook || type == PunchType.Uppercut || type == PunchType.Cross;
             if (big) { _swinger = f; _swungAt = Time.unscaledTime; }
             bool heavy = type == PunchType.Hook || type == PunchType.Uppercut || type == PunchType.Body;
-            if (heavy && Random.value < effortChance) Voice(f, Emotion.Effort, effortVolume * Random.Range(0.8f, 1f), 0.3f);
+            // The effort of a heavy one is the 5x5 layer's angry: an uppercut or hook hardest, a body shot a level less.
+            if (heavy && Random.value < effortChance) Play(f, Emotion5.Angry, type == PunchType.Body ? Random.Range(2, 4) : Random.Range(3, 6), effortVolume * Random.Range(0.8f, 1f), 0.3f);
             else if (Random.value < exhaleChance) Voice(f, Emotion.Exhale, exhaleVolume * Random.Range(0.8f, 1f), 0.15f);
         }
 
@@ -395,7 +396,8 @@ namespace PoBox.Audio
             if (synth) PlayAt(ImpactSynth.Pick(e.zone == PartKind.Head ? ImpactSynth.Head : ImpactSynth.Body, k), e.point, Mathf.Lerp(0.4f, 1f, k), Mathf.Lerp(0.97f, 1.04f, Mathf.Clamp01(e.gloveSpeed / 9f)));
             PlayAt(Pick(heavy ? punchHeavy : punchLight), e.point, clips * Mathf.Lerp(0.35f, 0.95f, k), snap * where);
             // The air knocked out of whoever took it, a beat after the glove.
-            if (e.victim != null) Voice(e.victim, Emotion.Pain, Mathf.Lerp(0.35f, painVolume, k), 0.25f, true);
+            // Hurt, at a level for how hard it landed (1-3 a pain cry; a level 4-5 shot knocks a groan out).
+            if (e.victim != null) Play(e.victim, Emotion5.Hurt, VoiceMatrix.Level(k), Mathf.Lerp(0.35f, painVolume, k), 0.25f, true);
             if (e.impulse >= thudImpulse)
             {
                 // The thud grows faster than the slap, and sinks as it grows.
@@ -415,7 +417,7 @@ namespace PoBox.Audio
                 _gaspVolume = Mathf.Max(_gaspVolume, Mathf.Lerp(0.25f, 0.8f, surprise));
             }
             // A punch far harder than these two usually land: now and then its thrower laughs at it.
-            if (surprise > 0.6f && e.attacker != null && Random.value < bigHitTauntChance) Later(0.7f, e.attacker, Emotion.Taunt, tauntVolume);
+            if (surprise > 0.6f && e.attacker != null && Random.value < bigHitTauntChance) Later(0.7f, e.attacker, Emotion5.Insult, surprise > 0.85f ? 3 : 2, tauntVolume);
             if (surprise > 0.6f && Time.unscaledTime - _lastSwell > 3f)
             {
                 _lastSwell = Time.unscaledTime;
@@ -430,9 +432,9 @@ namespace PoBox.Audio
             _victim = f;
             PlayCrowd(crowdSwell, 0.95f);
             PlayCrowd(crowdGroan, 0.5f);
-            if (f != null) Voice(f, Emotion.Groan, groanVolume, 0.5f, true);
-            // The one who put them there laughs at it, a beat after the fall.
-            if (cause.attacker != null && cause.attacker != f && Random.value < tauntChance) Later(1.1f, cause.attacker, Emotion.Taunt, tauntVolume);
+            if (f != null) Play(f, Emotion5.Hurt, 5, groanVolume, 0.5f, true);
+            // The one who put them there laughs at it, a beat after the fall (insult, level 4).
+            if (cause.attacker != null && cause.attacker != f && Random.value < tauntChance) Later(1.1f, cause.attacker, Emotion5.Insult, 4, tauntVolume);
         }
 
         void OnFloor(Vector3 point, float impulse)

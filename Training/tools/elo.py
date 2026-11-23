@@ -12,7 +12,8 @@ the marks with every joint jittered a little (seeded), which is where one bout o
 
 The ratings are a Bradley-Terry fit of all the results (a draw is half a win each), on the Elo scale (400 points
 = 10 to 1), centred on 1000: unlike Elo updated bout by bout, it does not depend on the order the bouts ran in.
-Written to Assets/_Project/Data/Resources/cpu_elo.json, where the game's ladder starts from (LeagueTable), and every bout is
+Written to Assets/_Project/Data/Resources/cpu_elo.json, which the game shows as each boxer's CPU record on the ladder
+(LeagueTable; since 2026-11-22 the game's ratings all start at 1000, not from these), and every bout is
 appended to logs/cpu_bouts.ndjson with its numbers.
 
 ponytail: one judge, not three, and the lasting damage starts again each round (exam rounds() resets it at a

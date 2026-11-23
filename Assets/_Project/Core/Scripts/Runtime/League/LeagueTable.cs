@@ -8,14 +8,17 @@ namespace PoBox.League
     /// The ladder. Every finished bout moves two Elo ratings, the table is kept on the device, and the next
     /// pairing is whoever has fought least against whoever is rated closest to them.
     ///
-    /// The ratings start from the CPU's: every pair of the game's brains boxed in C MuJoCo by the trainer
-    /// (Training/tools/elo.py), written to Resources/cpu_elo.json. A new file (new brains) starts the ratings
-    /// again from it; the record of bouts watched on this device is kept.
+    /// Every boxer starts at 1000 (<see cref="Start"/>; the tournament standard, owner 2026-11-22: "reset to
+    /// 1000"), K 32. Ratings already saved on a device are kept; a fresh profile, a new boxer or RESET starts at 1000.
+    /// The CPU's league (every pair of the game's brains boxed in C MuJoCo by Training/tools/elo.py, written to
+    /// Resources/cpu_elo.json) no longer seeds a rating: it is only shown, as each boxer's CPU record on the table.
     /// </summary>
     public class LeagueTable : MonoBehaviour
     {
         public PolicyProfile[] roster = new PolicyProfile[0];
-        public float startRating = 1000f;
+        /// <summary>Every rating's start (the tournament standard).</summary>
+        public const float Start = 1000f;
+        public float startRating = Start;
         public float kFactor = 32f;
 
         [Serializable]
@@ -24,7 +27,7 @@ namespace PoBox.League
             public string name;
             public float elo;
             public int wins, losses, draws, knockouts;
-            /// <summary>The CPU's rating, which this one started from (0 when the CPU has not rated this boxer).</summary>
+            /// <summary>The CPU league's rating, for reference only (0 when the CPU has not rated this boxer); ratings start at 1000.</summary>
             public float cpuElo;
             public string lastOpponent;
             /// <summary>Bouts in a row: wins counted up, losses down; a draw ends either run.</summary>
@@ -33,7 +36,7 @@ namespace PoBox.League
         }
 
         [Serializable]
-        class Save { public List<Row> rows = new List<Row>(); public string cpuWhen; }
+        class Save { public List<Row> rows = new List<Row>(); }
 
         [Serializable]
         class CpuRow { public string name; public float elo; public int wins, losses, draws; }
@@ -86,21 +89,8 @@ namespace PoBox.League
             foreach (PolicyProfile p in roster)
                 if (p != null && Find(p.displayName) == null)
                 {
-                    float c = CpuElo(p.displayName);
-                    _save.rows.Add(new Row { name = p.displayName, elo = c > 0f ? c : startRating, cpuElo = c });
+                    _save.rows.Add(new Row { name = p.displayName, elo = startRating, cpuElo = CpuElo(p.displayName) });
                 }
-            // New CPU ratings (new brains): every rating starts again from them.
-            Cpu cpu = CpuRatings;
-            if ((cpu.when ?? "") != (_save.cpuWhen ?? ""))
-            {
-                foreach (Row r in _save.rows)
-                {
-                    float c = CpuElo(r.name);
-                    r.cpuElo = c;
-                    r.elo = c > 0f ? c : startRating;
-                }
-                _save.cpuWhen = cpu.when;
-            }
             // A profile that has left the roster leaves the ladder with it.
             _save.rows.RemoveAll(r => ProfileFor(r.name) == null);
         }
@@ -112,12 +102,10 @@ namespace PoBox.League
         }
 
         /// <summary>A boxer's rating as the ladder last saved it, read without the arena's table (the first screen has none); the start rating if it has none.</summary>
-        public static float SavedElo(string name, float fallback = 1000f)
+        public static float SavedElo(string name, float fallback = Start)
         {
             Row row = SavedRow(name);
-            if (row != null) return row.elo;
-            float cpu = CpuElo(name);
-            return cpu > 0f ? cpu : fallback;
+            return row != null ? row.elo : fallback;
         }
 
         /// <summary>A boxer's row as the ladder last saved it (rating, record, streak), read without the arena's table; null if it has none yet.</summary>
@@ -126,7 +114,7 @@ namespace PoBox.League
             try
             {
                 Save save = JsonUtility.FromJson<Save>(PlayerPrefs.GetString(Key, ""));
-                if (save != null && (save.cpuWhen ?? "") == (CpuRatings.when ?? "")) foreach (Row r in save.rows) if (r.name == name) return r;
+                if (save != null && save.rows != null) foreach (Row r in save.rows) if (r.name == name) return r;
             }
             catch (Exception) { }
             return null;
@@ -243,18 +231,7 @@ namespace PoBox.League
             Save save = null;
             try { save = JsonUtility.FromJson<Save>(PlayerPrefs.GetString(Key, "")); }
             catch (Exception) { }
-            if (save == null) save = new Save { cpuWhen = CpuRatings.when };
-            else if ((save.cpuWhen ?? "") != (CpuRatings.when ?? ""))
-            {
-                // Rated against older CPU ratings: the records stay, the ratings start again from the CPU's, as Load does.
-                foreach (Row r in save.rows)
-                {
-                    float c = CpuElo(r.name);
-                    r.cpuElo = c;
-                    r.elo = c > 0f ? c : 1000f;
-                }
-                save.cpuWhen = CpuRatings.when;
-            }
+            if (save == null || save.rows == null) save = new Save();
             var rows = new List<Row>();
             foreach (string n in names)
             {
@@ -262,8 +239,7 @@ namespace PoBox.League
                 foreach (Row x in save.rows) if (x.name == n) { r = x; break; }
                 if (r == null)
                 {
-                    float c = CpuElo(n);
-                    r = new Row { name = n, elo = c > 0f ? c : 1000f, cpuElo = c };
+                    r = new Row { name = n, elo = Start, cpuElo = CpuElo(n) };
                     save.rows.Add(r);
                 }
                 rows.Add(r);

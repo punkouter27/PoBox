@@ -89,6 +89,8 @@ def main() -> None:
         if "--reset-std" in args:
             k = args.index("--reset-std")
             del args[k : k + 2]
+        if "--reset-critic" in args:  # the critic in the save is the one this run has been training
+            args.remove("--reset-critic")
         if total:
             import torch
 
@@ -98,7 +100,7 @@ def main() -> None:
                 if os.path.exists(p)
             )
             args[args.index("--more-iters") + 1] = str(max(1, total - done))
-        time.sleep(30)  # let the driver come back
+        time.sleep(180)  # let the driver come back and the GPU cool (faults come at 80-89 C on this laptop)
     raise SystemExit(f"[resilient] {run} faulted eight times; giving up")
 
 

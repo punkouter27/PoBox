@@ -106,7 +106,8 @@ def main() -> None:
                     "xml": {os.path.basename(x): sha(Path(x)) for x in xmls},
                     "reward": sha(TRAINING / "config" / "reward.json"),
                     "brains": {
-                        n: sha(ROOT / "Assets" / "_Project" / "RL_Models" / n.capitalize() / "match.onnx") for n in [LEARNER, *FOES]
+                        n: sha(ROOT / "Assets" / "_Project" / "RL_Models" / n.capitalize() / "match.onnx")
+                        for n in [LEARNER, *FOES]
                     },
                 }
             ),
