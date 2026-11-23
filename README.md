@@ -35,24 +35,36 @@ Unity plugin 3.15.0 for the fight's physics, and Unity Inference Engine for the 
 ### Voice matrix: 5 emotions x 5 levels
 
 Every boxer has a 5x5 voice grid: `AudioDirector.Play(fighter, Emotion5, level, volume)` (`Runtime/Audio/`,
-`VoiceMatrix.Pick(boxer, Emotion5, level, ...)`), level 1 (barely) to 5 (all out). Until a WAV is added, each cell
-is played as one of the older emotions, through the old tiers (the boxer's `A_Voice_*` recordings, the shared
-archetype takes, then the procedural `VoiceSynth`, made higher, rougher, louder and longer with the level):
+`VoiceMatrix.Pick(boxer, Emotion5, level, voice)`), level 1 (barely) to 5 (all out). A twin ("MATT II") uses its
+boxer's voice.
 
-| Emotion5 | Played as | Heard at |
+**The manifest**: `Assets/_Project/Data/Resources/Voices/voices.json` (schema `po-voice-manifest/1`) lists every
+roster boxer (each folder under `Assets/_Project/Agents/Boxers` with a `config.json`) x 5 emotions x 5 levels:
+the WAV each cell uses (`<id>/<emotion>-<level>.wav` under the Voices folder, e.g. `matt/hurt-3.wav`), whether it
+`exists`, and the boxer's procedural `voice` (pitchHz, formantScale, breath, rasp, vibratoHz, vibratoDepth, tempo,
+tremor, growl, timbre). Edit a `voice` there to change how a boxer sounds; never edit `exists` by hand.
+
+**Adding a WAV**: drop it in at the path the manifest lists (e.g. `Resources/Voices/matt/hurt-3.wav`). Importing
+it reruns the generator; menu **PoBox/Voices/Rebuild voices.json** does the same and logs "N of M clips recorded;
+missing: ...". The generator keeps the voices already in the file and adds new roster boxers.
+
+**What plays**, per cell: the WAV if the manifest says it exists; otherwise the boxer's own recording of the older
+emotion the cell maps to (`A_Voice_<Boxer>_<Emotion>_<n>`, if there is one); otherwise the procedural imitation
+(`VoiceSynth.Emotion5.cs`): a Rosenberg glottal pulse with jitter, shimmer and a subharmonic, aspiration noise,
+four gliding formants, 1-4 syllables with consonants, per-emotion prosody, in the boxer's manifest voice;
+deterministic per (boxer, emotion, level, take), made at the walk-on and cached. A missing manifest makes every
+cell procedural (one warning).
+
+| Emotion5 | Imitation (old emotion if recorded) | Heard at |
 |---|---|---|
-| angry | Effort (grunt) | a heavy punch thrown (hook/uppercut 3-5, body 2-3) |
-| happy | Triumph, soft and short | a drawn bout (level 2) |
-| hurt | Pain (levels 1-3), Groan (4-5) | a clean hit (level from its impulse), a knockdown (5), groans down or spent (4) |
-| insult | Taunt (laughs) | a far harder punch than usual (2-3), a knockdown scored (4) |
-| celebrate | Triumph | a win (5 by stoppage or last one standing, 4 on the cards) |
+| angry | "hup!" / "rraah(-hah)" (Effort) | a heavy punch thrown (hook/uppercut 3-5, body 2-3) |
+| happy | "heh", then laughs (Triumph) | a drawn bout (level 2) |
+| hurt | "oof", gasp + "ugh", gasp + long cry at 5 (Pain 1-3, Groan 4-5) | a clean hit (level from its impulse), a knockdown (5), groans down or spent (4) |
+| insult | "pfft-heh" / "nyah-nyah" (Taunt) | a far harder punch than usual (2-3), a knockdown scored (4) |
+| celebrate | "yeah!" / "woo-hoo!" + laugh (Triumph) | a win (5 by stoppage or last one standing, 4 on the cards) |
 
-Breath, panting, the dazed moan and the loser's sigh stay as they were (Exhale, Pant, Dazed, Defeat).
-
-**Adding recordings**: put WAVs in `Assets/_Project/Data/Resources/Voices/<Boxer>/<emotion>-<level>.wav`, e.g.
-`Voices/Matt/hurt-3.wav`, `Voices/Grandma/celebrate-5.wav` (emotion lower case: angry, happy, hurt, insult,
-celebrate; level 1-5; the folder is the boxer's name, `Matt` or `MATT`). More takes of a cell: `hurt-3_2.wav`,
-`hurt-3_3.wav`. A recorded cell is used as it is; the rest of the grid stays procedural.
+Level 1 to 5 raises loudness, length, pitch range, rasp, syllable count and vibrato. Breath, panting, the dazed
+moan and the loser's sigh stay as they were (Exhale, Pant, Dazed, Defeat, with the older synth).
 
 ## Where the boxers stand (13 November 2026)
 

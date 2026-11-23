@@ -117,6 +117,58 @@ namespace PoBox.Audio
             return null;
         }
 
+        /// <summary>
+        /// The manifest the generator writes: every boxer of <paramref name="roster"/> (scoreboard name, mass in kg) by
+        /// 5 emotions by 5 levels, <paramref name="exists"/> asked of each file (relative to the Voices folder), the
+        /// voices already in <paramref name="old"/> kept and a new boxer's made from <see cref="VoiceProfile.For"/>.
+        /// </summary>
+        public static VoiceManifest Rebuild(VoiceManifest old, IList<(string name, float mass)> roster, Func<string, bool> exists, string generated)
+        {
+            var m = new VoiceManifest { generated = generated ?? "" };
+            foreach (var (rawName, mass) in roster)
+            {
+                string name = rawName.ToUpperInvariant(), id = rawName.ToLowerInvariant();
+                Character was = old?.Find(name);
+                Voice voice = was != null && was.voice != null && was.voice.pitchHz > 0f ? was.voice : null;
+                if (voice == null)
+                {
+                    VoiceProfile p = VoiceProfile.For(name, mass, false);
+                    voice = Voice.From(p, VoiceProfile.Timbre(name, p));
+                }
+                var c = new Character { id = id, name = name, voice = voice };
+                foreach (Emotion5 e in (Emotion5[])Enum.GetValues(typeof(Emotion5)))
+                {
+                    var cells = new Clip[5];
+                    for (int level = 1; level <= 5; level++)
+                    {
+                        string file = FileFor(id, e, level);
+                        cells[level - 1] = new Clip { level = level, file = file, exists = exists != null && exists(file) };
+                    }
+                    c.clips.Set(e, cells);
+                }
+                m.characters.Add(c);
+            }
+            return m;
+        }
+
+        /// <summary>"N of M clips recorded; missing: matt/angry-1.wav, ..." (the first few missing, and how many more).</summary>
+        public string Summary(int show = 8)
+        {
+            int all = 0, have = 0;
+            var missing = new List<string>();
+            foreach (Character c in characters)
+                foreach (Emotion5 e in (Emotion5[])Enum.GetValues(typeof(Emotion5)))
+                    foreach (Clip clip in c.clips.Of(e))
+                    {
+                        all++;
+                        if (clip.exists) have++;
+                        else missing.Add(clip.file);
+                    }
+            string list = missing.Count == 0 ? "none" : string.Join(", ", missing.GetRange(0, Mathf.Min(show, missing.Count)))
+                                                       + (missing.Count > show ? $" and {missing.Count - show} more" : "");
+            return $"{have} of {all} clips recorded; missing: {list}";
+        }
+
         public static VoiceManifest Parse(string json)
         {
             try

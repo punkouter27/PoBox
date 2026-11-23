@@ -158,20 +158,19 @@ namespace PoBox.Tests
             Assert.IsFalse(VoiceMatrix.Parse5("hurt-0", out _, out _));
             Assert.IsFalse(VoiceMatrix.Parse5("2-3", out _, out _));
             Assert.IsFalse(VoiceMatrix.Parse5("A_Voice_Matt_Pain_01", out _, out _));
-            Assert.AreEqual(Emotion.Pain, VoiceMatrix.Map(Emotion5.Hurt, 2).emotion);
-            Assert.AreEqual(Emotion.Groan, VoiceMatrix.Map(Emotion5.Hurt, 5).emotion);
-            Assert.AreEqual(Emotion.Taunt, VoiceMatrix.Map(Emotion5.Insult, 1).emotion);
-            Assert.AreEqual(Emotion.Effort, VoiceMatrix.Map(Emotion5.Angry, 4).emotion);
-            Assert.Less(VoiceMatrix.Map(Emotion5.Happy, 5).intensity, VoiceMatrix.Map(Emotion5.Celebrate, 5).intensity, "happy should be the softer triumph");
+            Assert.AreEqual(Emotion.Pain, VoiceMatrix.Map(Emotion5.Hurt, 2));
+            Assert.AreEqual(Emotion.Groan, VoiceMatrix.Map(Emotion5.Hurt, 5));
+            Assert.AreEqual(Emotion.Taunt, VoiceMatrix.Map(Emotion5.Insult, 1));
+            Assert.AreEqual(Emotion.Effort, VoiceMatrix.Map(Emotion5.Angry, 4));
             Assert.AreEqual(1, VoiceMatrix.Level(0f));
             Assert.AreEqual(5, VoiceMatrix.Level(1f));
-            // With nothing recorded, every one of the 25 cells is still filled, procedurally.
-            var m = new VoiceMatrix { proceduralShare = 1f, gridTakes = 1 };
+            // With nothing recorded (an empty manifest), every one of the 25 cells is still filled, procedurally.
+            var m = new VoiceMatrix { gridTakes = 1, Manifest = new VoiceManifest() };
             VoiceProfile v = VoiceProfile.For("MATT", 80f, false);
             foreach (Emotion5 x in System.Enum.GetValues(typeof(Emotion5)))
                 for (int l = 1; l <= VoiceMatrix.Levels; l++)
                 {
-                    Assert.IsNotNull(m.Pick("MATT", x, l, null, v), $"{x} {l} is silent");
+                    Assert.IsNotNull(m.Pick("MATT", x, l, v), $"{x} {l} is silent");
                     Assert.AreEqual(VoiceMatrix.Tier.Procedural, m.LastTier);
                 }
         }

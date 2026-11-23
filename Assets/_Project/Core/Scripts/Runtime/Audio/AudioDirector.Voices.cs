@@ -34,7 +34,8 @@ namespace PoBox.Audio
         VoiceProfile ProfileOf(Fighter f)
         {
             if (!_profiles.TryGetValue(f, out VoiceProfile v))
-                _profiles[f] = v = VoiceProfile.For(Base(f), f.totalMass, System.Array.IndexOf(highVoices, Base(f)) >= 0);
+                // The voice manifest's (Resources/Voices/voices.json) if it lists the boxer, else made from its name and build.
+                _profiles[f] = v = matrix.ProfileFor(Base(f), VoiceProfile.For(Base(f), f.totalMass, System.Array.IndexOf(highVoices, Base(f)) >= 0));
             return v;
         }
 
@@ -70,14 +71,14 @@ namespace PoBox.Audio
 
         /// <summary>
         /// The tournament standard's voice API: this boxer says <paramref name="e"/> at intensity
-        /// <paramref name="level"/> 1..5, from its own recording (Resources/Voices/&lt;Boxer&gt;/&lt;emotion&gt;-&lt;level&gt;.wav)
-        /// or else the older emotion it maps to (<see cref="VoiceMatrix.Map"/>), procedural at the level's intensity.
+        /// <paramref name="level"/> 1..5: the WAV voices.json lists as recorded, else its own recording of the older
+        /// emotion it maps to (<see cref="VoiceMatrix.Map"/>), else the procedural imitation in its voice.
         /// </summary>
         public void Play(Fighter f, Emotion5 e, int level, float volume, float hold = 0.3f, bool must = false)
         {
             if (f == null) return;
             if (!must && _voiceFree.TryGetValue(f, out float free) && Time.time < free) return;
-            AudioClip clip = matrix.Pick(Base(f), e, level, old => Archetype(f, old), ProfileOf(f));
+            AudioClip clip = matrix.Pick(Base(f), e, level, ProfileOf(f));
             Say(f, clip, volume, hold, must);
         }
 

@@ -18,10 +18,10 @@ namespace PoBox.Audio
     ///      time a cell is wanted and kept. Always there, so no cell is ever silent.
     ///
     /// The tournament standard's 5x5 layer on top (2026-11-22): every boxer by an <see cref="Emotion5"/> (angry, happy,
-    /// hurt, insult, celebrate) by an intensity level 1..5 (the <see cref="Emotion5"/> overload of Pick).
-    /// A cell is a recording of its own if there is one, Resources/Voices/&lt;Boxer&gt;/&lt;emotion&gt;-&lt;level&gt;.wav
-    /// (Voices/Matt/hurt-3.wav; more takes as hurt-3_2.wav, ...); otherwise it is played as the older emotion
-    /// <see cref="Map"/> gives it, through the three tiers above, its procedural takes made at the level's intensity.
+    /// hurt, insult, celebrate) by a level 1..5, as the voice manifest (Resources/Voices/voices.json,
+    /// <see cref="VoiceManifest"/>) lists it: its WAV if the manifest says it exists, else the boxer's own recording
+    /// of the older emotion it maps to (<see cref="Map"/>), else the procedural imitation (VoiceSynth.Render5) in
+    /// the boxer's manifest voice.
     /// </summary>
     [Serializable]
     public class VoiceMatrix
@@ -36,7 +36,6 @@ namespace PoBox.Audio
         readonly Dictionary<string, Dictionary<Emotion, AudioClip[]>> _recorded = new Dictionary<string, Dictionary<Emotion, AudioClip[]>>(StringComparer.OrdinalIgnoreCase);
         readonly Dictionary<(string, Emotion), AudioClip[]> _made = new Dictionary<(string, Emotion), AudioClip[]>();
         readonly Dictionary<(string, Emotion5, int), AudioClip[]> _made5 = new Dictionary<(string, Emotion5, int), AudioClip[]>();
-        readonly Dictionary<string, Dictionary<(Emotion5, int), AudioClip[]>> _recorded5 = new Dictionary<string, Dictionary<(Emotion5, int), AudioClip[]>>(StringComparer.OrdinalIgnoreCase);
         bool _indexed;
 
         /// <summary>The intensity levels of the 5x5 layer: 1 (barely) to 5 (all out).</summary>
@@ -91,110 +90,105 @@ namespace PoBox.Audio
         }
 
         /// <summary>
-        /// The 5x5 layer's cell for this boxer, emotion and level (clamped to 1..5): its own recording
-        /// (Resources/Voices/&lt;Boxer&gt;/&lt;emotion&gt;-&lt;level&gt;) if there is one; otherwise the older emotion it maps
-        /// to (<see cref="Map"/>), from that emotion's recording, the archetype's takes (<paramref name="archetype"/>, may be
-        /// null) or the procedural voice made at the level's intensity.
+        /// The 5x5 layer's cell for this boxer (a twin is its boxer), emotion and level (clamped to 1..5):
+        ///   1. the WAV the voice manifest lists for it, if the manifest says it exists (a file it says is missing is
+        ///      never asked for);
+        ///   2. else the boxer's own recording of the older emotion the cell maps to (<see cref="Map"/>,
+        ///      A_Voice_&lt;Boxer&gt;_&lt;Emotion&gt;_&lt;n&gt;), if there is one;
+        ///   3. else the procedural imitation (<see cref="VoiceSynth.Render5"/>) in the boxer's voice.
         /// </summary>
-        public AudioClip Pick(string boxer, Emotion5 e, int level, Func<Emotion, AudioClip[]> archetype, VoiceProfile voice)
+        public AudioClip Pick(string boxer, Emotion5 e, int level, VoiceProfile voice)
         {
             level = Mathf.Clamp(level, 1, Levels);
-            AudioClip[] own = Recorded5(boxer, e, level);
-            if (own.Length > 0)
+            VoiceManifest.Character who = Manifest.Find(boxer);
+            AudioClip wav = Wav(who, e, level);
+            if (wav != null)
             {
                 LastTier = Tier.Recorded;
-                return own[UnityEngine.Random.Range(0, own.Length)];
+                return wav;
             }
             Index();
-            Emotion old = Map(e, level).emotion;
-            if (_recorded.TryGetValue(boxer ?? "", out var mine) && mine.TryGetValue(old, out AudioClip[] rec) && rec.Length > 0)
+            string name = who != null ? who.name : boxer ?? "";
+            if (_recorded.TryGetValue(name, out var mine) && mine.TryGetValue(Map(e, level), out AudioClip[] rec) && rec.Length > 0)
             {
                 LastTier = Tier.Recorded;
                 return rec[UnityEngine.Random.Range(0, rec.Length)];
             }
-            AudioClip[] arch = archetype?.Invoke(old);
-            bool hasArchetype = arch != null && arch.Length > 0;
-            if (hasArchetype && UnityEngine.Random.value >= proceduralShare)
-            {
-                LastTier = Tier.Archetype;
-                return arch[UnityEngine.Random.Range(0, arch.Length)];
-            }
-            AudioClip[] made = Made(boxer, e, level, voice);
-            if (made.Length > 0)
-            {
-                LastTier = Tier.Procedural;
-                return made[UnityEngine.Random.Range(0, made.Length)];
-            }
-            LastTier = Tier.Archetype;
-            return hasArchetype ? arch[UnityEngine.Random.Range(0, arch.Length)] : null;
+            AudioClip[] made = Made(who != null ? who.id : (boxer ?? "").ToLowerInvariant(), e, level, voice);
+            LastTier = Tier.Procedural;
+            return made.Length > 0 ? made[UnityEngine.Random.Range(0, made.Length)] : null;
+        }
+
+        /// <summary>The manifest this matrix reads: the game's (Resources/Voices/voices.json) unless a test sets one.</summary>
+        public VoiceManifest Manifest
+        {
+            get => _manifest ?? VoiceManifest.Loaded;
+            set => _manifest = value;
+        }
+        VoiceManifest _manifest;
+        readonly Dictionary<string, AudioClip> _wavs = new Dictionary<string, AudioClip>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>A boxer's voice from the manifest; <paramref name="otherwise"/> if the manifest does not list it.</summary>
+        public VoiceProfile ProfileFor(string boxer, VoiceProfile otherwise)
+        {
+            VoiceManifest.Character who = Manifest.Find(boxer);
+            return who != null && who.voice != null && who.voice.pitchHz > 0f ? who.voice.Profile() : otherwise;
+        }
+
+        /// <summary>The cell's recorded WAV, loaded once, if the manifest says it exists; null otherwise.</summary>
+        AudioClip Wav(VoiceManifest.Character who, Emotion5 e, int level)
+        {
+            VoiceManifest.Clip cell = who?.Cell(e, level);
+            if (cell == null || !cell.exists || string.IsNullOrEmpty(cell.file)) return null;
+            if (_wavs.TryGetValue(cell.file, out AudioClip clip)) return clip;
+            string path = "Voices/" + cell.file;
+            int dot = path.LastIndexOf('.');
+            if (dot > 0) path = path.Substring(0, dot);
+            clip = Resources.Load<AudioClip>(path);
+            if (clip == null) Debug.LogWarning($"[VoiceMatrix] voices.json lists {cell.file} as recorded, but Resources has no {path}: run PoBox/Voices/Rebuild voices.json.");
+            _wavs[cell.file] = clip;
+            return clip;
         }
 
         /// <summary>
-        /// The older emotion a 5x5 cell is played as, with the procedural voice's intensity (0..1) and length (1 the
-        /// emotion's own): angry an effort grunt, happy a soft short triumph, hurt pain (levels 1-3) or a groan (4-5),
-        /// insult a taunting laugh, celebrate a full triumph.
+        /// The older emotion a 5x5 cell is played as when the boxer has a recording of that one and not of the cell:
+        /// angry an effort grunt, happy and celebrate a triumph, hurt pain (levels 1-3) or a groan (4-5), insult a taunt.
         /// </summary>
-        public static (Emotion emotion, float intensity, float length) Map(Emotion5 e, int level)
+        public static Emotion Map(Emotion5 e, int level)
         {
-            float k = (Mathf.Clamp(level, 1, Levels) - 1) / (float)(Levels - 1);
             switch (e)
             {
-                case Emotion5.Angry: return (Emotion.Effort, k, Mathf.Lerp(0.85f, 1.35f, k));
-                case Emotion5.Happy: return (Emotion.Triumph, 0.5f * k, Mathf.Lerp(0.4f, 0.7f, k));
-                case Emotion5.Hurt: return (level <= 3 ? Emotion.Pain : Emotion.Groan, k, Mathf.Lerp(0.8f, 1.2f, k));
-                case Emotion5.Insult: return (Emotion.Taunt, k, Mathf.Lerp(0.85f, 1.2f, k));
-                default: return (Emotion.Triumph, k, Mathf.Lerp(0.85f, 1.3f, k));
+                case Emotion5.Angry: return Emotion.Effort;
+                case Emotion5.Hurt: return level <= 3 ? Emotion.Pain : Emotion.Groan;
+                case Emotion5.Insult: return Emotion.Taunt;
+                default: return Emotion.Triumph;
             }
         }
 
         /// <summary>A 0..1 strength as a level, 1..5.</summary>
         public static int Level(float strength01) => 1 + Mathf.RoundToInt(Mathf.Clamp01(strength01) * (Levels - 1));
 
-        /// <summary>The 5x5 layer's procedural cells for a boxer, every emotion at every level, made ahead of time.</summary>
+        /// <summary>The 5x5 layer's procedural cells for a boxer, every cell not recorded, made ahead of time.</summary>
         public void Warm5(string boxer, VoiceProfile voice)
         {
+            VoiceManifest.Character who = Manifest.Find(boxer);
+            string id = who != null ? who.id : (boxer ?? "").ToLowerInvariant();
             foreach (Emotion5 e in (Emotion5[])Enum.GetValues(typeof(Emotion5)))
                 for (int level = 1; level <= Levels; level++)
-                    if (Recorded5(boxer, e, level).Length == 0) Made(boxer, e, level, voice);
+                {
+                    VoiceManifest.Clip cell = who?.Cell(e, level);
+                    if (cell == null || !cell.exists) Made(id, e, level, voice);
+                }
         }
 
-        AudioClip[] Made(string boxer, Emotion5 e, int level, VoiceProfile voice)
+        AudioClip[] Made(string id, Emotion5 e, int level, VoiceProfile voice)
         {
-            var key = (boxer ?? "", e, level);
+            var key = (id, e, level);
             if (_made5.TryGetValue(key, out AudioClip[] clips)) return clips;
-            var (old, intensity, length) = Map(e, level);
-            try { clips = VoiceSynth.Make(voice, old, $"{boxer} {e}", gridTakes, intensity, length); }
-            catch (Exception ex) { Debug.LogWarning($"[VoiceMatrix] {boxer} {e} {level}: {ex.Message}"); clips = new AudioClip[0]; }
+            try { clips = VoiceSynth.Make5(voice, e, level, id, gridTakes); }
+            catch (Exception ex) { Debug.LogWarning($"[VoiceMatrix] {id} {e} {level}: {ex.Message}"); clips = new AudioClip[0]; }
             _made5[key] = clips;
             return clips;
-        }
-
-        /// <summary>
-        /// A boxer's own 5x5 recordings, read once a boxer from Resources/Voices/&lt;Boxer&gt; (the name as given, in
-        /// upper case or capitalised: MATT, Matt): clips named &lt;emotion&gt;-&lt;level&gt;, optionally _&lt;n&gt; for more takes.
-        /// </summary>
-        AudioClip[] Recorded5(string boxer, Emotion5 e, int level)
-        {
-            boxer ??= "";
-            if (!_recorded5.TryGetValue(boxer, out var row))
-            {
-                _recorded5[boxer] = row = new Dictionary<(Emotion5, int), AudioClip[]>();
-                if (boxer.Length > 0)
-                {
-                    var found = new Dictionary<(Emotion5, int), List<AudioClip>>();
-                    var seen = new HashSet<AudioClip>();
-                    string cap = boxer.Substring(0, 1).ToUpperInvariant() + boxer.Substring(1).ToLowerInvariant();
-                    foreach (string folder in new[] { boxer, boxer.ToUpperInvariant(), cap })
-                        foreach (AudioClip clip in Resources.LoadAll<AudioClip>("Voices/" + folder))
-                        {
-                            if (!seen.Add(clip) || !Parse5(clip.name, out Emotion5 ce, out int cl)) continue;
-                            if (!found.TryGetValue((ce, cl), out var list)) found[(ce, cl)] = list = new List<AudioClip>();
-                            list.Add(clip);
-                        }
-                    foreach (var kv in found) row[kv.Key] = kv.Value.ToArray();
-                }
-            }
-            return row.TryGetValue((e, level), out AudioClip[] clips) ? clips : Array.Empty<AudioClip>();
         }
 
         /// <summary>"hurt-3" is Hurt at level 3; "Celebrate-5_02" too, another take. Levels outside 1..5 are not read.</summary>
@@ -237,7 +231,7 @@ namespace PoBox.Audio
             var found = new Dictionary<(string, Emotion), List<AudioClip>>();
             foreach (AudioClip clip in Resources.LoadAll<AudioClip>("Voices"))
             {
-                if (Parse5(clip.name, out _, out _)) continue;   // a 5x5 cell (Voices/<Boxer>/<emotion>-<level>), read by Recorded5
+                if (Parse5(clip.name, out _, out _)) continue;   // a 5x5 cell (Voices/<id>/<emotion>-<level>): voices.json lists those
                 if (!Parse(clip.name, out string boxer, out Emotion e)) { Debug.LogWarning($"[VoiceMatrix] {clip.name}: not A_Voice_<Boxer>_<Emotion>_<n>, passed over."); continue; }
                 var key = (boxer.ToUpperInvariant(), e);
                 if (!found.TryGetValue(key, out var list)) found[key] = list = new List<AudioClip>();
