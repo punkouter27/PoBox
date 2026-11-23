@@ -312,7 +312,7 @@ Last full run (2026-11-22): pytest 31 passed, EditMode 2/2, PlayMode 134/134, 0 
   `warning CS` from `Assets/` in the log.
 - **Tab overlay and demo mode** (`Assets/_Project/Core/Scripts/Runtime/UI/DiagOverlay.cs`, `DemoMode.cs`): Tab or the 34 px corner
   button on a touch screen shows FPS, each boxer's episode reward (and each penalty term), inference ms and the curriculum
-  stage of the running brain, and a **Benchmark training speed** button (`Mj/SimBenchmark.cs`: a copy of the running
+  stage of the running brain, and a **Benchmark sim speed** button (`Mj/SimBenchmark.cs`: a copy of the running
   fight's MuJoCo world stepped flat out for 3 s on this device; physics steps/s and samples/s. Real training is MuJoCo
   Warp + PPO on a GPU and does not run in the game); after 30 s without input the HUD steps aside and random bouts run with the showcase
   shots cycling. Tunables: `Assets/_Project/Data/Resources/ShowcaseSettings.asset` (idle seconds, shots, dwell, result hold; off in
