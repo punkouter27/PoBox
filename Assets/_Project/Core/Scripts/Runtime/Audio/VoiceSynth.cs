@@ -10,9 +10,10 @@ namespace PoBox.Audio
     /// emotion is a shape: a grunt is short and falls, pain jumps up and falls, a groan is long and low, a dazed moan
     /// wobbles, a taunt is two or three short laughs, triumph rises and holds, defeat sighs down into breath; the
     /// exhale and the panting are breath only. Several takes of each, from different seeds, so no two are alike.
-    /// 16 kHz mono, made once a boxer and emotion, the first time it is heard.
+    /// 16 kHz mono, made once a boxer and emotion, the first time it is heard. The 5x5 layer's richer engine
+    /// (syllables, consonants, per-emotion prosody) is in VoiceSynth.Emotion5.cs.
     /// </summary>
-    public static class VoiceSynth
+    public static partial class VoiceSynth
     {
         public const int Rate = 16000;
 
@@ -35,42 +36,11 @@ namespace PoBox.Audio
             return clips;
         }
 
-        /// <summary>
-        /// Takes of one emotion said at an intensity (0 barely, 1 all out) and length (1 the emotion's own), for the
-        /// 5x5 layer (<see cref="VoiceMatrix.Map"/>): the harder, the higher, rougher, louder and less breathy.
-        /// </summary>
-        public static AudioClip[] Make(VoiceProfile v, Emotion e, string name, int takes, float intensity, float length)
-        {
-            intensity = Mathf.Clamp01(intensity);
-            VoiceProfile s = Shade(v, intensity);
-            float peak = Mathf.Lerp(0.45f, 0.85f, intensity);
-            var clips = new AudioClip[takes];
-            for (int t = 0; t < takes; t++)
-            {
-                var rng = new System.Random((name ?? "").GetHashCode() * 31 + (int)e * 7919 + t * 104729 + Mathf.RoundToInt(intensity * 1000f) * 613 + Mathf.RoundToInt(length * 100f));
-                float[] data = Render(s, e, rng, length, peak);
-                AudioClip clip = AudioClip.Create($"Voice {name} {e} {intensity:0.00} {t + 1}", data.Length, 1, Rate, false);
-                clip.SetData(data, 0);
-                clips[t] = clip;
-            }
-            return clips;
-        }
-
-        /// <summary>A voice pushed to an intensity: pitch up to +15%, more rasp, less breath (a soft one the reverse).</summary>
-        public static VoiceProfile Shade(VoiceProfile v, float intensity)
-        {
-            intensity = Mathf.Clamp01(intensity);
-            v.f0 *= Mathf.Lerp(0.92f, 1.15f, intensity);
-            v.rasp = Mathf.Clamp01(v.rasp + Mathf.Lerp(-0.05f, 0.3f, intensity));
-            v.breath = Mathf.Clamp01(v.breath + Mathf.Lerp(0.15f, -0.05f, intensity));
-            return v;
-        }
-
-        /// <summary>One take, normalised to a peak of <paramref name="peak"/> (0.8), <paramref name="length"/> times its emotion's length.</summary>
-        public static float[] Render(VoiceProfile v, Emotion e, System.Random rng, float length = 1f, float peak = 0.8f)
+        /// <summary>One take, normalised to a peak of 0.8.</summary>
+        public static float[] Render(VoiceProfile v, Emotion e, System.Random rng)
         {
             float R() => (float)rng.NextDouble();
-            float vary = (0.9f + 0.2f * R()) * Mathf.Clamp(length, 0.3f, 2f);   // this take's length
+            float vary = 0.9f + 0.2f * R();                     // this take's length
             float lift = 0.94f + 0.12f * R();                   // and pitch
             var parts = new List<float[]>();
             switch (e)
@@ -117,9 +87,9 @@ namespace PoBox.Audio
             var data = new float[n];
             int at = 0;
             foreach (float[] p in parts) { System.Array.Copy(p, 0, data, at, p.Length); at += p.Length; }
-            float top = 1e-4f;
-            for (int i = 0; i < n; i++) top = Mathf.Max(top, Mathf.Abs(data[i]));
-            float g = peak / top;
+            float peak = 1e-4f;
+            for (int i = 0; i < n; i++) peak = Mathf.Max(peak, Mathf.Abs(data[i]));
+            float g = 0.8f / peak;
             for (int i = 0; i < n; i++) data[i] *= g;
             return data;
         }
