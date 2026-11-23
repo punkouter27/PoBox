@@ -257,6 +257,534 @@
     "at power limit"
    ],
    "workload_changes": []
+  },
+  {
+   "when": "2026-11-22T22:18:59-05:00",
+   "ok": true,
+   "error": null,
+   "machine": {
+    "hostname": "legion",
+    "cpu": "Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz (12 threads)",
+    "gpu": "NVIDIA GeForce RTX 2060",
+    "vram_gb": 6.0,
+    "ram_gb": 15.9,
+    "gpu_driver": "621.24",
+    "os": "Windows 11 (10.0.26300)"
+   },
+   "load_before": {
+    "cpu_pct": 4,
+    "cpu_max_core_pct": 14,
+    "trainer_cpu_cores": 0.0,
+    "trainer_thread_pct": 0,
+    "ram_used_gb": 10.7,
+    "gpu_pct": 0.0,
+    "gpu_mem_pct": 0.0,
+    "vram_used_gb": 1.4,
+    "gpu_temp_c": 41.8,
+    "sm_clock_mhz": 450.0,
+    "sm_clock_max_mhz": 2100.0,
+    "power_w": 13.67,
+    "power_limit_w": 80.0,
+    "pstate": "P5",
+    "clock_reasons": [],
+    "display_active": false,
+    "pcie": "gen 3 x16",
+    "on_battery": false,
+    "gpu_processes": [
+     "EOSOverlayRenderer-Win64-Shipping.exe",
+     "EpicGamesLauncher.exe"
+    ]
+   },
+   "load_during": {
+    "cpu_pct": 18.8,
+    "cpu_max_core_pct": 77.4,
+    "trainer_cpu_cores": 1.0,
+    "trainer_thread_pct": 97.1,
+    "ram_used_gb": 11.3,
+    "gpu_pct": 69.5,
+    "gpu_mem_pct": 28.6,
+    "vram_used_gb": 2.0,
+    "gpu_temp_c": 59.7,
+    "sm_clock_mhz": 1886.2,
+    "sm_clock_max_mhz": 2100.0,
+    "clock_pct_of_max": 90,
+    "power_w": 73.9,
+    "power_limit_w": 80.0,
+    "pstate": "P0",
+    "clock_reasons": {
+     "power cap": 1.0
+    },
+    "display_active": false,
+    "pcie": "gen 3 x16",
+    "on_battery": false,
+    "samples": 12
+   },
+   "busy": false,
+   "workload_id": "2965df",
+   "workload": {
+    "repo": "PoBox",
+    "trainer": "PoBox ppo.py + mujoco_warp 3.15.0",
+    "script": "training/train_gauntlet.py",
+    "args": "--run-name _benchmark --name matt --resume checkpoints/_benchmark_warm/match_matt.pt --against sokol=checkpoints/_benchmark_warm/match_sokol.pt kim=checkpoints/_benchmark_warm/match_kim.pt zombie=checkpoints/_benchmark_warm/match_zombie.pt nick=checkpoints/_benchmark_warm/match_nick.pt trump=checkpoints/_benchmark_warm/match_trump.pt grandpa=checkpoints/_benchmark_warm/match_grandpa.pt grandma=checkpoints/_benchmark_warm/match_grandma.pt --stage match --models models/v3 --daze --obs-state --hit-push 0.6 --stagger-v 5 --hurt-full 400 --body-drain 0.0025 --hit-w 1.5 --taken-w 1.0 --block-w 0.5 --fall-penalty 12 --selfcontact-w 0.02 --repeat-decay 0.7 --combo-w 0.1 --hurt-start 0.2 --clinch-w 0.1 --fatigue-ceiling --sep-max 3.5 --num-envs 4608 --more-iters 600 --max-hours 0.75 --max-std 0.35 --done-when hits_per_s>=1.2,falls<=0.03,repeat_share<=0.6 --done-window 40 --save-every 100000 --no-onnx",
+    "num_envs": 4592,
+    "horizon": 24,
+    "net": [
+     512,
+     256,
+     128
+    ],
+    "config_hash": "3be902",
+    "note": "warm starts from the shipped Assets/_Project/RL_Models/*/match.onnx; no hand-over bank (not in a fresh clone)"
+   },
+   "result": {
+    "step_time_ms": 295.924,
+    "sim_ms": 274.788,
+    "learn_ms": 21.136,
+    "env_steps_per_s": 15517,
+    "steps_measured": 48,
+    "measured_s": 14.2,
+    "startup_s": 40.5
+   },
+   "git_commit": "a0eb9f3",
+   "versions": {
+    "python": "3.12.15",
+    "torch": "2.14.1+cu130",
+    "mujoco": "3.15.0",
+    "mujoco_warp": "3.15.0",
+    "warp": "1.19.0"
+   },
+   "context": {
+    "power_plan": "Balanced",
+    "power_mode": null,
+    "gpu_scheduling": null
+   },
+   "verdict": [
+    "CPU-bound",
+    "at power limit"
+   ],
+   "workload_changes": []
+  },
+  {
+   "when": "2026-11-22T22:32:47-05:00",
+   "ok": true,
+   "error": null,
+   "machine": {
+    "hostname": "legion",
+    "cpu": "Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz (12 threads)",
+    "gpu": "NVIDIA GeForce RTX 2060",
+    "vram_gb": 6.0,
+    "ram_gb": 15.9,
+    "gpu_driver": "621.24",
+    "os": "Windows 11 (10.0.26300)"
+   },
+   "load_before": {
+    "cpu_pct": 4,
+    "cpu_max_core_pct": 12,
+    "trainer_cpu_cores": 0.16,
+    "trainer_thread_pct": 0,
+    "ram_used_gb": 10.8,
+    "gpu_pct": 14.0,
+    "gpu_mem_pct": 3.0,
+    "vram_used_gb": 1.4,
+    "gpu_temp_c": 54.5,
+    "sm_clock_mhz": 585.0,
+    "sm_clock_max_mhz": 2100.0,
+    "power_w": 11.2,
+    "power_limit_w": 85.0,
+    "pstate": "P5",
+    "clock_reasons": [],
+    "display_active": false,
+    "pcie": "gen 3 x16",
+    "on_battery": false,
+    "gpu_processes": [
+     "EOSOverlayRenderer-Win64-Shipping.exe",
+     "EpicGamesLauncher.exe"
+    ]
+   },
+   "load_during": {
+    "cpu_pct": 18.7,
+    "cpu_max_core_pct": 70.7,
+    "trainer_cpu_cores": 1.0,
+    "trainer_thread_pct": 98.0,
+    "ram_used_gb": 11.3,
+    "gpu_pct": 68.4,
+    "gpu_mem_pct": 27.8,
+    "vram_used_gb": 2.0,
+    "gpu_temp_c": 68.8,
+    "sm_clock_mhz": 1821.9,
+    "sm_clock_max_mhz": 2100.0,
+    "clock_pct_of_max": 87,
+    "power_w": 78.6,
+    "power_limit_w": 85.0,
+    "pstate": "P0",
+    "clock_reasons": {
+     "power cap": 1.0
+    },
+    "display_active": false,
+    "pcie": "gen 3 x16",
+    "on_battery": false,
+    "samples": 13
+   },
+   "busy": false,
+   "workload_id": "2965df",
+   "workload": {
+    "repo": "PoBox",
+    "trainer": "PoBox ppo.py + mujoco_warp 3.15.0",
+    "script": "training/train_gauntlet.py",
+    "args": "--run-name _benchmark --name matt --resume checkpoints/_benchmark_warm/match_matt.pt --against sokol=checkpoints/_benchmark_warm/match_sokol.pt kim=checkpoints/_benchmark_warm/match_kim.pt zombie=checkpoints/_benchmark_warm/match_zombie.pt nick=checkpoints/_benchmark_warm/match_nick.pt trump=checkpoints/_benchmark_warm/match_trump.pt grandpa=checkpoints/_benchmark_warm/match_grandpa.pt grandma=checkpoints/_benchmark_warm/match_grandma.pt --stage match --models models/v3 --daze --obs-state --hit-push 0.6 --stagger-v 5 --hurt-full 400 --body-drain 0.0025 --hit-w 1.5 --taken-w 1.0 --block-w 0.5 --fall-penalty 12 --selfcontact-w 0.02 --repeat-decay 0.7 --combo-w 0.1 --hurt-start 0.2 --clinch-w 0.1 --fatigue-ceiling --sep-max 3.5 --num-envs 4608 --more-iters 600 --max-hours 0.75 --max-std 0.35 --done-when hits_per_s>=1.2,falls<=0.03,repeat_share<=0.6 --done-window 40 --save-every 100000 --no-onnx",
+    "num_envs": 4592,
+    "horizon": 24,
+    "net": [
+     512,
+     256,
+     128
+    ],
+    "config_hash": "3be902",
+    "note": "warm starts from the shipped Assets/_Project/RL_Models/*/match.onnx; no hand-over bank (not in a fresh clone)"
+   },
+   "result": {
+    "step_time_ms": 300.909,
+    "sim_ms": 279.85,
+    "learn_ms": 21.06,
+    "env_steps_per_s": 15260,
+    "steps_measured": 48,
+    "measured_s": 14.44,
+    "startup_s": 27.7
+   },
+   "git_commit": "a0eb9f3",
+   "versions": {
+    "python": "3.12.15",
+    "torch": "2.14.1+cu130",
+    "mujoco": "3.15.0",
+    "mujoco_warp": "3.15.0",
+    "warp": "1.19.0"
+   },
+   "context": {
+    "power_plan": "Balanced",
+    "power_mode": "best performance",
+    "gpu_scheduling": null
+   },
+   "verdict": [
+    "CPU-bound",
+    "at power limit"
+   ],
+   "workload_changes": []
+  },
+  {
+   "when": "2026-11-22T22:33:34-05:00",
+   "ok": true,
+   "error": null,
+   "machine": {
+    "hostname": "legion",
+    "cpu": "Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz (12 threads)",
+    "gpu": "NVIDIA GeForce RTX 2060",
+    "vram_gb": 6.0,
+    "ram_gb": 15.9,
+    "gpu_driver": "621.24",
+    "os": "Windows 11 (10.0.26300)"
+   },
+   "load_before": {
+    "cpu_pct": 7,
+    "cpu_max_core_pct": 22,
+    "trainer_cpu_cores": 0.23,
+    "trainer_thread_pct": 0,
+    "ram_used_gb": 10.8,
+    "gpu_pct": 8.0,
+    "gpu_mem_pct": 2.0,
+    "vram_used_gb": 1.4,
+    "gpu_temp_c": 60.1,
+    "sm_clock_mhz": 510.0,
+    "sm_clock_max_mhz": 2100.0,
+    "power_w": 11.73,
+    "power_limit_w": 85.0,
+    "pstate": "P5",
+    "clock_reasons": [],
+    "display_active": false,
+    "pcie": "gen 3 x16",
+    "on_battery": false,
+    "gpu_processes": [
+     "EOSOverlayRenderer-Win64-Shipping.exe",
+     "EpicGamesLauncher.exe"
+    ]
+   },
+   "load_during": {
+    "cpu_pct": 18.5,
+    "cpu_max_core_pct": 76.3,
+    "trainer_cpu_cores": 1.0,
+    "trainer_thread_pct": 98.3,
+    "ram_used_gb": 11.3,
+    "gpu_pct": 69.5,
+    "gpu_mem_pct": 27.2,
+    "vram_used_gb": 2.0,
+    "gpu_temp_c": 71.3,
+    "sm_clock_mhz": 1826.2,
+    "sm_clock_max_mhz": 2100.0,
+    "clock_pct_of_max": 87,
+    "power_w": 78.5,
+    "power_limit_w": 85.0,
+    "pstate": "P0",
+    "clock_reasons": {
+     "power cap": 1.0
+    },
+    "display_active": false,
+    "pcie": "gen 3 x16",
+    "on_battery": false,
+    "samples": 12
+   },
+   "busy": false,
+   "workload_id": "2965df",
+   "workload": {
+    "repo": "PoBox",
+    "trainer": "PoBox ppo.py + mujoco_warp 3.15.0",
+    "script": "training/train_gauntlet.py",
+    "args": "--run-name _benchmark --name matt --resume checkpoints/_benchmark_warm/match_matt.pt --against sokol=checkpoints/_benchmark_warm/match_sokol.pt kim=checkpoints/_benchmark_warm/match_kim.pt zombie=checkpoints/_benchmark_warm/match_zombie.pt nick=checkpoints/_benchmark_warm/match_nick.pt trump=checkpoints/_benchmark_warm/match_trump.pt grandpa=checkpoints/_benchmark_warm/match_grandpa.pt grandma=checkpoints/_benchmark_warm/match_grandma.pt --stage match --models models/v3 --daze --obs-state --hit-push 0.6 --stagger-v 5 --hurt-full 400 --body-drain 0.0025 --hit-w 1.5 --taken-w 1.0 --block-w 0.5 --fall-penalty 12 --selfcontact-w 0.02 --repeat-decay 0.7 --combo-w 0.1 --hurt-start 0.2 --clinch-w 0.1 --fatigue-ceiling --sep-max 3.5 --num-envs 4608 --more-iters 600 --max-hours 0.75 --max-std 0.35 --done-when hits_per_s>=1.2,falls<=0.03,repeat_share<=0.6 --done-window 40 --save-every 100000 --no-onnx",
+    "num_envs": 4592,
+    "horizon": 24,
+    "net": [
+     512,
+     256,
+     128
+    ],
+    "config_hash": "3be902",
+    "note": "warm starts from the shipped Assets/_Project/RL_Models/*/match.onnx; no hand-over bank (not in a fresh clone)"
+   },
+   "result": {
+    "step_time_ms": 296.26,
+    "sim_ms": 275.081,
+    "learn_ms": 21.179,
+    "env_steps_per_s": 15500,
+    "steps_measured": 48,
+    "measured_s": 14.22,
+    "startup_s": 26.3
+   },
+   "git_commit": "a0eb9f3",
+   "versions": {
+    "python": "3.12.15",
+    "torch": "2.14.1+cu130",
+    "mujoco": "3.15.0",
+    "mujoco_warp": "3.15.0",
+    "warp": "1.19.0"
+   },
+   "context": {
+    "power_plan": "Balanced",
+    "power_mode": "best performance",
+    "gpu_scheduling": null
+   },
+   "verdict": [
+    "CPU-bound",
+    "at power limit"
+   ],
+   "workload_changes": []
+  },
+  {
+   "when": "2026-11-22T22:44:18-05:00",
+   "ok": true,
+   "error": null,
+   "machine": {
+    "hostname": "legion",
+    "cpu": "Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz (12 threads)",
+    "gpu": "NVIDIA GeForce RTX 2060",
+    "vram_gb": 6.0,
+    "ram_gb": 15.9,
+    "gpu_driver": "621.24",
+    "os": "Windows 11 (10.0.26300)"
+   },
+   "load_before": {
+    "cpu_pct": 6,
+    "cpu_max_core_pct": 15,
+    "trainer_cpu_cores": 0.23,
+    "trainer_thread_pct": 0,
+    "ram_used_gb": 9.2,
+    "gpu_pct": 15.0,
+    "gpu_mem_pct": 3.0,
+    "vram_used_gb": 1.4,
+    "gpu_temp_c": 55.4,
+    "sm_clock_mhz": 555.0,
+    "sm_clock_max_mhz": 2100.0,
+    "power_w": 11.15,
+    "power_limit_w": 85.0,
+    "pstate": "P5",
+    "clock_reasons": [],
+    "display_active": false,
+    "pcie": "gen 3 x16",
+    "on_battery": false,
+    "gpu_processes": [
+     "EOSOverlayRenderer-Win64-Shipping.exe",
+     "EpicGamesLauncher.exe"
+    ]
+   },
+   "load_during": {
+    "cpu_pct": 9.1,
+    "cpu_max_core_pct": 27.1,
+    "trainer_cpu_cores": 0.2,
+    "trainer_thread_pct": 16.9,
+    "ram_used_gb": 10.0,
+    "gpu_pct": 97.1,
+    "gpu_mem_pct": 38.7,
+    "vram_used_gb": 2.3,
+    "gpu_temp_c": 68.5,
+    "sm_clock_mhz": 1736.7,
+    "sm_clock_max_mhz": 2100.0,
+    "clock_pct_of_max": 83,
+    "power_w": 83.9,
+    "power_limit_w": 85.0,
+    "pstate": "P0",
+    "clock_reasons": {
+     "power cap": 1.0
+    },
+    "display_active": false,
+    "pcie": "gen 3 x16",
+    "on_battery": false,
+    "samples": 9
+   },
+   "busy": false,
+   "workload_id": "2965df",
+   "workload": {
+    "repo": "PoBox",
+    "trainer": "PoBox ppo.py + mujoco_warp 3.15.0",
+    "script": "training/train_gauntlet.py",
+    "args": "--run-name _benchmark --name matt --resume checkpoints/_benchmark_warm/match_matt.pt --against sokol=checkpoints/_benchmark_warm/match_sokol.pt kim=checkpoints/_benchmark_warm/match_kim.pt zombie=checkpoints/_benchmark_warm/match_zombie.pt nick=checkpoints/_benchmark_warm/match_nick.pt trump=checkpoints/_benchmark_warm/match_trump.pt grandpa=checkpoints/_benchmark_warm/match_grandpa.pt grandma=checkpoints/_benchmark_warm/match_grandma.pt --stage match --models models/v3 --daze --obs-state --hit-push 0.6 --stagger-v 5 --hurt-full 400 --body-drain 0.0025 --hit-w 1.5 --taken-w 1.0 --block-w 0.5 --fall-penalty 12 --selfcontact-w 0.02 --repeat-decay 0.7 --combo-w 0.1 --hurt-start 0.2 --clinch-w 0.1 --fatigue-ceiling --sep-max 3.5 --num-envs 4608 --more-iters 600 --max-hours 0.75 --max-std 0.35 --done-when hits_per_s>=1.2,falls<=0.03,repeat_share<=0.6 --done-window 40 --save-every 100000 --no-onnx",
+    "num_envs": 4592,
+    "horizon": 24,
+    "net": [
+     512,
+     256,
+     128
+    ],
+    "config_hash": "3be902",
+    "note": "warm starts from the shipped Assets/_Project/RL_Models/*/match.onnx; no hand-over bank (not in a fresh clone)"
+   },
+   "result": {
+    "step_time_ms": 216.338,
+    "sim_ms": 194.968,
+    "learn_ms": 21.371,
+    "env_steps_per_s": 21226,
+    "steps_measured": 48,
+    "measured_s": 10.38,
+    "startup_s": 23.2
+   },
+   "git_commit": "a0eb9f3",
+   "versions": {
+    "python": "3.12.15",
+    "torch": "2.14.1+cu130",
+    "mujoco": "3.15.0",
+    "mujoco_warp": "3.15.0",
+    "warp": "1.19.0"
+   },
+   "context": {
+    "power_plan": "Balanced",
+    "power_mode": "best performance",
+    "gpu_scheduling": null
+   },
+   "verdict": [
+    "at power limit"
+   ],
+   "workload_changes": []
+  },
+  {
+   "when": "2026-11-22T23:03:47-05:00",
+   "ok": true,
+   "error": null,
+   "machine": {
+    "hostname": "legion",
+    "cpu": "Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz (12 threads)",
+    "gpu": "NVIDIA GeForce RTX 2060",
+    "vram_gb": 6.0,
+    "ram_gb": 15.9,
+    "gpu_driver": "621.24",
+    "os": "Windows 11 (10.0.26300)"
+   },
+   "load_before": {
+    "cpu_pct": 6,
+    "cpu_max_core_pct": 8,
+    "trainer_cpu_cores": 0.31,
+    "trainer_thread_pct": 0,
+    "ram_used_gb": 9.1,
+    "gpu_pct": 0.0,
+    "gpu_mem_pct": 0.0,
+    "vram_used_gb": 1.4,
+    "gpu_temp_c": 43.0,
+    "sm_clock_mhz": 600.0,
+    "sm_clock_max_mhz": 2100.0,
+    "power_w": 14.11,
+    "power_limit_w": 85.0,
+    "pstate": "P5",
+    "clock_reasons": [],
+    "display_active": false,
+    "pcie": "gen 3 x16",
+    "on_battery": false,
+    "gpu_processes": [
+     "EOSOverlayRenderer-Win64-Shipping.exe",
+     "EpicGamesLauncher.exe"
+    ]
+   },
+   "load_during": {
+    "cpu_pct": 8.7,
+    "cpu_max_core_pct": 23.7,
+    "trainer_cpu_cores": 0.2,
+    "trainer_thread_pct": 19.9,
+    "ram_used_gb": 9.8,
+    "gpu_pct": 97.3,
+    "gpu_mem_pct": 38.6,
+    "vram_used_gb": 2.3,
+    "gpu_temp_c": 57.5,
+    "sm_clock_mhz": 1813.3,
+    "sm_clock_max_mhz": 2100.0,
+    "clock_pct_of_max": 86,
+    "power_w": 83.7,
+    "power_limit_w": 85.0,
+    "pstate": "P0",
+    "clock_reasons": {
+     "power cap": 1.0
+    },
+    "display_active": false,
+    "pcie": "gen 3 x16",
+    "on_battery": false,
+    "samples": 9
+   },
+   "busy": false,
+   "workload_id": "2965df",
+   "workload": {
+    "repo": "PoBox",
+    "trainer": "PoBox ppo.py + mujoco_warp 3.15.0",
+    "script": "training/train_gauntlet.py",
+    "args": "--run-name _benchmark --name matt --resume checkpoints/_benchmark_warm/match_matt.pt --against sokol=checkpoints/_benchmark_warm/match_sokol.pt kim=checkpoints/_benchmark_warm/match_kim.pt zombie=checkpoints/_benchmark_warm/match_zombie.pt nick=checkpoints/_benchmark_warm/match_nick.pt trump=checkpoints/_benchmark_warm/match_trump.pt grandpa=checkpoints/_benchmark_warm/match_grandpa.pt grandma=checkpoints/_benchmark_warm/match_grandma.pt --stage match --models models/v3 --daze --obs-state --hit-push 0.6 --stagger-v 5 --hurt-full 400 --body-drain 0.0025 --hit-w 1.5 --taken-w 1.0 --block-w 0.5 --fall-penalty 12 --selfcontact-w 0.02 --repeat-decay 0.7 --combo-w 0.1 --hurt-start 0.2 --clinch-w 0.1 --fatigue-ceiling --sep-max 3.5 --num-envs 4608 --more-iters 600 --max-hours 0.75 --max-std 0.35 --done-when hits_per_s>=1.2,falls<=0.03,repeat_share<=0.6 --done-window 40 --save-every 100000 --no-onnx",
+    "num_envs": 4592,
+    "horizon": 24,
+    "net": [
+     512,
+     256,
+     128
+    ],
+    "config_hash": "3be902",
+    "note": "warm starts from the shipped Assets/_Project/RL_Models/*/match.onnx; no hand-over bank (not in a fresh clone)"
+   },
+   "result": {
+    "step_time_ms": 211.405,
+    "sim_ms": 191.181,
+    "learn_ms": 20.224,
+    "env_steps_per_s": 21721,
+    "steps_measured": 48,
+    "measured_s": 10.15,
+    "startup_s": 22.5
+   },
+   "git_commit": "a0eb9f3",
+   "versions": {
+    "python": "3.12.15",
+    "torch": "2.14.1+cu130",
+    "mujoco": "3.15.0",
+    "mujoco_warp": "3.15.0",
+    "warp": "1.19.0"
+   },
+   "context": {
+    "power_plan": "Balanced",
+    "power_mode": "best performance",
+    "gpu_scheduling": null
+   },
+   "verdict": [
+    "at power limit"
+   ],
+   "workload_changes": []
   }
  ]
 }

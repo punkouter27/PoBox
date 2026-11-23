@@ -53,7 +53,7 @@ class _Retrofit:
     def step(self, action: torch.Tensor):
         if self.C:
             self.qpos[:, self.cube_qi] = self.cube_park[None].expand(self.N, -1, -1)
-            self.qvel[:, self.cube_vi] = 0.0
+            self.qvel.index_fill_(1, self.cube_vi.flatten(), 0.0)  # a scalar put through an index tensor syncs
         return super().step(action)
 
 
@@ -93,7 +93,7 @@ class MatchEnv(_Retrofit, BoxingEnv):
     def _observe(self, g) -> torch.Tensor:
         """A boxer with obs_state (envs/boxing.py) reads its reserve, its daze and the opponent's in the command's place."""
         obs = super()._observe(g)
-        if self.obs_state.any():
+        if self.obs_state_any:
             share = self.daze / self.legs_at.clamp_min(1.0)
             state = torch.stack([self.reserve, share, share.flip(1)], -1) * self.obs_state.view(1, self.K, 1)
             obs[:, self.base_obs_dim :] = state.reshape(-1, CMD)

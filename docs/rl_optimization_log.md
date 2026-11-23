@@ -527,3 +527,16 @@ Exam (exam_v2, 60 trials, 12 rounds), round 1 -> round 2:
 - Promoted (uncommitted): `PromoteBoxing` timmy v3m2/v3u2, soldat v3m2/v3u2 (get-up ONNX via `tools/export_getup_v2.py`), and Soldat's own
   footwork `Promote("soldat","v3f_soldat")` (stand 100%, walk pass, turn 83% vs mark 90%) replacing Matt's.
 - Timmy and Soldat were missing from `Testbed.unity`'s roster ("the model has no a_root" in MjGateTests); added. MjGateTests 30/30.
+
+### 2026-11-22 — trainer speed: each env step as one CUDA graph (owner: "do 1 2 3 4")
+The benchmark (`benchmark.ps1 -Run`, RTX 2060 laptop) said "CPU-bound": GPU 69% busy, the trainer's one Python thread at 98%
+of a core. The profile: ~8,700 kernel launches per rollout step (~1,250 per opponent env: the reward, reset and observation
+in torch), ~18 us of CPU each. The warp physics was already a graph; the torch around it was not.
+- Removed the step's GPU->CPU syncs (`Normal(validate_args=False)`, `obs_state_any`, `blend_n`, `b_torso_i`, `index_fill_`),
+  which a graph cannot hold. Alone they changed nothing (296 -> 296 ms).
+- `envs/step_graph.py` (`StepGraph`) captures a whole `env.step` (warp physics + torch) as one CUDA graph, pinning the
+  attributes the step rebinds; `train_gauntlet.py` uses it unless `--no-step-graph`. From the same state a replay matches the
+  eager step to float noise (`tests/test_step_graph.py`); the MuJoCo Warp solver itself is not bit-deterministic run to run.
+- **Benchmark 296 -> 216 ms/step, 15.5k -> 21.2k env steps/s (1.37x).** GPU 97% busy, Python thread 17%, verdict now "at power
+  limit" only. Legion Performance mode, Windows "Best performance" and the 85 W GPU limit alone: no change (CPU-bound then).
+- Other trainers (`train_box.py`, `train_getup.py`, ...) still step eagerly; the same wrapper should fit them.

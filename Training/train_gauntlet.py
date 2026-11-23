@@ -39,6 +39,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 from envs.boxing import BoxingEnv  # noqa: E402
 from envs.match import MatchEnv  # noqa: E402
+from envs.step_graph import StepGraph  # noqa: E402
 from ppo import PPO, PPOConfig, export_onnx, obs_dim_of  # noqa: E402
 
 
@@ -76,6 +77,11 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--save-every", type=int, default=50)
     ap.add_argument("--device", default="cuda")
+    ap.add_argument(
+        "--no-step-graph",
+        action="store_true",
+        help="step the envs eagerly instead of as one CUDA graph each (envs/step_graph.py)",
+    )
     ap.add_argument("--lr", type=float, default=3e-4)
     ap.add_argument(
         "--foe-state",
@@ -593,6 +599,10 @@ def main() -> None:
         return t.reshape(env.N, 2, *t.shape[1:])[:, k]
 
     obs = [e.reset() for e in envs]
+    # Each env's whole step as one CUDA graph: eagerly the trainer's Python thread, launching ~1,250 kernels per env
+    # step, is what the GPU waits on. Its outputs are overwritten by the env's next step; obs[i] is read before that.
+    use_graph = not args.no_step_graph and dev.startswith("cuda")
+    steppers = [StepGraph(e) if use_graph else e.step for e in envs]
     per = (
         "hits_per_s",
         "hit_speed",
@@ -633,7 +643,7 @@ def main() -> None:
                     pair = [None, None]
                     pair[k], pair[1 - k] = a_me[at : at + e.N], a_foe
                     at += e.N
-                    obs[i], rew, done, cut = e.step(torch.stack(pair, 1).reshape(e.N * 2, A))
+                    obs[i], rew, done, cut = steppers[i](torch.stack(pair, 1).reshape(e.N * 2, A))
                     rews.append(mine(e, k, rew))
                     dones.append(mine(e, k, done))
                     cuts.append(mine(e, k, cut))

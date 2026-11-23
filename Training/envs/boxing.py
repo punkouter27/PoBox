@@ -169,6 +169,8 @@ class BoxingEnv(BoxingOpsMixin):
         if device == "cpu":
             # The viewer's case: one world on the CPU, so that watching does not take the GPU from training.
             wp.set_device("cpu")
+        else:
+            wp.set_device(device)  # back from a CPU env made earlier in this process (the tests make both)
         self.device = device
         self.xml_path = os.path.abspath(xml_path)
         self.N = num_envs
@@ -567,11 +569,15 @@ class BoxingEnv(BoxingOpsMixin):
         self.obs_state = torch.tensor(
             [n in obs_state or bool(c.get("obs_state", False)) for n, c in zip(self.names, self.cfgs)], device=device
         )
+        # Host copies of fixed per-fighter values the step reads, so the step never reads the GPU back (a sync).
+        self.obs_state_any = bool(self.obs_state.any())
+        self.blend_n = torch.tensor(self.blend_k, device=device, dtype=torch.float32).view(1, -1)
         self.push_on = bool((self.hit_push > 0.0).any())
         if self.push_on:
             self.xfrc = wp.to_torch(self.dw.xfrc_applied)
             self.xipos = wp.to_torch(self.dw.xipos)
             self.b_torso = L(ids(B, "torso"))
+            self.b_torso_i = [int(i) for i in ids(B, "torso")]
         leg = [i for i, n in enumerate(order) if n.split("_")[0] in ("hip", "knee", "ankle")]
         self.leg_idx = L(leg)
         self.arm_idx = L([i for i, n in enumerate(order) if n.split("_")[0] in ("shoulder", "elbow")])
@@ -718,7 +724,7 @@ class BoxingEnv(BoxingOpsMixin):
         if self.push_on:
             # Last step's punches, on the trunks of those who took them, for this whole control step.
             for k in range(K):
-                self.xfrc[:, int(self.b_torso[k])] = self.push[:, k]
+                self.xfrc[:, self.b_torso_i[k]] = self.push[:, k]
         if self.push_vel > 0.0:
             # An occasional shove, about once every four seconds per fighter.
             for rv in self.root_v:

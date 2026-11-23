@@ -80,7 +80,9 @@ class ActorCritic(nn.Module):
     def dist(self, obs: torch.Tensor) -> torch.distributions.Normal:
         mean = self.actor(obs)
         std = self.log_std.clamp(-5.0, 1.0).exp().expand_as(mean)
-        return torch.distributions.Normal(mean, std)
+        # validate_args=False: the argument check reads the GPU back every call (a sync per rollout step); NaNs are
+        # caught by the trainers' own NaN abort instead.
+        return torch.distributions.Normal(mean, std, validate_args=False)
 
     @torch.no_grad()
     def act(self, obs: torch.Tensor):

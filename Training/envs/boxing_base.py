@@ -376,7 +376,7 @@ class BoxingOpsMixin:
         N, K, A = self.N, self.K, self.A
         want = (self.default_joint + action * self.scale_ka).clamp(self.joint_lo, self.joint_hi)
         if self.blend_on:
-            n = torch.tensor(self.blend_k, device=self.device, dtype=torch.float32).view(1, K)
+            n = self.blend_n
             w = torch.where(
                 n > 0, (1.0 - self.step_count.view(N, 1) / n.clamp_min(1.0)).clamp(0.0, 1.0), torch.zeros_like(n)
             )
