@@ -78813,6 +78813,7 @@ GameObject:
   - component: {fileID: 1684109387}
   - component: {fileID: 1684109386}
   - component: {fileID: 1684109390}
+  - component: {fileID: 1684109391}
   m_Layer: 0
   m_Name: Bout
   m_TagString: Untagged
@@ -101677,3 +101678,52 @@ SceneRoots:
   - {fileID: 839656469}
   - {fileID: 393531864}
   - {fileID: 510477424}
+--- !u!114 &1684109391
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1684109383}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e6077466fdd5964da1dfaa0145882b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoBox.Runtime::PoBox.Sim.IntroMoves
+  play: 1
+  byBoxer:
+  - boxer: matt
+    clip: shadowbox_a
+    speed: 0
+  - boxer: sokol
+    clip: shadowbox_b
+    speed: 0
+  - boxer: kim
+    clip: shadowbox_d
+    speed: 0
+  - boxer: nick
+    clip: shadowbox_e
+    speed: 0
+  - boxer: timmy
+    clip: shadowbox_e
+    speed: 1.15
+  - boxer: trump
+    clip: combos_a
+    speed: 0
+  - boxer: soldat
+    clip: combos_b
+    speed: 0
+  - boxer: zombie
+    clip: combos_b
+    speed: 0.7
+  - boxer: grandma
+    clip: shadowbox_c
+    speed: 0
+  - boxer: grandpa
+    clip: shadowbox_c
+    speed: 0
+  pool: []
+  blendIn: 0.6
+  speed: 1
+  celebrate: 1
+  celebrations: []

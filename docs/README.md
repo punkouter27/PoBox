@@ -33,6 +33,44 @@ and "Things that cost time, worth knowing". The plan as it stood, with every tic
 [archive/tasks_2026-10.md](archive/tasks_2026-10.md). The October training log is
 [archive/rl_optimization_log_2026-10.md](archive/rl_optimization_log_2026-10.md).
 
+## Walk-on moves: shadow boxing from motion capture, no training (2026-11-23)
+
+The boxers used to stand still in their corners for the 5 s walk-on. Now each plays 5 s of shadow boxing from
+the CMU motion-capture database. Nothing is trained: the walk-on has MuJoCo stopped, so `Sim/IntroMoves.cs`
+writes each frame's pose into qpos, runs the kinematics and lets the meshes follow, as the instant replay does.
+The clip is turned to the boxer's corner, scaled by its legs, held inside its joint limits, its lower sole kept
+on the floor (`MjBoxer.ShowPose`), and eased in from the guard over 0.6 s. When the walk-on ends the bout places
+the boxers in their guards on their marks as before.
+
+- **Clips:** `Training/tools/intro_clips.py` (CMU takes 14_01, 14_02, 14_03, 13_17, 15_13, 80_10, 143_23) writes
+  `Assets/_Project/Data/Resources/IntroClips.bytes` (7 clips, 196 kB). Each take's 5 s window that moves the
+  arms most while the pelvis stays within a step and turns under 50 degrees. Left out: 17_10 (walks off),
+  79_94 flexing (leans back past the hips' range), 141_16 wave (2.5 s).
+- **Fix found on the way:** `retarget_clips.retarget` unwraps the shoulder angle from the first frame, and a
+  boxing guard (upper arm straight ahead) makes it jump a whole turn; the clamp then bent the arm 20-36 degrees
+  wrong. `intro_clips.retarget_wrapped` wraps every frame into range and takes the shoulder's other solution
+  (x + pi, pi - z) when it fits better. `walk_turn.npz` (training) is untouched: its clips never go there.
+- **Signature moves** (owner: yes): every shipped boxer has its own clip (`IntroMoves.Signatures()`, the
+  component's starting `byBoxer`), played at the boxer's own `speed` from config.json (Grandma and Grandpa 0.75,
+  Kim 1.1), Zombie at 0.7 and Timmy at 1.15 on top. Two corners with the same move start half a clip apart.
+- **The winner's celebration** (owner: yes): from the result until the referee raises its hand (at most
+  `Referee.raiseAfter` = 6 s), the winner, already held standing where it won (`MjRing.HoldPose`, re-placed every
+  step while the loser is simulated), takes the arms and trunk of a `celebrate_*` clip over its gloves-up stance
+  each frame (`MjRing.ChangeHeldPose`, `MjBrain.Celebrating`). Clips: chicken dance (20_01), waving (13_26),
+  jumping-jack arms (14_06); 10 clips, 280 kB in all.
+- **Movens-5M** (owner: yes, looked at, nothing downloaded): the Hugging Face card
+  (`wendell0218/Movens-5M`) says only "License: other"; the human part is SMPL-X (whose body model has its
+  own non-commercial licence), the robot part is Unitree G1 joints; its labels are mostly dance styles, with no
+  boxing or celebration type seen. Needs the licence read and the owner's yes before any of it ships.
+- **Tunable** on the `IntroMoves` component (on the Bout's object in Arena): on/off, a clip and speed per boxer
+  (`byBoxer`), the pool, blend-in seconds, speed, celebrations on/off and which.
+- **Tests:** `tests/test_intro_clips.py` (physics tier: every clip on every shipped body, 11 passed),
+  EditMode `IntroClipsTests`, PlayMode `WalkOnMovesTests` (writes `Build/Shots/walkon_*.png` at 1600x900 and
+  450x800).
+- **Not yet done on this PC (no Unity licence in batchmode, no Unity Hub installed):** adding the component to
+  Arena (menu `PoBox/Scene/Add Walk-on Moves To Arena`, or `-executeMethod
+  PoBox.EditorTools.SceneExtras.AddIntroMoves`), and running the EditMode/PlayMode tests and screenshots.
+
 ## Back to the dressing room; round-2 brains for Timmy and Soldat (2026-11-17)
 
 - **The walk-off.** Eight seconds into the result (`MjBrain.leaveAfter`), after the referee has raised the winner's

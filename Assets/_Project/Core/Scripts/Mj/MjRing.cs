@@ -296,6 +296,20 @@ namespace PoBox.Mj
             MjScene.Instance.SyncUnityToMjState();
         }
 
+        /// <summary>
+        /// A boxer held in a pose (HoldPose) takes another where it stands, facing the same way: the winner's celebration,
+        /// a new pose each frame. Every step re-places it in the latest one, as it does with any held pose. Nothing
+        /// happens to a boxer not held in a pose.
+        /// </summary>
+        public void ChangeHeldPose(MjBoxer b, double[] joints)
+        {
+            if (!Ready) return;
+            int k = Slot(b);
+            if (!_held[k] || _pose[k] == null) return;
+            _pose[k] = joints;
+            Rehold(k);
+        }
+
         /// <summary>A held boxer back on its spot, in its pose or its guard.</summary>
         void Rehold(int k)
         {

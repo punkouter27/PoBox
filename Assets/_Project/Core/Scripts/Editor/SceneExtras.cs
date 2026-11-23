@@ -41,6 +41,23 @@ namespace PoBox.EditorTools
             return $"intent arrows: {made} added to {scenePath}";
         }
 
+        /// <summary>The walk-on moves (Sim/IntroMoves.cs), once, on the bout's own object. Batchmode:
+        /// <c>-executeMethod PoBox.EditorTools.SceneExtras.AddIntroMoves</c>.</summary>
+        [MenuItem("PoBox/Scene/Add Walk-on Moves To Arena")]
+        public static void AddIntroMoves() => Debug.Log(AddIntroMovesTo(Paths.ArenaScene));
+
+        public static string AddIntroMovesTo(string scenePath)
+        {
+            var scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+            if (Object.FindObjectsByType<IntroMoves>(FindObjectsInactive.Include).Length > 0) return "walk-on moves: already there";
+            Bout[] bouts = Object.FindObjectsByType<Bout>(FindObjectsInactive.Include);
+            if (bouts.Length == 0) return "walk-on moves: no Bout in the scene to put them on";
+            Undo.AddComponent<IntroMoves>(bouts[0].gameObject);
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+            return $"walk-on moves: added to {bouts[0].name} in {scenePath}";
+        }
+
         static LineRenderer Line(Transform parent, string name, LineRenderer like, float width, bool flat)
         {
             var go = new GameObject(name);

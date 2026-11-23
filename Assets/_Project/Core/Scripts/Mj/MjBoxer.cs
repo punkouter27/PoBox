@@ -397,6 +397,43 @@ namespace PoBox.Mj
             MujocoLib.mj_forward(_m, _d);
         }
 
+        /// <summary>Thigh plus shin, metres (the shin's and the foot's offsets): the unit a motion clip's root is in (Training/tools/retarget_clips.py).</summary>
+        public double LegLength
+        {
+            get
+            {
+                double leg = 0;
+                foreach (string part in new[] { "shin_l", "foot_l" })
+                {
+                    double* p = _m->body_pos + 3 * Id(MujocoLib.mjtObj.mjOBJ_BODY, part);
+                    leg += Math.Sqrt(p[0] * p[0] + p[1] * p[1] + p[2] * p[2]);
+                }
+                return leg;
+            }
+        }
+
+        /// <summary>
+        /// Shown in a pose, not simulated (the walk-on's moves, IntroMoves): the root and the joints as given, each joint
+        /// held inside its limits, nothing moving, and the body lowered or raised until the lower sole is on the floor, as
+        /// retarget_clips.place does. Only the kinematics run; the caller moves the scene's objects (SyncUnityToMjState).
+        /// The next placement (Fighter.Respawn) puts the boxer back in its guard.
+        /// </summary>
+        public void ShowPose(double[] rootPos, double[] rootQuat, double[] joints)
+        {
+            double* q = _d->qpos + _rootQ;
+            for (int k = 0; k < 3; k++) q[k] = rootPos[k];
+            for (int k = 0; k < 4; k++) q[3 + k] = rootQuat[k];
+            for (int k = 0; k < 6; k++) _d->qvel[_rootV + k] = 0;
+            for (int i = 0; i < Joints; i++)
+            {
+                _d->qpos[_jq[i]] = Math.Max(Config.lower[i], Math.Min(Config.upper[i], joints[i]));
+                _d->qvel[_jv[i]] = 0;
+            }
+            MujocoLib.mj_kinematics(_m, _d);
+            q[2] -= Math.Min(SoleBottom(0), SoleBottom(1));
+            MujocoLib.mj_kinematics(_m, _d);
+        }
+
         /// <summary>The lowest corner of a foot's sole, MuJoCo's z.</summary>
         double SoleBottom(int f)
         {

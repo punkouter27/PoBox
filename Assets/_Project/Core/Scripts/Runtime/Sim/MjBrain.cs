@@ -45,6 +45,10 @@ namespace PoBox.Sim
         /// The referee is at the winner's left and lifts its arm (Fx/Referee): from both gloves up to the left one held high
         /// beside his, the right one in the guard. Once a result.
         /// </summary>
+        /// <summary>The winner, gloves up and held where it won, before the referee raises its hand: the time for its
+        /// celebration (IntroMoves), which changes the held pose (MjRing.ChangeHeldPose). The referee's raise ends it.</summary>
+        public bool Celebrating => _raised && !_refRaised && fighter != null && !fighter.IsDown;
+
         public void HandRaisedByReferee()
         {
             if (!_raised || _refRaised || fighter.IsDown) return;
