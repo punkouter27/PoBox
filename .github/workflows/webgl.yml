@@ -2,7 +2,7 @@ name: Deploy WebGL
 
 # PoBox's one workflow.
 #
-# Every push, pull request, release and manual run: the Python checks (ruff check, ruff format --check, pytest
+# Every push, pull request, release and manual run: the Python checks (ruff check, pytest
 # fast + physics tiers). The trainer's own tier (-m train: torch + MuJoCo Warp) and the Unity tests run locally
 # (AGENTS.md section 3): CI has no Unity licence and no GPU.
 #
@@ -47,8 +47,6 @@ jobs:
           python-version: "3.11"
       - name: Install (dev + physics groups)
         run: uv sync --group physics
-      - name: Format check
-        run: uv run ruff format --check .
       - name: Lint
         run: uv run ruff check .
       - name: Tests (fast + physics tiers)

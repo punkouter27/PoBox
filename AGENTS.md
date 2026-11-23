@@ -81,7 +81,7 @@ penalty does not retrain shipped policies — note this in docs when shipped mod
 - Unity: the WebGL player is built locally with the EXACT pinned editor (Unity cannot be licensed in CI) by
   `scripts/publish_webgl.ps1`, which runs EditMode tests first, then builds, zips and publishes a `webgl-*` release.
   The one workflow: on release → deploy to the game's Static Web App → check the live page AND /diag; on push →
-  Python checks (`ruff check`, `ruff format --check`, `pytest`) only.
+  Python checks (`ruff check`, `pytest`) only.
 - Unreal: the one workflow builds and deploys the repo's web front (viewer / showcase + /diag) to its Static Web App,
   after Python checks. The Unreal project must compile from a fresh clone (all plugins vendored in `Plugins/`).
 
@@ -100,6 +100,7 @@ every publish. Tests never write into tracked files.
 | Tab corner button is 34 px, not 44 px | fits above the menu cards on a phone | `dd8f197` 2026-11-22 | resize in `DiagOverlay.cs` |
 | /diag: leaderboard table (no storage account; `stpobox2` does not exist) and cornerman proxy show a neutral **Off** | switched off on purpose; not counted in the banner | `7045f65` 2026-11-22 | provision the table, set its check back to a live probe in `scripts/webgl.json` |
 | /diag on phones (<= 600px): the version stamp follows the content | a fixed stamp covered the rows | `401dc99` 2026-11-22 | `git revert 401dc99` |
+| CI runs no `ruff format --check` (lint and pytest only); formatting is checked locally (section 4) | owner's call: a formatting-only failure blocked the deploy | 2026-11-23 | add the step back to `.github/workflows/webgl.yml` |
 | Shipped brains predate the torque² / joint-speed² penalty terms | retraining is a multi-hour GPU run, not started | 2026-11-20 | retrain |
 
 ## 2. PoBox house rules and notes
@@ -325,7 +326,7 @@ Last full run (2026-11-22): pytest 31 passed, EditMode 2/2, PlayMode 134/134, 0 
   `.github/workflows/webgl.yml`, which deploys the zip to the Static Web App `pobox` and checks the live page and
   `/diag` and that the live `X-Commit` header is the release's commit (the deploy job writes it into
   `staticwebapp.config.json`). CI has no Unity licence and needs none. Repo secret: `AZURE_STATIC_WEB_APPS_API_TOKEN`.
-  Every push, PR and release runs the Python checks first (`uv sync --group physics`, `ruff format --check`,
+  Every push, PR and release runs the Python checks first (`uv sync --group physics`,
   `ruff check`, `pytest -m "not train"`); the deploy needs them. `scripts/deploy_webgl.ps1` deploys `Builds/WebGL` straight from this PC.
 - `/diag` live-probes from the browser: the game page, the leaderboard page, every file of the build and WebGL2.
   Services switched off on purpose show a neutral "Off" (`"expect": "off"`) and do not count toward the banner: the
