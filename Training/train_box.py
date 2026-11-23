@@ -772,4 +772,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    from tools.runs_hook import recorded  # the training runs grid (benchmark/runs.py)
+
+    with recorded("train_box.py"):
+        main()

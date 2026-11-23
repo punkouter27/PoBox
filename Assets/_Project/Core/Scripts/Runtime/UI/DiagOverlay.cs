@@ -84,7 +84,7 @@ namespace PoBox.UI
             _body.style.color = Text;
             _body.style.whiteSpace = WhiteSpace.Normal;
             _panel.Add(_body);
-            _bench = new Button(() => StartBenchmark()) { name = "diag-benchmark", text = "Benchmark training speed (3 s)" };
+            _bench = new Button(() => StartBenchmark()) { name = "diag-benchmark", text = "Benchmark sim speed (3 s)" };
             _bench.style.backgroundColor = (Color)new Color32(0x0B, 0x0F, 0x17, 0xFF);
             _bench.style.color = Text;
             _bench.style.borderLeftColor = _bench.style.borderRightColor = _bench.style.borderTopColor = _bench.style.borderBottomColor = Accent;
