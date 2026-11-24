@@ -152,9 +152,9 @@ Assets/_Project/Core/Scripts/Tests    play-mode tests, including the training-to
 Packages/org.mujoco  the MuJoCo plugin 3.15.0 (embedded; native libs also in Assets/Plugins/MuJoCo, Assets/Plugins/WebGL/MuJoCo)
 Training/            the trainer: environments, PPO, exams, body models (v2, v3, crew)
 server/              the cornerman's key-holding proxy
-scripts/             WebGL publish/deploy, play-mode test runner
+scripts/             WebGL publish/deploy, play-mode test runner, screenshots.py (before/after reports)
 tests/               Python tests (pytest)
 BLENDER/             Blender sources
 docs/                history, plan, training log, archive and dated reports
-SCREENSHOTS/         before/after reports of UI and graphics passes
+SCREENSHOTS/         before/after reports of UI and graphics passes (scripts/screenshots.py writes one per change)
 ```

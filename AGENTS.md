@@ -117,7 +117,8 @@ three is in `docs/archive/`. The owner often runs several Claude sessions on thi
   *Here: the Unity CLI against the open editor (or [unity-mcp](https://github.com/CoplayDev/unity-mcp) / [Unity-MCP](https://github.com/IvanMurzak/Unity-MCP), whichever works best); scenes are edited through `eval`, never on disk while open (CLAUDE.md).*
 - **Blender edits:** Before editing a Blender scene, archive the original `.blend` in the raw asset path and export a `.glb` copy to the export asset path (older sources stay in `BLENDER/<date>_<name>/`).
 - **UI documentation:** Save every UI change as an HTML report with annotated before/after screenshots, changes marked, in `SCREENSHOTS/`.
-  *Here: one folder per pass, e.g. `SCREENSHOTS/2026-10-16-ui-integrity/`.*
+  *Here: one folder per pass, e.g. `SCREENSHOTS/2026-10-16-ui-integrity/`, written by one command (section 4,
+  `scripts/screenshots.py`).*
 
 ### Platform setup matrix
 
@@ -334,6 +335,13 @@ Last full run (2026-11-22): pytest 31 passed, EditMode 2/2, PlayMode 134/134, 0 
   Every push, PR and release runs the Python checks first (`uv sync --group physics`,
   `ruff check`, `ruff format --check`, `pytest -m "not train"`; the format step was dropped in `b70f0f6` and restored by the
   2026-11-23 audit: run `uv run ruff format .` before pushing Python); the deploy needs them. `scripts/deploy_webgl.ps1` deploys `Builds/WebGL` straight from this PC.
+- **Before/after report for a UI change** (section 2.1): one command, local only (never the live site):
+  `uv run --no-sync --with playwright==1.49.0 --with pillow python scripts/screenshots.py --feature <name>`.
+  It shoots home, `/diag` and `/leaderboard.html` at 1366x768 and 390x844 from `Builds/WebGL` (after) and from the
+  newest `webgl-*` release at or before `--before <ref>` (default `HEAD~1`), or `--before-dir <PNGs>` /
+  `--before-build <folder>`; `--note screen="..."` adds what changed. It writes `SCREENSHOTS/<yyyy-mm-dd>-<name>/`
+  (`index.html`, `side-by-side.png` with changed regions boxed, palette PNGs of a few hundred KB). Build the after
+  side first (`scripts/publish_webgl.ps1 -NoPublish`). Chromium once: `... python -m playwright install chromium`.
 - `/diag` live-probes from the browser: the game page, the leaderboard page, every file of the build (HEAD) and WebGL2.
   Results are cached in the tab's `sessionStorage` for 60 s (`CACHE_SECONDS` in `scripts/webgl/diag.html`), so reloads
   do not re-probe the Free-tier site; `/diag?fresh` probes again at once.

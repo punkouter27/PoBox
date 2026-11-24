@@ -561,10 +561,14 @@ namespace PoBox.Tests
         }
 
         /// <summary>Waits out the walk-on and the introduction: until the first bell, or twenty seconds.</summary>
+        /// <summary>Until the first bell: 20 s of GAME time (Time.deltaTime, capped per frame by Time.maximumDeltaTime)
+        /// for the arena to load and the walk-on to play, with a 240 s wall-clock stop. A wall-clock 20 s ran out on a
+        /// busy PC while the walk-on was still playing (2026-11-23), though the game had had far less than 20 s.</summary>
         static IEnumerator UntilTheBell()
         {
-            float deadline = Time.realtimeSinceStartup + 20f;
-            while (Time.realtimeSinceStartup < deadline && (Bout.Instance == null || Bout.Instance.Phase != BoutPhase.Fight)) yield return null;
+            float real = Time.realtimeSinceStartup;
+            for (float t = 0f; t < 20f && Time.realtimeSinceStartup - real < 240f && (Bout.Instance == null || Bout.Instance.Phase != BoutPhase.Fight); t += Time.deltaTime)
+                yield return null;
         }
 
         [Test]
