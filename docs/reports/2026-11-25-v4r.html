@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carry-on round, 2026-11-25</title>
+<style>
+  :root { --bg:#fff; --fg:#1b1b1b; --muted:#666; --line:#ddd; --pass:#1a7f37; --fail:#b42318; --card:#f6f6f4; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#161616; --fg:#eaeaea; --muted:#9a9a9a; --line:#333; --pass:#4ac26b; --fail:#ff7b72; --card:#1f1f1f; } }
+  body { background:var(--bg); color:var(--fg); font:15px/1.5 system-ui, sans-serif; margin:0; padding:24px 16px; }
+  main { max-width:960px; margin:0 auto; }
+  h1 { font-size:1.5em; margin:0 0 4px; } h2 { font-size:1.15em; margin:32px 0 8px; }
+  .sub { color:var(--muted); margin:0 0 24px; }
+  table { border-collapse:collapse; width:100%; font-size:14px; }
+  th, td { border-bottom:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; }
+  .wrap { overflow-x:auto; }
+  .p { color:var(--pass); font-weight:600; } .f { color:var(--fail); font-weight:600; }
+  .card { background:var(--card); border-radius:8px; padding:12px 16px; margin:12px 0; }
+  img { max-width:100%; border:1px solid var(--line); border-radius:6px; background:#fff; }
+  .lvl { color:var(--muted); font-size:13px; text-transform:uppercase; letter-spacing:.04em; margin:12px 0 2px; }
+</style>
+</head>
+<body><main>
+<h1>Carry-on round: nine hours on the v3 match brains</h1>
+<p class="sub">2026-11-24 22:56 to 2026-11-25 07:32 · 19 runs · RTX 5070 Ti Laptop, 3072 rings · exams in C MuJoCo (<code>tools/exam_v2.py</code>)</p>
+
+<div class="card">
+<b>In one line:</b> three boxers now pass six of the seven exam lines, where their shipped brains pass four or five:
+<b>Nick</b> (<code>v4r2_nick</code>), <b>Zombie</b> (<code>v4r3_zombie</code>) and <b>Timmy</b> (<code>v4r3_timmy</code>).
+<b>Trump</b> (<code>v4r2_trump</code>) goes from three to five. None is in the game yet: promotion needs the editor
+(PromoteBoxing, then MjParityTests and MjGateTests).
+</div>
+
+<h2>The kept brains against shipped</h2>
+<div class="wrap"><table>
+<tr><th>Boxer</th><th>Brain</th><th>Lines</th><th>Footing (falls/min)</th><th>Attack (landed/s)</th><th>Under pressure</th><th>Carrying on</th></tr>
+<tr><td>Nick</td><td><code>v4r2_nick</code></td><td><span class="p">6/7</span> (4/7)</td><td class="p">0.00 (0.67)</td><td class="p">1.87 (0.97)</td><td class="p">0.77 (0.02)</td><td class="f">23/28 (24/29)</td></tr>
+<tr><td>Zombie</td><td><code>v4r3_zombie</code></td><td><span class="p">6/7</span> (5/7)</td><td class="p">0.00 (1.33)</td><td class="p">0.84 (0.79)</td><td class="f">0.00 (0.00)</td><td class="p">28/29 (29/30)</td></tr>
+<tr><td>Timmy</td><td><code>v4r3_timmy</code></td><td><span class="p">6/7</span> (4/7)</td><td class="p">0.00 (0.33)</td><td class="p">0.65 (0.43)</td><td class="f">0.00 (0.02)</td><td class="p">27/30 (27/30)</td></tr>
+<tr><td>Trump</td><td><code>v4r2_trump</code></td><td><span class="p">5/7</span> (3/7)</td><td class="p">0.00 (8.67)</td><td class="f">0.13 (0.16)</td><td class="f">0.00 (0.01)</td><td class="p">27/28 (23/28)</td></tr>
+<tr><td>Matt</td><td><code>v4r3_matt</code></td><td>4/7 (4/7)</td><td class="p">0.00 (0.00)</td><td class="f">0.49 (0.33)</td><td class="f">0.00 (0.00)</td><td class="p">22/23 (22/23)</td></tr>
+</table></div>
+<p class="sub">Shipped values in brackets. Guard, chin and getting up pass for all five, before and after. Matt's
+getting up (23/30) is his get-up brain, which this round did not train.</p>
+
+<h2>What did not work</h2>
+<div class="wrap"><table>
+<tr><th>Boxer</th><th>Runs</th><th>Result</th></tr>
+<tr><td>Kim</td><td><code>v4r_kim</code></td><td>Footing 3.00 to 1.67, but attack 0.41 to 0.17 even at <code>--hit-w 2.0</code>. Third time a gauntlet traded her punch for footing. Shipped Kim stays.</td></tr>
+<tr><td>Soldat</td><td><code>v4r_soldat</code></td><td>5/7 on paper because he stopped punching (0.10 to 0.00). Not a candidate; needs a different punching lesson.</td></tr>
+<tr><td>Sokol</td><td><code>v4r3_sokol</code></td><td>3/7 against 4/7, worse on attack and guard. Shipped Sokol stays.</td></tr>
+<tr><td>Nick, carrying on</td><td><code>v4r3_nick</code>, <code>v4r4_nick</code></td><td>Stuck at 22-24 of ~29 over four rounds, also with the hand-over weighted up. Not this recipe's to fix.</td></tr>
+</table></div>
+
+<h2>Charts</h2>
+<p class="lvl">Glance</p>
+<p>Timmy, Zombie and Nick fall in under 10% of training episodes; Trump's 25% includes knockdowns from punches, which the
+exam's footing line does not count.</p>
+<img src="2026-11-25-v4r-charts/falls.png" alt="Falls per episode for the five kept runs over 500 iterations">
+<p class="lvl">Read</p>
+<p>Nick's punches landed climb all run, 0.9 to 1.2 a second; the others level off near 0.5 to 0.6 within 20 iterations.
+Trump stays at 0.12: his short reach is the open problem (tasks.md V2).</p>
+<img src="2026-11-25-v4r-charts/hits.png" alt="Punches landed a second for the five kept runs">
+<p class="lvl">Study</p>
+<p>Share of hand-overs from the get-up brain that stay up. This is the line the recipe is built around. It does not
+track the exam: Trump stays up about 55% of the time in training but 27/28 in the exam, Nick about 92% in training but
+23/28 in the exam. Training mixes in harder hand-over states from the bank; the exam uses real knockdowns.</p>
+<img src="2026-11-25-v4r-charts/carry_on.png" alt="Carry-on share for the five kept runs">
+
+<h2>Next</h2>
+<ul>
+<li>Open the editor, promote the four candidates, run MjParityTests and MjGateTests.</li>
+<li>Matt's get-up brain: 23/30, one short of the mark.</li>
+<li>Punching for Trump, Soldat and Kim needs a new lesson, not more of this recipe.</li>
+</ul>
+<p class="sub">Run-by-run detail: <code>docs/rl_optimization_log.md</code>, 2026-11-24 section. Queue: <code>Training/logs/make_queue_v4r.py</code>.</p>
+</main></body>
+</html>

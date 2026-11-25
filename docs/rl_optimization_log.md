@@ -614,3 +614,102 @@ in torch), ~18 us of CPU each. The warp physics was already a graph; the torch a
   (a file-polled command bridge in place of the missing Unity CLI) compiled with 0 warnings; its first capture script did not
   run (a line-count bug, fixed). Editor closed; ProjectSettings churn (a Sentis WebGL define) reverted. Not done: the capture
   report and MjParityTests/MjGateTests for Grandpa's promoted brain. Queue resumed: v4r_sokol, v4r_nick, v4r_trump.
+
+## 2026-11-24, nine hours as needed (owner: "search for what needs training and train 9 hours as needed")
+
+- **Last night's carry-on exams** (`logs/exams/v4r_*`, run but not logged), each against the shipped brain:
+  **Nick `v4r` is better on every line**: footing PASS 0.00 (0.67), attack 1.34/s (0.97), guard 67% (46%), chin worst
+  1.00 (3.00), getting up 29/30 in 1.7 s, carrying on 24/29 (24/29): 5/7 (4/7), a candidate for the game.
+  **Trump `v4r`**: footing 0.33 (8.67; mark 0.2), carrying on 25/28 (23/28; mark 90%), guard 69%, attack 0.18/s
+  (0.16): 3/7 but close on two lines, better than v4m3_trump on all. Sokol `v4r2`: attack 0.28 (0.40), carrying on
+  22/28 (25/28), worse. Grandpa `v4r` v the promoted v4m_grandpa: footing 2.00 (0.00), guard 71% (52%), worse.
+- Every boxer lands 0.00/s on Matt and takes nothing from him (his shipped match brain keeps away): "under pressure"
+  fails against him for most of the roster. Not a training target today; noted.
+- **Queue (`logs/make_queue_v4r.py`, ~9 h)**: the carry-on recipe where footing is the main fail: Zombie (1.33),
+  Timmy and Soldat (0.33 each), fresh critic from shipped (new banks `logs/handover_v4_{zombie,timmy,soldat}.npz`);
+  Trump and Nick carry on from their v4r saves (critic kept); Kim from shipped with `--hit-w 2.0` (v4m_kim lost
+  her punch at 1.5); then second rounds for Zombie, Trump and Nick. 500 iterations each (~55 min at 3072 rings).
+  Exams run beside it (`logs/exam_watch.py`).
+- **23:44 `v4r_zombie` done** (500 iterations, fresh critic). Exam v shipped: **footing PASS 0.00 (1.33)**, attack 0.50/s
+  FAIL (0.79 pass), guard 47% (72%), chin, getting up 26/30, carrying on 24/26: 5/7 as before, footing traded for punch.
+  `v4r2_zombie` (queued) now carries on with `--hit-w 2.0` to win the punch back.
+- **00:17 `v4r2_trump` done** (500 more from v4r_trump, critic kept). Exam: **footing PASS 0.00** (v4r 0.33, shipped 8.67),
+  **carrying on PASS 27/28** (25/28, 23/28), guard 70%, chin, getting up 28/30; attack 0.13/s at 1.8 m/s (0.18, 0.16).
+  **5/7, shipped 3/7: a candidate for the game** (not promoted: needs the editor, PromoteBoxing + MjParity/MjGate).
+  His punch is still the open line (tasks.md V2).
+- **00:48 `v4r2_nick` done** (500 more from v4r_nick, critic kept; ~31 min, the trainer now runs 13-23k sps). Exam:
+  footing PASS 0.00, attack PASS 1.87/s (v4r 1.34, shipped 0.97), **under pressure PASS 0.77/s v Grandma, his hardest**
+  (the first pass of that line on v3), guard 70%, chin worst 0.00 (3.00 shipped), getting up 28/30 in 1.7 s; carrying
+  on 23/28 FAIL (24/29). **6/7, shipped 4/7: the best boxer brain on record; a candidate for the game.**
+- **01:15 `v4r_timmy` done** (500 from shipped, fresh critic). Exam v shipped: footing 0.33 (0.33), attack 0.46/s (0.43),
+  guard 52% (35%), chin worst 0.33 (0.00), getting up 29/30, carrying on 28/29 (27/30): 4/7 as before, small gains, near
+  the mark on footing and attack. A second round goes on the queue's tail.
+- **01:41 `v4r_soldat` done** (500 from shipped, fresh critic). Exam: footing PASS 0.00 (0.33), carrying on 25/26, guard
+  33%, chin, getting up 26/30, but **attack 0.00/s at 0.3 m/s (0.10)**: 5/7 on paper because he stopped punching. Not a
+  candidate; `v4r2_soldat` taken off the queue (it would build on a boxer who does not throw). His punch needs the
+  different lesson of 11-23 (a punch to imitate, or fist speed towards the target), not this recipe.
+- **02:07 `v4r_kim` done** (500 from shipped, fresh critic, `--hit-w 2.0`). Exam v shipped: footing 1.67 (3.00), but
+  **attack 0.17/s (0.41)**, carrying on 25/29 (25/30), guard 65%, chin, getting up 29/30: 2/7 v 3/7. Third time (v3m4_kim
+  11-15, v4m_kim 11-23, now) the gauntlet trades her punch for footing, more hit weight or not. `v4r2_kim` taken off;
+  shipped Kim stays. Her footing needs a lesson that does not cost the punch.
+- **02:33 `v4r2_zombie` done** (500 more from v4r_zombie, `--hit-w 2.0`). Exam: footing PASS 0.00, **attack PASS 0.79/s**
+  (v4r 0.50, shipped 0.79: the punch is back), guard 48%, chin, getting up 28/30; carrying on 23/28 FAIL (v4r 24/26,
+  shipped 29/30). 5/7 like shipped, now trading carrying on for footing. `v4r3_zombie` (queued) carries on.
+- **02:59 `v4r3_trump` done** (500 more from v4r2_trump). Exam: footing 1.33 FAIL, attack 0.09/s, carrying on 26/29 FAIL,
+  guard 75%: 3/7, worse than v4r2_trump (5/7). **`v4r2_trump` stays his best**; no more Trump rounds on this recipe.
+- 03:10 queue extended (runs take ~27 min): `v4r_matt` (attack 0.33, nobody lands on him; new bank
+  `logs/handover_v4_matt.npz`) and `v4r3_sokol` from shipped at `--hit-w 2.0` (what gave Zombie his punch back), then
+  a second round of each.
+- **03:20 `v4r3_nick` done** (400 more from v4r2_nick). Exam: 6/7 again: footing 0.00, attack 1.97/s, under pressure 0.64/s
+  (v Sokol), guard 68%, chin, getting up 30/30; carrying on 23/30 FAIL (v4r2 23/28). Level with v4r2_nick: carrying on
+  sits at 23-24 of ~29 over three rounds; the recipe does not move it for Nick. Either is the candidate (v4r2_nick first,
+  fewer head shots taken: 0.25 v 0.30). No more Nick rounds.
+- **03:45 `v4r2_timmy` done** (500 more from v4r_timmy). Exam: **attack PASS 0.66/s** (v4r 0.46, shipped 0.43), getting up
+  30/30, carrying on 27/30, guard 47%, chin; footing 1.33 FAIL (0.33, 0.33). 5/7 v shipped 4/7, but his footing got
+  worse while his punch came: a candidate only if 1.33 falls a minute is acceptable (worst v one opponent).
+- **04:12 `v4r3_zombie` done** (500 more from v4r2_zombie, `--hit-w 2.0`). Exam: **footing PASS 0.00** (shipped 1.33),
+  attack PASS 0.84/s (0.79), **carrying on PASS 28/29** (v4r2 23/28), guard 49%, chin, getting up 29/30; under pressure
+  0.00 v Soldat FAIL. **6/7, shipped 5/7: a candidate for the game.**
+- **04:38 `v4r_matt` done** (500 from shipped, fresh critic, `--hit-w 2.0`). Exam v shipped: attack 0.48/s (0.33; mark
+  0.5), but **footing 1.33 FAIL (0.00)**, getting up 23/30 FAIL (his get-up brain, unchanged), carrying on 23/23, guard,
+  chin: 3/7 v 4/7. Matt and Zombie still land nothing on each other. `v4r2_matt` (queued) gets one round to bring the
+  footing back, as Zombie's second round brought his punch back.
+- 04:50 queue extended: `v4r4_zombie` (one more on the 6/7 brain) and `v4r3_timmy` (`--fall-penalty 16` for his footing).
+- **05:03 `v4r3_sokol` done** (500 from shipped, fresh critic, `--hit-w 2.0`). Exam v shipped: footing 0.33 FAIL (0.00),
+  attack 0.26/s (0.40), guard 11% (27%), carrying on 24/27: 3/7 v 4/7. Sokol on this recipe twice now, worse both times:
+  shipped Sokol stays. `v4r4_sokol` off; in its place `v4r4_nick` from v4r2_nick with `--handover-share 0.7
+  --recover-w 2.0` for his one failing line.
+- **05:29 `v4r2_matt` done** (500 more from v4r_matt). Exam: **footing PASS 0.00 again**, attack 0.42/s (shipped 0.33,
+  mark 0.5), guard 56% (33%), chin, carrying on 22/23; getting up 23/30 FAIL (get-up brain, untouched). 4/7 like
+  shipped but a better boxer; still nothing either way v Zombie. `v4r3_matt` queued for the punch.
+- **05:55 `v4r4_zombie` done** (500 more from v4r3_zombie). Exam: footing 0.00, attack 0.80/s, guard 43%, getting up
+  29/30, carrying on 25/29 FAIL: 5/7, below v4r3_zombie. **`v4r3_zombie` stays his best.** Last job queued: `v4r4_matt`
+  (400 more from v4r3_matt) to fill to the ninth hour.
+- **06:20 `v4r3_timmy` done** (500 more from v4r2_timmy, `--fall-penalty 16`). Exam: **footing PASS 0.00** (v4r2 1.33,
+  shipped 0.33), **attack PASS 0.65/s** (shipped 0.43), guard 38%, chin, getting up 30/30, carrying on 27/30; under
+  pressure 0.00 v Grandma. **6/7, shipped 4/7: a candidate for the game.** The higher fall penalty brought the footing
+  back without costing the punch.
+- **06:45 `v4r4_nick` done** (500 from v4r2_nick, `--handover-share 0.7 --recover-w 2.0`). Exam: 6/7, carrying on 22/29
+  FAIL (v4r2 23/28): weighting the hand-over up did not move it. Nick's carrying on is not this recipe's to fix; the
+  misses are worth reading in the viewer (what happens in the 3 s after the get-up brain hands over).
+  `v4r2_nick` stays his candidate.
+- **07:11 `v4r3_matt` done** (500 more from v4r2_matt). Exam: footing 0.00, **attack 0.49/s** (mark 0.5; shipped 0.33),
+  guard 33%, chin, carrying on 22/23; getting up 23/30 FAIL (get-up brain). 4/7, one hundredth short on attack.
+- **07:32 `v4r4_matt` done** (400 more from v4r3_matt). Exam: attack 0.39/s, carrying on 21/23: below v4r3_matt, which
+  stays his best (4/7, attack 0.49).
+- **Close, 07:45.** 19 runs in 8.6 h. Candidates for the game (none promoted; promotion needs the editor, then
+  MjParityTests/MjGateTests): **`v4r2_nick` 6/7 (4/7), `v4r3_zombie` 6/7 (5/7), `v4r3_timmy` 6/7 (4/7), `v4r2_trump`
+  5/7 (3/7)**; `v4r3_matt` 4/7 but attack 0.49 v 0.33. Kim, Soldat and Sokol stay on shipped. Report:
+  `docs/reports/2026-11-25-v4r.html`. All new brains include the torque² / joint-speed² penalties (AGENTS.md deviation).
+
+## 2026-11-25 09:00, the four candidates into Assets (owner: "load the latest trained RL brain ... run the app ... report")
+
+- Exported `v4r2_nick`, `v4r3_zombie`, `v4r3_timmy`, `v4r2_trump` to ONNX (`Training/logs/export_v4r.py`, fixed batch:
+  obs 1x103, actions 1x21, value 1x1, as shipped) and copied each over `Assets/_Project/RL_Models/NAME/match.onnx`
+  (.meta kept; shipped files and MANIFEST in `../PoBox_quarantine_2026-11-25/`). Uncommitted.
+- **Examined as the game feeds them** (obs_state off, `logs/exams/game_*`), v shipped as the game feeds it (`base_game_*`):
+  Nick **6/7** (4/7; carrying on 22/30 the one fail), Zombie **6/7** (5/7; under pressure 0.02), Timmy **5/7** (4/7;
+  footing 1.67 fails this way, 0.00 with its state), Trump **4/7** (3/7; footing 0.67 v 8.67, attack 0.15). All four beat
+  what they replace.
+- Unity did not open: the licensing client reports "Access token is unavailable" and 0 entitlements (as on 11-23). The
+  in-game run, screenshots, GIFs, gizmo checks and MjParityTests/MjGateTests wait for the licence (Unity Hub sign-in).
