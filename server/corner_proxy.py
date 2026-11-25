@@ -197,12 +197,15 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:  # noqa: N802 (http.server's name)
         url = urllib.parse.urlsplit(self.path)
-        if url.path not in ROUTES:
-            return self.reply(404, error="not found")
         try:
             n = int(self.headers.get("content-length") or 0)
         except ValueError:
             return self.reply(400, error="invalid content length")
+        if url.path not in ROUTES:
+            # Read what was sent before answering: closing on an unread body resets the connection on Windows.
+            if n > 0:
+                self.rfile.read(min(n, MAX_BODY * 4))
+            return self.reply(404, error="not found")
         if n <= 0 or n > MAX_BODY:
             if n > 0:
                 self.rfile.read(min(n, MAX_BODY * 4))
