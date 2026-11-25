@@ -86,6 +86,11 @@ namespace PoBox.Mj
 
         /// <summary>The share of joint drive strength the boxer has: 1 unhurt, less when dazed, 0.04 with its legs gone (envs/boxing.py).</summary>
         [NonSerialized] public double DriveScale = 1.0;
+
+        /// <summary>0: drive the body; 1: limp (2026-11-25). Between them the drives fade, so a boxer going down folds and
+        /// lands as physics rather than holding a pose. <see cref="Runtime.Sim.MjBrain"/> sets it from the bout: 1 while a
+        /// boxer is down and not yet getting up, back to 0 as the get-up policy takes the body.</summary>
+        [NonSerialized] public double Limp;
         /// <summary>What a tiring boxer has left, 0 to 1 (envs/boxing.py's reserve). Stays at 1 unless its config has fatigue_j.</summary>
         [NonSerialized] public double Reserve = 1.0;
         /// <summary>Its daze and the opponent's, as shares of where the legs go: what a policy with obs_state reads (set by the game's brain).</summary>
@@ -676,6 +681,8 @@ namespace PoBox.Mj
         public void Drive()
         {
             double f = Rules.action_filter;
+            // Limp (2026-11-25): a boxer going down fades its drives, so the body folds and lands as physics.
+            double limp = 1.0 - Clamp(Limp, 0.0, 1.0);
             for (int i = 0; i < Joints; i++)
             {
                 Action[i] = Clamp(Action[i], -Config.action_clip, Config.action_clip);
@@ -697,11 +704,11 @@ namespace PoBox.Mj
                     // The Hill muscle (envs/muscle.py): the daze and the reserve scale its torque; no ceiling, no spring weakening.
                     double dt = Config.control_decimation / (double)Config.physics_hz;
                     _d->ctrl[_act[i]] = _held[i] = HillMuscle.Target(want, q, _d->qvel[_jv[i]], ref _activation[i], _kp[i],
-                        Config.force_limit[i], Config.velocity_limit[i], Config.lower[i], Config.upper[i], DriveScale * tired, dt, Config.muscle);
+                        Config.force_limit[i], Config.velocity_limit[i], Config.lower[i], Config.upper[i], DriveScale * tired * limp, dt, Config.muscle);
                     continue;
                 }
                 bool ceiling = Config.fatigue_ceiling && Config.fatigue_j > 0.0;
-                double scale = DriveScale * (ceiling ? 1.0 : tired);
+                double scale = DriveScale * (ceiling ? 1.0 : tired) * limp;
                 if (scale < 0.999) want = q + scale * (want - q);
                 if (ceiling && tired < 0.999)
                 {

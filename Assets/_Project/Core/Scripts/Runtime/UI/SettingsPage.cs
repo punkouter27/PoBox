@@ -10,8 +10,8 @@ namespace PoBox.UI
 {
     /// <summary>
     /// The settings (Assets/_Project/UI/Settings.uxml), the same on the HUD's menu, the first screen and the free-for-all: three
-    /// tabs on one sheet, every option of the game. SOUND: sound, the commentator's voice, the buzz of a hit, bullet
-    /// time. VIEW: quality, the frame rate, INTENT and MAP (off by default), STATS (the numbers over the picture) and BETS (the coin pick before the
+    /// tabs on one sheet, every option of the game. SOUND: sound, the commentator's voice, the buzz of a hit, the
+    /// picture's motion (shake, ripples and wipes), bullet time. VIEW: quality, the frame rate, INTENT and MAP (off by default), STATS (the numbers over the picture) and BETS (the coin pick before the
     /// bell), both off by default. MORE: the collision shapes, the brain cam, the readings, throwing the ladder away,
     /// the Twitch channel for chat plays and the cornerman's proxy. Every choice is kept on the device. RESET is only
     /// offered where there is a ladder, BRAIN only where there is a brain cam (the arena), X-RAY only where there are
@@ -32,7 +32,7 @@ namespace PoBox.UI
 
         readonly Button[] _tabs = new Button[3];
         readonly VisualElement[] _pages = new VisualElement[3];
-        readonly Button _sound, _quality, _voice, _buzz, _bullet, _fps, _stats, _bets, _intent, _map, _xray, _brain, _reset;
+        readonly Button _sound, _quality, _voice, _buzz, _motion, _bullet, _fps, _stats, _bets, _intent, _map, _xray, _brain, _reset;
         readonly Label _qualityBadge, _resetWord;
         readonly Glyph _resetGlyph;
         readonly TextField _twitch, _corner, _board;
@@ -60,6 +60,7 @@ namespace PoBox.UI
             _quality = root.Q<Button>("s-quality"); _qualityBadge = root.Q<Label>("s-quality-badge");
             _voice = root.Q<Button>("s-voice");
             _buzz = root.Q<Button>("s-buzz");
+            _motion = root.Q<Button>("s-motion");
             _bullet = root.Q<Button>("s-bullet");
             _fps = root.Q<Button>("s-fps");
             _stats = root.Q<Button>("s-stats");
@@ -80,6 +81,7 @@ namespace PoBox.UI
             Hook(_sound, () => AudioDirector.Muted = !AudioDirector.Muted);
             Hook(_voice, () => SpeechCommentary.Enabled = !SpeechCommentary.Enabled);
             Hook(_buzz, () => Haptics.Enabled = !Haptics.Enabled);
+            Hook(_motion, () => PictureMotion.Enabled = !PictureMotion.Enabled);
             Hook(_bullet, () => ArenaMood.BulletTime = !ArenaMood.BulletTime);
             Hook(_xray, () => PhysicsXray.On = !PhysicsXray.On);
             Hook(_brain, () => BrainCam = !BrainCam);
@@ -174,6 +176,7 @@ namespace PoBox.UI
             AudioDirector.Muted = PlayerPrefs.GetInt("pobox.muted", 0) == 1;
             SpeechCommentary.Enabled = PlayerPrefs.GetInt("pobox.voice", 1) == 1;
             Haptics.Enabled = PlayerPrefs.GetInt("pobox.haptics", 1) == 1;
+            PictureMotion.Enabled = PlayerPrefs.GetInt("pobox.motion", 1) == 1;
             ArenaMood.BulletTime = PlayerPrefs.GetInt("pobox.bullettime", 1) == 1;
             PhysicsXray.On = PlayerPrefs.GetInt("pobox.xray", 0) == 1;
             BrainCam = PlayerPrefs.GetInt("pobox.brain", 0) == 1;
@@ -193,6 +196,7 @@ namespace PoBox.UI
             PlayerPrefs.SetInt("pobox.muted", AudioDirector.Muted ? 1 : 0);
             PlayerPrefs.SetInt("pobox.voice", SpeechCommentary.Enabled ? 1 : 0);
             PlayerPrefs.SetInt("pobox.haptics", Haptics.Enabled ? 1 : 0);
+            PlayerPrefs.SetInt("pobox.motion", PictureMotion.Enabled ? 1 : 0);
             PlayerPrefs.SetInt("pobox.bullettime", ArenaMood.BulletTime ? 1 : 0);
             PlayerPrefs.SetInt("pobox.xray", PhysicsXray.On ? 1 : 0);
             PlayerPrefs.SetInt("pobox.brain", BrainCam ? 1 : 0);
@@ -210,6 +214,7 @@ namespace PoBox.UI
             Toggle(_sound, "Sound", !AudioDirector.Muted);
             Toggle(_voice, "Voice", SpeechCommentary.Enabled);
             Toggle(_buzz, "Buzz", Haptics.Enabled);
+            Toggle(_motion, "Motion", PictureMotion.Enabled);
             Toggle(_bullet, "Bullet time", ArenaMood.BulletTime);
             Toggle(_xray, "X-ray", PhysicsXray.On);
             Toggle(_brain, "Brain cam", BrainCam);

@@ -54,11 +54,12 @@ namespace PoBox.Audio
             return true;
         }
 
-        /// <summary>The bed's target share (0..1 between quiet and loud): the louder of the camera's reading and the hall's.</summary>
+        /// <summary>The bed's target share (0..1 between quiet and loud): the louder of the camera's reading and the hall's,
+        /// with a surge (how fast the hall is rising) counted on top, so a knockdown lifts the crowd at once.</summary>
         float BedShare(float fromExcitement)
         {
             CrowdExcitement c = CrowdNow;
-            return c != null ? Mathf.Max(fromExcitement, Mathf.Clamp01(c.Bed)) : fromExcitement;
+            return c != null ? Mathf.Max(fromExcitement, Mathf.Clamp01(c.Bed + 0.2f * c.Surge)) : fromExcitement;
         }
 
         /// <summary>The roar layer, on the crowd bus, and a swell as the hall boils over. <paramref name="scale"/>: the bus gain without a mixer.</summary>

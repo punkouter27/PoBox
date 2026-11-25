@@ -26,6 +26,8 @@ namespace PoBox.Audio
 
         /// <summary>The excitement, 0..1.</summary>
         public float Value { get; private set; }
+        /// <summary>How fast it is rising, 0..1 a second against its own attack (2026-11-25): the bed lifts on a surge.</summary>
+        public float Surge { get; private set; }
         /// <summary>Punches a second over the window (landed ones weighted).</summary>
         public float Rate { get; private set; }
         /// <summary>The bed's share (0..1 between quiet and loud) and the roar layer's level (0..1), from the curves.</summary>
@@ -141,7 +143,10 @@ namespace PoBox.Audio
             if (phase == BoutPhase.Count) target = Mathf.Max(target, _s.countFloor);
             target = Mathf.Clamp01(target);
             float speed = target > Value ? _s.attackPerSecond : _s.releasePerSecond;
+            float previous = Value;
             Value += (target - Value) * Mathf.Clamp01(dt * speed);
+            // How fast it is rising, against its own attack: a knockdown lifts the bed at once, a plateau does not.
+            Surge = Mathf.Clamp01((Value - previous) / Mathf.Max(1e-4f, dt) / Mathf.Max(0.5f, _s.attackPerSecond));
 
             bool above = Value >= _s.swellAt;
             if (above && !_wasAbove && now - _lastSwell > _s.swellCooldown) { _swell = true; _lastSwell = now; }

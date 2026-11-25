@@ -23,6 +23,8 @@ namespace PoBox.Audio
         [Range(1, 4)] public int variants = 3;
         [Tooltip("Seed of the variants: the same asset always renders the same sounds.")]
         public int seed = 20261125;
+        [Tooltip("Rate the modal banks are rendered at, Hz. A punch carries nothing above 8 kHz, so 22050 halves the memory and the work at load with nothing heard lost.")]
+        [Range(8000, 44100)] public int sampleRate = 22050;
 
         public ModalContactSet For(ContactKind kind)
         {

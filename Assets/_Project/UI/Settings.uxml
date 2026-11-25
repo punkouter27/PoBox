@@ -48,6 +48,13 @@
                 <ui:VisualElement class="sw-dot" picking-mode="Ignore" />
             </ui:Button>
         </ui:VisualElement>
+        <ui:VisualElement class="grid" picking-mode="Ignore">
+            <ui:Button name="s-motion" class="btn btn--tool grid-2" tooltip="Screen shake, ripples and wipes. Off: a still picture">
+                <PoBox.UI.Glyph kind="Balance" class="glyph--btn" />
+                <ui:Label class="btn-word" text="MOTION" picking-mode="Ignore" />
+                <ui:VisualElement class="sw-dot" picking-mode="Ignore" />
+            </ui:Button>
+        </ui:VisualElement>
     </ui:VisualElement>
 
     <ui:VisualElement name="s-page-view" class="s-page hidden" picking-mode="Ignore">

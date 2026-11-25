@@ -58,6 +58,7 @@ namespace PoBox.Fx
         class HazePass : ScriptableRenderPass
         {
             static readonly int Params = Shader.PropertyToID("_HazeParams"), Params2 = Shader.PropertyToID("_HazeParams2");
+            static readonly int Texel = Shader.PropertyToID("_PoBoxHazeTexel");
             Material _m;
             Settings _s;
 
@@ -86,6 +87,8 @@ namespace PoBox.Fx
 
                 _m.SetVector(Params, new Vector4(_s.density, _s.heightFalloff, _s.anisotropy, _s.intensity));
                 _m.SetVector(Params2, new Vector4(_s.maxDistance, _s.steps, Time.frameCount % 64, 0f));
+                // The composite upsamples by depth: it needs one marched texel in screen uv.
+                _m.SetVector(Texel, new Vector4(1f / desc.width, 1f / desc.height, 0f, 0f));
 
                 using (var builder = graph.AddRasterRenderPass<PassData>("PoBox Haze March", out var data))
                 {
@@ -103,6 +106,7 @@ namespace PoBox.Fx
                     data.material = _m;
                     data.haze = haze;
                     builder.UseTexture(haze);
+                    if (resources.cameraDepthTexture.IsValid()) builder.UseTexture(resources.cameraDepthTexture);
                     builder.SetRenderAttachment(resources.activeColorTexture, 0);
                     builder.SetRenderFunc((PassData d, RasterGraphContext ctx) => Blitter.BlitTexture(ctx.cmd, d.haze, new Vector4(1, 1, 0, 0), d.material, 1));
                 }

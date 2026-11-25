@@ -138,3 +138,4 @@ MonoBehaviour:
   levels: 4
   variants: 3
   seed: 20261125
+  sampleRate: 22050

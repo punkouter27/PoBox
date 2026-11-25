@@ -12,7 +12,7 @@ namespace PoBox.Audio
     /// </summary>
     public static class ImpactSynth
     {
-        public const int Rate = 44100;
+        public static int Rate = 44100;
         public const int Hardness = 4;          // banks run soft to hard
         public const int PerHardness = 3;       // variants a step
 
@@ -71,20 +71,28 @@ namespace PoBox.Audio
             var rng = new System.Random(settings.seed);
             var kinds = (ContactKind[])System.Enum.GetValues(typeof(ContactKind));
             _modal = new ModalBank[kinds.Length];
-            foreach (ContactKind kind in kinds)
+            // Rendered at the asset's own rate (half by default): a punch carries nothing above 8 kHz, and on WebGL
+            // and the phone that is half the memory and half the work at load. The other banks keep 44.1 kHz.
+            int saved = Rate;
+            Rate = Mathf.Clamp(settings.sampleRate, 8000, 44100);
+            try
             {
-                ModalContactSet set = settings.For(kind) ?? new ModalContactSet();
-                var bodies = new AudioClip[levels * variants];
-                var cracks = new AudioClip[levels * variants];
-                for (int h = 0; h < levels; h++)
-                    for (int v = 0; v < variants; v++)
-                    {
-                        float k = (h + 0.5f) / levels;
-                        bodies[h * variants + v] = Clip($"Modal {kind} body {h}.{v}", ModalBody(set, k, rng));
-                        cracks[h * variants + v] = Clip($"Modal {kind} crack {h}.{v}", ModalCrack(set, k, rng));
-                    }
-                _modal[(int)kind] = new ModalBank(set, bodies, cracks, levels, variants);
+                foreach (ContactKind kind in kinds)
+                {
+                    ModalContactSet set = settings.For(kind) ?? new ModalContactSet();
+                    var bodies = new AudioClip[levels * variants];
+                    var cracks = new AudioClip[levels * variants];
+                    for (int h = 0; h < levels; h++)
+                        for (int v = 0; v < variants; v++)
+                        {
+                            float k = (h + 0.5f) / levels;
+                            bodies[h * variants + v] = Clip($"Modal {kind} body {h}.{v}", ModalBody(set, k, rng));
+                            cracks[h * variants + v] = Clip($"Modal {kind} crack {h}.{v}", ModalCrack(set, k, rng));
+                        }
+                    _modal[(int)kind] = new ModalBank(set, bodies, cracks, levels, variants);
+                }
             }
+            finally { Rate = saved; }
         }
 
         /// <summary>

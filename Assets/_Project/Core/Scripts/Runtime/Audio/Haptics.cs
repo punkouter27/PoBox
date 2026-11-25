@@ -81,8 +81,8 @@ namespace PoBox.Audio
 
         void OnHit(HitEvent e)
         {
-            Excitement ex = Excitement.Instance;
-            float k = Mathf.Clamp01(e.impulse / (1.5f * (ex != null ? ex.UsualImpulse : 10f)));
+            // The one reading the sound and the spray use (ContactStrength), so a shot that sounds heavy also feels heavy.
+            float k = ContactStrength.On(e.zone == PartKind.Head ? ContactKind.Head : ContactKind.Torso, e.impulse);
             if (k > 0.15f) Buzz(Mathf.Lerp(8f, 40f, k), Mathf.Lerp(50f, 255f, k), false);
         }
 

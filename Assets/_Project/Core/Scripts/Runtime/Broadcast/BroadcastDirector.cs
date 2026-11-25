@@ -201,7 +201,7 @@ namespace PoBox.Broadcast
             _initiative = e.attacker;
             float strength = Mathf.Clamp01(e.impulse / 25f);
             // One shake at a time: a combo's punches would otherwise stack bumps into a rattle.
-            if (e.impulse > 3f && _impulse != null && Time.unscaledTime - _shakeAt >= ShakeSeconds * 0.6f)
+            if (e.impulse > 3f && _impulse != null && !PictureMotion.Reduced && Time.unscaledTime - _shakeAt >= ShakeSeconds * 0.6f)
             {
                 _shakeAt = Time.unscaledTime;
                 _impulse.GenerateImpulseAtPositionWithVelocity(e.point, -e.normal * (strength * shakeVelocity));
@@ -222,7 +222,7 @@ namespace PoBox.Broadcast
             if (Pinned != Shot.Impact) _impactVictim = f;
             Force(Shot.Impact, 1.3f);
             _shakeAt = Time.unscaledTime;
-            if (_impulse != null) _impulse.GenerateImpulseAtPositionWithVelocity(f.pelvis.transform.position, Vector3.down * shakeVelocity);
+            if (_impulse != null && !PictureMotion.Reduced) _impulse.GenerateImpulseAtPositionWithVelocity(f.pelvis.transform.position, Vector3.down * shakeVelocity);
         }
 
         Mj.MjRing _ring;

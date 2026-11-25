@@ -387,6 +387,9 @@ namespace PoBox.Sim
         {
             if (!ring.Ready || fighter == null) return;
             boxer.DriveScale = fighter.DriveScale;
+            // Going down, the body goes limp (MjBoxer.Limp): the drives fade over a fifth of a second so the boxer folds and
+            // lands as physics. A boxer rising is the get-up policy's, driven as it was trained, so limp is back to 0 there.
+            boxer.Limp = Mathf.MoveTowards((float)boxer.Limp, fighter.IsDown && !fighter.IsRising ? 1f : 0f, Time.fixedDeltaTime / 0.2f);
             boxer.DazeShare = fighter.dazeRule ? fighter.Daze / Mathf.Max(1f, fighter.LegsAt) : 0.0;
             Fighter foe = fighter.opponent;
             boxer.OpponentDazeShare = foe != null && foe.dazeRule ? foe.Daze / Mathf.Max(1f, foe.LegsAt) : 0.0;

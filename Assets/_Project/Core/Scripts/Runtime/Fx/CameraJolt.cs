@@ -57,6 +57,7 @@ namespace PoBox.Fx
 
         void OnHit(HitEvent e)
         {
+            if (PictureMotion.Reduced) return;
             float k = Mathf.InverseLerp(hitImpulse.x, hitImpulse.y, e.impulse);
             if (k <= 0f || Time.unscaledTime - _shakeAt < BroadcastDirector.ShakeSeconds * 0.6f) return;
             _shakeAt = Time.unscaledTime;
@@ -66,6 +67,7 @@ namespace PoBox.Fx
 
         void OnFloor(Vector3 point, float impulse)
         {
+            if (PictureMotion.Reduced) return;
             float k = Mathf.Clamp01(impulse / fullFall);
             if (k <= 0.3f || Time.unscaledTime - _shakeAt < BroadcastDirector.ShakeSeconds * 0.6f) return;
             _shakeAt = Time.unscaledTime;
