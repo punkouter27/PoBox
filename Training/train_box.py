@@ -276,6 +276,25 @@ def main() -> None:
         "(tasks.md F2); 0 = off. Try 0.3",
     )
     ap.add_argument(
+        "--xcom-w",
+        type=float,
+        default=0.0,
+        help="charge per metre the extrapolated CoM leaves the foot support segment (beyond 10 cm); 0 = off. Try 0.8",
+    )
+    ap.add_argument(
+        "--stall-w",
+        type=float,
+        default=0.0,
+        help="anti-stall pressure penalty ramped after --stall-s seconds without landing a punch; 0 = off. Try 0.08",
+    )
+    ap.add_argument("--stall-s", type=float, default=2.0, help="seconds without a landed punch before --stall-w ramps")
+    ap.add_argument(
+        "--sym-coef",
+        type=float,
+        default=0.0,
+        help="bilateral mirror-symmetry regularisation weight in PPO actor updates; 0 = off. Try 0.1",
+    )
+    ap.add_argument(
         "--selfcontact-w",
         type=float,
         default=0.0,
@@ -423,6 +442,9 @@ def main() -> None:
             obs_delay=args.obs_delay,
             default_rules=not args.legacy_rules,
             flail_w=args.flail_w,
+            xcom_w=args.xcom_w,
+            stall_w=args.stall_w,
+            stall_s=args.stall_s,
         )
     N, K, A, D = env.N, env.K, env.A, env.obs_dim
     # One learner per distinct fighter. Two copies of the same fighter share one, and it learns from both.
@@ -463,8 +485,19 @@ def main() -> None:
             init_std=args.init_std,
             max_std=args.max_std,
             lr_max=args.lr_max,
+            sym_coef=args.sym_coef,
         )
-        learners.append(PPO(D, A, per_learner, device, cfg))
+        ppo = PPO(D, A, per_learner, device, cfg)
+        if args.sym_coef > 0.0:
+            from envs.symmetry import build_mirror_maps
+
+            joint_order = env.cfgs[0]["joint_order"] if hasattr(env, "cfgs") else env.cfg["joint_order"]
+            ppo.set_symmetry(
+                *build_mirror_maps(
+                    joint_order, D, device=device, obs_state_tail=bool(getattr(env, "obs_state_any", False))
+                )
+            )
+        learners.append(ppo)
 
     judge = None
     if args.stage == "footwork" and args.style_w > 0.0:

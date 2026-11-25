@@ -17,7 +17,7 @@ namespace PoBox.Audio
         public const int PerHardness = 3;       // variants a step
 
         public static AudioClip[] Head, Body, Block, Floor, Step;
-        public static AudioClip Bell, BellEnd, CrowdOoh, CrowdBoo;
+        public static AudioClip Bell, BellEnd, CrowdOoh, CrowdBoo, CrowdRoar, DazeRing;
         static bool _built;
 
         public static void Build()
@@ -36,6 +36,8 @@ namespace PoBox.Audio
             // the boo of a stalled fight sinks and drags.
             CrowdOoh = Clip("Synth Crowd Ooh", Crowd(new System.Random(9), 48, 1.3f, rise: true));
             CrowdBoo = Clip("Synth Crowd Boo", Crowd(new System.Random(10), 40, 2.2f, rise: false));
+            CrowdRoar = Clip("Synth Crowd Roar", CrowdRoarSwell(new System.Random(11), 56, 2.4f));
+            DazeRing = Clip("Synth Daze Ring", DazeTinnitus(2.2f));
         }
 
         /// <summary>A variant of <paramref name="bank"/> for a hardness 0..1.</summary>
@@ -168,6 +170,43 @@ namespace PoBox.Audio
             Formant(src, o, 800f, 6f, 0.45f);
             Formant(src, o, 2400f, 8f, 0.08f);
             Noise(o, rng, 0f, len * 0.4f, 1200f, 0.4f, 0.03f, len * 0.2f);
+            return o;
+        }
+
+        static float[] CrowdRoarSwell(System.Random rng, int voices, float len)
+        {
+            var src = new float[(int)(len * Rate)];
+            for (int v = 0; v < voices; v++)
+            {
+                bool low = rng.NextDouble() < 0.55;
+                float f0 = (low ? 120f : 230f) * Jitter(rng, 0.22f);
+                float start = (float)rng.NextDouble() * 0.28f, end = len - (float)rng.NextDouble() * 0.35f;
+                float amp = 0.55f + 0.45f * (float)rng.NextDouble(), phase = (float)rng.NextDouble();
+                for (int i = (int)(start * Rate); i < (int)(end * Rate) && i < src.Length; i++)
+                {
+                    float t = i / (float)Rate, u = (t - start) / Mathf.Max(0.01f, end - start);
+                    float f = f0 * (1f + 0.22f * Mathf.Sin(Mathf.PI * Mathf.Min(1f, u * 1.2f)));
+                    phase += f / Rate;
+                    phase -= Mathf.Floor(phase);
+                    float env = Mathf.Min(1f, (t - start) / 0.16f) * Mathf.Min(1f, (end - t) / 0.45f);
+                    src[i] += amp * env * (2f * phase - 1f);
+                }
+            }
+            // Open cheer vowel ("aah/yeah") + broadband arena roar swell.
+            var o = new float[src.Length];
+            Formant(src, o, 650f, 3.5f, 1.0f);
+            Formant(src, o, 1250f, 5.0f, 0.55f);
+            Formant(src, o, 2600f, 7.0f, 0.22f);
+            Noise(o, rng, 0f, len * 0.55f, 1600f, 0.55f, 0.12f, 0.18f);
+            return o;
+        }
+
+        static float[] DazeTinnitus(float len)
+        {
+            var o = new float[(int)(len * Rate)];
+            // A delicate high-frequency ear-ring pair that beats gently and fades as daze drains.
+            Mode(o, 0f, 3920f, 0.55f, len * 0.42f, 0.06f);
+            Mode(o, 0f, 4180f, 0.30f, len * 0.35f, 0.08f);
             return o;
         }
 
