@@ -2,8 +2,11 @@
 
 Two physics-driven boxers fight in a ring while the game films it like a broadcast: cameras that cut on the
 action, a scoreboard, three judges, a referee, a ladder, a crowd and a commentary line. The app starts on a
-screen where the two boxers are picked. Portrait, one screen, nothing scrolls. Unity 6000.6.0f1, URP 17.6,
-Cinemachine, UI Toolkit. The fight runs on the official MuJoCo Unity plugin 3.5.0, with no PhysX.
+screen where the two boxers are picked. Portrait, one screen, nothing scrolls. Unity 6000.6.9f1, URP 17.6,
+Cinemachine, UI Toolkit. The fight runs on the official MuJoCo Unity plugin 3.15.0, with no PhysX.
+
+The editor version and the plugin version above are the current ones (`ProjectSettings/ProjectVersion.txt`,
+`Packages/org.mujoco/package.json`); the dated entries below keep the version that was true when they were written.
 
 This file is the running history, newest first. The overview is the root [README.md](../README.md), the live
 plan is [tasks.md](tasks.md), the training log is [rl_optimization_log.md](rl_optimization_log.md), and
@@ -12,7 +15,8 @@ the house rules are [AGENTS.md](../AGENTS.md).
 ## Where it stands (2026-11-13)
 
 - **Eight boxers:** Matt, Zombie, Nick, Trump, Grandma, Grandpa, Kim, Sokol. Each has three brains (footwork,
-  boxing, get-up) in `Assets/_Project/Agents/Boxers/NAME`.
+  boxing, get-up) in `Assets/_Project/Agents/Boxers/NAME`. Ten bodies ship (Soldat and Timmy joined on
+  2026-11-16) and the roster has sixteen slots (`MenuView`, the cup's round of 16); a slot nobody fills is a BYE.
 - **Six are on the v3 body** (`Training/models/v3`: human force each way, per-joint action scale, de Leva
   masses): Sokol and Nick (2026-11-02), Zombie (2026-11-03), Matt, Trump and Kim (2026-11-04).
 - **Grandma and Grandpa are still on v2.** On v3 they got up 5 and 14 times of 60 (2026-11-03). The last log
@@ -23,6 +27,60 @@ the house rules are [AGENTS.md](../AGENTS.md).
   `Training/models/crew`).
 - **Last test counts on record (2026-11-04):** MjParity 3/3, MjGate 24/24, StateFlow 2/2, OneScreen 74/74.
 - The design documents in [20261004](20261004) describe the game as it was on 4 October (six boxers, v2 bodies).
+
+## Cleanup pass: one reference check, one naming rule, two split classes (2026-11-25 update)
+
+A pass over the repo's hygiene, done from a measurement rather than a grep. Two editor menu items now do the
+measuring, and three tests keep it true.
+
+**The audit (`Assets/_Project/Core/Scripts/Editor/RepoStandard.cs`).** `PoBox/Repo/Standard Report` writes
+`Temp/repo-standard.txt`: the naming violations, and the assets nothing reaches, walked with
+`AssetDatabase.GetDependencies` from the build scenes, all of `Assets/_Project/Scenes` (the tests open
+`Testbed.unity` by path), every `Resources` folder, and the render pipeline assets that hang off
+`ProjectSettings/QualitySettings.asset`. A text grep is not a substitute and was measured to be unsafe: the
+seven icons in `UI/Icons` are reached through `project://database/...` URLs in `Theme.uss` and the Arena
+lightmaps through the binary `LightingData.asset`, so a GUID scan calls 16 live assets dead.
+
+**What the report found, and what was removed or renamed.** 116 naming violations; 12 assets unreached.
+`PoBox/Repo/Apply Standard Fixes` then, all with `AssetDatabase.MoveAsset`/`RenameAsset` so every GUID — and
+so every scene and prefab reference — is kept: 11 prop prefabs took `PF_`, 23 materials and 4 strays moved into
+`Environments/Materials` as `M_`, 64 first-party clips took `A_` (the Kenney pack keeps its own names), and the
+ten `Entrant_NAME` profiles became `Entrant_<Name>` (MjRetrofit now finds a profile by its display name, not by
+a file name it used to build). Deleted: the 7 pre-rename materials (`Pad_Red` and friends, which
+`UpgradeWiring` had already superseded), Lil Matt's announcer take (he was retired 2026-10-16) and
+`Audio/Real/whoosh.wav` (the glove whoosh is synthesised), Unity's `Assets/_Recovery` crash scene, and four
+`InitTestScene*.unity` files an interrupted test run had left. `scripts/run_tests.ps1` sweeps those now.
+
+**Two classes split, no behaviour change.** `MjBoxer.Observation.cs` holds the observation pass
+(`Heading`, `StandIn`, `Observe`, `Bodies`) and `MjRing.Seats.cs` holds where a boxer is put (`Place`, `Hold`,
+`Release`, `SetDown`…). `MjBoxer.Observe` now narrows each number into the policy's `float[]` as it clamps it, so
+`Infer` converts nothing for a narrow brain; a wide one copies the 103 and narrows only the three body inputs.
+
+**Runtime hygiene.** The keyboard-only controls (`F1`–`F4`, space, `R`, the free camera's WASD) are
+`#if UNITY_EDITOR || DEBUG`, so a release player keeps only Escape and Tab. The diagnostics overlay no longer
+lays anything out or searches the scene while it is hidden, finds the boxers once a second while it is up, and
+shows draw calls, set-pass calls and garbage a frame. The app mode, the docked panels and the static switches
+share one place: `ScreenChrome.Show` for the docking (the three screens had drifted, one hiding all three
+panels and two hiding only the opposite one) and `RuntimeState` for the statics, which clears every published
+`Instance` at `SubsystemRegistration`.
+
+**What was tried and put back.** Removing packages by grep is not safe here: `com.unity.pipeline` is the
+bridge the Unity CLI talks to the editor over, and taking it out of `manifest.json` left the editor unable to
+answer a single command (a `TypeLoadException` in `PipelineServerStartup`), which is how this was found.
+`Packages/manifest.json` is unchanged.
+
+**The gates.** `RepoStandardTests` (EditMode) fails on a new unprefixed prop, material or first-party clip, on
+an `Entrant_` that is not PascalCase, and on a boxer with a brain and no ladder entry; `RuntimeStandardTests`
+pins the 103/106 observation layout, the static reset and the docking rule; `tests/test_repo_standard.py`
+(fast tier) checks that the docs name the Unity version in `ProjectVersion.txt`, the plugin version the trainer
+pins, and everyone on the roster, and that no staged training queue still puts a second MuJoCo on
+`PYTHONPATH`. That last one was real: 81 entries across 8 staged queues pointed at `Training/.mj350`
+(MuJoCo 3.5.0) while the game, the trainer and `pyproject.toml` are 3.15.0; the folder and the entries are
+gone (the folder to `../PoBox_quarantine_2026-11-25/`, with the abandoned checkpoints `r0_matt`, `r1_matt`,
+`_benchmark` and `_benchmark_warm`).
+
+`scripts/clean.ps1 -DryRun` lists the generated output (Build/, Builds/, Logs/, Temp/, the stray WebGL burst
+artifact at `Data/Plugins/`, `MUJOCO_LOG.TXT`) and deletes only what git does not track: 815 MB on this PC.
 
 ## Older history
 

@@ -30,9 +30,6 @@
  {
   "run": "rescale_policy_matt",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -58,9 +55,6 @@
  {
   "run": "rescale_getup_matt",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -86,9 +80,6 @@
  {
   "run": "rescale_match_matt",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -114,9 +105,6 @@
  {
   "run": "rescale_policy_sokol",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -142,9 +130,6 @@
  {
   "run": "rescale_getup_sokol",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -170,9 +155,6 @@
  {
   "run": "rescale_match_sokol",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -198,9 +180,6 @@
  {
   "run": "rescale_policy_kim",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -226,9 +205,6 @@
  {
   "run": "rescale_getup_kim",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -254,9 +230,6 @@
  {
   "run": "rescale_match_kim",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -282,9 +255,6 @@
  {
   "run": "rescale_policy_zombie",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -310,9 +280,6 @@
  {
   "run": "rescale_getup_zombie",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -338,9 +305,6 @@
  {
   "run": "rescale_match_zombie",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -366,9 +330,6 @@
  {
   "run": "rescale_policy_nick",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -394,9 +355,6 @@
  {
   "run": "rescale_getup_nick",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -422,9 +380,6 @@
  {
   "run": "rescale_match_nick",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -450,9 +405,6 @@
  {
   "run": "rescale_policy_trump",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -478,9 +430,6 @@
  {
   "run": "rescale_getup_trump",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -506,9 +455,6 @@
  {
   "run": "rescale_match_trump",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -534,9 +480,6 @@
  {
   "run": "rescale_policy_grandpa",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -562,9 +505,6 @@
  {
   "run": "rescale_getup_grandpa",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -590,9 +530,6 @@
  {
   "run": "rescale_match_grandpa",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -618,9 +555,6 @@
  {
   "run": "rescale_policy_grandma",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -646,9 +580,6 @@
  {
   "run": "rescale_getup_grandma",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -674,9 +605,6 @@
  {
   "run": "rescale_match_grandma",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/rescale_actions.py",
    "--ckpt",
@@ -738,9 +666,6 @@
  {
   "run": "exam_v3f_matt",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/footwork_c.py",
    "--name",
@@ -880,9 +805,6 @@
  {
   "run": "exam_v3m_matt",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--models",
@@ -930,9 +852,6 @@
  {
   "run": "exam_v3f_sokol",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/footwork_c.py",
    "--name",
@@ -1072,9 +991,6 @@
  {
   "run": "exam_v3m_sokol",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--models",
@@ -1122,9 +1038,6 @@
  {
   "run": "exam_v3f_kim",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/footwork_c.py",
    "--name",
@@ -1264,9 +1177,6 @@
  {
   "run": "exam_v3m_kim",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--models",
@@ -1314,9 +1224,6 @@
  {
   "run": "exam_v3f_zombie",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/footwork_c.py",
    "--name",
@@ -1456,9 +1363,6 @@
  {
   "run": "exam_v3m_zombie",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--models",
@@ -1506,9 +1410,6 @@
  {
   "run": "exam_v3f_nick",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/footwork_c.py",
    "--name",
@@ -1648,9 +1549,6 @@
  {
   "run": "exam_v3m_nick",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--models",
@@ -1698,9 +1596,6 @@
  {
   "run": "exam_v3f_trump",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/footwork_c.py",
    "--name",
@@ -1844,9 +1739,6 @@
  {
   "run": "exam_v3m_trump",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--models",
@@ -1894,9 +1786,6 @@
  {
   "run": "exam_v3f_grandpa",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/footwork_c.py",
    "--name",
@@ -2038,9 +1927,6 @@
  {
   "run": "exam_v3m_grandpa",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--models",
@@ -2088,9 +1974,6 @@
  {
   "run": "exam_v3f_grandma",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/footwork_c.py",
    "--name",
@@ -2232,9 +2115,6 @@
  {
   "run": "exam_v3m_grandma",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--models",

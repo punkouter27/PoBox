@@ -350,12 +350,14 @@ namespace PoBox.UI
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetModeStatics() => CurrentMode = AppMode.Watch;
 
-        void Update()
+        /// <summary>
+        /// Keyboard-only development controls: the debug grid, the app mode, the camera mode and the brain swap, pause,
+        /// restart and the free camera. They ship only in the editor and in a development build; a player build keeps
+        /// Escape (and Tab, which the diagnostics overlay owns).
+        /// </summary>
+        void DevKeys()
         {
-            BuildIfNew();
-            if (_root == null) return;
-            _safeArea.Fit(_root, _safe);
-            if (Input.GetKeyDown(KeyCode.Escape)) Back();
+#if UNITY_EDITOR || DEBUG
             if (Input.GetKeyDown(KeyCode.F3)) ToggleDebug();     // Tab is the diagnostics overlay's (DiagOverlay)
             if (Input.GetKeyDown(KeyCode.F1))
             {
@@ -385,6 +387,16 @@ namespace PoBox.UI
                 if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) delta -= Vector3.right * step;
                 if (delta != Vector3.zero) director.AddFreeOffset(delta);
             }
+#endif
+        }
+
+        void Update()
+        {
+            BuildIfNew();
+            if (_root == null) return;
+            _safeArea.Fit(_root, _safe);
+            if (Input.GetKeyDown(KeyCode.Escape)) Back();
+            DevKeys();
             float now = Time.unscaledTime;
             if (_statsTap.Poll(now)) SettingsPage.ToggleStats();
             if (_leaving)

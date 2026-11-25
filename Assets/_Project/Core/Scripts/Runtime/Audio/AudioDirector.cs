@@ -119,7 +119,7 @@ namespace PoBox.Audio
         [Range(0f, 1f)] public float heartbeatVolume = 0.7f;
 
         [Header("Perspective")]
-        [Tooltip("A breathing loop, heard on the close shots (Assets/_Project/Environments/Audio/Real/breath.wav).")]
+        [Tooltip("A breathing loop, heard on the close shots (Assets/_Project/Environments/Audio/Real/A_breath.wav).")]
         public AudioClip breath;
         [Range(0f, 1f)] public float breathVolume = 0.25f;
         [Tooltip("On a close shot the hits come up and the crowd goes back by these, dB; on a wide shot the reverse, by half.")]
@@ -129,7 +129,7 @@ namespace PoBox.Audio
         [Tooltip("How far the crowd is pulled down while the bell rings, dB.")]
         public float bellDuckDb = 8f;
 
-        /// <summary>One register of the boxers' voices: takes of each sound (Assets/_Project/Environments/Audio/Synth/voice_*.wav).</summary>
+        /// <summary>One register of the boxers' voices: takes of each sound (Assets/_Project/Environments/Audio/Synth/A_voice_*.wav).</summary>
         [System.Serializable]
         public class VoiceSet
         {

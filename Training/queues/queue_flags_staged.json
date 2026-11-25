@@ -51,9 +51,6 @@
  {
   "run": "exam_f2_matt",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/footwork_c.py",
    "--name",
@@ -148,9 +145,6 @@
  {
   "run": "exam_rc2_matt",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--only",

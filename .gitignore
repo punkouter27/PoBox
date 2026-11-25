@@ -19,6 +19,10 @@
 # The Test Runner's temporary scene (InitTestScene<guid>.unity): left behind when a test run is interrupted.
 /[Aa]ssets/InitTestScene*.unity
 /[Aa]ssets/InitTestScene*.unity.meta
+# Unity's crash-recovery scene: not an asset, and it is not in the build.
+/[Aa]ssets/_Recovery/
+# A MuJoCo installed only for the trainer's exams (see AGENTS.md: one MuJoCo, the game's).
+/Training/.mj350/
 
 # Old training runs (results/<boxer>/<run>).
 results/

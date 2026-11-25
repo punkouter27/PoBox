@@ -9,7 +9,8 @@ Unity plugin 3.15.0 for the fight's physics, and Unity Inference Engine for the 
 
 ## What is in it
 
-- **Eight boxers**: Matt, Zombie, Nick, Trump, Grandma, Grandpa, Kim and Sokol, each built from its own
+- **Eight boxers**: Matt, Zombie, Nick, Trump, Grandma, Grandpa, Kim and Sokol (Soldat and Timmy joined on
+  2026-11-16; the roster has sixteen slots), each built from its own
   rigged mesh, with mass and strength to match its size.
 - **Three trained skills each**: footwork (stand under shoves, walk, turn), getting up from the canvas,
   and boxing. All trained in MuJoCo Warp on the GPU (`Training/`).

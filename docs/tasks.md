@@ -4,10 +4,11 @@ Open items only. The plan as it stood on 2026-11-13, with every ticked task and 
 [archive/tasks_2026-10.md](archive/tasks_2026-10.md). Task ids (D6, F1, G13 ...) are kept because the
 logs and reports cite them. What was measured, run by run, is `rl_optimization_log.md`.
 
-## Status (2026-11-13)
+## Status (2026-11-13; versions corrected 2026-11-25)
 
-- The retrofit is done: the game runs on the MuJoCo plugin 3.5.0 with no PhysX in the fight (Phases 0, A, B, D1-D5).
+- The retrofit is done: the game runs on the MuJoCo plugin 3.15.0 with no PhysX in the fight (Phases 0, A, B, D1-D5).
 - Eight boxers: Matt, Zombie, Nick, Trump, Grandma, Grandpa, Kim, Sokol. Lil Matt was retired on 2026-10-16.
+  Soldat and Timmy were added on 2026-11-16 (ten bodies, sixteen roster slots).
 - Six are on the v3 body: Sokol, Nick (2026-11-02), Zombie (2026-11-03), Matt, Trump, Kim (2026-11-04).
   Grandma and Grandpa are on v2: their v3 get-up fails (5 and 14 of 60).
 - The referee and the ring-card walker are in the game on trained footwork.

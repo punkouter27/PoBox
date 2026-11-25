@@ -247,9 +247,6 @@
   "run": "exam_rz_fw_jog_matt",
   "viewer": false,
   "est_h": 0.1,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_rules.py",
    "footwork_c",
@@ -304,9 +301,6 @@
   "run": "exam_rz_fw_slope_matt",
   "viewer": false,
   "est_h": 0.1,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_rules.py",
    "footwork_c",
@@ -367,9 +361,6 @@
   "run": "exam_rz_fw_rules_matt",
   "viewer": false,
   "est_h": 0.1,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_rules.py",
    "footwork_c",
@@ -465,9 +456,6 @@
   "run": "exam_rz_ctl_matt",
   "viewer": false,
   "est_h": 0.35,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_rules.py",
    "exam_v2",
@@ -568,9 +556,6 @@
   "run": "exam_rz_esc_matt",
   "viewer": false,
   "est_h": 0.35,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_rules.py",
    "exam_v2",
@@ -667,9 +652,6 @@
   "run": "exam_rz_flail_matt",
   "viewer": false,
   "est_h": 0.35,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_rules.py",
    "exam_v2",
@@ -766,9 +748,6 @@
   "run": "exam_rz_d3_matt",
   "viewer": false,
   "est_h": 0.35,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_rules.py",
    "exam_v2",
@@ -865,9 +844,6 @@
   "run": "exam_rz_d5_matt",
   "viewer": false,
   "est_h": 0.35,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_rules.py",
    "exam_v2",
@@ -964,9 +940,6 @@
   "run": "exam_rz_af_matt",
   "viewer": false,
   "est_h": 0.35,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_rules.py",
    "exam_v2",

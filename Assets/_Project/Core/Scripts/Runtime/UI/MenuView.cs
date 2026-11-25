@@ -181,7 +181,9 @@ namespace PoBox.UI
             if (!Application.isPlaying) return;
 
             if (Input.GetKeyDown(KeyCode.Escape)) Back();
+#if UNITY_EDITOR || DEBUG
             if (Input.GetKeyDown(KeyCode.F3)) SettingsPage.ToggleStats();     // Tab is the diagnostics overlay's (DiagOverlay)
+#endif
             if (_leaving) Set(_busyWord, _busyBase + BusyDots[(int)(Time.unscaledTime * 3f) % BusyDots.Length]);
             CupCountdown();
             _smoothed = Mathf.Lerp(_smoothed, Time.unscaledDeltaTime, 0.05f);
@@ -311,15 +313,10 @@ namespace PoBox.UI
         /// <summary>One at a time: they are docked in the same place.</summary>
         void Open(VisualElement which, bool open)
         {
-            if (which == null) return;
-            if (open)
-            {
-                foreach (VisualElement other in new[] { _sheet, _debugPanel, _cupSheet })
-                    if (other != null && other != which) other.AddToClassList("hidden");
-                if (which == _sheet && _settings != null) _settings.Refresh();
-            }
-            which.EnableInClassList("hidden", !open);
-            if (open && which == _debugPanel) RefreshDebug();
+            ScreenChrome.Show(which, open, _sheet, _debugPanel, _cupSheet);
+            if (!open) return;
+            if (which == _sheet && _settings != null) _settings.Refresh();
+            if (which == _debugPanel) RefreshDebug();
         }
 
         /// <summary>A tap on a card: it goes in the corner whose turn it is, and the turn passes to the other.</summary>

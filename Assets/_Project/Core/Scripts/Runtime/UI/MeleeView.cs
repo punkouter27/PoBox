@@ -157,13 +157,7 @@ namespace PoBox.UI
         /// <summary>One at a time, the settings and the debug panel, and the result put away while either is up: all three are docked in the same place.</summary>
         void Open(VisualElement which, bool open)
         {
-            if (which == null) return;
-            if (open)
-            {
-                VisualElement other = which == _sheet ? _debugPanel : _sheet;
-                other?.AddToClassList("hidden");
-            }
-            which.EnableInClassList("hidden", !open);
+            ScreenChrome.Show(which, open, _sheet, _debugPanel);
             if (open && which == _sheet) _settings?.Refresh();
             if (open && which == _debugPanel) RefreshDebug();
             ShowResult();
@@ -181,7 +175,9 @@ namespace PoBox.UI
             if (_root == null) return;
             _safeArea.Fit(_root, _safe);
             if (Input.GetKeyDown(KeyCode.Escape)) Back();
+#if UNITY_EDITOR || DEBUG
             if (Input.GetKeyDown(KeyCode.F3)) SettingsPage.ToggleStats();     // Tab is the diagnostics overlay's (DiagOverlay)
+#endif
             _call.EnableInClassList("hidden", Time.unscaledTime >= _callUntil);
 
             if (Time.unscaledTime < _nextText) return;

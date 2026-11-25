@@ -745,9 +745,6 @@
  {
   "run": "exam_m11_matt",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--only",
@@ -765,9 +762,6 @@
  {
   "run": "exam_m11_zombie",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--only",
@@ -785,9 +779,6 @@
  {
   "run": "exam_m11_nick",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--only",
@@ -805,9 +796,6 @@
  {
   "run": "exam_m11_sokol",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--only",
@@ -825,9 +813,6 @@
  {
   "run": "exam_m11_kim",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--only",
@@ -845,9 +830,6 @@
  {
   "run": "exam_m11_trump",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--only",
@@ -865,9 +847,6 @@
  {
   "run": "exam_m11_grandma",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--only",
@@ -885,9 +864,6 @@
  {
   "run": "exam_m11_grandpa",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--only",

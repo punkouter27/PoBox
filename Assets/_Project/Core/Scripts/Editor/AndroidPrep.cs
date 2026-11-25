@@ -173,13 +173,13 @@ namespace PoBox.EditorTools
                 foreach (string p in Directory.GetFiles("Assets/_Project/Environments/Announcer/Voice", "*.wav"))
                     if (SetAudio(p, AudioClipLoadType.DecompressOnLoad, 0.6f, forceMono: true)) audioCount++;
 
-                if (File.Exists("Assets/_Project/Environments/Audio/Real/crowdBed.wav") && SetAudio("Assets/_Project/Environments/Audio/Real/crowdBed.wav", AudioClipLoadType.Streaming, 0.5f, forceMono: false)) audioCount++;
-                if (File.Exists("Assets/_Project/Environments/Audio/Real/crowdApplause.wav") && SetAudio("Assets/_Project/Environments/Audio/Real/crowdApplause.wav", AudioClipLoadType.CompressedInMemory, 0.55f, forceMono: true)) audioCount++;
-                foreach (string p in new[] { "Assets/_Project/Environments/Audio/Real/crowdSwell.wav", "Assets/_Project/Environments/Audio/Real/crowdGroan.wav" })
+                if (File.Exists("Assets/_Project/Environments/Audio/Real/A_crowdBed.wav") && SetAudio("Assets/_Project/Environments/Audio/Real/A_crowdBed.wav", AudioClipLoadType.Streaming, 0.5f, forceMono: false)) audioCount++;
+                if (File.Exists("Assets/_Project/Environments/Audio/Real/A_crowdApplause.wav") && SetAudio("Assets/_Project/Environments/Audio/Real/A_crowdApplause.wav", AudioClipLoadType.CompressedInMemory, 0.55f, forceMono: true)) audioCount++;
+                foreach (string p in new[] { "Assets/_Project/Environments/Audio/Real/A_crowdSwell.wav", "Assets/_Project/Environments/Audio/Real/A_crowdGroan.wav" })
                     if (File.Exists(p) && SetAudio(p, AudioClipLoadType.CompressedInMemory, 0.55f, forceMono: false)) audioCount++;
-                foreach (string p in new[] { "Assets/_Project/Environments/Audio/Real/breath.wav", "Assets/_Project/Environments/Audio/Real/lapBell.wav" })
+                foreach (string p in new[] { "Assets/_Project/Environments/Audio/Real/A_breath.wav", "Assets/_Project/Environments/Audio/Real/A_lapBell.wav" })
                     if (File.Exists(p) && SetAudio(p, AudioClipLoadType.CompressedInMemory, 0.65f, forceMono: true)) audioCount++;
-                if (File.Exists("Assets/_Project/Environments/Audio/Real/sting.wav") && SetAudio("Assets/_Project/Environments/Audio/Real/sting.wav", AudioClipLoadType.DecompressOnLoad, 0.65f, forceMono: false)) audioCount++;
+                if (File.Exists("Assets/_Project/Environments/Audio/Real/A_sting.wav") && SetAudio("Assets/_Project/Environments/Audio/Real/A_sting.wav", AudioClipLoadType.DecompressOnLoad, 0.65f, forceMono: false)) audioCount++;
 
                 if (Directory.Exists("Assets/_Project/Environments/Audio/Synth"))
                     foreach (string p in Directory.GetFiles("Assets/_Project/Environments/Audio/Synth", "*.wav"))
