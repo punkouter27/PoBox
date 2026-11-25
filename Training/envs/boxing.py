@@ -40,6 +40,7 @@ import warp as wp
 from .bodies import lying_bodies  # noqa: E402,F401  (the Melee's downed bodies; plain mujoco, shared with the C exams)
 from .boxing_base import BoxingOpsMixin  # noqa: E402
 from .reward_config import penalties  # noqa: E402
+from .muscle import MODEL as HILL, HillDrive, is_hill, params_from  # noqa: E402
 from .math3d import (  # noqa: E402,F401
     DEFAULT_FATIGUE_J,
     PUNCH_MASS,
@@ -166,6 +167,14 @@ class BoxingEnv(BoxingOpsMixin):
         xcom_w: float = 0.0,
         stall_w: float = 0.0,
         stall_s: float = 2.0,
+        domain_rand=None,
+        muscle: str = "",
+        muscle_over: dict = None,
+        muscle_for: tuple = (),
+        energy_w: float = None,
+        hit_bank: str = "",
+        hit_every_s: float = 4.0,
+        hit_scale: float = 1.0,
     ):
         wp.init()
         wp.config.verbose_warnings = verbose
@@ -295,7 +304,20 @@ class BoxingEnv(BoxingOpsMixin):
         # angular velocity^2, action change^2 and foot slip, each its own weight. torque^2 and joint speed^2 came
         # 2026-11-20 and are charged (and logged, rt_torque / rt_jvel) only when their weight is not 0.
         self.pen = penalties(self.MODE or "boxing")
-        self.TERMS = self.TERMS + [t for t, k in (("torque", "torque_sq"), ("jvel", "joint_vel_sq")) if self.pen[k]]
+        # 2026-11-25 (opt-in): energy_w, when given, is the run's weight on the mechanical work sum |tau omega| (rt_work).
+        if energy_w is not None:
+            self.pen["mech_work"] = float(energy_w)
+        self.TERMS = self.TERMS + [
+            t for t, k in (("torque", "torque_sq"), ("jvel", "joint_vel_sq"), ("work", "mech_work")) if self.pen[k]
+        ]
+        # Three more upgrades of 2026-11-25, each off unless asked for: domain_rand (an envs.randomize.RandRanges),
+        # hit_bank (a tools/hits_to_bank.py .npz; one shove from it every hit_every_s per fighter, impulses x hit_scale),
+        # muscle "hill" (envs/muscle.py) for the fighters in muscle_for (all of them when it is empty), muscle_over its
+        # parameters over the config's. A fighter whose config already has a muscle block runs it, as the game does.
+        self._domain_rand, self._hit_bank = domain_rand, hit_bank
+        self.hit_every_s, self.hit_scale = hit_every_s, hit_scale
+        if muscle not in ("", HILL):
+            raise ValueError(f"muscle must be '' or '{HILL}', not {muscle!r}")
         self.range_m = range_m
         self.hit_cap = hit_cap
         # How far a glove has to come back off the target before it can score again: a punch has a
@@ -358,10 +380,29 @@ class BoxingEnv(BoxingOpsMixin):
         )
         self.ring_half = float(cfg.get("ring_half", self.cfg.get("ring_half", 3.05)))
 
+        # The Hill muscle, fighter by fighter: written into the fighter's config (its "muscle" block), which the run's
+        # latest_*_policy_config.json carries to the game. It takes the place of the linear speed limit (its force-velocity
+        # curve is that rule), so a muscled fighter's speed_limit is off.
+        self.hill_k = [
+            (muscle == HILL and (not muscle_for or n in muscle_for)) or is_hill(c)
+            for n, c in zip(self.names, self.cfgs)
+        ]
+        self.muscle_params = [
+            params_from(c.get("muscle") if is_hill(c) else None, **(muscle_over or {})) if h else None
+            for h, c in zip(self.hill_k, self.cfgs)
+        ]
+        self.cfgs = [
+            dict(c, muscle=p.block(), speed_limit=False) if p is not None else c
+            for p, c in zip(self.muscle_params, self.cfgs)
+        ]
+        self.cfg = self.cfgs[0]
+
         # Fighter by fighter: a boxer trained under the rule can meet one that was not. default_rules (2026-10-30, AGENTS.md
         # section 3, the trainers pass it unless --legacy-rules): a fighter whose config does not say is trained with the
         # speed limit and DEFAULT_FATIGUE_J of fatigue; one whose config says (every shipped boxer: true, 20000) keeps its own.
-        limited = [speed_limit or bool(c.get("speed_limit", default_rules)) for c in self.cfgs]
+        limited = [
+            (speed_limit or bool(c.get("speed_limit", default_rules))) and not h for c, h in zip(self.cfgs, self.hill_k)
+        ]
         self.limited = limited
         self.speed_limit = any(limited)
         self.rules_defaulted = [
@@ -705,6 +746,7 @@ class BoxingEnv(BoxingOpsMixin):
         self.from_bank = torch.zeros(N, self.K, dtype=torch.bool, device=device)
         self._bank_use = torch.zeros(N, self.K, dtype=torch.bool, device=device)
         self._init_extra()
+        self._init_upgrades()
         if self.obs_delay_max > 0:
             # Every caller of _observe (reset, each stage's step) gets the late observation; a subclass's own
             # _observe still reaches its base class's through super(), undelayed.
@@ -725,6 +767,34 @@ class BoxingEnv(BoxingOpsMixin):
         self._fwd_graph = None
         self._capture_graphs()
         self.reset()
+
+    def _init_upgrades(self) -> None:
+        """Domain randomisation, the Hill muscle and the hit bank, made after the stage's own set-up (which may give
+        each world its own body) and before any CUDA graph is captured."""
+        if self._domain_rand is not None:
+            from .randomize import DomainRand
+
+            self.dr = DomainRand(self, self._domain_rand)
+            self._dr_obs_noise = float(self._domain_rand.obs_noise)
+        if any(self.hill_k):
+            F = lambda rows: torch.tensor(np.array(rows), device=self.device, dtype=torch.float32)
+            plain = params_from(None)
+            self.hill = HillDrive(
+                [p or plain for p in self.muscle_params],
+                F([c["force_limit"] for c in self.cfgs]),
+                self.qvel_limit,
+                self.joint_lo,
+                self.joint_hi,
+                self.N,
+            )
+            self.hill_on = torch.tensor(self.hill_k, device=self.device)
+            n = self.K * self.A
+            # A live view of each world's kp (the randomisation writes it in place).
+            self._hill_kp = wp.to_torch(self.mw.actuator_gainprm)[:, :n, 0].reshape(-1, self.K, self.A)
+        if self._hit_bank:
+            from .hit_bank import HitShover
+
+            self.hits = HitShover(self, self._hit_bank, self.hit_every_s, self.hit_scale)
 
     def step(self, action: torch.Tensor):
         N, K, A = self.N, self.K, self.A

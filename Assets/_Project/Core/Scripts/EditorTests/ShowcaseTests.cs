@@ -12,11 +12,13 @@ namespace PoBox.EditorTests
     /// </summary>
     public class ShowcaseTests
     {
+#pragma warning disable CS0649 // filled by JsonUtility
         [System.Serializable]
         class Weights { public float torque_sq = -1f, joint_vel_sq = -1f, ang_vel_sq = -1f, action_rate = -1f, foot_slip = -1f; }
 
         [System.Serializable]
         class TrainingConfig { public Weights boxing; }
+#pragma warning restore CS0649
 
         [Test]
         public void RewardWeightsAreTheTrainingConfigs()

@@ -1,0 +1,10 @@
+{
+  "_doc": "Domain randomisation ranges (envs/randomize.py), used only with train_box.py --domain-rand (off by default). Drawn per world at every episode reset. friction, mass, kp, kd and dt_jitter are +- shares of the nominal value (mass per body, the rest one factor per world); delay_max is the most control steps (20 ms each) the drive targets lag the policy, drawn 0..delay_max per fighter; obs_noise is extra sensor noise on top of --obs-noise, in the env's per-number noise units. The game runs the nominal body: these only make a brain robust, nothing here is mirrored in Unity.",
+  "friction": 0.3,
+  "mass": 0.1,
+  "kp": 0.15,
+  "kd": 0.2,
+  "delay_max": 2,
+  "dt_jitter": 0.05,
+  "obs_noise": 0.5
+}

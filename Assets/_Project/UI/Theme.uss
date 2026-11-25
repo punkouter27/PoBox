@@ -487,6 +487,8 @@ Label { margin: 0; padding: 0; }
     border-radius: var(--radius-sm);
 }
 .chat--melee { top: var(--ffa-under-board); left: var(--gap-4); right: var(--gap-4); }
+/* Chat's corner (Online/ChatCorner.cs): the vote's tally between rounds, one line under the chat line. */
+.chat--vote { margin-top: 44px; color: var(--accent); }
 
 /* Between rounds: the cards and the round's numbers, over the middle of the picture. */
 .break {

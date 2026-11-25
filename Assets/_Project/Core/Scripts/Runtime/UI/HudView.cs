@@ -167,6 +167,8 @@ namespace PoBox.UI
         public bool DebugOpen => _debugPanel != null && !_debugPanel.ClassListContains("hidden");
         public bool ResultsOpen => _results != null && !_results.ClassListContains("hidden");
         public SettingsPage Settings => _settings;
+        /// <summary>The Twitch chat this HUD reads (settings' TWITCH channel), or null: Online/ChatCorner runs its votes on it.</summary>
+        public TwitchChat Chat => _twitch;
         public VisualElement Root => _root;
 
         /// <summary>A pretend notch for the editor and the tests, in screen pixels, for every document (<see cref="SafeArea"/>). Null is the real safe area.</summary>

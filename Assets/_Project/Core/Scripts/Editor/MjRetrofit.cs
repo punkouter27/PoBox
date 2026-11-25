@@ -112,7 +112,9 @@ namespace PoBox.EditorTools
             };
         }
 
+#pragma warning disable CS0649 // filled by JsonUtility
         [System.Serializable] class Sizes { public float height_m, total_mass_kg; }
+#pragma warning restore CS0649
 
         /// <summary>The owner's mesh for a boxer, Assets/_Project/Environments/Models/NAME.glb (or .fbx).</summary>
         static GameObject Mesh(string name)
@@ -303,6 +305,7 @@ namespace PoBox.EditorTools
                 var fighter = go.AddComponent<Fighter>();
                 var brain = go.AddComponent<MjBrain>();
                 var skin = go.AddComponent<FighterSkin>();
+                go.AddComponent<PoBox.Audio.LipSync>();   // 2026-11-25: the voice moves the jaw or mouth
 
                 var byName = new Dictionary<string, BodyPart>();
                 foreach (string body in BodyOrder)

@@ -164,6 +164,7 @@ class PPO:
         }
         self.t = 0
         self._sym: Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor] | None = None
+        self.amp = None  # amp.AMP when attached (train_box.py --amp): its discriminator steps inside update()
 
     def set_symmetry(
         self,
@@ -179,6 +180,11 @@ class PPO:
             act_perm.to(self.device),
             act_sign.to(self.device),
         )
+
+    def set_amp(self, disc) -> None:
+        """Attach an adversarial-motion-prior discriminator (amp.AMP): it takes one step per PPO minibatch in update(),
+        on clip transitions and the replay buffer the trainer fills. None detaches it (the default: no change)."""
+        self.amp = disc
 
     # ---- rollout -------------------------------------------------------------------------------
     def act(self, raw_obs: torch.Tensor) -> torch.Tensor:
@@ -236,6 +242,7 @@ class PPO:
         stats = {"policy_loss": 0.0, "value_loss": 0.0, "entropy": 0.0, "kl": 0.0}
         if c.sym_coef > 0.0 and self._sym is not None:
             stats["sym_loss"] = 0.0
+        amp_sums: Dict[str, torch.Tensor] = {}
         n_updates = 0
         mb = T * N // c.minibatches
         for _ in range(c.epochs):
@@ -291,8 +298,13 @@ class PPO:
                 stats["value_loss"] += v_loss.item()
                 stats["entropy"] += ent.mean().item()
                 stats["kl"] += kl.item()
+                if self.amp is not None:
+                    for k, v in self.amp.step().items():
+                        amp_sums[k] = amp_sums.get(k, 0.0) + v
                 n_updates += 1
         self.t = 0
+        for k, v in amp_sums.items():
+            stats[k] = float(v)
         for k in stats:
             stats[k] /= max(1, n_updates)
         stats["lr"] = self.cfg.lr

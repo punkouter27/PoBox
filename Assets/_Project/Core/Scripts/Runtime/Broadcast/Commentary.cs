@@ -19,6 +19,11 @@ namespace PoBox.Broadcast
     /// none ships in the app) the round's numbers go to it <see cref="askBefore"/> seconds before the bell and its
     /// line is said if it is back in time; otherwise, or without a proxy, the line is chosen by rules from the same
     /// numbers (<see cref="CornerTip"/>). After a win the winner gets one line to the interviewer the same way.
+    ///
+    /// Colour commentary (<see cref="Colour"/>): at each bell between rounds, and after a knockdown at most once every
+    /// <see cref="colourEventGap"/> seconds, a compact summary (punches, power, knockdowns, daze, stamina, the cards)
+    /// goes to the same proxy's /commentary endpoint, and the one or two lines that come back are said too. It only
+    /// ever adds lines: offline, failed or late, nothing extra is said.
     /// </summary>
     public class Commentary : MonoBehaviour
     {
@@ -54,6 +59,31 @@ namespace PoBox.Broadcast
         bool _clinchSaid;
         BoutPhase _phase = (BoutPhase)(-1);
 
+        // Colour commentary: Claude through the same proxy (its /commentary endpoint), said on top of the lines above.
+        [Header("Colour commentary (the proxy's /commentary)")]
+        [Tooltip("At each bell between rounds, ask for one or two colour lines on the round.")]
+        [SerializeField] bool colourBetweenRounds = true;
+        [Tooltip("Also ask after a knockdown (at most one every colourEventGap seconds).")]
+        [SerializeField] bool colourOnKnockdown = true;
+        [Tooltip("Fewest seconds between two knockdown asks.")]
+        [SerializeField] float colourEventGap = 45f;
+        [Tooltip("Seconds into the break the first colour line is said (the bell's line and the corner's go first).")]
+        [SerializeField] float colourAfter = 4.5f;
+        [Tooltip("Seconds between the two colour lines.")]
+        [SerializeField] float colourLineGap = 3f;
+        [Tooltip("A knockdown's line is said only this soon after it; later it is old news and dropped.")]
+        [SerializeField] float colourFresh = 6f;
+        [Tooltip("Seconds the game waits for the proxy before giving up: silence, and the rule-based lines carry on.")]
+        [SerializeField] int colourTimeout = 5;
+        UnityWebRequest _colour;
+        bool _colourIsRound;
+        float _colourAskedAt, _nextColourEvent, _colourSayAt;
+        // The answer's lines, said one at a time.
+        readonly string[] _colourLines = new string[2];
+        int _colourCount, _colourIndex;
+        BoutPhase _colourPhase = (BoutPhase)(-1);
+        readonly ColourFacts _colourFacts = new ColourFacts();
+
         void OnEnable()
         {
             SimBus.Hit += OnHit;
@@ -66,6 +96,8 @@ namespace PoBox.Broadcast
         {
             CornerAI.Drop(ref _ask);
             CornerAI.Drop(ref _interview);
+            CornerAI.Drop(ref _colour);
+            _colourCount = 0;
             SimBus.Hit -= OnHit;
             SimBus.Knockdown -= OnKnockdown;
             SimBus.GotUp -= OnGotUp;
@@ -105,6 +137,7 @@ namespace PoBox.Broadcast
                 SimBus.Say($"DOWN! {f.displayName} is on the canvas · {cause.impulse:0} N·s {PunchName(cause.punch)}", 3);
             else
                 SimBus.Say($"{f.displayName} loses their feet", 2);
+            AskColourKnockdown(f, cause);
         }
 
         void OnGotUp(Fighter f)
@@ -117,6 +150,7 @@ namespace PoBox.Broadcast
         {
             if (bout == null) return;
             Corner();
+            Colour();
             if (bout.Phase != BoutPhase.Fight) return;
             Fighter a = bout.red, b = bout.blue;
             if (a == null || b == null) return;
@@ -254,6 +288,132 @@ namespace PoBox.Broadcast
             int worse = line != null && _askCorner >= 0 ? _askCorner : Worse(a, b);
             Fighter w = worse == 0 ? a : b;
             SimBus.Say($"{w.displayName}'s corner: {line ?? CornerTip(worse, w, 1 - worse, worse == 0 ? b : a)}", 2);
+        }
+
+        /// <summary>
+        /// Colour commentary from Claude, through the proxy (<see cref="CornerAI"/>, endpoint /commentary). At the bell
+        /// ending a round the round's summary goes out; its one or two lines are said from <see cref="colourAfter"/> into
+        /// the break, <see cref="colourLineGap"/> apart, while there is break left. After a knockdown (rate-limited) the
+        /// same, said at once if it is back within <see cref="colourFresh"/>. No proxy, a failure, a timeout or a late
+        /// answer: nothing is said, and the rule-based lines carry the broadcast as they always have.
+        /// </summary>
+        void Colour()
+        {
+            Fighter a = bout.red, b = bout.blue;
+            if (a == null || b == null) return;
+            BoutPhase phase = bout.Phase;
+            float now = Time.unscaledTime;
+            if (phase != _colourPhase)
+            {
+                _colourPhase = phase;
+                if (phase == BoutPhase.RoundBreak && colourBetweenRounds)
+                {
+                    FillColour("round", a, b);
+                    AskColour(true, now);
+                }
+                else if (_colourIsRound)
+                {
+                    // The break is over: a round's lines are about a moment that has passed.
+                    CornerAI.Drop(ref _colour);
+                    _colourCount = 0;
+                }
+            }
+            if (_colour != null && !CornerAI.Pending(_colour)) Split(CornerAI.Answer(ref _colour));
+            if (_colourIndex >= _colourCount) return;
+            bool stale = _colourIsRound
+                ? phase != BoutPhase.RoundBreak || bout.PhaseAge > bout.breakSeconds - 1f
+                : now - _colourAskedAt > colourFresh + _colourIndex * colourLineGap;
+            if (stale) { _colourCount = 0; return; }
+            if ((_colourIsRound && bout.PhaseAge < colourAfter) || now < _colourSayAt) return;
+            SimBus.Say(_colourLines[_colourIndex++], 1);
+            _colourSayAt = now + colourLineGap;
+        }
+
+        void AskColourKnockdown(Fighter victim, HitEvent cause)
+        {
+            float now = Time.unscaledTime;
+            if (!colourOnKnockdown || bout == null || bout.red == null || bout.blue == null || cause.attacker == null) return;
+            if (now < _nextColourEvent || _colour != null) return;
+            _nextColourEvent = now + colourEventGap;
+            FillColour("knockdown", bout.red, bout.blue);
+            _colourFacts.attacker = cause.attacker.displayName;
+            _colourFacts.victim = victim.displayName;
+            _colourFacts.punch = PunchName(cause.punch);
+            _colourFacts.impulse = Mathf.Round(cause.impulse);
+            int left = Mathf.Max(0, Mathf.CeilToInt(bout.RoundTimeLeft));
+            _colourFacts.clock = $"{left / 60}:{left % 60:00}";
+            AskColour(false, now);
+        }
+
+        void AskColour(bool round, float now)
+        {
+            CornerAI.Drop(ref _colour);
+            _colourCount = _colourIndex = 0;
+            _colourIsRound = round;
+            _colourAskedAt = _colourSayAt = now;
+            _colour = CornerAI.Ask(JsonUtility.ToJson(_colourFacts), CornerAI.CommentaryEndpoint, colourTimeout);
+        }
+
+        /// <summary>The answer's first two non-empty lines, queued to be said.</summary>
+        void Split(string text)
+        {
+            _colourCount = _colourIndex = 0;
+            if (text == null) return;
+            foreach (string line in text.Split('\n'))
+            {
+                string l = line.Trim();
+                if (l.Length == 0) continue;
+                _colourLines[_colourCount++] = l;
+                if (_colourCount == _colourLines.Length) break;
+            }
+        }
+
+        void FillColour(string kind, Fighter a, Fighter b)
+        {
+            ColourFacts c = _colourFacts;
+            c.kind = kind;
+            c.round = bout.Round;
+            c.rounds = bout.rounds;
+            c.cards = bout.CardsText();
+            c.attacker = c.victim = c.punch = c.clock = "";
+            c.impulse = 0f;
+            FillBoxer(c.red, 0, a);
+            FillBoxer(c.blue, 1, b);
+        }
+
+        void FillBoxer(ColourBoxer c, int corner, Fighter f)
+        {
+            c.name = f.displayName;
+            c.landedRound = Landed(corner, f);
+            c.thrownRound = Thrown(corner, f);
+            c.landedBout = f.stats.landed;
+            c.thrownBout = f.stats.thrown;
+            c.accuracy = PunchStats.LandedPercent(f);
+            c.knockdowns = f.stats.knockdowns;
+            c.downs = f.stats.downs;
+            c.hardestPunch = Mathf.Round(f.stats.peakImpulse);
+            c.fastestKmh = Mathf.Round(PunchStats.FastestKmh(f));
+            c.headTaken = Mathf.Round(Head(corner, f));
+            c.daze = Mathf.Round(f.Daze01 * 100f) / 100f;
+            c.stamina = Mathf.Round(f.Stamina * 100f) / 100f;
+        }
+
+        /// <summary>What the commentator is told: the round's and the bout's numbers for each boxer, nothing else.</summary>
+        [System.Serializable]
+        class ColourFacts
+        {
+            public string kind, cards, attacker, victim, punch, clock;
+            public int round, rounds;
+            public float impulse;
+            public ColourBoxer red = new ColourBoxer(), blue = new ColourBoxer();
+        }
+
+        [System.Serializable]
+        class ColourBoxer
+        {
+            public string name;
+            public int landedRound, thrownRound, landedBout, thrownBout, accuracy, knockdowns, downs;
+            public float hardestPunch, fastestKmh, headTaken, daze, stamina;
         }
 
         /// <summary>The one who had the worse of the round: landed fewer, or on a tie took more to the head.</summary>

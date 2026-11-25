@@ -19,7 +19,8 @@ namespace PoBox.Online
     /// The socket runs on a background task and puts each chat line on a queue; <see cref="Poll"/>, on the main
     /// thread, takes them off. A message starting with "!" is a vote: one standing vote a viewer (the last one
     /// counts), read by <see cref="Votes"/> ("!red", "!blue", or a boxer's name). "!cube" asks for a cube to be
-    /// thrown into the ring; <see cref="TakeCube"/> hands out at most one every few seconds.
+    /// thrown into the ring; <see cref="TakeCube"/> hands out at most one every few seconds. Between rounds an open
+    /// <see cref="Vote"/> (ChatCorner: "!jab", "!body", "!defend", "!pressure") takes its own words first.
     ///
     /// Off unless PlayerPrefs "pobox.twitch" holds a channel name. YouTube's live chat has no anonymous read: it
     /// needs a Google API key, and a key shipped in an app is a key given away, so it is not here.
@@ -33,6 +34,8 @@ namespace PoBox.Online
 
         public string Channel { get; }
         public bool Connected => _connected;
+        /// <summary>A vote running between rounds (<see cref="ChatCorner"/>): while it is open, its words are counted there and not as a standing vote.</summary>
+        public ChatVote Vote { get; set; }
 
         readonly ConcurrentQueue<string> _lines = new ConcurrentQueue<string>();
         readonly CancellationTokenSource _stop = new CancellationTokenSource();
@@ -114,6 +117,7 @@ namespace PoBox.Online
                 if (text.Length < 2 || text[0] != '!') continue;
                 int end = text.IndexOf(' ');
                 string word = (end < 0 ? text.Substring(1) : text.Substring(1, end - 1)).ToLowerInvariant();
+                if (Vote != null && Vote.TryCast(viewer, word)) continue;
                 if (word == "cube") _cubesAsked++;
                 else if (word.Length <= 24) _votes[viewer] = word;
             }

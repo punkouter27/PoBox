@@ -836,6 +836,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2517706209504648045, guid: 28f113dd4527c5447bf8fe7ec003616e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 706991416166468701}
+    - targetCorrespondingSourceObject: {fileID: 2517706209504648045, guid: 28f113dd4527c5447bf8fe7ec003616e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1447367092143775897}
     - targetCorrespondingSourceObject: {fileID: 5578637786078111568, guid: 28f113dd4527c5447bf8fe7ec003616e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4219610736282279033}
@@ -1318,6 +1321,9 @@ MonoBehaviour:
   boxer: {fileID: 5549252256980487033}
   ring: {fileID: 0}
   punchSpeed: 3.5
+  leaveAfter: 8
+  leaveSpeed: 0.35
+  goneBeyondRopes: 0.5
   squareFacing: 0.26
   squareSpeed: 0.3
   cornerSpeed: 0.8
@@ -1379,7 +1385,63 @@ MonoBehaviour:
   tiredDroop: 14
   rimIntensity: 0.55
   pressedRim: 1.4
+  wetPerRound: 0.25
+  wetFromFatigue: 0.5
+  wetAtStart: 0.08
   rippleImpulse: 12
+--- !u!114 &1447367092143775897
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6053977585932756430}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4c403885c8a454bafd912b91f15e8dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoBox.Runtime::PoBox.Audio.LipSync
+  fighter: {fileID: 0}
+  voice: {fileID: 0}
+  face: {fileID: 0}
+  openShapes:
+  - jawOpen
+  - Jaw_Open
+  - mouthOpen
+  - Mouth_Open
+  - V_Open
+  - viseme_aa
+  - Open
+  wideShapes:
+  - mouthStretch
+  - Mouth_Widen
+  - V_Wide
+  - viseme_E
+  - viseme_I
+  roundShapes:
+  - mouthPucker
+  - Mouth_Pucker
+  - V_Tight_O
+  - viseme_O
+  - viseme_U
+  shapeWeight: 100
+  jaw: {fileID: 0}
+  jawNames:
+  - CC_Base_JawRoot
+  - JawRoot
+  - jaw
+  - Jaw
+  - mixamorig:Jaw
+  jawAxis: {x: 0, y: 0, z: 1}
+  jawDegrees: 16
+  mouth: {fileID: 0}
+  openScale: {x: 1, y: 2.2, z: 1}
+  wideScale: 1.25
+  attackSeconds: 0.03
+  releaseSeconds: 0.07
+  lookAheadSeconds: 0.04
+  tapFullLevel: 0.12
+  syllablesPerSecond: 5.5
 --- !u!137 &6098308034798271345 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: 2473943099713029586, guid: 28f113dd4527c5447bf8fe7ec003616e, type: 3}

@@ -25,6 +25,10 @@
 //   _PoBoxCrowdSide    who just scored: -1 red, +1 blue. Each half of the hall sits behind its own corner,
 //                      two figures in five there wear its colour, and they are the ones who jump highest
 //                      when their fighter lands.
+//
+// And one from the reactive crowd (CrowdExcitement, 2026-11-25):
+//   _PoBoxCrowdExcite  how excited the hall is, 0..1. Every figure's sway, bounce and jump are scaled by
+//                      1 + _ExciteMotion * it; never set (0) the crowd moves exactly as before.
 Shader "PoBox/Crowd"
 {
     Properties
@@ -51,6 +55,7 @@ Shader "PoBox/Crowd"
         _BlueCorner ("Blue corner's colour", Color) = (0.20, 0.49, 0.94, 1)
         _FlashGain ("Flash brightness", Range(0, 20)) = 9
         _PhoneGain ("Phone light brightness", Range(0, 10)) = 1.6
+        _ExciteMotion ("Extra motion at full reactive-crowd excitement (_PoBoxCrowdExcite)", Range(0, 3)) = 1
     }
     SubShader
     {
@@ -96,6 +101,7 @@ Shader "PoBox/Crowd"
                 half4 _BlueCorner;
                 float _FlashGain;
                 float _PhoneGain;
+                float _ExciteMotion;
             CBUFFER_END
 
             TEXTURE2D(_Albedo); SAMPLER(sampler_Albedo);
@@ -109,6 +115,8 @@ Shader "PoBox/Crowd"
             float _PoBoxCrowdPhones;
             float _PoBoxCrowdSide;
             float _PoBoxCrowdLead;
+            // Set every frame by CrowdExcitement (0 when there is none).
+            float _PoBoxCrowdExcite;
 
             struct Attributes
             {
@@ -166,10 +174,14 @@ Shader "PoBox/Crowd"
                 float phase = v.seed.x * 6.2831853;
                 float energy = 0.4 + 0.6 * v.seed.y;
                 float t = _Time.y;
-                float bob = sin(t * 1.7 + phase) * 0.015 * (0.3 + mood);
-                float bounce = max(0, sin(t * (4.0 + 2.0 * mood) + phase)) * 0.10 * mood * energy * (1.0 + 0.6 * lead);
-                float jump = max(0, sin(t * 9.0 + phase)) * 0.30 * burst * energy;
-                float lean = sin(t * 1.3 + phase * 1.7) * 0.05 * (0.2 + mood);
+                // The reactive crowd scales the amplitudes only (a rate that moved with it would jump the phase).
+                float motion = 1.0 + _ExciteMotion * saturate(_PoBoxCrowdExcite);
+                float bob = sin(t * 1.7 + phase) * 0.015 * (0.3 + mood) * motion;
+                // An excited hall bounces even when the mood reading is low (its height, not its rate).
+                float bounceMood = max(mood, 0.8 * saturate(_PoBoxCrowdExcite));
+                float bounce = max(0, sin(t * (4.0 + 2.0 * mood) + phase)) * 0.10 * bounceMood * energy * (1.0 + 0.6 * lead) * motion;
+                float jump = max(0, sin(t * 9.0 + phase)) * 0.30 * burst * energy * motion;
+                float lean = sin(t * 1.3 + phase * 1.7) * 0.05 * (0.2 + mood) * motion;
 
                 // A flash is one figure in about eighty at the peak, a different eightieth every 1/14 s (one in twelve read as
                 // a strobe on the phone, owner 2026-11-03).

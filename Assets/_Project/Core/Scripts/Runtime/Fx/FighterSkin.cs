@@ -21,6 +21,10 @@ namespace PoBox.Fx
     /// snaps it away from the glove on a spring and lets it come back, and a tired fighter's chin sinks. That is
     /// drawn only, on the neck bone the skin binder leaves to follow the chest; no number of the fight changes.
     /// It runs after the binder (order 200), so the chest it turns the neck from is this frame's.
+    ///
+    /// The skin also gets wetter over a bout (<c>_Wet</c>): a broad sheen that rises through every round and
+    /// carries over into the next, plus a share of the fatigue, so a fighter in the last round shines even when
+    /// fresh. The bad marks on the head swell (the shader reads the same marks; nothing more is sent).
     /// </summary>
     [DefaultExecutionOrder(210)]
     public class FighterSkin : MonoBehaviour
@@ -69,6 +73,14 @@ namespace PoBox.Fx
         [Tooltip("The rim's strength as authored, and how much more of it a boxer on the ropes under pressure gets.")]
         public float rimIntensity = 0.55f, pressedRim = 1.4f;
         float _pressed;
+        static readonly int WetId = Shader.PropertyToID("_Wet");
+        [Header("Wet sheen (_Wet)")]
+        [Tooltip("Sheen gained over each full round of a bout, 0..1. Round one ends at this, round two at twice it.")]
+        [SerializeField] float wetPerRound = 0.25f;
+        [Tooltip("Share of the fatigue (the same 0..1 as the beaded sweat) that adds to the sheen.")]
+        [SerializeField] float wetFromFatigue = 0.5f;
+        [Tooltip("Sheen before the first bell (the walk-on: oiled for the cameras).")]
+        [SerializeField] float wetAtStart = 0.08f;
         static readonly int RippleId = Shader.PropertyToID("_Ripple");
         static readonly int RippleStrengthId = Shader.PropertyToID("_RippleStrength");
         static readonly int LoadId = Shader.PropertyToID("_Load");
@@ -190,6 +202,20 @@ namespace PoBox.Fx
             Shader.SetKeyword(_skinHq, level >= 0 && level < names.Length && names[level] == "High");
         }
 
+        /// <summary>The round's wet sheen, 0..1: rounds fought (and how far into this one) plus a share of the fatigue.</summary>
+        float Wet(float fatigue)
+        {
+            float rounds = 0f;
+            Bout bout = Bout.Instance;
+            if (bout != null)
+            {
+                float into = bout.Phase == BoutPhase.Fight || bout.Phase == BoutPhase.Count
+                    ? 1f - Mathf.Clamp01(bout.RoundTimeLeft / Mathf.Max(1f, bout.roundSeconds)) : bout.Phase == BoutPhase.RoundBreak || bout.Phase == BoutPhase.Results ? 1f : 0f;
+                rounds = bout.Phase == BoutPhase.WalkOn || (bout.Phase == BoutPhase.Intro && bout.Round == 1) ? 0f : bout.Round - 1 + into;
+            }
+            return Mathf.Clamp01(wetAtStart + rounds * wetPerRound + fatigue * wetFromFatigue);
+        }
+
         void LateUpdate()
         {
             SkinQuality();
@@ -217,6 +243,7 @@ namespace PoBox.Fx
             Mj.MjBoxer boxer = fighter.boxer;
             if (boxer != null && boxer.Config != null && boxer.Config.fatigue_j > 0.0) sweat = Mathf.Max(sweat, 1f - (float)boxer.Reserve);
             // The face: where it is, and how flushed (the health lost, the first half of it showing most).
+            float wet = Wet(sweat);
             Vector3 head = HeadPoint;
             var flush = new Vector4(head.x, head.y, head.z, Mathf.Sqrt(Mathf.Clamp01(1f - fighter.Health / 100f)));
             for (int i = 0; i < parts.Length; i++)
@@ -226,6 +253,7 @@ namespace PoBox.Fx
                 _block.Clear();
                 _block.SetFloat(BruiseId, _source[i] != null ? _source[i].bruise : 0f);
                 _block.SetFloat(SweatId, sweat);
+                _block.SetFloat(WetId, wet);
                 _block.SetColor(RimId, rimColor);
                 _block.SetVector(FlushId, flush);
                 for (int r = 0; r < rs.Length; r++)
@@ -247,6 +275,7 @@ namespace PoBox.Fx
             _block.Clear();
             _block.SetFloat(BruiseId, 0f);
             _block.SetFloat(SweatId, sweat);
+            _block.SetFloat(WetId, wet);
             _block.SetColor(RimId, rimColor);
             _block.SetVectorArray(MarksId, _marks);
             _block.SetFloat(MarkCountId, count);

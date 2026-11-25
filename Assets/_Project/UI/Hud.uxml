@@ -129,6 +129,8 @@
 
             <!-- Chat plays (TwitchChat.cs): each corner's votes. Only there with a channel set in pobox.twitch. -->
             <ui:Label name="chat" class="chat hidden" text="" picking-mode="Ignore" />
+            <!-- Chat's corner (Online/ChatCorner.cs): the vote between rounds and its result. Hidden outside the break. -->
+            <ui:Label name="chat-vote" class="chat chat--vote hidden" text="" picking-mode="Ignore" />
 
             <ui:Label name="banner" class="banner hidden" text="ROUND 1" picking-mode="Ignore" />
 

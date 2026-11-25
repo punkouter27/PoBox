@@ -10,10 +10,21 @@ import torch
 import warp as wp
 
 from .math3d import quat_mul, quat_rotate_inverse, quat_yaw, to_heading, yaw_quat
+from .randomize import PRIVILEGED
+
+
+PRIVILEGED_DIM = 3 + 4 + PRIVILEGED  # opponent velocity, own state, the randomisation's draw (privileged())
 
 
 class BoxingOpsMixin:
     """Reusable physics-wrapper methods mixed into BoxingEnv and its stage subclasses."""
+
+    # The opt-in trainer upgrades (2026-11-25), each None / 0 unless asked for: domain randomisation (envs/randomize.py),
+    # the Hill muscle (envs/muscle.py) and shoves from the fight log's hits (envs/hit_bank.py).
+    dr = None
+    hill = None
+    hits = None
+    _dr_obs_noise = 0.0
 
     # ---- for a subclass that is another stage of training ---------------------------------------
     def _prepare_model(self, m) -> None:
@@ -43,11 +54,15 @@ class BoxingOpsMixin:
             self._step_graph = self._fwd_graph = None
 
     def _physics_step(self) -> None:
+        if self.hits is not None:
+            self.hits.apply()
         if self._step_graph is not None:
             wp.capture_launch(self._step_graph)
         else:
             for _ in range(self.decimation):
                 mjw.step(self.mw, self.dw)
+        if self.hits is not None:
+            self.hits.remove()
 
     def _physics_forward(self) -> None:
         if self._fwd_graph is not None:
@@ -185,6 +200,10 @@ class BoxingOpsMixin:
             # Begun hurt: most of the way to the legs going, so a clinch (or a careful round) is worth something.
             hurt = m1 & (self._u(self.N, self.K) < self.hurt_start)
             self.daze = torch.where(hurt, self._u(self.N, self.K, lo=0.55, hi=0.9) * self.legs_at, self.daze)
+        if self.dr is not None:
+            self.dr.resample(mask)
+        if self.hill is not None:
+            self.hill.reset(mask)
 
     def _place_bodies(self, mask: torch.Tensor, q: torch.Tensor) -> None:
         """Each downed body somewhere in the ring at least 0.9 m from both fighters' spots and 1.2 m from the other
@@ -341,10 +360,9 @@ class BoxingOpsMixin:
             ],
             dim=-1,
         )
-        if self.obs_noise > 0.0:
-            obs = obs + torch.randn(obs.shape, generator=self.rng, device=self.device) * (
-                self.noise_scale * self.obs_noise
-            )
+        noise = self.obs_noise + self._dr_obs_noise
+        if noise > 0.0:
+            obs = obs + torch.randn(obs.shape, generator=self.rng, device=self.device) * (self.noise_scale * noise)
         return torch.nan_to_num(obs).clamp(-100.0, 100.0).reshape(N * K, self.obs_dim)
 
     def _delayed(self, obs: torch.Tensor) -> torch.Tensor:
@@ -381,6 +399,9 @@ class BoxingOpsMixin:
                 n > 0, (1.0 - self.step_count.view(N, 1) / n.clamp_min(1.0)).clamp(0.0, 1.0), torch.zeros_like(n)
             )
             want = w[..., None] * self.held + (1.0 - w[..., None]) * want
+        if self.dr is not None:
+            want = self.dr.delayed(want)  # actuator delay: the targets of 0..delay_max control steps ago
+        asked = want
         q = self.qpos[:, self.jq]
         if self.ceiling_on:
             # A tired drive under the ceiling: the spring keeps the daze's weakening only, and the target is held where
@@ -395,6 +416,12 @@ class BoxingOpsMixin:
         elif self.daze_on or self.MODE or self.fatigue_on:
             scale = self.drive_scale * self._tired() if self.fatigue_on else self.drive_scale
             want = q + scale[..., None] * (want - q)
+        if self.hill is not None:
+            # The Hill muscle (envs/muscle.py) in place of the spring's weakening and the fatigue ceiling: the daze and the
+            # reserve scale its torque. The game's MjBoxer.Drive does the same from the config's muscle block.
+            scale = self.drive_scale * self._tired() if self.fatigue_on else self.drive_scale
+            muscled = self.hill.target(asked, q, self.qvel[:, self.jv], self._hill_kp, scale, self.dt)
+            want = torch.where(self.hill_on.view(1, K, 1), muscled, want)
         self.ctrl.copy_(want.reshape(N, K * A))
 
     def _gains(self):
@@ -415,6 +442,9 @@ class BoxingOpsMixin:
             r["torque"] = -self.pen["torque_sq"] * scale * (tau**2).sum(-1)
         if self.pen["joint_vel_sq"]:
             r["jvel"] = -self.pen["joint_vel_sq"] * scale * (jv**2).sum(-1)
+        if self.pen["mech_work"]:
+            # Metabolic cost as mechanical work: sum |tau omega| (W) per step, its own weight (--energy-w), unclamped.
+            r["work"] = -self.pen["mech_work"] * scale * (tau * jv).abs().sum(-1)
 
     def _selfcontact(self) -> torch.Tensor:
         """Metres of each fighter's own parts pressed into each other at the last substep, (N, K): the soft contacts'
@@ -452,3 +482,20 @@ class BoxingOpsMixin:
         return torch.where(
             self.hurt_full > 0.0, self.hurt / self.hurt_full.clamp_min(1e-6), torch.zeros_like(self.hurt)
         ).clamp(0.0, 1.0)
+
+    # ---- the opt-in upgrades -------------------------------------------------------------------------
+    def privileged(self) -> torch.Tensor:
+        """What a teacher may see and the game's brain may not (train_distill.py), (N * K, PRIVILEGED_DIM): the opponent's
+        true pelvis velocity in this fighter's heading frame (zeros alone), its own reserve, drive scale, daze (as a share
+        of where the legs go) and mean muscle activation, and the domain randomisation's draw (zeros without it)."""
+        N, K, dev = self.N, self.K, self.device
+        yaw = quat_yaw(self.xquat[:, self.pelvis])
+        if self.spar:
+            lin_w = torch.stack([self.qvel[:, rv : rv + 3] for rv in self.root_v], 1)
+            opp = to_heading(lin_w.flip(1), yaw)
+        else:
+            opp = torch.zeros(N, K, 3, device=dev)
+        act = self.hill.act.abs().mean(-1) if self.hill is not None else torch.zeros(N, K, device=dev)
+        own = torch.stack([self.reserve, self.drive_scale, self.daze / self.legs_at.clamp_min(1.0), act], -1)
+        drawn = self.dr.params() if self.dr is not None else torch.zeros(N, K, PRIVILEGED, device=dev)
+        return torch.nan_to_num(torch.cat([opp, own, drawn], -1)).clamp(-100.0, 100.0).reshape(N * K, PRIVILEGED_DIM)

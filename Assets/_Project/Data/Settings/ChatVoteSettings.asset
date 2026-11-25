@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b8073e86739266419ff5eca6104882d, type: 3}
+  m_Name: ChatVoteSettings
+  m_EditorClassIdentifier: PoBox.Runtime::PoBox.Online.ChatVoteSettings
+  options:
+  - word: jab
+    label: JAB
+    hurtOverride: 0.15
+    driveScale: 1
+    reservePerSecond: 0.003
+    line: '{0}, work behind the jab!'
+  - word: body
+    label: BODY
+    hurtOverride: 0.25
+    driveScale: 1
+    reservePerSecond: -0.003
+    line: '{0}, go downstairs, dig to the body!'
+  - word: defend
+    label: DEFEND
+    hurtOverride: 0
+    driveScale: 0.92
+    reservePerSecond: 0.01
+    line: '{0}, hands up, survive the round!'
+  - word: pressure
+    label: PRESSURE
+    hurtOverride: 0.5
+    driveScale: 1
+    reservePerSecond: -0.008
+    line: '{0}, walk him down, pressure!'
+  target: 0
+  openAfter: 0.5
+  closeBefore: 1.5
+  minVotes: 1
+  hudLabel: chat-vote

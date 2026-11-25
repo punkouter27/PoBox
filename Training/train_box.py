@@ -36,6 +36,7 @@ from envs.boxing import BoxingEnv  # noqa: E402
 from envs.getup import GetUpEnv  # noqa: E402
 from envs.footwork import FootworkEnv  # noqa: E402
 from envs.match import MatchEnv  # noqa: E402
+from envs import upgrades  # noqa: E402  (opt-in: domain randomisation, Hill muscle, energy, hit bank)
 from ppo import PPO, PPOConfig, export_onnx  # noqa: E402
 
 
@@ -346,6 +347,51 @@ def main() -> None:
         help="also chart each learning fighter in TensorBoard as boxer_<name>, on one line that runs through "
         "every stage and every opponent it has had (the count is carried in its checkpoint)",
     )
+    # ---- adversarial motion priors (amp.py) and the self-play league (league.py): opt-in, off by default ----
+    ap.add_argument(
+        "--amp",
+        action="store_true",
+        help="adversarial motion priors (amp.py): a discriminator over (s, s') of the clips pays a style reward; "
+        "replaces --style-w's judge. Clips: clips/walk_turn.npz, or clips/getup.npz for --stage getup",
+    )
+    ap.add_argument("--amp-w", type=float, default=0.5, help="--amp: weight of the style reward beside the task's")
+    ap.add_argument("--amp-clips", default="", help="--amp: clip file (.npz from tools/retarget_clips.py or amp.py)")
+    ap.add_argument(
+        "--amp-features",
+        default="auto",
+        choices=["auto", "legs", "full"],
+        help="--amp: legs (trunk, legs, feet) or full (every joint, feet and gloves); auto = full for getup, else legs",
+    )
+    ap.add_argument("--amp-lr", type=float, default=1e-4, help="--amp: discriminator learning rate")
+    ap.add_argument(
+        "--amp-gp", type=float, default=5.0, help="--amp: gradient penalty weight on the clips' transitions"
+    )
+    ap.add_argument("--amp-buffer", type=int, default=200_000, help="--amp: replay buffer of policy transitions")
+    ap.add_argument("--amp-batch", type=int, default=4096, help="--amp: discriminator minibatch (each side)")
+    ap.add_argument(
+        "--league",
+        action="store_true",
+        help="self-play league (league.py): the first fighter learns against a PFSP-sampled pool of frozen "
+        "snapshots, shipped brains and an exploiter, driving the second fighter. Needs a two-fighter model",
+    )
+    ap.add_argument("--league-pool", nargs="*", default=[], help="--league: frozen opponents, .pt or .onnx")
+    ap.add_argument(
+        "--league-boxers",
+        nargs="*",
+        default=[],
+        help="--league: shipped brains by boxer name (Assets/_Project/RL_Models)",
+    )
+    ap.add_argument("--league-brain", default="match", help="--league: which shipped brain of --league-boxers")
+    ap.add_argument("--league-snapshot", type=int, default=50, help="--league: learner into the pool every N iters")
+    ap.add_argument("--league-size", type=int, default=8, help="--league: most members in the pool")
+    ap.add_argument("--league-pfsp", type=float, default=2.0, help="--league: PFSP exponent p in (1 - x)^p")
+    ap.add_argument(
+        "--league-exploit-share", type=float, default=0.125, help="--league: share of rings for the exploiter; 0 = none"
+    )
+    ap.add_argument(
+        "--league-exploiter-reset", type=int, default=200, help="--league: exploiter to the pool and restarted every N"
+    )
+    upgrades.add_args(ap)
     args = ap.parse_args()
 
     torch.manual_seed(args.seed)
@@ -372,6 +418,7 @@ def main() -> None:
             action_filter=args.action_filter,
             obs_delay=args.obs_delay,
             default_rules=not args.legacy_rules,
+            **upgrades.kwargs(args),
         )
     elif args.stage == "footwork":
         env = FootworkEnv(
@@ -402,6 +449,7 @@ def main() -> None:
             default_rules=not args.legacy_rules,
             flail_w=args.flail_w,
             gesture=args.gesture,
+            **upgrades.kwargs(args),
         )
     else:
         env = (MatchEnv if args.stage == "v2" else BoxingEnv)(
@@ -445,11 +493,16 @@ def main() -> None:
             xcom_w=args.xcom_w,
             stall_w=args.stall_w,
             stall_s=args.stall_s,
+            **upgrades.kwargs(args),
         )
     N, K, A, D = env.N, env.K, env.A, env.obs_dim
     # One learner per distinct fighter. Two copies of the same fighter share one, and it learns from both.
     names = env.names if env.hetero else [env.names[0]]
     per_learner = N if env.hetero else N * K
+    if args.league:  # the first fighter learns; the league drives the second (league.py)
+        if args.freeze or args.stage in ("getup", "footwork"):
+            raise SystemExit("--league is for a spar or match model, without --freeze")
+        names, per_learner = [env.names[0]], N
     run_name = args.run_name or f"{env.mode}_{time.strftime('%Y%m%d_%H%M%S')}"
     tb_dir = os.path.join(tb_root, run_name)
     writer = SummaryWriter(tb_dir)
@@ -499,8 +552,29 @@ def main() -> None:
             )
         learners.append(ppo)
 
+    amp_r = None
+    if args.amp:
+        from amp import AMPReward
+
+        amp_r = AMPReward.for_env(
+            env,
+            args.stage,
+            device,
+            args.amp_w,
+            clips=args.amp_clips,
+            feature_set=args.amp_features,
+            lr=args.amp_lr,
+            gp=args.amp_gp,
+            buffer=args.amp_buffer,
+            batch=args.amp_batch,
+        )
+        learners[0].set_amp(amp_r.disc)
+        print(
+            f"[amp] {len(amp_r.disc.expert):,} clip transitions of {amp_r.reader.dim} features each; style weight {args.amp_w:g}"
+        )
+
     judge = None
-    if args.stage == "footwork" and args.style_w > 0.0:
+    if args.stage == "footwork" and args.style_w > 0.0 and not args.amp:
         from style import Judge, clip_features
 
         judge = Judge(clip_features(env.m, env.cfg["joint_order"])[0], device)
@@ -523,6 +597,8 @@ def main() -> None:
             career[i] = int(extra.get("career", 0))
             if judge is not None and "judge" in extra:
                 judge.load_state_dict(extra["judge"])
+            if amp_r is not None and i == 0 and "amp" in extra:
+                amp_r.disc.load_state_dict(extra["amp"])
             same_stage = extra.get("mode", "") == env.mode and extra.get("fighters", []) == env.names
             if same_stage:
                 start_iter = int(extra.get("iter", 0))
@@ -538,6 +614,30 @@ def main() -> None:
                     ppo.model.log_std.fill_(float(torch.log(torch.tensor(args.reset_std))))
         if args.reset_std > 0.0:
             print(f"exploration noise reset to {args.reset_std:g}")
+
+    lg = None
+    if args.league:
+        from league import LeagueTrainer
+
+        lg = LeagueTrainer(
+            env,
+            learners[0],
+            device,
+            pool=args.league_pool,
+            boxers=args.league_boxers,
+            brain=args.league_brain,
+            exploit_share=args.league_exploit_share,
+            snapshot_every=args.league_snapshot,
+            exploiter_reset=args.league_exploiter_reset,
+            max_size=args.league_size,
+            pfsp_p=args.league_pfsp,
+            seed=args.seed,
+        )
+        saved_league = (
+            os.path.join(os.path.dirname(os.path.abspath(args.resume[0])), "league.pt") if args.resume else ""
+        )
+        if saved_league and os.path.exists(saved_league):
+            lg.load(saved_league)
 
     if args.more_iters > 0:
         args.iters = min(args.iters, start_iter + args.more_iters)
@@ -561,6 +661,8 @@ def main() -> None:
     tag = (lambda name: f"_{name}") if env.hetero else (lambda name: "")
 
     obs = env.reset()
+    if amp_r is not None:
+        amp_r.reset()
     total_steps = 0
     t_start = time.time()
     print(
@@ -571,6 +673,8 @@ def main() -> None:
 
     def split(x: torch.Tensor):
         """A flat (N*K, ...) tensor as one piece per learner."""
+        if lg is not None:  # the learner is the first fighter of every ring
+            return [x.reshape(N, K, *x.shape[1:])[:, 0]]
         if not env.hetero:
             return [x]
         x = x.reshape(N, K, *x.shape[1:])
@@ -587,6 +691,7 @@ def main() -> None:
 
     for it in range(start_iter, args.iters):
         t0 = time.time()
+        upgrades.tick(env, args, it - start_iter)
         if args.effort_free_iters > 0:
             share = min(1.0, max(0.0, (it - start_iter - args.effort_free_iters) / args.effort_free_iters))
             env.effort_scale = share
@@ -594,8 +699,15 @@ def main() -> None:
         with torch.no_grad():
             for _ in range(args.steps):
                 acts = [best_punch(ppo, o) if fz else ppo.act(o) for ppo, o, fz in zip(learners, split(obs), frozen)]
-                act = torch.stack(acts, 1).reshape(N * K, A) if env.hetero else acts[0]
+                if lg is not None:
+                    act = lg.actions(obs, acts[0])
+                else:
+                    act = torch.stack(acts, 1).reshape(N * K, A) if env.hetero else acts[0]
                 obs, rew, done, timeout = env.step(act)
+                if lg is not None:
+                    lg.record(rew, done, timeout)
+                if amp_r is not None:
+                    rew = rew + amp_r.pay(done)
                 if judge is not None:
                     # Paid for the moment the step ended in, where a walk is being judged and the episode goes on.
                     feat, judged = env.style_features(), env.style_mask() & ~done
@@ -607,13 +719,27 @@ def main() -> None:
                     if not fz:
                         ppo.record(r, d, t)
         all_stats = [ppo.update(o) for ppo, o, fz in zip(learners, split(obs), frozen) if not fz]
-        stats = {k: sum(s[k] for s in all_stats) / len(all_stats) for k in all_stats[0]}
+        # Averaged over the learners that report each number (--amp's discriminator numbers come from the first only).
+        keys = dict.fromkeys(k for st in all_stats for k in st)
+        stats = {k: sum(st[k] for st in all_stats if k in st) / sum(k in st for st in all_stats) for k in keys}
         total_steps += args.steps * N * K
         fps = args.steps * N * K / max(1e-6, time.time() - t0)
         s = env.get_stats()
         if judge is not None:
             s.update({"judge_loss": 0.0, "judge_on_clips": 0.0, "judge_on_boxer": 0.0, **judge.update()})
             s["rt_style"] = paid.item() / args.steps
+        if amp_r is not None:
+            s.update(amp_r.stats())
+            if env.mode == "footwork":
+                s["rt_style"] = s["rt_amp"]  # the footwork log line's style column
+        if lg is not None:
+            s.update(lg.end_iter(it, obs))
+            s.update(lg.stats())
+            if it % 10 == 0:
+                print(
+                    f"[league] score {s['league_score']:.2f} (draws {s['league_draws']:.0%}) | {lg.league.describe()}",
+                    flush=True,
+                )
         if not all(v == v for v in (stats["kl"], s["ep_return"])):  # NaN check
             print(f"[abort] NaN at iteration {it}; the last checkpoint is intact", flush=True)
             break
@@ -749,6 +875,7 @@ def main() -> None:
                         "career": career[k],
                         "xml": os.path.abspath(args.xml),
                         **({"judge": judge.state_dict()} if judge is not None else {}),
+                        **({"amp": amp_r.disc.state_dict()} if amp_r is not None and k == 0 else {}),
                         # What the viewer needs to show the policy in the world it was trained in.
                         "env": {
                             "daze": args.daze,
@@ -786,6 +913,8 @@ def main() -> None:
                 )
                 with open(os.path.join(ck_dir, f"latest{tag(name)}_policy_config.json"), "w", encoding="utf-8") as fh:
                     json.dump(manifest, fh, indent=2)
+            if lg is not None:
+                lg.save(ck_dir)
             # Keep one save in ten once they are old; a night of saves is otherwise gigabytes.
             saved = sorted(f for f in os.listdir(ck_dir) if f.startswith("model_"))
             keep_from = sorted({f[6:12] for f in saved})[-6:]

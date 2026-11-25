@@ -2,8 +2,10 @@
 
 Every env charges, per control step and each with its own weight: actuator torque squared (``torque_sq``), joint
 speed squared (``joint_vel_sq``), pelvis roll/pitch angular velocity squared (``ang_vel_sq``), the squared action
-change (``action_rate``) and foot speed squared while the foot is down (``foot_slip``). A weight left out of the file
-keeps the default below, which is what the env charged before the file existed (the two newer terms default to 0).
+change (``action_rate``) and foot speed squared while the foot is down (``foot_slip``); and, opt-in (2026-11-25), the
+mechanical work sum |torque x joint speed| (``mech_work``, logged as rt_work; train_box.py --energy-w sets it for a run).
+A weight left out of the file keeps the default below, which is what the env charged before the file existed (the newer
+terms default to 0).
 """
 
 from __future__ import annotations
@@ -12,11 +14,32 @@ import json
 import os
 
 PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "config", "reward.json")
-KEYS = ("torque_sq", "joint_vel_sq", "ang_vel_sq", "action_rate", "foot_slip")
+KEYS = ("torque_sq", "joint_vel_sq", "ang_vel_sq", "action_rate", "foot_slip", "mech_work")
 DEFAULTS = {
-    "boxing": {"torque_sq": 0.0, "joint_vel_sq": 0.0, "ang_vel_sq": 0.02, "action_rate": 0.01, "foot_slip": 0.2},
-    "footwork": {"torque_sq": 0.0, "joint_vel_sq": 0.0, "ang_vel_sq": 0.02, "action_rate": 0.01, "foot_slip": 0.2},
-    "getup": {"torque_sq": 0.0, "joint_vel_sq": 0.0, "ang_vel_sq": 0.0, "action_rate": 0.005, "foot_slip": 0.1},
+    "boxing": {
+        "torque_sq": 0.0,
+        "joint_vel_sq": 0.0,
+        "ang_vel_sq": 0.02,
+        "action_rate": 0.01,
+        "foot_slip": 0.2,
+        "mech_work": 0.0,
+    },
+    "footwork": {
+        "torque_sq": 0.0,
+        "joint_vel_sq": 0.0,
+        "ang_vel_sq": 0.02,
+        "action_rate": 0.01,
+        "foot_slip": 0.2,
+        "mech_work": 0.0,
+    },
+    "getup": {
+        "torque_sq": 0.0,
+        "joint_vel_sq": 0.0,
+        "ang_vel_sq": 0.0,
+        "action_rate": 0.005,
+        "foot_slip": 0.1,
+        "mech_work": 0.0,
+    },
 }
 
 

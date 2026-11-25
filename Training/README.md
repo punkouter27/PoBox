@@ -23,6 +23,12 @@ separate MuJoCo is needed (the old `.mj350` folder and `PYTHONPATH=.mj350` in st
 Reward penalty weights (torque², joint speed², angular velocity², action rate, foot slip) are in
 `config/reward.json` (`envs/reward_config.py`); shipped brains predate the torque² and joint-speed² terms.
 
+Opt-in upgrades of 2026-11-25 (all off by default; table in `docs/README.md`): `--amp` (motion-prior
+discriminator, `amp.py`; get-up clips via `python amp.py prep-getup --fetch`), `--league` (`league.py`),
+`--domain-rand`, `--muscle hill`, `--energy-w`, `--hit-bank` (`envs/upgrades.py`), and `train_distill.py`.
+`train_gauntlet.py` and `train_getup.py` do not take them yet, and the C MuJoCo exams do not model the Hill
+muscle. A new boxer from a mesh in one command: `python tools/new_boxer.py NAME mesh.glb --bone-map mixamo`.
+
 ## From a rigged mesh to a trained policy
 
 1. **Read the rig out of the owner's mesh** (house rule: the skeleton comes from the skinned model).

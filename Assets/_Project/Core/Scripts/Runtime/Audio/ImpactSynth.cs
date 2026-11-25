@@ -18,17 +18,26 @@ namespace PoBox.Audio
 
         public static AudioClip[] Head, Body, Block, Floor, Step;
         public static AudioClip Bell, BellEnd, CrowdOoh, CrowdBoo, CrowdRoar, DazeRing;
+        /// <summary>The reactive crowd's roar layer (2026-11-25): a seamless loop of a cheering hall.</summary>
+        public static AudioClip CrowdRoarLoop;
         static bool _built;
 
-        public static void Build()
+        /// <summary>
+        /// Makes every bank. <paramref name="contactBanks"/> false skips the fixed punch, block and floor banks, for a
+        /// director that plays the modal ones (<see cref="BuildModal"/>) instead.
+        /// </summary>
+        public static void Build(bool contactBanks = true)
         {
             if (_built) return;
             _built = true;
             var rng = new System.Random(20261031);
-            Head = Bank("Synth Head", rng, (h, r) => Punch(r, h, head: true));
-            Body = Bank("Synth Body", rng, (h, r) => Punch(r, h, head: false));
-            Block = Bank("Synth Block", rng, BlockHit);
-            Floor = Bank("Synth Floor", rng, FloorHit);
+            if (contactBanks)
+            {
+                Head = Bank("Synth Head", rng, (h, r) => Punch(r, h, head: true));
+                Body = Bank("Synth Body", rng, (h, r) => Punch(r, h, head: false));
+                Block = Bank("Synth Block", rng, BlockHit);
+                Floor = Bank("Synth Floor", rng, FloorHit);
+            }
             Step = Bank("Synth Step", rng, StepHit);
             Bell = Clip("Synth Bell", BellStrikes(new System.Random(7), 1));
             BellEnd = Clip("Synth Bell End", BellStrikes(new System.Random(8), 3));
@@ -38,6 +47,89 @@ namespace PoBox.Audio
             CrowdBoo = Clip("Synth Crowd Boo", Crowd(new System.Random(10), 40, 2.2f, rise: false));
             CrowdRoar = Clip("Synth Crowd Roar", CrowdRoarSwell(new System.Random(11), 56, 2.4f));
             DazeRing = Clip("Synth Daze Ring", DazeTinnitus(2.2f));
+            CrowdRoarLoop = Clip("Synth Crowd Roar Loop", RoarLoop(new System.Random(12), 72, 4f), fadeTail: false);
+        }
+
+        // ------------------------------------------------------------ modal impacts (2026-11-25)
+
+        static ModalBank[] _modal;
+        static ImpactModalSettings _modalFrom;
+
+        /// <summary>True once <see cref="BuildModal"/> has rendered a settings asset's banks.</summary>
+        public static bool HasModal => _modal != null;
+
+        /// <summary>
+        /// Renders the modal banks of <paramref name="settings"/>, one per <see cref="ContactKind"/>: for each, the
+        /// body at <c>levels</c> force steps and the crack at as many speed steps, <c>variants</c> of each. At load;
+        /// the same asset again is a no-op.
+        /// </summary>
+        public static void BuildModal(ImpactModalSettings settings)
+        {
+            if (settings == null || settings == _modalFrom) return;
+            _modalFrom = settings;
+            int levels = Mathf.Max(1, settings.levels), variants = Mathf.Max(1, settings.variants);
+            var rng = new System.Random(settings.seed);
+            var kinds = (ContactKind[])System.Enum.GetValues(typeof(ContactKind));
+            _modal = new ModalBank[kinds.Length];
+            foreach (ContactKind kind in kinds)
+            {
+                ModalContactSet set = settings.For(kind) ?? new ModalContactSet();
+                var bodies = new AudioClip[levels * variants];
+                var cracks = new AudioClip[levels * variants];
+                for (int h = 0; h < levels; h++)
+                    for (int v = 0; v < variants; v++)
+                    {
+                        float k = (h + 0.5f) / levels;
+                        bodies[h * variants + v] = Clip($"Modal {kind} body {h}.{v}", ModalBody(set, k, rng));
+                        cracks[h * variants + v] = Clip($"Modal {kind} crack {h}.{v}", ModalCrack(set, k, rng));
+                    }
+                _modal[(int)kind] = new ModalBank(set, bodies, cracks, levels, variants);
+            }
+        }
+
+        /// <summary>
+        /// The modal sound of a contact: what it struck, its force (impulse, N s) and speed (m/s); either may be
+        /// negative for not known. False before <see cref="BuildModal"/>.
+        /// </summary>
+        public static bool Modal(ContactKind kind, float force, float speed, out ModalHit hit)
+        {
+            hit = default;
+            if (_modal == null || (int)kind >= _modal.Length || _modal[(int)kind] == null) return false;
+            hit = _modal[(int)kind].Pick(force, speed);
+            return hit.body != null;
+        }
+
+        /// <summary>The struck body at hardness <paramref name="hard"/> 0..1: the contact's slap over the set's modes.</summary>
+        static float[] ModalBody(ModalContactSet set, float hard, System.Random rng)
+        {
+            var o = new float[Mathf.Max(64, (int)(set.length * Rate))];
+            float contact = Mathf.Lerp(set.contactSeconds.x, set.contactSeconds.y, hard) * Jitter(rng, 0.15f);
+            Noise(o, rng, 0f, contact * 2.2f, set.slapHz, set.slapQ, set.slapGain, contact * 0.6f);
+            float sink = Mathf.Lerp(set.sink.x, set.sink.y, hard);
+            float decay = Mathf.Lerp(set.decayScale.x, set.decayScale.y, hard);
+            int n = set.modes != null ? set.modes.Length : 0;
+            for (int i = 0; i < n; i++)
+            {
+                ModalMode m = set.modes[i];
+                // Brightness from force: the upper modes come up as it hardens, and go back on a soft one.
+                float up = n > 1 ? i / (float)(n - 1) : 0f;
+                float tilt = Mathf.Lerp(1f - 0.5f * set.brightnessTilt * up, 1f + set.brightnessTilt * up, hard);
+                Mode(o, 0.001f, m.hz * sink * Jitter(rng, set.detune), m.gain * Mathf.Lerp(0.5f, 1.15f, hard) * tilt,
+                     Mathf.Max(0.002f, m.decay * decay), contact);
+            }
+            int rattles = Mathf.RoundToInt(set.rattles * hard);
+            for (int k = 0; k < rattles; k++)
+                Noise(o, rng, 0.02f + (float)rng.NextDouble() * 0.12f, 0.012f, set.rattleHz * Jitter(rng, 0.3f), 1.4f, 0.18f * hard, 0.004f);
+            return o;
+        }
+
+        /// <summary>The contact's crack at brightness <paramref name="bright"/> 0..1: shorter, higher and narrower the faster.</summary>
+        static float[] ModalCrack(ModalContactSet set, float bright, System.Random rng)
+        {
+            float seconds = Mathf.Max(0.001f, set.crackSeconds) * Mathf.Lerp(1.3f, 0.7f, bright);
+            var o = new float[Mathf.Max(64, (int)(seconds * 8f * Rate))];
+            Noise(o, rng, 0f, seconds, set.crackHz * Mathf.Lerp(1f, 1.5f, bright) * Jitter(rng, 0.05f), Mathf.Lerp(1.2f, 2.2f, bright), 1f, 0.0006f);
+            return o;
         }
 
         /// <summary>A variant of <paramref name="bank"/> for a hardness 0..1.</summary>
@@ -59,9 +151,9 @@ namespace PoBox.Audio
             return bank;
         }
 
-        static AudioClip Clip(string name, float[] data)
+        static AudioClip Clip(string name, float[] data, bool fadeTail = true)
         {
-            Normalise(data, 0.9f);
+            Normalise(data, 0.9f, fadeTail);
             AudioClip c = AudioClip.Create(name, data.Length, 1, Rate, false);
             c.SetData(data, 0);
             return c;
@@ -201,6 +293,57 @@ namespace PoBox.Audio
             return o;
         }
 
+        /// <summary>
+        /// A hall on its feet, as a loop (2026-11-25): many voices on an open "aah", each starting anywhere in the loop
+        /// and wrapping round its end, through formants run twice round the loop so their state is continuous at the
+        /// seam, with a steady broadband roar under it.
+        /// </summary>
+        static float[] RoarLoop(System.Random rng, int voices, float len)
+        {
+            int n = (int)(len * Rate);
+            var src = new float[n];
+            for (int v = 0; v < voices; v++)
+            {
+                bool low = rng.NextDouble() < 0.55;
+                float f0 = (low ? 125f : 235f) * Jitter(rng, 0.25f);
+                int start = rng.Next(n), dur = (int)((0.8f + 1.8f * (float)rng.NextDouble()) * Rate);
+                float amp = 0.5f + 0.5f * (float)rng.NextDouble(), phase = (float)rng.NextDouble(), vib = 4f + 2.5f * (float)rng.NextDouble();
+                for (int j = 0; j < dur; j++)
+                {
+                    float t = j / (float)Rate, u = j / (float)dur;
+                    float f = f0 * (1f + 0.15f * Mathf.Sin(Mathf.PI * u)) * (1f + 0.015f * Mathf.Sin(2f * Mathf.PI * vib * t));
+                    phase += f / Rate;
+                    phase -= Mathf.Floor(phase);
+                    float env = Mathf.Min(1f, u / 0.15f) * Mathf.Min(1f, (1f - u) / 0.3f);
+                    src[(start + j) % n] += amp * env * (2f * phase - 1f);
+                }
+            }
+            // The room under the voices: steady noise, the same level all the way round.
+            var hiss = new float[n];
+            for (int i = 0; i < n; i++) hiss[i] = ((float)rng.NextDouble() * 2f - 1f) * 0.9f * Mathf.Sqrt(voices);
+            var o = new float[n];
+            FormantLoop(src, o, 680f, 3.5f, 1f);
+            FormantLoop(src, o, 1220f, 5f, 0.5f);
+            FormantLoop(src, o, 2600f, 7f, 0.2f);
+            FormantLoop(hiss, o, 1500f, 0.6f, 0.08f);
+            return o;
+        }
+
+        /// <summary><see cref="Formant"/> over a loop: run once round to settle the filter, then again, written.</summary>
+        static void FormantLoop(float[] x, float[] o, float centre, float q, float gain)
+        {
+            float w0 = 2f * Mathf.PI * centre / Rate, alpha = Mathf.Sin(w0) / (2f * q);
+            float b0 = alpha, b2 = -alpha, a0 = 1f + alpha, a1 = -2f * Mathf.Cos(w0), a2 = 1f - alpha;
+            float x1 = 0, x2 = 0, y1 = 0, y2 = 0;
+            for (int pass = 0; pass < 2; pass++)
+                for (int i = 0; i < x.Length; i++)
+                {
+                    float y = (b0 * x[i] + b2 * x2 - a1 * y1 - a2 * y2) / a0;
+                    x2 = x1; x1 = x[i]; y2 = y1; y1 = y;
+                    if (pass == 1) o[i] += gain * y;
+                }
+        }
+
         static float[] DazeTinnitus(float len)
         {
             var o = new float[(int)(len * Rate)];
@@ -262,12 +405,13 @@ namespace PoBox.Audio
             }
         }
 
-        static void Normalise(float[] o, float peak)
+        static void Normalise(float[] o, float peak, bool fadeTail = true)
         {
             float m = 1e-6f;
             for (int i = 0; i < o.Length; i++) m = Mathf.Max(m, Mathf.Abs(o[i]));
             float k = peak / m;
             for (int i = 0; i < o.Length; i++) o[i] *= k;
+            if (!fadeTail) return;    // a loop: its end runs into its start
             // A short fade at the end, so a cut tail does not click.
             int f = Mathf.Min(o.Length, Rate / 100);
             for (int i = 0; i < f; i++) o[o.Length - 1 - i] *= i / (float)f;

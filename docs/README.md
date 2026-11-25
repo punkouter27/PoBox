@@ -33,6 +33,61 @@ and "Things that cost time, worth knowing". The plan as it stood, with every tic
 [archive/tasks_2026-10.md](archive/tasks_2026-10.md). The October training log is
 [archive/rl_optimization_log_2026-10.md](archive/rl_optimization_log_2026-10.md).
 
+## Twenty upgrades: motion priors, a league, muscles, spray, decals, lip-sync, chat votes (2026-11-25)
+
+Twenty upgrades went in on one day: eight in the trainer, twelve in the game. **Every trainer one is off unless
+its flag is given**, so the shipped brains and the parity tests are untouched. In the game, the new pieces are
+placed in the scenes and prefabs by one idempotent menu item, `PoBox/Setup/Wire 2026-11 Upgrades`
+(`Editor/UpgradeWiring.cs`).
+
+**Trainer** (`Training/`; flags on `train_box.py`, defaults off):
+
+| What | Flag | Files |
+|---|---|---|
+| Adversarial motion priors: a discriminator over (s, s') judges style instead of clip tracking | `--amp`, `--amp-w 0.5` | `amp.py`, `ppo.py` (`PPO.set_amp`) |
+| AMP for the get-up stage, on 6 CMU get-up takes (140_01-04, 08, 09) | `--stage getup --amp` | `amp.py prep-getup [--fetch]` -> `clips/getup.npz` |
+| Self-play league: frozen snapshots + shipped brains, PFSP sampling, an exploiter | `--league`, `--league-boxers ...` | `league.py` |
+| Domain randomisation: friction, mass, PD gains, actuator delay, dt jitter, sensor noise | `--domain-rand` | `envs/randomize.py`, `config/domain_rand.json` |
+| Hill muscle: activation lag, force-length, force-velocity (replaces the linear speed limit) | `--muscle hill` | `envs/muscle.py`; Unity `Mj/HillMuscle.cs`, `Mj/MuscleConfig.cs` |
+| Mechanical work penalty, sum of abs(torque x speed) | `--energy-w` (`mech_work` in `reward.json`, 0) | `envs/boxing_base.py` |
+| Real hits as training shoves, from the fight log | `--hit-bank PATH` | `tools/hits_to_bank.py`, `envs/hit_bank.py` |
+| Teacher-student distillation (privileged teacher, DAgger student on the 103 numbers) | `train_distill.py` | `train_distill.py` |
+
+The Hill muscle runs in Unity only for a boxer whose `config.json` has a `muscle` block (none does yet), so
+parity is unchanged; a brain trained with it writes the block and `speed_limit: false` into its policy config.
+The C MuJoCo exams do not model the muscle yet: port it there before promoting such a brain.
+
+**Game:**
+
+- **Impact spray** (`Fx/HitSpray.cs`): spit on head punches over 6 m/s, mist off clean body punches, a ring of
+  canvas dust at the first heavy landing after a knockdown. Built-in particles (VFX Graph needs compute shaders,
+  which WebGL lacks), `Emit` only, no allocations.
+- **Bruise swelling and sweat** (`FighterOverlay.shader`, `FighterSkin`): the 8 bruise marks now raise the head's
+  overlay a few millimetres; a wet sheen grows with rounds and fatigue.
+- **Blood and fall decals** (`CanvasMarks`): 8 blood and 6 scuff projectors that stay for the bout.
+- **Splines** (`com.unity.splines` 2.9.2, already pulled in by Cinemachine): the ropes can take a spline rest
+  shape and now have UVs; a **dolly camera** on an arc of rail films the intro before the first bell
+  (`Fx/BroadcastDolly.cs`, `Shot.Dolly`, `BroadcastDirector.dollyCam`).
+- **Towels** over the top rope at the red and blue posts (`Fx/VerletCloth.cs`, CPU Verlet, no PhysX).
+- **CC0 materials** from ambientCG (`Environments/Textures/AmbientCG`, credits beside them): braided rope,
+  leather pads, canvas fabric, towel.
+- **Lip-sync** (`Audio/LipSync.cs` on every corner prefab): the procedural voices write a mouth track; Timmy and
+  Zombie move their jaw bone, the others need a mouth transform assigned (no mesh has mouth blendshapes).
+- **Modal impact sound** (`ImpactModalSettings`): resonances by contact (head, body, glove, canvas), louder and
+  brighter with the measured impulse and glove speed.
+- **Reactive crowd** (`CrowdExcitement`): punch rate, big hits, daze and knockdowns drive the crowd's level, a
+  roar layer and how far the figures move (`_PoBoxCrowdExcite`).
+- **Colour commentary** from Claude (`server/corner_proxy.py` `POST /commentary`, `Commentary.cs`): a round
+  summary at each bell, a line after a knockdown at most every 45 s. Needs `ANTHROPIC_API_KEY` on the proxy;
+  off or slow (5 s), the canned lines carry on. /diag lists it as Off until the proxy is hosted.
+- **Chat votes** (`Online/ChatCorner.cs`, `ChatVote.cs`): between rounds Twitch chat votes `!pressure` /
+  `!defend` / ...; the winner changes how the boxer spends energy next round. The brains have no tactics input,
+  so the words cannot change which punches are thrown.
+- **New boxer in one command**: `python Training/tools/new_boxer.py NAME mesh.glb --bone-map mixamo`
+  (rig, MJCF, capsule fit, self-collision check, roster entry).
+
+Also: `pyproject.toml` and `uv.lock`, deleted by accident in `0fdbc09`, are back (CI's `uv sync` needs them).
+
 ## Walk-on moves: shadow boxing from motion capture, no training (2026-11-23)
 
 The boxers used to stand still in their corners for the 5 s walk-on. Now each plays 5 s of shadow boxing from

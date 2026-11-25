@@ -22,6 +22,12 @@
       "name": "Cornerman proxy (server/corner_proxy.py)",
       "expect": "off",
       "note": "Off: runs on the player's own PC when a proxy address is typed into Settings (CORNER); nothing hosted to probe."
+    },
+    {
+      "section": "Services",
+      "name": "Colour commentary (server/corner_proxy.py /commentary, Claude Haiku 5.5)",
+      "expect": "off",
+      "note": "Off: the same proxy as the cornerman (Settings CORNER), its /commentary endpoint; not deployed, so nothing hosted to probe. Without it the broadcast keeps its rule-based lines. Deploy the proxy and set expect back to a live probe to turn it on."
     }
   ]
 }

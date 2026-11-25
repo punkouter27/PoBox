@@ -28,6 +28,10 @@ namespace PoBox.Mj
         /// <summary>2026-10-30: the rules each of the three brains was trained under (envs/boxing.py's rules_&lt;brain&gt;); a
         /// config without them, every brain shipped before, has none: no filter, no delay.</summary>
         public BrainRules rules_footwork = new BrainRules(), rules_match = new BrainRules(), rules_getup = new BrainRules();
+        /// <summary>2026-11-25: a Hill-type muscle on every drive (Training/envs/muscle.py), in place of the speed limit's
+        /// damping; a config without the block (every brain shipped before) has none.</summary>
+        public MuscleConfig muscle = new MuscleConfig();
+        public bool Hill => muscle != null && muscle.Hill;
     }
 
     /// <summary>
@@ -293,7 +297,8 @@ namespace PoBox.Mj
                 _act[i] = Id(MujocoLib.mjtObj.mjOBJ_ACTUATOR, Config.joint_order[i]);
                 // envs/boxing.py's speed limit: a drive pulling its hardest has nothing left over at the limit.
                 // The model is compiled afresh from the scene each time, so this is added once.
-                _speedExtra[i] = Config.speed_limit ? Config.force_limit[i] / Config.velocity_limit[i] : 0.0;
+                // Under the Hill muscle its force-velocity curve is the speed limit, and the trainer adds no damping.
+                _speedExtra[i] = Config.speed_limit && !Config.Hill ? Config.force_limit[i] / Config.velocity_limit[i] : 0.0;
                 _m->dof_damping[_jv[i]] += _speedExtra[i];
                 // The fatigue ceiling's numbers, from the compiled model as the trainer reads them: a position drive's force is
                 // kp (target - q) - kv qdot, held inside its force range (models/v3's are not the same both ways).
@@ -337,7 +342,7 @@ namespace PoBox.Mj
                 _d->qpos[_jq[i]] = Config.default_joint_pos[i];
                 _d->qvel[_jv[i]] = 0;
                 _d->ctrl[_act[i]] = _held[i] = Config.default_joint_pos[i];
-                Action[i] = _applied[i] = 0;
+                Action[i] = _applied[i] = _activation[i] = 0;
             }
             _fresh = true;
             MujocoLib.mj_forward(_m, _d);
@@ -389,7 +394,7 @@ namespace PoBox.Mj
                 _d->qpos[_jq[i]] = joints[i];
                 _d->qvel[_jv[i]] = 0;
                 _d->ctrl[_act[i]] = _held[i] = joints[i];
-                Action[i] = _applied[i] = 0;
+                Action[i] = _applied[i] = _activation[i] = 0;
             }
             MujocoLib.mj_kinematics(_m, _d);
             q[2] += 0.002 - Math.Min(SoleBottom(0), SoleBottom(1));
@@ -455,7 +460,7 @@ namespace PoBox.Mj
                 _d->qpos[_jq[i]] = jointPos[i];
                 _d->qvel[_jv[i]] = 0;
                 _d->ctrl[_act[i]] = _held[i] = jointPos[i];
-                Action[i] = _applied[i] = 0;
+                Action[i] = _applied[i] = _activation[i] = 0;
             }
             _fresh = true;
             MujocoLib.mj_forward(_m, _d);
@@ -687,6 +692,14 @@ namespace PoBox.Mj
                 // Hurt or tired: the spring to the target is weakened, the damping is not. Under the ceiling, tiredness caps
                 // the drive's torque instead, and only the daze weakens the spring.
                 double tired = 1.0 - Config.fatigue_weak * Clamp(1.0 - Reserve / 0.5, 0.0, 1.0);
+                if (Config.Hill)
+                {
+                    // The Hill muscle (envs/muscle.py): the daze and the reserve scale its torque; no ceiling, no spring weakening.
+                    double dt = Config.control_decimation / (double)Config.physics_hz;
+                    _d->ctrl[_act[i]] = _held[i] = HillMuscle.Target(want, q, _d->qvel[_jv[i]], ref _activation[i], _kp[i],
+                        Config.force_limit[i], Config.velocity_limit[i], Config.lower[i], Config.upper[i], DriveScale * tired, dt, Config.muscle);
+                    continue;
+                }
                 bool ceiling = Config.fatigue_ceiling && Config.fatigue_j > 0.0;
                 double scale = DriveScale * (ceiling ? 1.0 : tired);
                 if (scale < 0.999) want = q + scale * (want - q);
@@ -705,6 +718,8 @@ namespace PoBox.Mj
         int _blendAt;
         /// <summary>The action the drives got last control step: what the action filter starts from.</summary>
         readonly double[] _applied = new double[64];
+        /// <summary>Each joint's muscle activation under the Hill muscle (-1 to 1); 0 at every reset, as in training.</summary>
+        readonly double[] _activation = new double[64];
         readonly double[] _speedExtra = new double[64];
         double _speedShare = 1.0;
 

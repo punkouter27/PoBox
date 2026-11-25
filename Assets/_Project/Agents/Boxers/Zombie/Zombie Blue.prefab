@@ -883,6 +883,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2560398321708092341, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2533326549530119735}
+    - targetCorrespondingSourceObject: {fileID: 2560398321708092341, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2042031146850330261}
     - targetCorrespondingSourceObject: {fileID: 1778283469925357868, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7522782828621161834}
@@ -1644,6 +1647,7 @@ MonoBehaviour:
   dazeWeak: 0.45
   dazeBody: 0.45
   slackSeconds: {x: 1.2, y: 2.4}
+  beatenDrive: 0.6
   handOverSeconds: 1.5
   staggerSpeed: 5
   staggerSeconds: 0.3
@@ -1670,8 +1674,13 @@ MonoBehaviour:
   boxer: {fileID: 3433841844390498431}
   ring: {fileID: 0}
   punchSpeed: 3.5
+  leaveAfter: 8
+  leaveSpeed: 0.35
+  goneBeyondRopes: 0.5
   squareFacing: 0.26
   squareSpeed: 0.3
+  cornerSpeed: 0.8
+  cornerSeconds: 8
 --- !u!114 &2533326549530119735
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1729,7 +1738,63 @@ MonoBehaviour:
   tiredDroop: 14
   rimIntensity: 0.55
   pressedRim: 1.4
+  wetPerRound: 0.25
+  wetFromFatigue: 0.5
+  wetAtStart: 0.08
   rippleImpulse: 12
+--- !u!114 &2042031146850330261
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7845248480711757996}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4c403885c8a454bafd912b91f15e8dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoBox.Runtime::PoBox.Audio.LipSync
+  fighter: {fileID: 0}
+  voice: {fileID: 0}
+  face: {fileID: 0}
+  openShapes:
+  - jawOpen
+  - Jaw_Open
+  - mouthOpen
+  - Mouth_Open
+  - V_Open
+  - viseme_aa
+  - Open
+  wideShapes:
+  - mouthStretch
+  - Mouth_Widen
+  - V_Wide
+  - viseme_E
+  - viseme_I
+  roundShapes:
+  - mouthPucker
+  - Mouth_Pucker
+  - V_Tight_O
+  - viseme_O
+  - viseme_U
+  shapeWeight: 100
+  jaw: {fileID: 0}
+  jawNames:
+  - CC_Base_JawRoot
+  - JawRoot
+  - jaw
+  - Jaw
+  - mixamorig:Jaw
+  jawAxis: {x: 0, y: 0, z: 1}
+  jawDegrees: 16
+  mouth: {fileID: 0}
+  openScale: {x: 1, y: 2.2, z: 1}
+  wideScale: 1.25
+  attackSeconds: 0.03
+  releaseSeconds: 0.07
+  lookAheadSeconds: 0.04
+  tapFullLevel: 0.12
+  syllablesPerSecond: 5.5
 --- !u!4 &7948388191868929443 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2385200993690476218, guid: 39f7181c47de9e747a3204b46e9aae7b, type: 3}

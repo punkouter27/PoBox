@@ -62,16 +62,20 @@ namespace PoBox.Audio
             var clips = new AudioClip[Mathf.Max(1, takes)];
             for (int t = 0; t < clips.Length; t++)
             {
-                float[] data = Render5(v, e, level, t, id);
+                float[] data = Render5(v, e, level, t, id, out VisemeTrack mouth);
                 AudioClip clip = AudioClip.Create($"Voice {id} {e} {level} {t + 1}", data.Length, 1, Rate, false);
                 clip.SetData(data, 0);
+                VisemeLibrary.Register(clip, mouth);
                 clips[t] = clip;
             }
             return clips;
         }
 
         /// <summary>One take of a 5x5 cell, its peak 0.5 (level 1) to 0.9 (level 5), so it sits with recorded clips.</summary>
-        public static float[] Render5(VoiceProfile v, Emotion5 e, int level, int take, string id)
+        public static float[] Render5(VoiceProfile v, Emotion5 e, int level, int take, string id) => Render5(v, e, level, take, id, out _);
+
+        /// <summary>One take of a 5x5 cell and the mouth that says it, block by block (lip-sync, 2026-11-25).</summary>
+        public static float[] Render5(VoiceProfile v, Emotion5 e, int level, int take, string id, out VisemeTrack mouth)
         {
             level = Mathf.Clamp(level, 1, 5);
             float k = (level - 1) / 4f;
@@ -84,7 +88,8 @@ namespace PoBox.Audio
             float range = Mathf.Lerp(0.6f, 1.3f, k);
             float lift = 0.97f + 0.06f * R();
 
-            var parts = new List<float[]>();
+            var said = new Utterance();
+            List<float[]> parts = said.parts;
             foreach (Syl s in plan)
             {
                 s.dur *= len;
@@ -93,10 +98,10 @@ namespace PoBox.Audio
                 s.p1 = (1f + (s.p1 - 1f) * range) * lift;
                 s.rasp += 0.3f * k;
                 s.vibrato = s.vibrato * Mathf.Lerp(0.6f, 1.4f, k) + v.vibratoDepth;
-                Onset(parts, v, s, rng);
-                parts.Add(Vowel(v, s, rng));
-                Coda(parts, v, s, rng);
-                if (s.gap > 0f) parts.Add(Silence(s.gap));
+                Onset(said, v, s, rng);
+                said.Add(Vowel(v, s, rng), MouthOf(s));
+                Coda(said, v, s, rng);
+                if (s.gap > 0f) said.Add(Silence(s.gap), MouthShape.Closed(0));
             }
 
             int n = 0;
@@ -108,7 +113,32 @@ namespace PoBox.Audio
             for (int i = 0; i < n; i++) top = Mathf.Max(top, Mathf.Abs(data[i]));
             float g = Mathf.Lerp(0.5f, 0.9f, k) / top;
             for (int i = 0; i < n; i++) data[i] *= g;
+            mouth = VisemeTrack.Build(data, said.shapes);
             return data;
+        }
+
+        /// <summary>The pieces of a take as they are joined, each with the mouth it is said with (lengths kept equal).</summary>
+        sealed class Utterance
+        {
+            public readonly List<float[]> parts = new List<float[]>();
+            public readonly List<MouthShape> shapes = new List<MouthShape>();
+
+            public void Add(float[] piece, MouthShape m)
+            {
+                m.samples = piece.Length;
+                parts.Add(piece);
+                shapes.Add(m);
+            }
+        }
+
+        /// <summary>A syllable's vowel as the mouth makes it: from the glide's shape (w rounded, y spread) to its last vowel.</summary>
+        static MouthShape MouthOf(Syl s)
+        {
+            Vector3 from = s.glide == Glide.W ? VU : s.glide == Glide.Y ? VI : s.v0;
+            MouthShape m = MouthShape.Vowel(0, from, s.v1, s.voiced);
+            if (s.nasal) { m.open0 *= 0.8f; m.open1 *= 0.8f; }
+            if (s.glide != Glide.None) m.reach = 0.3f; // a glide (the y of "nyah", the w of "wah") is over early in the vowel
+            return m;
         }
 
         /// <summary>
@@ -203,40 +233,42 @@ namespace PoBox.Audio
         }
 
         /// <summary>The consonant before the vowel: noise for h/s/sh/f, a closure and a burst for k/t/p/g, a nasal murmur for n.</summary>
-        static void Onset(List<float[]> parts, VoiceProfile v, Syl s, System.Random rng)
+        static void Onset(Utterance said, VoiceProfile v, Syl s, System.Random rng)
         {
+            // The mouth: an h is already the vowel's shape, half open; s spread on the teeth; sh rounded; f lip on teeth.
             switch (s.onset)
             {
-                case Cons.H: parts.Add(Noise(rng, 0.05f, 1500f * v.formants, 1800f, 0.35f, 0.02f)); break;
-                case Cons.S: parts.Add(Noise(rng, 0.08f, 5200f, 1800f, 0.5f, 0.015f)); break;
-                case Cons.Sh: parts.Add(Noise(rng, 0.09f, 2800f, 1200f, 0.5f, 0.015f)); break;
-                case Cons.F: parts.Add(Noise(rng, 0.07f, 4000f, 3500f, 0.25f, 0.01f)); break;
-                case Cons.K: case Cons.T: case Cons.P: case Cons.G: Plosive(parts, rng, s.onset, 1f); break;
+                case Cons.H: said.Add(Noise(rng, 0.05f, 1500f * v.formants, 1800f, 0.35f, 0.02f), MouthShape.Held(0, 0.35f, 0.5f)); break;
+                case Cons.S: said.Add(Noise(rng, 0.08f, 5200f, 1800f, 0.5f, 0.015f), MouthShape.Held(0, 0.12f, 0.85f)); break;
+                case Cons.Sh: said.Add(Noise(rng, 0.09f, 2800f, 1200f, 0.5f, 0.015f), MouthShape.Held(0, 0.15f, 0.1f)); break;
+                case Cons.F: said.Add(Noise(rng, 0.07f, 4000f, 3500f, 0.25f, 0.01f), MouthShape.Held(0, 0.08f, 0.55f)); break;
+                case Cons.K: case Cons.T: case Cons.P: case Cons.G: Plosive(said, rng, s.onset, 1f); break;
                 case Cons.N:
                     var murmur = new Syl { v0 = VNasal, v1 = VNasal, dur = 0.06f, p0 = s.p0, p1 = s.p0, amp = 0.45f, rasp = s.rasp, attack = 0.01f, decay = 0.2f };
-                    parts.Add(Vowel(v, murmur, rng));
+                    said.Add(Vowel(v, murmur, rng), MouthShape.Held(0, 0.15f, 0.5f));
                     break;
             }
         }
 
         /// <summary>The consonant after the vowel: "oof"'s f, "hup"'s p, "pfft"'s t, "ugh"'s g.</summary>
-        static void Coda(List<float[]> parts, VoiceProfile v, Syl s, System.Random rng)
+        static void Coda(Utterance said, VoiceProfile v, Syl s, System.Random rng)
         {
             switch (s.coda)
             {
-                case Cons.F: parts.Add(Noise(rng, 0.09f, 4000f, 3500f, 0.22f, 0.01f)); break;
-                case Cons.S: parts.Add(Noise(rng, 0.1f, 5200f, 1800f, 0.35f, 0.01f)); break;
-                case Cons.K: case Cons.T: case Cons.P: case Cons.G: Plosive(parts, rng, s.coda, 0.6f); break;
+                case Cons.F: said.Add(Noise(rng, 0.09f, 4000f, 3500f, 0.22f, 0.01f), MouthShape.Held(0, 0.08f, 0.55f)); break;
+                case Cons.S: said.Add(Noise(rng, 0.1f, 5200f, 1800f, 0.35f, 0.01f), MouthShape.Held(0, 0.12f, 0.85f)); break;
+                case Cons.K: case Cons.T: case Cons.P: case Cons.G: Plosive(said, rng, s.coda, 0.6f); break;
             }
         }
 
         /// <summary>A stop: a closure (silence), a burst of noise where the consonant is made, a breath of aspiration.</summary>
-        static void Plosive(List<float[]> parts, System.Random rng, Cons c, float strength)
+        static void Plosive(Utterance said, System.Random rng, Cons c, float strength)
         {
             float centre = c == Cons.K ? 1800f : c == Cons.T ? 4200f : c == Cons.P ? 900f : 1500f;
-            parts.Add(Silence(0.025f));
-            parts.Add(Noise(rng, 0.014f, centre, centre * 0.6f, (c == Cons.G ? 0.5f : 0.9f) * strength, 0.001f));
-            if (c != Cons.G) parts.Add(Noise(rng, 0.02f, 1500f, 2000f, 0.2f * strength, 0.002f));
+            // A p shuts the lips; k, t and g shut the mouth further back, the jaw nearly closed.
+            said.Add(Silence(0.025f), c == Cons.P ? MouthShape.Closed(0) : MouthShape.Held(0, 0.08f, 0.5f));
+            said.Add(Noise(rng, 0.014f, centre, centre * 0.6f, (c == Cons.G ? 0.5f : 0.9f) * strength, 0.001f), MouthShape.Held(0, 0.3f, 0.5f));
+            if (c != Cons.G) said.Add(Noise(rng, 0.02f, 1500f, 2000f, 0.2f * strength, 0.002f), MouthShape.Held(0, 0.3f, 0.5f));
         }
 
         /// <summary>Band-limited noise (a fricative or a burst): <paramref name="seconds"/> long, around <paramref name="hz"/>.</summary>

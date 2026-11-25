@@ -200,7 +200,8 @@ namespace PoBox.Audio
 
         void Awake()
         {
-            if (synth) ImpactSynth.Build();
+            // With modal sets the fixed punch, block and floor banks are not needed (and not made).
+            if (synth) ImpactSynth.Build(contactBanks: impactModes == null);
             AudioMixerGroup hits = Group("Hits"), crowd = Group("Crowd"), ring = Group("Ring");
             _mixed = mixer != null && hits != null && crowd != null && ring != null;
 
@@ -265,6 +266,7 @@ namespace PoBox.Audio
             _bed.volume = 0f;
             _crowdSource = Source2D(crowd);
             _ringSource = Source2D(ring);
+            SetUpReactive(hits, crowd);
 
             var ringNow = FindAnyObjectByType<MjRing>();
             Vector2 c = ringNow != null ? ringNow.centre : Vector2.zero;
@@ -318,6 +320,7 @@ namespace PoBox.Audio
             // Whoever the scene switched on: the two of a bout, or everybody in a free-for-all.
             _all = FindObjectsByType<Fighter>(FindObjectsInactive.Exclude);
             WarmVoices();
+            WarmMouths();
         }
 
         void OnEnable()
@@ -364,7 +367,9 @@ namespace PoBox.Audio
             // Glove on glove: the dull leather of the guard, and over it a pop that comes up with the speed.
             float k = Mathf.InverseLerp(2f, 9f, speed);
             float clips = synth ? clipLayer : 1f;
-            if (synth) PlayAt(ImpactSynth.Pick(ImpactSynth.Block, k), at, Mathf.Lerp(0.35f, 0.9f, k), Random.Range(0.97f, 1.03f));
+            // Modal: glove on glove, its crack from the speed (a block carries no impulse).
+            if (!PlayModal(ContactKind.GloveOnGlove, -1f, speed, at) && synth)
+                PlayAt(ImpactSynth.Pick(ImpactSynth.Block, k), at, Mathf.Lerp(0.35f, 0.9f, k), Random.Range(0.97f, 1.03f));
             PlayAt(Pick(punchBlocked), at, clips * Mathf.Lerp(0.3f, 0.85f, k), Mathf.Lerp(1.02f, 1.2f, k) * Random.Range(0.96f, 1.04f));
             PlayAt(Pick(punchLight), at, clips * Mathf.Lerp(0.08f, 0.35f, k * k), Mathf.Lerp(1.3f, 1.55f, k) * Random.Range(0.96f, 1.04f));
         }
@@ -386,14 +391,17 @@ namespace PoBox.Audio
             float clips = synth ? clipLayer : 1f;
             if (!e.clean)
             {
-                if (synth) PlayAt(ImpactSynth.Pick(ImpactSynth.Block, k), e.point, Mathf.Lerp(0.35f, 0.85f, k), snap);
+                if (!PlayModal(ContactKind.GloveOnGlove, e.impulse, e.gloveSpeed, e.point) && synth)
+                    PlayAt(ImpactSynth.Pick(ImpactSynth.Block, k), e.point, Mathf.Lerp(0.35f, 0.85f, k), snap);
                 PlayAt(Pick(punchBlocked), e.point, clips * Mathf.Lerp(0.3f, 0.8f, k), snap * 0.95f);
                 return;
             }
 
             bool heavy = e.impulse >= heavyImpulse;
             // The synthesised body of the hit: what it landed on, as hard as it landed; the clip is the slap on top.
-            if (synth) PlayAt(ImpactSynth.Pick(e.zone == PartKind.Head ? ImpactSynth.Head : ImpactSynth.Body, k), e.point, Mathf.Lerp(0.4f, 1f, k), Mathf.Lerp(0.97f, 1.04f, Mathf.Clamp01(e.gloveSpeed / 9f)));
+            // Modal (2026-11-25): the head's modes or the trunk's, the body scaled by the impulse, the crack by the glove's speed.
+            if (!PlayModal(e.zone == PartKind.Head ? ContactKind.Head : ContactKind.Torso, e.impulse, e.gloveSpeed, e.point) && synth)
+                PlayAt(ImpactSynth.Pick(e.zone == PartKind.Head ? ImpactSynth.Head : ImpactSynth.Body, k), e.point, Mathf.Lerp(0.4f, 1f, k), Mathf.Lerp(0.97f, 1.04f, Mathf.Clamp01(e.gloveSpeed / 9f)));
             PlayAt(Pick(heavy ? punchHeavy : punchLight), e.point, clips * Mathf.Lerp(0.35f, 0.95f, k), snap * where);
             // The air knocked out of whoever took it, a beat after the glove.
             // Hurt, at a level for how hard it landed (1-3 a pain cry; a level 4-5 shot knocks a groan out).
@@ -441,7 +449,8 @@ namespace PoBox.Audio
         {
             // A glove or a knee put down is a pat; a body landing is the whole thud, and lower.
             float k = Mathf.Clamp01(impulse / 120f);
-            if (synth) PlayAt(ImpactSynth.Pick(ImpactSynth.Floor, k), point, Mathf.Lerp(0.12f, 1f, k), Random.Range(0.96f, 1.04f));
+            if (!PlayModal(ContactKind.Canvas, impulse, -1f, point) && synth)
+                PlayAt(ImpactSynth.Pick(ImpactSynth.Floor, k), point, Mathf.Lerp(0.12f, 1f, k), Random.Range(0.96f, 1.04f));
             PlayAt(bodyFall, point, (synth ? clipLayer : 1f) * Mathf.Lerp(0.08f, 1f, k), Mathf.Lerp(1.25f, 0.9f, k) * Random.Range(0.95f, 1.05f));
         }
 
@@ -482,7 +491,8 @@ namespace PoBox.Audio
 
             // The bed follows the excitement squared: a quiet hall most of the time, a roar when it earns one.
             float e = Excitement.Value;
-            float target = Mathf.Lerp(crowdQuiet, crowdLoud, Mathf.Clamp01(e * e + ArenaMood.Burst * 0.5f));
+            // With a reactive crowd, the hall's own reading too (whichever is louder).
+            float target = Mathf.Lerp(crowdQuiet, crowdLoud, BedShare(Mathf.Clamp01(e * e + ArenaMood.Burst * 0.5f)));
             _bedLevel = Mathf.MoveTowards(_bedLevel, target, dt * 0.6f);
 
             // The duck: down at once, back over half a second.
@@ -506,6 +516,7 @@ namespace PoBox.Audio
                 mixer.SetFloat("RingVolume", Db(ringGain));
                 _bed.volume = _bedLevel * 0.5f;
                 Sections(_bedLevel);
+                RoarLayer(1f, dt);
             }
             else
             {
@@ -514,6 +525,7 @@ namespace PoBox.Audio
                 Sections(_bedLevel * crowdGain * crowdLinear);
                 _crowdSource.volume = crowdGain * crowdLinear;
                 _ringSource.volume = ringGain;
+                RoarLayer(crowdGain * crowdLinear, dt);
             }
 
             Scrape(dt);

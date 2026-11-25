@@ -38,10 +38,12 @@ namespace PoBox.League
         [Serializable]
         class Save { public List<Row> rows = new List<Row>(); }
 
+#pragma warning disable CS0649 // filled by JsonUtility
         [Serializable]
         class CpuRow { public string name; public float elo; public int wins, losses, draws; }
         [Serializable]
         class Cpu { public string when; public int bouts; public List<CpuRow> rows = new List<CpuRow>(); }
+#pragma warning restore CS0649
 
         static Cpu _cpu;
         /// <summary>The CPU ratings shipped with the game (Resources/cpu_elo.json), read once; empty if there are none.</summary>
