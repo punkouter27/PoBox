@@ -130,7 +130,7 @@ class TerrainRanges:
         raw = load(path).get("terrain", {})
         out.bump_mps = float(raw.get("bump_mps", out.bump_mps))
         given = raw.get("classes", [])
-        if classes:  # a comma list of names keeps only those classes
+        if classes and classes.strip().lower() != "all":  # a comma list of names keeps only those classes
             want = {c.strip() for c in classes.split(",") if c.strip()}
             unknown = want - {c["name"] for c in given}
             if unknown:

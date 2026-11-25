@@ -157,6 +157,10 @@ def apply(env, overrides: Mapping[str, float]) -> Tuple[List[str], List[str]]:
             applied.append(k)
         else:
             unknown.append(k)
+    if applied:
+        hook = getattr(env, "after_rung", None)  # a rung brings a term or a subsystem the env must make (footwork)
+        if hook is not None:
+            hook()
     return applied, unknown
 
 

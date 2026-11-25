@@ -63,6 +63,8 @@ def test_terrain_classes_are_weighted_and_a_tilt_is_a_unit_vector() -> None:
     assert picks == [0, 0, 1, 2]
     mild = limits.TerrainRanges.from_config(PATH, classes="mild")
     assert [c.name for c in mild.classes] == ["mild"]
+    every = limits.TerrainRanges.from_config(PATH, classes="all")  # --terrain alone
+    assert [c.name for c in every.classes] == ["flat", "mild", "steep"]
     with pytest.raises(ValueError):
         limits.TerrainRanges.from_config(PATH, classes="lunar")
     for deg in (0.0, 5.0, 14.0):
@@ -145,6 +147,65 @@ def test_apply_only_touches_knobs_the_env_has() -> None:
     assert env.walk_share == 0.0 and isinstance(env.walk_share, float)
 
 
+def test_apply_tells_the_env_a_rung_moved() -> None:
+    """A promotion turns knobs the env must act on (navigation goals, a turn charge): apply must say so."""
+
+    class Env:
+        nav_share = 0.0
+        calls = 0
+
+        def after_rung(self) -> None:
+            self.calls += 1
+
+    env = Env()
+    curriculum.apply(env, {"nav_share": 0.35})
+    assert env.nav_share == 0.35 and env.calls == 1
+    curriculum.apply(env, {"nobody_has_this": 1.0})
+    assert env.calls == 1  # nothing applied, nothing to rebuild
+
+
+def test_a_rung_leaves_the_knobs_given_on_the_command_line_alone() -> None:
+    """--nav-share 0.3 with the balance rung: the rung's own 0.0 must not switch navigation off on the way in."""
+    from argparse import Namespace
+
+    from envs import upgrades
+
+    class Env:
+        walk_share = 0.5
+        turn_share = 0.25
+        cmd_fwd_max = 1.0
+        disturb = 1.0
+        nav_share = 0.3
+        declared = None
+
+        def declare_rung_terms(self, all_terms: bool = False) -> None:
+            self.declared = all_terms
+
+        def after_rung(self) -> None:
+            pass
+
+    env = Env()
+    args = Namespace(
+        curriculum="auto",
+        nav_share=0.3,
+        nav_obstacles=None,
+        sprint_share=None,
+        sprint_w=None,
+        momentum_w=None,
+        lean_w=None,
+        turn_accel=None,
+        terrain="",
+        terrain_bump=None,
+        reuse_trunk="",
+        freeze_layers=0,
+        freeze_until=0,
+    )
+    upgrades.Progressive(env, [], args)
+    assert env.declared is True  # a curriculum run lists every rung's column from iteration 0
+    assert env.nav_share == 0.3  # asked for on the command line, so the rung's 0.0 does not win
+    assert env.walk_share == 0.0  # asked for by nobody, so the balance rung does
+
+
 def test_from_args_reads_a_rung_or_auto() -> None:
     rungs = curriculum.ladder(PATH)
     assert curriculum.from_args(rungs, "") is None
@@ -212,6 +273,29 @@ def test_the_footwork_rungs_build_and_step() -> None:
     assert s["rt_rom"] < 0.0, "the range-of-motion charge never fired"
     assert s["rt_tilt"] < 0.0, "the centripetal-lean charge never fired"
     assert s["rt_goal"] != 0.0, "no navigation episode was paid"
+
+
+@pytest.mark.train
+def test_a_promotion_to_the_navigation_rung_turns_navigation_on() -> None:
+    """The ladder's last rung sets nav_share on a run that started at balance: the goals must be made then, not at init."""
+    pytest.importorskip("torch")
+    pytest.importorskip("mujoco_warp")
+    import torch
+
+    from envs.footwork import FootworkEnv
+
+    env = FootworkEnv(XML, 2, device="cpu", seed=7, obs_noise=0.0, disturb=0.2, randomise=0.0, episode_len_s=3.0)
+    assert env.nav_env is None and "goal" not in env.TERMS
+    env.declare_rung_terms(all_terms=True)  # what a curriculum run does at iteration 0: every column is there
+    assert "goal" in env.TERMS and "goal" in env._ft
+    curriculum.apply(env, {"nav_share": 1.0, "walk_share": 1.0})  # the navigate rung's own knob
+    assert env.nav_env is not None and env.nav_share == 1.0
+    gen = torch.Generator().manual_seed(7)
+    for _ in range(200):
+        obs, rew = env.step(0.4 * torch.randn(2, env.K, env.A, generator=gen))[:2]
+        assert torch.isfinite(obs).all() and torch.isfinite(rew).all()
+    assert env.nav.any(), "no episode was a navigation episode after the promotion"
+    assert env.get_stats()["rt_goal"] != 0.0, "the promoted rung paid nothing"
 
 
 @pytest.mark.train

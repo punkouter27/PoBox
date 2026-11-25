@@ -80,6 +80,19 @@ run has used any of it yet (the GPU had another session's job on it). What was v
 (16 tests: the formulas and the ladder in the fast tier, a full footwork env with every flag on, the shared
 encoder with mirroring, freezing and a trunk copied between a shared and a separate policy).
 
+**First runs, the same afternoon (2026-11-25, verification only: 3 x 128, 30 x 512 and 20 x 512 worlds, minutes
+each, deleted after):** the trainer takes every flag in one run (curriculum, terrain, navigation, sprint, torque cap
+0.7, 8 Hz lag, soft stops, gravity +-5%, momentum and lean, mirroring, a shared encoder held for 2 layers) with no
+NaN and about 9,600 samples/s at 512 worlds on this PC's GPU; rt_rom, rt_tilt, rt_mom, rt_torque and the terrain
+shares are all non-zero in the run's CSV. Two things the runs showed and fixed: a rung promotion could not turn its
+own subsystem on (a run starting at `balance` that reached `navigate` got the `nav_share` knob but no goals, because
+the nav env was only built at start-up), and a rung's default silently overwrote a knob given on the command line
+(`--nav-share 0.3 --curriculum auto` spent the whole balance rung at 0). Now `curriculum.apply` calls the env's
+`after_rung`, which lists the rung's terms and builds what it needs, a curriculum run declares every rung's column at
+iteration 0 (so a promotion never widens the CSV), and an explicit flag wins over the rung (`kept from the command
+line` in the log). `--terrain` alone now means every class, as the table says. Tests: 19 in
+`tests/test_rl_progression.py`, 170 in the fast tier.
+
 ## Twenty upgrades: motion priors, a league, muscles, spray, decals, lip-sync, chat votes (2026-11-25)
 
 Twenty upgrades went in on one day: eight in the trainer, twelve in the game. **Every trainer one is off unless

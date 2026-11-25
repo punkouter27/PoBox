@@ -70,9 +70,11 @@ def add_args(ap: argparse.ArgumentParser) -> None:
     p.add_argument("--rom-w", type=float, default=None, help="charge per rad pressed into the last of a joint's range")
     p.add_argument(
         "--terrain",
+        nargs="?",
+        const="all",
         default="",
-        help="footwork: floor classes from config/progression.json, re-drawn every reset (comma list to keep some; "
-        "empty = the one flat floor)",
+        help="footwork: floor classes from config/progression.json, re-drawn every reset (alone = all of them, "
+        "a comma list keeps some; empty = the one flat floor)",
     )
     p.add_argument("--terrain-bump", type=float, default=None, help="--terrain: the uneven-ground impulse, m/s")
     p.add_argument("--nav-share", type=float, default=None, help="footwork: share of walks that navigate to a goal")
@@ -181,6 +183,9 @@ class Progressive:
         self.env, self.learners, self.args = env, learners, args
         self.sched = None
         self.freeze_until = 0
+        # The knobs asked for on the command line: a rung sets the ones a run left alone (--nav-share 0.3 stays 0.3
+        # whatever the rung's own default is).
+        self.cli = footwork_kwargs(args)
         if getattr(args, "reuse_trunk", ""):
             import hierarchy
 
@@ -206,12 +211,25 @@ class Progressive:
             from . import curriculum as cur
 
             self.sched = cur.from_args(cur.ladder(), args.curriculum)
-            applied, unknown = cur.apply(env, self.sched.rung.overrides)
+            if hasattr(env, "declare_rung_terms"):
+                env.declare_rung_terms(all_terms=True)  # every rung's column is there from iteration 0
+            applied, unknown, kept = self._apply(self.sched.rung.overrides)
             print(
                 f"[curriculum] starting at {self.sched.rung.name}: {', '.join(applied) or 'no knob'}"
+                + (f" (kept from the command line: {', '.join(kept)})" if kept else "")
                 + (f" (not on this env: {', '.join(unknown)})" if unknown else ""),
                 flush=True,
             )
+
+    def _apply(self, over: dict):
+        """A rung's knobs into the live env, with the command line's own values on top of them."""
+        from . import curriculum as cur
+
+        applied, unknown = cur.apply(self.env, over)
+        kept = [k for k in applied if k in self.cli]
+        if kept:
+            cur.apply(self.env, {k: self.cli[k] for k in kept})
+        return applied, unknown, kept
 
     def update(self, stats: dict, iteration: int) -> str:
         """One iteration: let a held encoder go, and move the run along its ladder; returns a line for the log."""
@@ -224,13 +242,12 @@ class Progressive:
             notes.append(f"[hierarchy] encoder let go at iteration {iteration}")
             self.freeze_until = 0
         if self.sched is not None:
-            from . import curriculum as cur
-
             what, over = self.sched.update(stats, iteration)
             if what:
-                applied, unknown = cur.apply(self.env, over)
+                applied, unknown, kept = self._apply(over)
                 notes.append(
                     f"[curriculum] {what} to {self.sched.rung.name}: {', '.join(applied) or 'no knob'}"
+                    + (f" (kept from the command line: {', '.join(kept)})" if kept else "")
                     + (f" (not on this env: {', '.join(unknown)})" if unknown else "")
                 )
             elif iteration % 10 == 0:

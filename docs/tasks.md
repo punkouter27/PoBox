@@ -72,12 +72,14 @@ Their notes are in the archive.
 ## Progressive training (2026-11-25)
 
 The batch is in (`Training/envs/limits.py`, `curriculum.py`, `terrain.py`, `nav.py`, `momentum.py`, `Training/hierarchy.py`;
-flags in `Training/README.md`, tables in `docs/README.md`). Nothing has been run on it yet.
+flags in `Training/README.md`, tables in `docs/README.md`). Short verification runs only (2026-11-25: minutes each,
+every flag in one run, no NaN; two defects fixed, see the entry in `docs/README.md`); nothing has trained to a brain.
 
 - [ ] P1 Run the ladder once: `--stage footwork --curriculum auto --terrain --nav-share 0.3` on `models/v2/matt_solo.xml`
       warm from Matt's footwork brain, 1 h, then `tools/footwork_c.py --exam`. What to look for: the rung log line
-      (`[curriculum] rung ...`, printed every 10 iterations) reaching `sprint`, `nav_rate` climbing above 0.5, and no
-      rise in `stand_fall_rate` after a promotion.
+      (`[curriculum] rung ...`, printed every 10 iterations) reaching `sprint`, `nav_rate` climbing above 0.5 (it
+      only can once a rung asks for walks and the navigate rung is in; `--nav-share` is kept, not overwritten),
+      and no rise in `stand_fall_rate` after a promotion.
 - [ ] P2 Do the hard limits cost the punch: a match run with `--torque-cap 0.7 --act-lag 8` against the same seed
       without them, `hits/s` and `hit_speed` compared. A cap that costs punches is a cap the game should not adopt.
 - [ ] P3 Mirror augmentation and a shared encoder on a shipping run: `--mirror-aug 0.5 --shared-encoder --sym-coef 0.1`

@@ -768,3 +768,29 @@ in torch), ~18 us of CPU each. The warp physics was already a graph; the torch a
 - Next, when the GPU is free: a 1 h `--stage footwork --curriculum auto --terrain` run on `models/v2/matt_solo.xml` warm
   from Matt's footwork brain, then `tools/footwork_c.py --exam` on it; and a `--torque-cap 0.7 --act-lag 8` run of the
   match stage to see whether the cap costs punches.
+
+## 2026-11-25 15:40, the progressive batch on the GPU for the first time: three short runs, two defects fixed
+- Three minutes-long runs with every new flag on, so the wiring is proved on a real trainer, not only in the tests:
+  3 x 128 worlds (all flags at once: curriculum auto, terrain flat,mild,steep, nav 0.3, sprint 0.2, torque cap 0.7,
+  act-lag 8 Hz, soft stops, gravity +-5%, momentum and lean, mirror 0.5, shared encoder, 2 layers held until 1),
+  30 x 512 (the same, the encoder let go at 10) and 20 x 512 at `--curriculum navigate`.
+- Results: no NaN in any of them; 7,700-10,200 sps at 512 worlds; `rt_rom`, `rt_tilt`, `rt_mom`, `rt_torque`,
+  `rom_use` and `terrain_flat/mild/steep` (0.58 / 0.42 / 0.25) all move in `logs/smoke_*.csv`; the shared encoder
+  printed `5,675 of 190,251 parameters (3%)` while held and released at its iteration. The runs were deleted
+  (`checkpoints/smoke_*`, `logs/smoke_*`), nothing trained to a brain.
+- Defect 1, the ladder could not turn a rung on: `nav_env` (and the turning charges) were built only in the env's
+  constructor, so a run starting at `balance` that promoted to `navigate` got `nav_share` 0.35 and no goals, cubes or
+  `rt_goal` — `nav_rate` could never leave 0, which is exactly the check P1 asks for. Fixed: `FootworkEnv.after_rung`
+  lists the rung's terms and builds its goals/charges, `curriculum.apply` calls it, and a curriculum run declares every
+  rung's terms at iteration 0 so a promotion never widens the CSV. A declared term whose rung is not reached reads 0.
+- Defect 2, a rung overwrote the command line: `--nav-share 0.3 --curriculum auto` logged `starting at balance` with
+  `nav_share` written back to 0 and spent every balance iteration without navigation episodes. Fixed: the knobs named on
+  the command line are re-applied after each rung (`kept from the command line: nav_share` in the log); a knob nobody
+  named still follows the rung (`walk_share 0.0` at balance).
+- Also: `--terrain` alone used to be an argparse error although `docs/README.md` promised "all classes"; it now means
+  every class, and a comma list still keeps some.
+- Verified after the fix: `tests/test_rl_progression.py` 19 passed (three new: `apply` tells the env a rung moved, a
+  rung leaves the command line's knobs alone, a promotion to `navigate` builds the goals and pays rt_goal), the fast tier
+  170 passed, `ruff check` and `ruff format --check` clean, and the same 20-iteration run now logs
+  `kept from the command line: nav_share`. `--terrain` alone, on the trainer, drew 0.42 / 0.36 / 0.22 of
+  flat / mild / steep.

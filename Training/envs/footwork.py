@@ -64,6 +64,8 @@ class FootworkEnv(BoxingEnv):
         "fall",
         "style",
     ]
+    # The rungs above a walk each bring a term of their own (2026-11-25): goal, sprint, mom, tilt.
+    RUNG_TERMS = ("goal", "sprint", "mom", "tilt")
     MODE = "footwork"
 
     def __init__(
@@ -135,14 +137,7 @@ class FootworkEnv(BoxingEnv):
         z = lambda *shape: torch.zeros(*shape, device=dev)
         L = lambda x: torch.tensor(x, device=dev, dtype=torch.long)
         # The rungs above a walk each bring a reward term of their own; the term lists are fixed before _ft is built.
-        if self.nav_share > 0.0:
-            self.TERMS = self.TERMS + ["goal"]
-        if self.sprint_share > 0.0 and self.sprint_w > 0.0:
-            self.TERMS = self.TERMS + ["sprint"]
-        if self.momentum_w > 0.0:
-            self.TERMS = self.TERMS + ["mom"]
-        if self.lean_w > 0.0:
-            self.TERMS = self.TERMS + ["tilt"]
+        self.declare_rung_terms()
         self.base_obs_dim = self.obs_dim
         self.obs_dim += CMD
         self.kind = torch.zeros(N, K, dtype=torch.long, device=dev)
@@ -215,17 +210,7 @@ class FootworkEnv(BoxingEnv):
         self.nav = torch.zeros(N, K, dtype=torch.bool, device=dev)
         self.sprint = torch.zeros(N, K, dtype=torch.bool, device=dev)
         self._new_nav, self._new_sprint = self.nav.clone(), self.sprint.clone()
-        if self.nav_share > 0.0 and self.C:
-            from .limits import NavRanges
-            from .nav import NavGoals
-
-            r = NavRanges.from_config()
-            if self.nav_obstacles:
-                r.obstacles = (min(r.obstacles[0], int(self.nav_obstacles)), int(self.nav_obstacles))
-            self.nav_env = NavGoals(self, r)
-        elif self.nav_share > 0.0:
-            print("[nav] the model has no cube pool: navigation is off for this run", flush=True)
-            self.nav_share = 0.0
+        self._build_rungs()
         if self.terrain_spec:
             from .limits import TerrainRanges
             from .terrain import Terrain
@@ -234,10 +219,6 @@ class FootworkEnv(BoxingEnv):
             if self.terrain_bump > 0.0:
                 r.bump_mps = float(self.terrain_bump)
             self.terrain = Terrain(self, r)
-        if self.momentum_w > 0.0 or self.lean_w > 0.0:
-            from .momentum import TurnMomentum
-
-            self.mom = TurnMomentum(self, self.momentum_w, self.lean_w, self.turn_accel)
 
         self._f = {
             k: torch.zeros((), device=dev)
@@ -267,6 +248,50 @@ class FootworkEnv(BoxingEnv):
         }
         self._ft = {t: torch.zeros((), device=dev) for t in self.TERMS}
         self._fk = {k: torch.zeros(3, device=dev) for k in ("ends", "fell")}  # by kind of episode
+
+    def declare_rung_terms(self, all_terms: bool = False) -> None:
+        """List the reward terms of the rungs whose knobs are on; all of them when the run may climb to them.
+
+        The term list is the log's columns, so a curriculum run declares every rung's term up front: a promotion then
+        changes a term's value, never the row's width. Safe to call again once _ft exists (curriculum.apply does).
+        """
+        on = {
+            "goal": all_terms or self.nav_share > 0.0,
+            "sprint": all_terms or (self.sprint_share > 0.0 and self.sprint_w > 0.0),
+            "mom": all_terms or self.momentum_w > 0.0,
+            "tilt": all_terms or self.lean_w > 0.0,
+        }
+        for t in self.RUNG_TERMS:
+            if on[t] and t not in self.TERMS:
+                self.TERMS = self.TERMS + [t]
+                if hasattr(self, "_ft"):
+                    self._ft[t] = torch.zeros((), device=self.device)
+
+    def _build_rungs(self) -> None:
+        """The goals and the turning charges of the rungs now on: made here, and again when a promotion turns one on."""
+        if getattr(self, "nav_env", None) is None and self.nav_share > 0.0:
+            if not self.C:
+                if not getattr(self, "_nav_warned", False):
+                    print("[nav] the model has no cube pool: navigation is off for this run", flush=True)
+                    self._nav_warned = True
+                self.nav_share = 0.0
+            else:
+                from .limits import NavRanges
+                from .nav import NavGoals
+
+                r = NavRanges.from_config()
+                if self.nav_obstacles:
+                    r.obstacles = (min(r.obstacles[0], int(self.nav_obstacles)), int(self.nav_obstacles))
+                self.nav_env = NavGoals(self, r)
+        if getattr(self, "mom", None) is None and (self.momentum_w > 0.0 or self.lean_w > 0.0):
+            from .momentum import TurnMomentum
+
+            self.mom = TurnMomentum(self, self.momentum_w, self.lean_w, self.turn_accel)
+
+    def after_rung(self) -> None:
+        """A knob changed on the ladder: list the terms it brings and build what it needs (curriculum.apply calls this)."""
+        self.declare_rung_terms()
+        self._build_rungs()
 
     def _randomise(self) -> None:
         """A body for each world. MuJoCo Warp keeps one copy of a model field unless it is given one a world."""
@@ -664,6 +689,9 @@ class FootworkEnv(BoxingEnv):
             arrived = self.nav_env.terms(r, g)  # rt_goal: progress, arrival, obstacles shoved
         if self.mom is not None:
             self.mom.terms(r, g, lin_b, ang_b)  # rt_mom and rt_lean
+        for t in self.RUNG_TERMS:  # a rung declared but not yet reached reads 0: its column stays put, it pays nothing
+            if t in self.TERMS and t not in r:
+                r[t] = torch.zeros(N, K, device=self.device)
 
         fell = (pos[..., 2] < self.stand_height * 0.6) | (upright < 0.4) | ~torch.isfinite(pos).all(-1)
         timeout = self.step_count >= self.max_steps

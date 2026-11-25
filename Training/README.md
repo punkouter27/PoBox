@@ -37,8 +37,11 @@ The progressive batch of the same day, also off by default (`envs/limits.py`, `e
 `--momentum-w`, `--lean-w`, `--turn-accel` (`envs/momentum.py`); and the encoder reuse `--shared-encoder`,
 `--freeze-layers N --freeze-until K`, `--reuse-trunk CKPT` (`hierarchy.py`), plus `--mirror-aug`
 (`PPOConfig.mirror_aug`). The footwork stage takes the rung knobs; the physical limits apply to every stage.
-The ladder is data: rungs, their thresholds and the terrain classes are in `config/progression.json`. A new boxer
-from a mesh in one command: `python tools/new_boxer.py NAME mesh.glb --bone-map mixamo`.
+The ladder is data: rungs, their thresholds and the terrain classes are in `config/progression.json`.
+A rung sets the knobs a run left alone and its scale is built when it arrives (a promotion to `navigate` makes the
+navigation goals then, not only at start-up); a knob given on the command line (`--nav-share 0.3`) stays as asked
+and the log's `kept from the command line` names it. `--terrain` alone is every class, `--terrain mild,steep` keeps
+some. A new boxer from a mesh in one command: `python tools/new_boxer.py NAME mesh.glb --bone-map mixamo`.
 
 ## From a rigged mesh to a trained policy
 
