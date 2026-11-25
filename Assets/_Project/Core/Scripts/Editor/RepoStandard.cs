@@ -104,6 +104,9 @@ namespace PoBox.EditorTools
             log.AppendLine($"unreached: {unreached.Count} asset(s), {bytes / 1024} KB");
             foreach (string u in unreached) log.AppendLine("  " + u);
 
+            log.AppendLine("stale test scenes:");
+            foreach (string s in StaleTestScenes()) log.AppendLine("  " + s);
+
             Write(log);
             Debug.Log($"[RepoStandard] {names.Count} naming violation(s), {unreached.Count} unreached asset(s) ({bytes / 1024} KB). {OutPath}");
         }
@@ -171,7 +174,7 @@ namespace PoBox.EditorTools
             }
         }
 
-        /// <summary>`grandma` -> `Grandma`, `grandmaII` -> `GrandmaII`.</summary>
+        /// <summary>`grandma` -> `Grandma`, `grandmaII` -> `GrandmaII`, `soldat` -> `Soldat`.</summary>
         static string Title(string lower)
         {
             if (string.IsNullOrEmpty(lower)) return lower;
@@ -179,6 +182,14 @@ namespace PoBox.EditorTools
             int roman = rest.Length;
             while (roman > 0 && (rest[roman - 1] == 'I' || rest[roman - 1] == 'V' || rest[roman - 1] == 'X')) roman--;
             return char.ToUpperInvariant(lower[0]) + rest.Substring(0, roman).ToLowerInvariant() + rest.Substring(roman);
+        }
+
+        /// <summary>The roster's own spelling of a boxer folder name: `sokol` -> `Sokol`.</summary>
+        static string BoxerTitle(string folder)
+        {
+            if (string.IsNullOrEmpty(folder)) return folder;
+            if (folder == "grandmaII") return "GrandmaII";
+            return char.ToUpperInvariant(folder[0]) + folder.Substring(1);
         }
 
         /// <summary>
@@ -225,6 +236,13 @@ namespace PoBox.EditorTools
         static IEnumerable<string> Files(string dir, string extension) =>
             Directory.Exists(dir)
                 ? Directory.GetFiles(dir, "*" + extension, SearchOption.TopDirectoryOnly)
+                    .Where(p => !p.EndsWith(".meta", StringComparison.Ordinal))
+                    .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
+                : Array.Empty<string>();
+
+        static IEnumerable<string> AllFiles(string dir, string extension) =>
+            Directory.Exists(dir)
+                ? Directory.GetFiles(dir, "*" + extension, SearchOption.AllDirectories)
                     .Where(p => !p.EndsWith(".meta", StringComparison.Ordinal))
                     .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
                 : Array.Empty<string>();
