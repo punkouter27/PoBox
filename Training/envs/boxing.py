@@ -163,6 +163,9 @@ class BoxingEnv(BoxingOpsMixin):
         recover_s: float = 3.0,
         handover_reserve: float = 1.0,
         handover_yaw: float = 0.6,
+        xcom_w: float = 0.0,
+        stall_w: float = 0.0,
+        stall_s: float = 2.0,
     ):
         wp.init()
         wp.config.verbose_warnings = verbose
@@ -225,6 +228,12 @@ class BoxingEnv(BoxingOpsMixin):
         self.seek_w, self.ropes_start = seek_w, ropes_start
         if seek_w and not self.MODE:  # the bout's step only; footwork and get-up have steps of their own
             self.TERMS = self.TERMS + ["seek"]
+        # Extrapolated CoM (xCoM) support-segment stability and anti-stall pressure shaping (both off by default).
+        self.xcom_w, self.stall_w, self.stall_s = xcom_w, stall_w, stall_s
+        if xcom_w and not self.MODE:
+            self.TERMS = self.TERMS + ["xcom"]
+        if stall_w and not self.MODE:
+            self.TERMS = self.TERMS + ["stall"]
         # Five more, all off unless asked for (2026-10-16 night, staged). selfcontact_w: a charge per centimetre of
         # a boxer's own parts pressed into each other (MuJoCo's soft contacts: the harder they press, the deeper), for
         # the guard the footwork brain held against itself, arm actions at the clip (AGENTS: a small self-contact
@@ -1000,6 +1009,19 @@ class BoxingEnv(BoxingOpsMixin):
         # 18 cm out from between the feet is leaning on something.
         feet_mid = g["foot_xy"].mean(2)
         r["lean"] = -1.5 * ((g["own_head"][..., :2] - feet_mid).norm(dim=-1) - 0.18).clamp_min(0.0)
+        if self.xcom_w:
+            # Extrapolated CoM (Hof et al.): pelvis XY + linear velocity / omega0 projected onto the foot-to-foot segment.
+            omega0 = torch.sqrt(9.81 / self.stand_height.clamp_min(0.4)).view(1, K, 1)
+            xcom_xy = pos[..., :2] + lin_w[..., :2] / omega0
+            f0, f1 = g["foot_xy"][:, :, 0], g["foot_xy"][:, :, 1]
+            seg = f1 - f0
+            u = (((xcom_xy - f0) * seg).sum(-1) / (seg**2).sum(-1).clamp_min(1e-6)).clamp(0.0, 1.0)
+            closest = f0 + u[..., None] * seg
+            xcom_err = (xcom_xy - closest).norm(dim=-1)
+            r["xcom"] = -self.xcom_w * (xcom_err - 0.10).clamp_min(0.0)
+        if self.stall_w:
+            stall = ((self.since_hit - self.stall_s) / 2.0).clamp(0.0, 1.0)
+            r["stall"] = -self.stall_w * stall
 
         # ---- termination
         fell = (pos[..., 2] < self.stand_height * 0.6) | (upright < 0.4) | ~torch.isfinite(pos).all(-1)  # (N,K)

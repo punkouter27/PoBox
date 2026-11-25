@@ -137,6 +137,9 @@ class PPOConfig:
     # drops the gamma*V(s_t) added at time-outs and survivor cuts (a step ending that way is then valued as terminal),
     # to test whether that self-referential target is what feeds the runaway. On by default (unchanged behaviour).
     bootstrap_cuts: bool = True
+    # Bilateral mirror-symmetry regularisation weight: penalises ||pi(M(s)) - M(pi(s))||^2 in actor updates
+    # so boxers learn balanced orthodox/southpaw guards and avoid single-hand spam. 0 = off (unchanged behaviour).
+    sym_coef: float = 0.0
 
 
 class PPO:
@@ -160,6 +163,22 @@ class PPO:
             "sigma": torch.zeros(T, N, act_dim, device=device),
         }
         self.t = 0
+        self._sym: Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor] | None = None
+
+    def set_symmetry(
+        self,
+        obs_perm: torch.Tensor,
+        obs_sign: torch.Tensor,
+        act_perm: torch.Tensor,
+        act_sign: torch.Tensor,
+    ) -> None:
+        """Attach sagittal mirror permutations/signs for bilateral policy regularisation."""
+        self._sym = (
+            obs_perm.to(self.device),
+            obs_sign.to(self.device),
+            act_perm.to(self.device),
+            act_sign.to(self.device),
+        )
 
     # ---- rollout -------------------------------------------------------------------------------
     def act(self, raw_obs: torch.Tensor) -> torch.Tensor:
@@ -215,6 +234,8 @@ class PPO:
         adv_f, ret_f = flat(adv_n), flat(ret)
 
         stats = {"policy_loss": 0.0, "value_loss": 0.0, "entropy": 0.0, "kl": 0.0}
+        if c.sym_coef > 0.0 and self._sym is not None:
+            stats["sym_loss"] = 0.0
         n_updates = 0
         mb = T * N // c.minibatches
         for _ in range(c.epochs):
@@ -246,6 +267,16 @@ class PPO:
                     else v_loss
                 )
                 loss = surr + c.value_coef * v_train - c.entropy_coef * ent.mean()
+                if c.sym_coef > 0.0 and self._sym is not None:
+                    o_perm, o_sign, a_perm, a_sign = self._sym
+                    with torch.no_grad():
+                        std_obs = torch.sqrt(self.obs_rms.var + 1e-8)
+                        raw_m = (obs[idx] * std_obs + self.obs_rms.mean)[:, o_perm] * o_sign
+                        obs_m = self.obs_rms.normalize(raw_m, c.obs_clip)
+                    mu_m = self.model.actor(obs_m)[:, a_perm] * a_sign
+                    sym_loss = (mu - mu_m).pow(2).mean()
+                    loss = loss + c.sym_coef * sym_loss
+                    stats["sym_loss"] += sym_loss.item()
                 self.opt.zero_grad(set_to_none=True)
                 loss.backward()
                 # The actor and the critic share no weights: clipped together, a large value gradient shrinks
