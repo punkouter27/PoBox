@@ -81,6 +81,15 @@ class FootworkEnv(BoxingEnv):
         cmd_fwd_max: float = 1.0,
         slope_deg: float = 0.0,
         gesture: float = 0.0,
+        terrain: str = "",
+        terrain_bump: float = 0.0,
+        nav_share: float = 0.0,
+        nav_obstacles: int = 0,
+        sprint_share: float = 0.0,
+        sprint_w: float = 0.5,
+        momentum_w: float = 0.0,
+        lean_w: float = 0.0,
+        turn_accel: float = 12.0,
         **kw,
     ):
         self.walk_share, self.turn_share = walk_share, turn_share
@@ -94,6 +103,16 @@ class FootworkEnv(BoxingEnv):
         # any way: the gravity is tilted a world, which is the same physics as a sloping floor seen from the floor, and the
         # observation's "which way is down" is that true gravity, as a body on a slope feels it. Heights stay above the floor.
         self.cmd_fwd_max, self.slope_deg = cmd_fwd_max, slope_deg
+        # The rungs above a plain walk (2026-11-25). terrain: the floor classes of config/progression.json, re-drawn at
+        # every reset (envs/terrain.py; "" = the one floor, as before); terrain_bump overrides the classes' bump size.
+        # nav_share: the share of walks that are a navigation episode with obstacles (envs/nav.py), nav_obstacles the
+        # most cubes parked across the path. sprint_share: the share of walks that ask for a sprint (a forward command
+        # near cmd_fwd_max) and pay for a longer stride. momentum_w / lean_w: the yaw-jerk and centripetal-lean charges,
+        # and turn_accel the rad/s^2 the yaw command may change at (envs/momentum.py). All off unless asked for.
+        self.terrain_spec, self.terrain_bump = terrain, terrain_bump
+        self.nav_share, self.nav_obstacles = nav_share, nav_obstacles
+        self.sprint_share, self.sprint_w = sprint_share, sprint_w
+        self.momentum_w, self.lean_w, self.turn_accel = momentum_w, lean_w, turn_accel
         # The share of walks that begin at a moment of a walking clip (style.py), legs and trunk as the clip has
         # them and the arms in the guard, with the clip's own velocity as the command: a boxer that has only ever
         # stood does not find walking by trying things at random, but one put in mid-stride learns to carry on.
@@ -115,6 +134,15 @@ class FootworkEnv(BoxingEnv):
         N, K, dev, m = self.N, self.K, self.device, self.m
         z = lambda *shape: torch.zeros(*shape, device=dev)
         L = lambda x: torch.tensor(x, device=dev, dtype=torch.long)
+        # The rungs above a walk each bring a reward term of their own; the term lists are fixed before _ft is built.
+        if self.nav_share > 0.0:
+            self.TERMS = self.TERMS + ["goal"]
+        if self.sprint_share > 0.0 and self.sprint_w > 0.0:
+            self.TERMS = self.TERMS + ["sprint"]
+        if self.momentum_w > 0.0:
+            self.TERMS = self.TERMS + ["mom"]
+        if self.lean_w > 0.0:
+            self.TERMS = self.TERMS + ["tilt"]
         self.base_obs_dim = self.obs_dim
         self.obs_dim += CMD
         self.kind = torch.zeros(N, K, dtype=torch.long, device=dev)
@@ -156,7 +184,9 @@ class FootworkEnv(BoxingEnv):
         if self.C:
             self.cube_qi = L([[int(m.jnt_qposadr[j]) + i for i in range(7)] for j in cubes])  # (C, 7)
             self.cube_vi = L([[int(m.jnt_dofadr[j]) + i for i in range(6)] for j in cubes])  # (C, 6)
-            self.cube_park = self.default_qpos[self.cube_qi]
+            # One parking place a world, so the navigation rung can put an obstacle in a world's own path (envs/nav.py);
+            # every other rung holds all of them at the keyframe's place, as before.
+            self.cube_park = self.default_qpos[self.cube_qi].unsqueeze(0).repeat(N, 1, 1)
             self.cube_left = z(N, self.C)  # seconds a cube in play has left
             self.next_cube = torch.zeros(N, dtype=torch.long, device=dev)
         if self.rsi > 0.0 and K == 1:
@@ -180,6 +210,35 @@ class FootworkEnv(BoxingEnv):
         self._randomise()
         self._slope()
 
+        # The states of the rungs above a walk (2026-11-25), made after the body randomisation and the slope (the terrain
+        # replaces the slope with a class-drawn one) and before the first reset reads them.
+        self.nav = torch.zeros(N, K, dtype=torch.bool, device=dev)
+        self.sprint = torch.zeros(N, K, dtype=torch.bool, device=dev)
+        self._new_nav, self._new_sprint = self.nav.clone(), self.sprint.clone()
+        if self.nav_share > 0.0 and self.C:
+            from .limits import NavRanges
+            from .nav import NavGoals
+
+            r = NavRanges.from_config()
+            if self.nav_obstacles:
+                r.obstacles = (min(r.obstacles[0], int(self.nav_obstacles)), int(self.nav_obstacles))
+            self.nav_env = NavGoals(self, r)
+        elif self.nav_share > 0.0:
+            print("[nav] the model has no cube pool: navigation is off for this run", flush=True)
+            self.nav_share = 0.0
+        if self.terrain_spec:
+            from .limits import TerrainRanges
+            from .terrain import Terrain
+
+            r = TerrainRanges.from_config(classes=self.terrain_spec)
+            if self.terrain_bump > 0.0:
+                r.bump_mps = float(self.terrain_bump)
+            self.terrain = Terrain(self, r)
+        if self.momentum_w > 0.0 or self.lean_w > 0.0:
+            from .momentum import TurnMomentum
+
+            self.mom = TurnMomentum(self, self.momentum_w, self.lean_w, self.turn_accel)
+
         self._f = {
             k: torch.zeros((), device=dev)
             for k in (
@@ -202,6 +261,8 @@ class FootworkEnv(BoxingEnv):
                 "shoves",
                 "cubes",
                 "sat_sum",
+                "nav_ends",
+                "nav_ok",
             )
         }
         self._ft = {t: torch.zeros((), device=dev) for t in self.TERMS}
@@ -268,6 +329,19 @@ class FootworkEnv(BoxingEnv):
         )
         return c * (self._u(*shape) > 0.2).float()[..., None] * self.quick.view(1, self.K, 1)
 
+    def _sprint_cmd(self, shape) -> torch.Tensor:
+        """A sprint's command: 1.4 m/s forward up to cmd_fwd_max, little sideways, the body's own quick factor."""
+        N, K = shape
+        fast = torch.stack(
+            [
+                self._u(N, K, lo=1.4, hi=max(1.5, self.cmd_fwd_max)),
+                self._u(N, K, lo=-0.2, hi=0.2),
+                self._u(N, K, lo=-0.3, hi=0.3),
+            ],
+            -1,
+        )
+        return fast * self.quick.view(1, self.K, 1)
+
     def _reset_states(self):
         N, K, A, dev = self.N, self.K, self.A, self.device
         q = self.default_qpos.unsqueeze(0).repeat(N, 1)
@@ -277,6 +351,13 @@ class FootworkEnv(BoxingEnv):
             pick < self.walk_share, WALK, torch.where(pick < self.walk_share + self.turn_share, TURN, STAND)
         )
         self._new_cmd = self._draw_cmd((N, K)) * (self._new_kind == WALK).float()[..., None]
+        # A walk may be a sprint (a fast forward command, and a longer stride paid for) or a navigation episode (the
+        # command is the steering one, drawn every step; a goal and obstacles come with the reset).
+        walk = self._new_kind == WALK
+        self._new_sprint = walk & (self._u(N, K) < self.sprint_share)
+        self._new_nav = walk & ~self._new_sprint & (self._u(N, K) < self.nav_share)
+        if self.sprint_share > 0.0:
+            self._new_cmd = torch.where(self._new_sprint[..., None], self._sprint_cmd((N, K)), self._new_cmd)
         opp = []
         for k in range(K):
             rq, rv = self.root_q[k], self.root_v[k]
@@ -337,6 +418,14 @@ class FootworkEnv(BoxingEnv):
         self.was_down = torch.where(m1[..., None], torch.ones_like(self.was_down), self.was_down)
         if self.C:
             self.cube_left = torch.where(m1, torch.zeros_like(self.cube_left), self.cube_left)
+        # The rung's own episode flags and floor: a navigation episode draws its goal and obstacles now that the bodies
+        # are where the episode begins, and a terrain world draws its slope for the episode.
+        self.nav = torch.where(m1, self._new_nav, self.nav)
+        self.sprint = torch.where(m1, self._new_sprint, self.sprint)
+        if self.nav_env is not None:
+            self.nav_env.draw(mask)
+        if self.terrain is not None:
+            self.terrain.resample(mask)
 
     def _drive(self, action: torch.Tensor) -> None:
         super()._drive(action)
@@ -435,7 +524,7 @@ class FootworkEnv(BoxingEnv):
         # A waiting cube is put back at its parking place every step: it is not resting on anything.
         self.cube_left = (self.cube_left - self.dt).clamp_min(0.0)
         waiting = (self.cube_left <= 0.0)[..., None]
-        self.qpos[:, self.cube_qi] = torch.where(waiting, self.cube_park[None], self.qpos[:, self.cube_qi])
+        self.qpos[:, self.cube_qi] = torch.where(waiting, self.cube_park, self.qpos[:, self.cube_qi])
         self.qvel[:, self.cube_vi] = torch.where(
             waiting, torch.zeros_like(self.qvel[:, self.cube_vi]), self.qvel[:, self.cube_vi]
         )
@@ -445,6 +534,8 @@ class FootworkEnv(BoxingEnv):
         rows = torch.nonzero(
             (self._u(N) < self.dt / self.cube_every_s) & (self.cube_left.gather(1, c[:, None])[:, 0] <= 0.0)
         )[:, 0]
+        if self.nav_env is not None:
+            rows = rows[~self.nav[rows].any(-1)]  # a navigation episode's obstacles stay where they were put
         if rows.numel() == 0:
             return
         n, c = rows.numel(), c[rows]
@@ -476,10 +567,18 @@ class FootworkEnv(BoxingEnv):
         self._drive(action)
         self._shove()
         self._cubes()
+        if self.terrain is not None:
+            self.terrain.bump()  # uneven ground under a foot, before the physics
         self._physics_step()
         self.step_count = self.step_count + 1.0
 
         g = self._geometry()
+        # The rungs above a walk steer and pace the body a little differently: the navigation episode's command heads
+        # for its goal, and the turn's yaw rate follows a command that cannot change at once.
+        if self.nav_env is not None:
+            self.cmd = self.nav_env.command(self.cmd, g)
+        if self.mom is not None:
+            self.cmd = self.mom.command(self.cmd)
         lin_w, lin_b, ang_b, grav_b = self._base(g)
         pos, yaw = g["pos"], g["yaw"]
         upright = -grav_b[..., 2]
@@ -525,6 +624,9 @@ class FootworkEnv(BoxingEnv):
         self.air = self.air + self.dt * (~contact).float()
         landed = contact & ~self.was_down
         r["steps"] = 1.0 * ((self.air - 0.25) * landed.float()).sum(-1) * moving_now
+        if self.sprint_share > 0.0 and self.sprint_w > 0.0:
+            # A sprint's stride is longer than a walk's: paid for the time a foot spends up beyond 0.35 s, on landing.
+            r["sprint"] = self.sprint_w * self.sprint.float() * ((self.air - 0.35) * landed.float()).sum(-1)
         self.air = torch.where(contact, torch.zeros_like(self.air), self.air)
         self.was_down = contact
         # The guard stays up whatever the legs are doing; the legs go back to the stance when nothing is asked.
@@ -557,13 +659,21 @@ class FootworkEnv(BoxingEnv):
         if self.flail_w:
             # No punching here: every hand is idle, and its shoulder and elbow speed is charged (envs/boxing.py).
             r["flail"] = -self.flail_w * self._flail(jv, torch.ones(N, K, 2, dtype=torch.bool, device=self.device))
+        arrived = None
+        if self.nav_env is not None:
+            arrived = self.nav_env.terms(r, g)  # rt_goal: progress, arrival, obstacles shoved
+        if self.mom is not None:
+            self.mom.terms(r, g, lin_b, ang_b)  # rt_mom and rt_lean
 
         fell = (pos[..., 2] < self.stand_height * 0.6) | (upright < 0.4) | ~torch.isfinite(pos).all(-1)
         timeout = self.step_count >= self.max_steps
         any_fell = fell.any(1)
         r["fall"] = -self.fall_penalty * fell.float()
         reward = sum(r.values())
-        done = any_fell | timeout
+        # Reaching the goal ends the episode as a time-out does: the value is carried over, so an arrival is a bonus and
+        # not the loss of the episode's remaining reward (the same rule as a knockdown's survivor, --survivor-bootstrap).
+        reached = arrived.any(1) if arrived is not None else torch.zeros(N, dtype=torch.bool, device=self.device)
+        done = any_fell | timeout | reached
 
         # ---- bookkeeping
         t_now = (self.episode_len[:, None] + 1.0) * self.dt
@@ -592,6 +702,10 @@ class FootworkEnv(BoxingEnv):
         a["turn_ends"] += ended.sum()
         a["turn_ok"] += (ended * ((self.faced_at >= 0.0) & (self.faced_at <= 3.0) & ~fell).float()).sum()
         a["turn_t"] += (ended * self.faced_at.clamp_min(0.0)).sum()
+        if self.nav_env is not None:
+            ended_nav = (self.nav & done[:, None]).float()
+            a["nav_ends"] += ended_nav.sum()
+            a["nav_ok"] += (ended_nav * self.nav_env.arrived.float()).sum()
         a["turn_n"] += (ended * (self.faced_at >= 0.0).float()).sum()
         for name in self.TERMS:
             self._ft[name] += r[name].mean()
@@ -604,6 +718,8 @@ class FootworkEnv(BoxingEnv):
         self.cmd_left = self.cmd_left - self.dt
         change = (self.cmd_left <= 0.0) & (self.kind == WALK)
         self.cmd = torch.where(change[..., None], self._draw_cmd((N, K)), self.cmd)
+        if self.sprint_share > 0.0:  # a sprint keeps asking for a sprint until the episode ends
+            self.cmd = torch.where(change[..., None] & self.sprint[..., None], self._sprint_cmd((N, K)), self.cmd)
         self.cmd_left = torch.where(change, self._u(N, K, lo=2.0, hi=4.0), self.cmd_left)
 
         self.prev_glove, self.prev_head, self.prev_body = g["glove"].clone(), g["t_head"].clone(), g["t_body"].clone()
@@ -614,7 +730,8 @@ class FootworkEnv(BoxingEnv):
         self._reseed_trackers(done)
         self._obs = self._observe(self._geometry())
         expand = lambda x: x[:, None].expand(N, K).reshape(N * K)
-        return self._obs, reward.reshape(N * K), expand(done), expand(timeout & ~any_fell)
+        boot = (timeout & ~any_fell) | reached  # an arrival is a cut, not a terminal state
+        return self._obs, reward.reshape(N * K), expand(done), expand(boot)
 
     def get_stats(self) -> Dict[str, float]:
         a = {k: v.item() for k, v in self._f.items()}
@@ -655,6 +772,13 @@ class FootworkEnv(BoxingEnv):
             "daze": 0.0,
         }
         out.update({f"rt_{t}": self._ft[t].item() / s for t in self.TERMS})
+        # The rungs above a walk (2026-11-25), each only when the run asked for it.
+        out["nav_rate"] = a["nav_ok"] / max(1.0, a["nav_ends"])
+        out["nav_ends"] = a["nav_ends"]
+        if self.terrain is not None:
+            out.update(self.terrain.stats())
+        if self.phys is not None:
+            out.update(self.phys.stats())
         for group in (self._f, self._ft, self._fk):
             for v in group.values():
                 v.zero_()

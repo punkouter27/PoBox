@@ -69,6 +69,21 @@ Every rung also has to keep each joint's 99th-percentile speed under its human l
 These replace the October items they grew out of: C6, C7, C8, D7, D8, D9, G8, G13, K11, K12, H8, R11.
 Their notes are in the archive.
 
+## Progressive training (2026-11-25)
+
+The batch is in (`Training/envs/limits.py`, `curriculum.py`, `terrain.py`, `nav.py`, `momentum.py`, `Training/hierarchy.py`;
+flags in `Training/README.md`, tables in `docs/README.md`). Nothing has been run on it yet.
+
+- [ ] P1 Run the ladder once: `--stage footwork --curriculum auto --terrain --nav-share 0.3` on `models/v2/matt_solo.xml`
+      warm from Matt's footwork brain, 1 h, then `tools/footwork_c.py --exam`. What to look for: the rung log line
+      (`[curriculum] rung ...`, printed every 10 iterations) reaching `sprint`, `nav_rate` climbing above 0.5, and no
+      rise in `stand_fall_rate` after a promotion.
+- [ ] P2 Do the hard limits cost the punch: a match run with `--torque-cap 0.7 --act-lag 8` against the same seed
+      without them, `hits/s` and `hit_speed` compared. A cap that costs punches is a cap the game should not adopt.
+- [ ] P3 Mirror augmentation and a shared encoder on a shipping run: `--mirror-aug 0.5 --shared-encoder --sym-coef 0.1`
+      for one match run; check `mirror_aug` in the CSV and that the exported ONNX still matches Unity
+      (`MjParityTests`), since the shared trunk is a new graph shape.
+
 ## Phase D: on a phone
 
 - [x] D6 Android build with the 3.5.0 arm64 library; run on a phone; frame pacing and inference cost measured.

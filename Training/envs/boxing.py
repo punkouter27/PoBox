@@ -175,6 +175,7 @@ class BoxingEnv(BoxingOpsMixin):
         hit_bank: str = "",
         hit_every_s: float = 4.0,
         hit_scale: float = 1.0,
+        phys=None,
     ):
         wp.init()
         wp.config.verbose_warnings = verbose
@@ -310,6 +311,12 @@ class BoxingEnv(BoxingOpsMixin):
         self.TERMS = self.TERMS + [
             t for t, k in (("torque", "torque_sq"), ("jvel", "joint_vel_sq"), ("work", "mech_work")) if self.pen[k]
         ]
+        # 2026-11-25 (the progressive batch): the hard physical limits (envs/constraints.py, a limits.PhysRanges): gravity
+        # scale, motor torque caps, actuator lag and compliant stops, each applied at the last step of _drive. Its
+        # range-of-motion charge is a reward term of its own (rt_rom) only when its weight is not 0.
+        self._phys = phys
+        if phys is not None and phys.rom_w > 0.0:
+            self.TERMS = self.TERMS + ["rom"]
         # Three more upgrades of 2026-11-25, each off unless asked for: domain_rand (an envs.randomize.RandRanges),
         # hit_bank (a tools/hits_to_bank.py .npz; one shove from it every hit_every_s per fighter, impulses x hit_scale),
         # muscle "hill" (envs/muscle.py) for the fighters in muscle_for (all of them when it is empty), muscle_over its
@@ -795,6 +802,10 @@ class BoxingEnv(BoxingOpsMixin):
             from .hit_bank import HitShover
 
             self.hits = HitShover(self, self._hit_bank, self.hit_every_s, self.hit_scale)
+        if self._phys is not None and self._phys.any:
+            from .constraints import Constraints
+
+            self.phys = Constraints(self, self._phys)
 
     def step(self, action: torch.Tensor):
         N, K, A = self.N, self.K, self.A

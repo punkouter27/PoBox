@@ -33,6 +33,53 @@ and "Things that cost time, worth knowing". The plan as it stood, with every tic
 [archive/tasks_2026-10.md](archive/tasks_2026-10.md). The October training log is
 [archive/rl_optimization_log_2026-10.md](archive/rl_optimization_log_2026-10.md).
 
+## Progressive training: physical limits, a rung ladder, terrain, obstacles (2026-11-25, later)
+
+Twenty more trainer upgrades, the progressive set: what a body physically is, how a skill is grown from the one
+below it, and what the rung above a walk asks for. **All of them are off unless their flag is given**: with no new
+flag the envs are exactly as they were and every shipped brain stays valid. Unity ML-Agents and UE5
+LearningAgents are not in this repo (AGENTS.md: no ML-Agents); every item is in the repo's own PPO
+(`Training/ppo.py`) and its MuJoCo Warp envs.
+
+**Physical constraints on the agent** (`Training/envs/limits.py`, `envs/constraints.py`; on `train_box.py`, one
+group, applied as the last thing a drive target passes through):
+
+| What | Flag | Notes |
+|---|---|---|
+| Gravity scaling | `--gravity-scale 0.1` | each world feels g x (1 +- s); the observation's "down" is that g |
+| Motor torque caps | `--torque-cap 0.7`, `--torque-var` | the drive's force range, scaled a world, written into `mw.actuator_forcerange` and into the target |
+| Actuator latency | `--act-lag 8 --lag-var 0.2` | first-order motor lag, 8 Hz bandwidth (separate from `--domain-rand`'s integer delay) |
+| Compliant joint stops | `--soft-limit 0.08 --rom-w 0.01` | inside the last 0.08 rad of a joint's range the target gives way; the press is charged (rt_rom) |
+| Range-of-motion readout | (with `--soft-limit`) | `rom_use` in the run's stats |
+
+**Curriculum and hierarchical reuse** (`envs/curriculum.py`, `config/progression.json`, `hierarchy.py`):
+
+| What | Flag | Notes |
+|---|---|---|
+| The rung ladder: balance -> walk -> sprint -> navigate | `--curriculum auto` (or a rung's name) | promotes/demotes on the run's own stats, with a hold and an EMA; the rung's knobs are written into the live env |
+| Sprint rung | `--sprint-share 0.5` | walk episodes that ask for 1.4 m/s up to `cmd_fwd_max`, paid for a stride past 0.35 s |
+| Obstacle navigation rung | `--nav-share 0.3 --nav-obstacles 2` | a goal 2-4 m away, cubes parked across the line, the command steers to it (envs/nav.py) |
+| A shared encoder | `--shared-encoder` | one trunk behind actor and critic: half the parameters, one body state |
+| Freeze the low-level encoder | `--freeze-layers 2 --freeze-until 200` | the new rung learns its head on top of locomotion, then the encoder is let go |
+| Reuse a trunk across stages | `--reuse-trunk checkpoints/<run>/latest.pt` | copies the encoder (never the head), shared or separate |
+| Mirror data augmentation | `--mirror-aug 0.5` | half of each rollout is trained mirrored, so one step teaches both sides |
+
+**Behavioural expansion** (`envs/terrain.py`, `envs/momentum.py`, `envs/nav.py`, plus the get-up stage that
+already exists):
+
+| What | Flag | Notes |
+|---|---|---|
+| Terrain adaptation | `--terrain` (all classes), `--terrain mild,steep`, `--terrain-bump` | flat/mild/steep floors drawn every episode: slope (tilted gravity), friction, uneven-ground kicks |
+| Momentum-aware turning | `--momentum-w 0.1 --turn-accel 12` | the yaw command ramps at 12 rad/s^2; yaw jerk beyond it is charged (rt_mom) |
+| Leaning into a turn | `--lean-w 2` | the centripetal lean height x v x w / g is asked for and the miss charged (rt_tilt) |
+| Recovery behaviours | `--stage getup` (existing), `nav` goals | the get-up brain is the recovery rung; a navigation episode is a recovery from a shove off line |
+
+Not done in this pass, and deliberately: none of these are mirrored into the game (the game runs the nominal
+body, as with `--domain-rand`), the C MuJoCo exams do not model the terrain classes or the motor lag, and no
+run has used any of it yet (the GPU had another session's job on it). What was verified: `tests/test_rl_progression.py`
+(16 tests: the formulas and the ladder in the fast tier, a full footwork env with every flag on, the shared
+encoder with mirroring, freezing and a trunk copied between a shared and a separate policy).
+
 ## Twenty upgrades: motion priors, a league, muscles, spray, decals, lip-sync, chat votes (2026-11-25)
 
 Twenty upgrades went in on one day: eight in the trainer, twelve in the game. **Every trainer one is off unless

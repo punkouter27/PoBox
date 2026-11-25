@@ -449,6 +449,7 @@ def main() -> None:
             default_rules=not args.legacy_rules,
             flail_w=args.flail_w,
             gesture=args.gesture,
+            **upgrades.footwork_kwargs(args),
             **upgrades.kwargs(args),
         )
     else:
@@ -539,9 +540,10 @@ def main() -> None:
             max_std=args.max_std,
             lr_max=args.lr_max,
             sym_coef=args.sym_coef,
+            **upgrades.ppo_kwargs(args),
         )
         ppo = PPO(D, A, per_learner, device, cfg)
-        if args.sym_coef > 0.0:
+        if args.sym_coef > 0.0 or args.mirror_aug > 0.0:
             from envs.symmetry import build_mirror_maps
 
             joint_order = env.cfgs[0]["joint_order"] if hasattr(env, "cfgs") else env.cfg["joint_order"]
@@ -614,6 +616,10 @@ def main() -> None:
                     ppo.model.log_std.fill_(float(torch.log(torch.tensor(args.reset_std))))
         if args.reset_std > 0.0:
             print(f"exploration noise reset to {args.reset_std:g}")
+
+    # The progressive batch (2026-11-25): the encoder carried into this rung, held for its first iterations, and the
+    # rung ladder. After --resume on purpose: a reused trunk is a deliberate override of whatever was resumed.
+    prog = upgrades.attach(env, learners, args)
 
     lg = None
     if args.league:
@@ -725,6 +731,9 @@ def main() -> None:
         total_steps += args.steps * N * K
         fps = args.steps * N * K / max(1e-6, time.time() - t0)
         s = env.get_stats()
+        note = prog.update(s, it - start_iter)
+        if note:
+            print(note, flush=True)
         if judge is not None:
             s.update({"judge_loss": 0.0, "judge_on_clips": 0.0, "judge_on_boxer": 0.0, **judge.update()})
             s["rt_style"] = paid.item() / args.steps

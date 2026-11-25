@@ -20,10 +20,16 @@ class BoxingOpsMixin:
     """Reusable physics-wrapper methods mixed into BoxingEnv and its stage subclasses."""
 
     # The opt-in trainer upgrades (2026-11-25), each None / 0 unless asked for: domain randomisation (envs/randomize.py),
-    # the Hill muscle (envs/muscle.py) and shoves from the fight log's hits (envs/hit_bank.py).
+    # the Hill muscle (envs/muscle.py) and shoves from the fight log's hits (envs/hit_bank.py); the progressive-training
+    # batch of the same day: the physical limits (envs/constraints.py), terrain (envs/terrain.py), navigation
+    # (envs/nav.py) and momentum-aware turning (envs/momentum.py).
     dr = None
     hill = None
     hits = None
+    phys = None
+    terrain = None
+    nav_env = None
+    mom = None
     _dr_obs_noise = 0.0
 
     # ---- for a subclass that is another stage of training ---------------------------------------
@@ -204,6 +210,10 @@ class BoxingOpsMixin:
             self.dr.resample(mask)
         if self.hill is not None:
             self.hill.reset(mask)
+        if self.phys is not None:
+            self.phys.reset(mask, ctrl.view(self.N, self.K, self.A))
+        if self.mom is not None:
+            self.mom.reset(mask)
 
     def _place_bodies(self, mask: torch.Tensor, q: torch.Tensor) -> None:
         """Each downed body somewhere in the ring at least 0.9 m from both fighters' spots and 1.2 m from the other
@@ -422,6 +432,10 @@ class BoxingOpsMixin:
             scale = self.drive_scale * self._tired() if self.fatigue_on else self.drive_scale
             muscled = self.hill.target(asked, q, self.qvel[:, self.jv], self._hill_kp, scale, self.dt)
             want = torch.where(self.hill_on.view(1, K, 1), muscled, want)
+        if self.phys is not None:
+            # Gravity scaling, motor lag, torque caps and compliant stops (envs/constraints.py): the last thing the
+            # target passes through, so nothing above it can ask the motor for more than it has.
+            want = self.phys.drive(want, q, self._gains()[0])
         self.ctrl.copy_(want.reshape(N, K * A))
 
     def _gains(self):
@@ -445,6 +459,8 @@ class BoxingOpsMixin:
         if self.pen["mech_work"]:
             # Metabolic cost as mechanical work: sum |tau omega| (W) per step, its own weight (--energy-w), unclamped.
             r["work"] = -self.pen["mech_work"] * scale * (tau * jv).abs().sum(-1)
+        if self.phys is not None:
+            self.phys.terms(r)  # the charge for working a joint into the last radians of its range (rt_rom)
 
     def _selfcontact(self) -> torch.Tensor:
         """Metres of each fighter's own parts pressed into each other at the last substep, (N, K): the soft contacts'

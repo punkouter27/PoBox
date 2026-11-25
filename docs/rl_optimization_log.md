@@ -738,3 +738,33 @@ in torch), ~18 us of CPU each. The warp physics was already a graph; the torch a
 - Stopped by the owner at iteration 110 (about 6 min; "train later"): `hits/s 0.62`, `fall 0.21`, `kd/min 0.49`,
   league score 0.13. Checkpoints `model_000025..100.pt` kept in `checkpoints/v3_amp_league_matt` (not examined).
 - Next, when training resumes: `exam_v2.py --only matt` on a full-length run against the shipped brain.
+
+## 2026-11-25 14:40, the progressive batch: hard limits, a rung ladder, terrain, obstacles, momentum, encoder reuse (no run)
+- Twenty trainer upgrades, all off by default (the tables are in `docs/README.md`, "Progressive training"). Physical
+  limits (`envs/limits.py`, `envs/constraints.py`): `--gravity-scale` (g x 1 +- s a world, the observation's down with
+  it), `--torque-cap` / `--torque-var` (the drive's force range, written into `mw.actuator_forcerange` and into the
+  target), `--act-lag` / `--lag-var` (first-order motor lag, separate from `--domain-rand`'s integer delay),
+  `--soft-limit` / `--rom-w` (the last radians of a joint's range give way; the press is rt_rom, `rom_use` in the stats).
+- Curriculum and reuse (`envs/curriculum.py`, `config/progression.json`, `hierarchy.py`): the ladder balance -> walk ->
+  sprint -> navigate (`--curriculum auto`, promote/demote on the run's own stats with a hold and an EMA, the rung's knobs
+  written into the live env so no optimiser state is lost), `--sprint-share`, `--nav-share` / `--nav-obstacles`
+  (`envs/nav.py`: a goal 2-4 m out, cubes parked across the line, the steering command on the observation's own three
+  command numbers, arrival ends the episode as a cut so the value carries over), `--shared-encoder`,
+  `--freeze-layers N --freeze-until K`, `--reuse-trunk CKPT` (the encoder only, never the head), `--mirror-aug`.
+- Behaviour (`envs/terrain.py`, `envs/momentum.py`): `--terrain` (flat/mild/steep floors drawn every episode: slope as
+  tilted gravity, contact friction, uneven-ground kicks), `--momentum-w` (yaw jerk beyond a 12 rad/s^2 command ramp) and
+  `--lean-w` (the centripetal lean height x v x w / g).
+- Not run: the GPU had another session's job on it (`nvidia-smi` 50%, 2.4 GB), and no shipped brain needs these. The
+  design intent is the owner's ask: a physically constrained agent that climbs balance -> walk -> sprint -> navigate
+  without retraining the encoder, with recovery (get-up) and momentum-aware turning as the behaviours beside it.
+- Verified: `tests/test_rl_progression.py`, 16 passed. Fast tier: the limit formulas (a cap is never exceeded, a stop
+  gives way at the limit, the lag alpha), terrain weights and unit tilts, steering, the yaw ramp and the lean, the ladder
+  (promotion/demotion hysteresis, a NaN never promotes, only knobs the env has are written). Train tier: a 2-world
+  `matt_solo` footwork env with every flag on, stepped 40 times (rt_goal, rt_sprint, rt_mom, rt_tilt, rt_rom all
+  charged; `terrain_*` and `rom_use` in the stats); a shared encoder trained with mirror augmentation then held (the
+  trunk does not move, the head does); a trunk copied from a shared checkpoint into a separate policy. The wiring was also
+  run once outside the trainer: a run started at `balance` promoted to `walk` at the fifth good update and wrote
+  `walk_share 0.5`, `cmd_fwd_max 1.0` into the live env, and the held encoder was released at its iteration.
+- Next, when the GPU is free: a 1 h `--stage footwork --curriculum auto --terrain` run on `models/v2/matt_solo.xml` warm
+  from Matt's footwork brain, then `tools/footwork_c.py --exam` on it; and a `--torque-cap 0.7 --act-lag 8` run of the
+  match stage to see whether the cap costs punches.
