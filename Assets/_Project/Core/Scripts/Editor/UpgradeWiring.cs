@@ -58,7 +58,7 @@ namespace PoBox.EditorTools
         static void WireScene(ImpactModalSettings impact, CrowdExcitementSettings crowdSettings, ChatVoteSettings chat)
         {
             // Impact spray on the object that already makes the hit sparks.
-            var vfx = Object.FindFirstObjectByType<ImpactVfx>(FindObjectsInactive.Include);
+            var vfx = Object.FindAnyObjectByType<ImpactVfx>(FindObjectsInactive.Include);
             if (vfx != null)
             {
                 var spray = vfx.GetComponent<HitSpray>();
@@ -77,7 +77,7 @@ namespace PoBox.EditorTools
             else Note("no ImpactVfx: HitSpray skipped");
 
             // Blood and fall decals beside the existing spot pool.
-            var marks = Object.FindFirstObjectByType<CanvasMarks>(FindObjectsInactive.Include);
+            var marks = Object.FindAnyObjectByType<CanvasMarks>(FindObjectsInactive.Include);
             if (marks != null)
             {
                 DecalProjector template = marks.spots != null && marks.spots.Length > 0 ? marks.spots[0] : null;
@@ -94,7 +94,7 @@ namespace PoBox.EditorTools
             Swap("Pad_White", "M_Turnbuckle_White");
 
             // Reactive crowd and modal impacts on the sound director.
-            var audio = Object.FindFirstObjectByType<AudioDirector>(FindObjectsInactive.Include);
+            var audio = Object.FindAnyObjectByType<AudioDirector>(FindObjectsInactive.Include);
             if (audio != null)
             {
                 var excite = audio.GetComponent<CrowdExcitement>();
@@ -112,10 +112,10 @@ namespace PoBox.EditorTools
             WireDolly(marks);
 
             // Chat votes between rounds: only where rounds are run (the 1v1 bout).
-            var bout = Object.FindFirstObjectByType<Bout>(FindObjectsInactive.Include);
+            var bout = Object.FindAnyObjectByType<Bout>(FindObjectsInactive.Include);
             if (bout != null)
             {
-                var corner = Object.FindFirstObjectByType<ChatCorner>(FindObjectsInactive.Include);
+                var corner = Object.FindAnyObjectByType<ChatCorner>(FindObjectsInactive.Include);
                 if (corner == null)
                 {
                     var go = new GameObject("Chat Corner");
@@ -125,7 +125,7 @@ namespace PoBox.EditorTools
                 }
                 var so = new SerializedObject(corner);
                 Set(so, "bout", bout);
-                Set(so, "hud", Object.FindFirstObjectByType<PoBox.UI.HudView>(FindObjectsInactive.Include));
+                Set(so, "hud", Object.FindAnyObjectByType<PoBox.UI.HudView>(FindObjectsInactive.Include));
                 Set(so, "settings", chat);
                 so.ApplyModifiedPropertiesWithoutUndo();
             }
@@ -174,7 +174,7 @@ namespace PoBox.EditorTools
 
         static void WireDolly(CanvasMarks marks)
         {
-            var director = Object.FindFirstObjectByType<PoBox.Broadcast.BroadcastDirector>(FindObjectsInactive.Include);
+            var director = Object.FindAnyObjectByType<PoBox.Broadcast.BroadcastDirector>(FindObjectsInactive.Include);
             if (director == null || director.dollyCam != null) return;
             Vector3 c = marks != null ? marks.ringCentre : Vector3.zero;
             Vector3 toWide = director.wideCam != null ? director.wideCam.transform.position - c : Vector3.back;
@@ -271,7 +271,7 @@ namespace PoBox.EditorTools
             Material a = Mat(from), b = Mat(to);
             if (a == null || b == null) { Note($"missing material {from} or {to}"); return; }
             int n = 0;
-            foreach (var r in Object.FindObjectsByType<Renderer>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            foreach (var r in Object.FindObjectsByType<Renderer>(FindObjectsInactive.Include))
             {
                 Material[] m = r.sharedMaterials;
                 bool hit = false;
