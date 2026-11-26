@@ -25,7 +25,7 @@ namespace PoBox.UI
     /// word trailing dots and the cards are locked.
     ///
     /// CUP opens the cup (League/Career.cs) as a sheet in the same place: its bracket, one line a match (the
-    /// round of 16's walkovers on one line), NEW CUP (sixteen slots seeded by the ladder's ratings, BYEs for the
+    /// first round's walkovers on one line), NEW CUP (eight slots seeded by the ladder's ratings, BYEs for the
     /// rest), AUTO and FIGHT, which fights the cup's next bout. With AUTO on, the sheet counts down on FIGHT and
     /// fights the next bout by itself; the arena comes back here after each cup result (<see cref="CupReturning"/>),
     /// so the cup runs itself to its final.
@@ -416,7 +416,7 @@ namespace PoBox.UI
             _cupCountdown = open && _cup != null && _cup.auto && _cup.Next(out _, out _, out _) ? cupAutoSeconds : -1f;
         }
 
-        /// <summary>A new cup from every boxer on this screen, best rated first: sixteen slots, BYEs for the ones nobody fills.</summary>
+        /// <summary>A new cup from the highest-rated boxers on this screen: eight slots, BYEs for the ones nobody fills.</summary>
         public void NewCup()
         {
             if (!Application.isPlaying || _leaving) return;
@@ -470,7 +470,7 @@ namespace PoBox.UI
             _cupBracket.Clear();
             int next = -1;
             bool more = _cup != null && _cup.Next(out next, out _, out _);
-            if (_cup == null) Set(_cupTitle, "NO CUP YET · NEW CUP SEEDS 16 BY RATING");
+            if (_cup == null) Set(_cupTitle, "NO CUP YET · NEW CUP SEEDS 8 BY RATING");
             else if (_cup.Champion != null)
             {
                 int titles = Career.Titles(_cup.Shown(_cup.Champion));
@@ -485,7 +485,7 @@ namespace PoBox.UI
             }
             SetFightWord();
             if (_cup == null) return;
-            // The round of 16's walkovers on one line: with eight boxers that is the whole round.
+            // First-round walkovers on one line.
             string byes = _cup.ByesLine();
             if (byes.Length > 0) AddCupLine(byes, false);
             for (int m = 0; m < Career.Matches; m++)

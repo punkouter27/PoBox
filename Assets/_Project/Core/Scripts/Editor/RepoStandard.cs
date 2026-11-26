@@ -179,6 +179,14 @@ namespace PoBox.EditorTools
             }
         }
 
+        /// <summary>The Test Runner's leftover scenes under Assets/ (the same sweep <see cref="DeleteDead"/> makes).</summary>
+        static IEnumerable<string> StaleTestScenes() =>
+            Directory.Exists("Assets")
+                ? Directory.GetFiles("Assets", "InitTestScene*.unity", SearchOption.TopDirectoryOnly)
+                    .Select(p => p.Replace('\\', '/'))
+                    .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
+                : Array.Empty<string>();
+
         /// <summary>`grandma` -> `Grandma`, `grandmaII` -> `GrandmaII`, `soldat` -> `Soldat`.</summary>
         static string Title(string lower)
         {

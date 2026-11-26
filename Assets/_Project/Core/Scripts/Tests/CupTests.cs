@@ -9,7 +9,7 @@ using PoBox.Sim;
 namespace PoBox.Tests
 {
     /// <summary>
-    /// The sixteen-slot cup (League/Career.cs): BYEs in the empty slots, the draw keeping the top two apart, a cup
+    /// The eight-slot cup (League/Career.cs): BYEs in the empty slots, the draw keeping the top two apart, a cup
     /// played out to its champion, a boxer added later taking a BYE; the free-for-all's placings on the ladder; and
     /// the voice matrix's procedural tier and its clip names. No scene: the owner's cup, ladder and titles are kept
     /// aside and put back.
@@ -24,7 +24,7 @@ namespace PoBox.Tests
         [SetUp]
         public void KeepAside()
         {
-            _cupFile = Path.Combine(Application.persistentDataPath, "career.json");
+            _cupFile = Path.Combine(Application.persistentDataPath, "career8.json");
             _cupSaved = File.Exists(_cupFile) ? File.ReadAllText(_cupFile) : null;
             _ladder = PlayerPrefs.GetString(LadderKey, null);
             _titles = PlayerPrefs.GetString(TitlesKey, null);
@@ -67,17 +67,17 @@ namespace PoBox.Tests
         }
 
         [Test]
-        public void EightBoxersGetByesAndFightFromTheQuarterFinals()
+        public void EightBoxersFightFromTheQuarterFinals()
         {
             Career c = Career.New(Entrants(8));
-            Assert.AreEqual(16, c.slots.Length);
+            Assert.AreEqual(8, c.slots.Length);
             int byes = 0;
             foreach (string s in c.slots) if (string.IsNullOrEmpty(s)) byes++;
-            Assert.AreEqual(8, byes, "eight empty slots should be BYEs");
-            for (int m = 0; m < Career.FirstRound; m++) Assert.IsTrue(c.IsWalkover(m), $"R16 match {m} is not a walkover");
+            Assert.AreEqual(0, byes);
+            for (int m = 0; m < Career.FirstRound; m++) Assert.IsFalse(c.IsWalkover(m));
             Assert.IsTrue(c.Next(out int first, out _, out _));
             Assert.AreEqual("QF", Career.RoundName(first), "the first bout fought should be a quarter-final");
-            Assert.AreEqual("R16  8 BYES · ALL THROUGH", c.ByesLine());
+            Assert.AreEqual("", c.ByesLine());
             Assert.AreEqual(7, PlayOut(c), "eight boxers is seven bouts");
             Assert.IsNotNull(c.Champion);
             Assert.AreEqual(1, Career.Titles(c.Shown(c.Champion)), "the champion's cup was not counted");
@@ -85,19 +85,19 @@ namespace PoBox.Tests
         }
 
         [Test]
-        public void SixteenBoxersFightFifteenBoutsAndTheTopTwoMeetOnlyInTheFinal()
+        public void LargerRosterEntersEightAndTheTopTwoMeetOnlyInTheFinal()
         {
             Career c = Career.New(Entrants(16));
             Assert.AreEqual("", c.ByesLine(), "a full cup has no byes");
-            // Seeds 1 and 2 (the ladder's best two) sit in opposite halves of the draw: slot 0 at the top, slot 8 at the top of the bottom half.
-            float s1 = LeagueTable.SavedElo(c.shown[0]), s2 = LeagueTable.SavedElo(c.shown[8]);
+            // Seeds 1 and 2 sit in opposite halves of the draw.
+            float s1 = LeagueTable.SavedElo(c.shown[0]), s2 = LeagueTable.SavedElo(c.shown[4]);
             for (int k = 0; k < Career.Size; k++)
             {
                 float r = LeagueTable.SavedElo(c.shown[k]);
                 Assert.GreaterOrEqual(s1, r, $"slot {k} ({c.shown[k]}) is rated above the top seed");
                 if (k != 0) Assert.GreaterOrEqual(s2, r, $"slot {k} ({c.shown[k]}) is rated above the second seed");
             }
-            Assert.AreEqual(15, PlayOut(c));
+            Assert.AreEqual(7, PlayOut(c));
         }
 
         [Test]
@@ -184,11 +184,11 @@ namespace PoBox.Tests
         public void TheDrawIsTheTournamentStandardsOrder()
         {
             Career c = Career.New(Entrants(16));
-            int[,] pairs = { { 1, 16 }, { 8, 9 }, { 4, 13 }, { 5, 12 }, { 2, 15 }, { 7, 10 }, { 3, 14 }, { 6, 11 } };
+            int[,] pairs = { { 1, 8 }, { 4, 5 }, { 2, 7 }, { 3, 6 } };
             for (int m = 0; m < Career.FirstRound; m++)
             {
-                Assert.AreEqual(pairs[m, 0], c.SeedOf(c.slots[2 * m]), $"R16 match {m}'s red seed");
-                Assert.AreEqual(pairs[m, 1], c.SeedOf(c.slots[2 * m + 1]), $"R16 match {m}'s blue seed");
+                Assert.AreEqual(pairs[m, 0], c.SeedOf(c.slots[2 * m]), $"QF match {m}'s red seed");
+                Assert.AreEqual(pairs[m, 1], c.SeedOf(c.slots[2 * m + 1]), $"QF match {m}'s blue seed");
             }
         }
 
@@ -196,21 +196,21 @@ namespace PoBox.Tests
         public void ADrawGoesToTheHigherSeed()
         {
             Career c = Career.New(Entrants(16));
-            // R16: seed 16 beats seed 1, then 8 v 9 is drawn: seed 8 goes through.
+            // QF: seed 8 beats seed 1, then 4 v 5 is drawn: seed 4 goes through.
             Assert.IsTrue(c.Next(out _, out string red, out string blue));
             Assert.IsTrue(c.Report(red, blue, 1));
             Assert.IsTrue(c.Next(out _, out red, out blue));
-            Assert.AreEqual(8, c.SeedOf(red));
+            Assert.AreEqual(4, c.SeedOf(red));
             Assert.IsTrue(c.Report(red, blue, -1), "a drawn cup bout was not taken");
-            Assert.AreEqual(red, c.won[1], "the draw did not go to seed 8");
+            Assert.AreEqual(red, c.won[1], "the draw did not go to seed 4");
             while (c.Next(out int m, out red, out blue) && m < Career.FirstRound) Assert.IsTrue(c.Report(red, blue, 0));
-            // The quarter-final: seed 16 (red) v seed 8 (blue), drawn: blue, the higher seed, goes through.
+            // The semifinal: seed 8 (red) v seed 4 (blue), drawn: blue, the higher seed, goes through.
             Assert.IsTrue(c.Next(out int qf, out red, out blue));
-            Assert.AreEqual("QF", Career.RoundName(qf));
-            Assert.AreEqual(16, c.SeedOf(red));
-            Assert.AreEqual(8, c.SeedOf(blue));
+            Assert.AreEqual("SF", Career.RoundName(qf));
+            Assert.AreEqual(8, c.SeedOf(red));
+            Assert.AreEqual(4, c.SeedOf(blue));
             Assert.IsTrue(c.Report(red, blue, -1));
-            Assert.AreEqual(blue, c.won[qf], "the quarter-final's draw did not go to the higher seed");
+            Assert.AreEqual(blue, c.won[qf], "the semifinal's draw did not go to the higher seed");
         }
 
         [Test]
@@ -258,17 +258,17 @@ namespace PoBox.Tests
         [Test]
         public void ABoxerAddedLaterTakesTheTopSeedsBye()
         {
-            Career c = Career.New(Entrants(8));
+            Career c = Career.New(Entrants(7));
             string topSeed = c.slots[0];
-            Assert.IsTrue(c.Fill(Entrants(9)), "the ninth boxer did not come in");
-            Assert.AreEqual("Extra8", c.slots[1], "the newcomer should face the top seed");
+            Assert.IsTrue(c.Fill(Entrants(8)), "the eighth boxer did not come in");
+            Assert.AreEqual("Sokol", c.slots[1], "the newcomer should face the top seed");
             Assert.IsTrue(c.Next(out int m, out string red, out string blue));
             Assert.AreEqual(0, m, "the newcomer's bout comes first");
             Assert.AreEqual(topSeed, red);
-            Assert.IsFalse(c.Fill(Entrants(9)), "nobody new: nothing should change");
+            Assert.IsFalse(c.Fill(Entrants(8)), "nobody new: nothing should change");
             // Once the top seed has fought on, its slot is closed to newcomers.
             PlayOut(c);
-            Assert.IsFalse(c.Fill(Entrants(10)), "a played cup took a newcomer");
+            Assert.IsFalse(c.Fill(Entrants(9)), "a played cup took a newcomer");
             // And it all survives a save and a load.
             Career back = Career.Load();
             Assert.IsNotNull(back);
@@ -276,7 +276,7 @@ namespace PoBox.Tests
         }
 
         [Test]
-        public void AnOldEightSlotCupIsDropped()
+        public void ABracketWithAnInvalidShapeIsRejected()
         {
             File.WriteAllText(_cupFile, "{\"slots\":[\"a\",\"b\",\"\",\"\",\"\",\"\",\"\",\"\"],\"shown\":[\"A\",\"B\",\"\",\"\",\"\",\"\",\"\",\"\"],\"won\":[\"\",\"\",\"\",\"\",\"\",\"\",\"\"]}");
             Assert.IsNull(Career.Load());

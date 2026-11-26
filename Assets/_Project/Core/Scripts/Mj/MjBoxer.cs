@@ -527,6 +527,22 @@ namespace PoBox.Mj
         public void Infer()
         {
             if (_worker == null) { Array.Clear(Action, 0, Joints); return; }
+            // A direct-MLP brain reads the 103-number observation, never the wide one (2026-11-25): Scope() pads the
+            // observation to WideObservationSize whenever a WIDE brain was loaded earlier in the session, and a wide
+            // buffer fed to a 103-in MLP reads past its end (IndexOutOfRangeException every decision tick).
+            if (DirectBrains && _mlp != null && _mlp.InputSize == ObservationSize)
+            {
+                double t0 = Time.realtimeSinceStartupAsDouble;
+                Value = _mlp.Run(_obsF, _actF);
+                for (int i = 0; i < Joints; i++)
+                {
+                    if (float.IsFinite(_actF[i])) Action[i] = _actF[i];
+                    else { NanInfCount++; Action[i] = 0.0; }
+                }
+                _inferSeconds += Time.realtimeSinceStartupAsDouble - t0;
+                Announce(Time.realtimeSinceStartupAsDouble - t0, true);
+                return;
+            }
             // Time.realtimeSinceStartupAsDouble, not Stopwatch: a WebGL Stopwatch counts whole milliseconds, which
             // read every sub-millisecond inference as 0 (the overlay showed 0.00 ms in the browser).
             double start = Time.realtimeSinceStartupAsDouble;
