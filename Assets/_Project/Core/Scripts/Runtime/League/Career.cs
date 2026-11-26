@@ -7,10 +7,9 @@ using UnityEngine;
 namespace PoBox.League
 {
     /// <summary>
-    /// The cup: sixteen slots, single elimination, seeded by the ladder's ratings in the usual draw (1 v 16, 8 v 9,
-    /// ... so the top two can only meet in the final). Slots with nobody in them are BYEs: with eight boxers the
-    /// round of sixteen is all walkovers and the fighting starts at the quarter-finals. The bracket is kept in
-    /// Application.persistentDataPath/career.json and carried on from bout to bout, across sessions.
+    /// The cup: eight slots, single elimination, seeded by the ladder's ratings (1 v 8, 4 v 5, 2 v 7, 3 v 6).
+    /// Slots with nobody in them are BYEs. The bracket is kept in
+    /// Application.persistentDataPath/career8.json and carried on from bout to bout, across sessions.
     ///
     /// Slots fill themselves (<see cref="Fill"/>): a boxer added to the game after the cup was drawn takes a BYE
     /// slot whose walkover has not yet been used, so the seed it faces fights it instead.
@@ -25,13 +24,12 @@ namespace PoBox.League
     [Serializable]
     public class Career
     {
-        public const int Size = 16, Matches = Size - 1, FirstRound = Size / 2;
+        public const int Size = 8, Matches = Size - 1, FirstRound = Size / 2;
         // Slot k holds seed SeedSlot[k] + 1, in the tournament standard's order (2026-11-22):
-        // 1 v 16, 8 v 9, 4 v 13, 5 v 12 (the top half), 2 v 15, 7 v 10, 3 v 14, 6 v 11 (the bottom half).
-        static readonly int[] SeedSlot = { 0, 15, 7, 8, 3, 12, 4, 11, 1, 14, 6, 9, 2, 13, 5, 10 };
-        // Where each round's matches start: the round of 16 is 0-7, the quarter-finals 8-11, the semis 12-13, the final 14.
-        static readonly int[] RoundStart = { 0, 8, 12, 14, 15 };
-        static readonly string[] RoundNames = { "R16", "QF", "SF", "FINAL" };
+        // 1 v 8, 4 v 5 (the top half), 2 v 7, 3 v 6 (the bottom half).
+        static readonly int[] SeedSlot = { 0, 7, 3, 4, 1, 6, 2, 5 };
+        static readonly int[] RoundStart = { 0, 4, 6, 7 };
+        static readonly string[] RoundNames = { "QF", "SF", "FINAL" };
 
         /// <summary>The bracket's first round, by slot: a boxer's folder name, or empty for a bye.</summary>
         public string[] slots = new string[Size];
@@ -45,7 +43,7 @@ namespace PoBox.League
         /// <summary>A bout of the cup's is being fought: the arena reports its result.</summary>
         public static bool Live;
 
-        static string FilePath => Path.Combine(Application.persistentDataPath, "career.json");
+        static string FilePath => Path.Combine(Application.persistentDataPath, "career8.json");
         const string TitlesKey = "pobox.cup.titles";
 
         public static Career Load()
@@ -54,7 +52,6 @@ namespace PoBox.League
             {
                 if (!File.Exists(FilePath)) return null;
                 var c = JsonUtility.FromJson<Career>(File.ReadAllText(FilePath));
-                // An eight-slot cup from before 2026-11-16 does not fit: it is dropped, NEW CUP draws a new one.
                 return c != null && c.slots != null && c.slots.Length == Size && c.shown != null && c.shown.Length == Size
                        && c.won != null && c.won.Length == Matches ? c : null;
             }
@@ -73,7 +70,7 @@ namespace PoBox.League
             catch (Exception) { }
         }
 
-        /// <summary>A new cup from these boxers (folder name, shown name), best rated first; the first sixteen are in it.</summary>
+        /// <summary>A new cup from these boxers (folder name, shown name), best rated first; the first eight are in it.</summary>
         public static Career New(IList<(string name, string shown)> boxers)
         {
             var seeded = new List<(string name, string shown)>(boxers);
@@ -102,7 +99,7 @@ namespace PoBox.League
             if (fresh.Count == 0) return false;
             fresh.Sort((a, b) => LeagueTable.SavedElo(b.shown).CompareTo(LeagueTable.SavedElo(a.shown)));
             bool any = false;
-            // Through the slots in seed order, so the top seed loses its bye first (its walkover is the one a 16th seed would fill).
+            // Through the slots in seed order, so the top seed loses its bye first.
             for (int seed = Size - 1; seed >= 0 && fresh.Count > 0; seed--)
             {
                 int k = Array.IndexOf(SeedSlot, seed);
@@ -182,7 +179,7 @@ namespace PoBox.League
         public string Champion => Known(won[Matches - 1]);
 
         /// <summary>
-        /// A boxer's seed in this cup, 1 (best) to 16, from the slot it was drawn in; int.MaxValue if it is not in it.
+        /// A boxer's seed in this cup, 1 (best) to 8, from the slot it was drawn in; int.MaxValue if it is not in it.
         /// </summary>
         public int SeedOf(string name)
         {
@@ -227,7 +224,7 @@ namespace PoBox.League
             return s.ToString();
         }
 
-        /// <summary>The round of 16's walkovers in one line, "R16  8 BYES · ALL THROUGH" (or "3 BYES"); empty when there are none.</summary>
+        /// <summary>The first round's walkovers in one line; empty when there are none.</summary>
         public string ByesLine()
         {
             int through = 0, real = 0;
@@ -237,7 +234,7 @@ namespace PoBox.League
                 else real++;
             }
             if (through == 0) return "";
-            return $"R16  {through} BYE{(through == 1 ? "" : "S")}" + (real == 0 ? " · ALL THROUGH" : "");
+            return $"QF  {through} BYE{(through == 1 ? "" : "S")}" + (real == 0 ? " · ALL THROUGH" : "");
         }
 
         // ------------------------------------------------------------ titles

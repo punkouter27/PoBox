@@ -25,8 +25,9 @@ Unity plugin 3.15.0 for the fight's physics, and Unity Inference Engine for the 
 
 - **BYE**: a slot with nobody in it says BYE, on the first screen's 4x4 grid (`Runtime/UI/MenuView.cs`) and in
   the cup's bracket.
-- **The cup** (`Runtime/League/Career.cs`, kept in `persistentDataPath/career.json`): 16 slots, single elimination,
-  seeded by rating in the order 1v16, 8v9, 4v13, 5v12, 2v15, 7v10, 3v14, 6v11. BYEs take the bottom seeds; a BYE's
+- **The cup** (`Runtime/League/Career.cs`, kept in `persistentDataPath/career8.json`): 8 slots, single elimination,
+  seeded by rating in the order 1v8, 4v5, 2v7, 3v6. Old 16-slot `career.json` saves are left untouched but cannot
+  be resumed in the new cup. BYEs take the bottom seeds; a BYE's
   opponent goes through unfought; BYE v BYE sends a BYE on; a draw goes to the higher seed; it runs itself bout to bout.
 - **Elo** (`Runtime/League/LeagueTable.cs`, kept in PlayerPrefs): every boxer starts at 1000, K 32 (reset to 1000
   on 2026-11-22: ratings no longer start from the CPU league in `Assets/_Project/Data/Resources/cpu_elo.json`, which

@@ -105,7 +105,7 @@ namespace PoBox.Tests
             if (!MatchSelection.HasMenu || !Application.CanStreamedLevelBeLoaded(MatchSelection.MeleeScene))
                 Assert.Ignore("the build has no menu or no free-for-all");
             // The cup is the owner's, on disk: kept aside and put back.
-            string cupFile = Path.Combine(Application.persistentDataPath, "career.json");
+            string cupFile = Path.Combine(Application.persistentDataPath, "career8.json");
             string cupSaved = File.Exists(cupFile) ? File.ReadAllText(cupFile) : null;
             var warnings = new Warnings();
             try
