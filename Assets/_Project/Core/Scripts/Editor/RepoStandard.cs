@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
@@ -90,6 +91,7 @@ namespace PoBox.EditorTools
         {
             ".prefab", ".mat", ".png", ".jpg", ".exr", ".wav", ".ogg", ".glb", ".blend",
             ".shader", ".asset", ".bytes", ".json", ".anim", ".controller", ".onnx", ".uss", ".uxml",
+            ".cs",
         };
 
         [MenuItem("PoBox/Repo/Standard Report", priority = 70)]
@@ -106,6 +108,9 @@ namespace PoBox.EditorTools
 
             log.AppendLine("stale test scenes:");
             foreach (string s in StaleTestScenes()) log.AppendLine("  " + s);
+
+            log.AppendLine("unused scripts (no scene/prefab/script reference):");
+            foreach (string s in UnusedScripts()) log.AppendLine("  " + s);
 
             Write(log);
             Debug.Log($"[RepoStandard] {names.Count} naming violation(s), {unreached.Count} unreached asset(s) ({bytes / 1024} KB). {OutPath}");
@@ -339,6 +344,41 @@ namespace PoBox.EditorTools
                 while (end < text.Length && !char.IsWhiteSpace(text[end]) && text[end] != '"' && text[end] != ')' && text[end] != '\'') end++;
                 yield return text.Substring(at, end - at);
                 at = text.IndexOf(Key, end, StringComparison.Ordinal);
+            }
+        }
+
+        static IEnumerable<string> UnusedScripts()
+        {
+            var referenced = new HashSet<string>();
+            foreach (string guid in AssetDatabase.FindAssets("t:Scene t:Prefab t:ScriptableObject", new[] { "Assets/_Project" }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (!File.Exists(path)) continue;
+                foreach (Match m in Regex.Matches(File.ReadAllText(path), "guid: ([0-9a-f]{32})"))
+                    referenced.Add(m.Groups[1].Value);
+            }
+
+            var scripts = new Dictionary<string, string>();
+            foreach (string guid in AssetDatabase.FindAssets("t:MonoScript", new[] { "Assets/_Project" }))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                if (path.EndsWith(".cs")) scripts[guid] = path;
+            }
+
+            foreach (var kv in scripts)
+            {
+                string path = kv.Value;
+                string name = Path.GetFileNameWithoutExtension(path);
+                if (referenced.Contains(kv.Key)) continue;
+                if (path.Contains("/Editor/") || path.Contains("/Tests/") || path.Contains("/EditorTests/")) continue;
+                if (path.Contains("/Resources/")) continue;
+                int uses = 0;
+                foreach (string other in scripts.Values)
+                {
+                    if (other == path) continue;
+                    if (Regex.IsMatch(File.ReadAllText(other), $@"\b{Regex.Escape(name)}\b")) uses++;
+                }
+                if (uses == 0) yield return path;
             }
         }
 

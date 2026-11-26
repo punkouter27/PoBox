@@ -477,7 +477,7 @@ namespace PoBox.EditorTools
                     const float fov = 26f;
                     float span = Mathf.Max(0.9f, (head.y - pelvis.y) * 1.75f);
                     float distance = span * 0.5f / Mathf.Tan(fov * 0.5f * Mathf.Deg2Rad);
-                    Vector3 from = Quaternion.AngleAxis(24f, Vector3.up) * forward;
+                    Vector3 from = Quaternion.AngleAxis(-24f, Vector3.up) * forward;
                     main.transform.position = look + from * distance + Vector3.up * 0.12f;
                     main.transform.rotation = Quaternion.LookRotation(look - main.transform.position, Vector3.up);
                     main.fieldOfView = fov;
