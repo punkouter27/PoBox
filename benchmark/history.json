@@ -1711,6 +1711,132 @@
     "CPU-bound"
    ],
    "workload_changes": []
+  },
+  {
+   "when": "2026-11-25T19:36:53-05:00",
+   "ok": true,
+   "error": null,
+   "machine": {
+    "hostname": "C4T4V44",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-13850HX (28 threads)",
+    "gpu": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+    "vram_gb": 8.0,
+    "ram_gb": 63.8,
+    "gpu_driver": "581.95",
+    "os": "Windows 11 (10.0.26100)"
+   },
+   "load_before": {
+    "cpu_pct": 14,
+    "cpu_max_core_pct": 59,
+    "trainer_cpu_cores": 0.0,
+    "trainer_thread_pct": 0,
+    "ram_used_gb": 22.9,
+    "gpu_pct": 0.0,
+    "gpu_mem_pct": 0.0,
+    "vram_used_gb": 2.6,
+    "gpu_temp_c": 60.0,
+    "sm_clock_mhz": 870.0,
+    "sm_clock_max_mhz": 3105.0,
+    "power_w": 13.48,
+    "power_limit_w": 55.0,
+    "pstate": "P4",
+    "clock_reasons": [],
+    "display_active": true,
+    "pcie": "gen 3 x8",
+    "on_battery": false,
+    "gpu_processes": [
+     "Code.exe",
+     "Creative Cloud UI Helper.exe",
+     "CrossDeviceResume.exe",
+     "Docker Desktop.exe",
+     "PhoneExperienceHost.exe",
+     "SearchHost.exe",
+     "ShellExperienceHost.exe",
+     "ShellHost.exe",
+     "StartMenuExperienceHost.exe",
+     "TeamViewer.exe",
+     "TextInputHost.exe",
+     "ZSATray.exe",
+     "[Insufficient Permissions]",
+     "explorer.exe",
+     "ms-teams.exe",
+     "msedge.exe",
+     "msedgewebview2.exe"
+    ]
+   },
+   "load_during": {
+    "cpu_pct": 12.8,
+    "cpu_max_core_pct": 69444520.2,
+    "trainer_cpu_cores": 0.2,
+    "trainer_thread_pct": 19.6,
+    "ram_used_gb": 23.6,
+    "gpu_pct": 80.6,
+    "gpu_mem_pct": 25.2,
+    "vram_used_gb": 3.5,
+    "gpu_temp_c": 77.0,
+    "sm_clock_mhz": 2415.0,
+    "sm_clock_max_mhz": 3105.0,
+    "clock_pct_of_max": 78,
+    "power_w": 65.9,
+    "power_limit_w": 58.67,
+    "pstate": "P1",
+    "clock_reasons": {
+     "power cap": 1.0
+    },
+    "display_active": true,
+    "pcie": "gen 4 x8",
+    "on_battery": false,
+    "samples": 9
+   },
+   "busy": false,
+   "workload_id": "afe114",
+   "workload": {
+    "repo": "PoBox",
+    "trainer": "PoBox ppo.py + mujoco_warp 3.15.0",
+    "script": "training/train_gauntlet.py",
+    "args": "--run-name _benchmark --name matt --resume checkpoints/_benchmark_warm/match_matt.pt --against sokol=checkpoints/_benchmark_warm/match_sokol.pt kim=checkpoints/_benchmark_warm/match_kim.pt zombie=checkpoints/_benchmark_warm/match_zombie.pt nick=checkpoints/_benchmark_warm/match_nick.pt trump=checkpoints/_benchmark_warm/match_trump.pt grandpa=checkpoints/_benchmark_warm/match_grandpa.pt grandma=checkpoints/_benchmark_warm/match_grandma.pt --stage match --models models/v3 --daze --obs-state --hit-push 0.6 --stagger-v 5 --hurt-full 400 --body-drain 0.0025 --hit-w 1.5 --taken-w 1.0 --block-w 0.5 --fall-penalty 12 --selfcontact-w 0.02 --repeat-decay 0.7 --combo-w 0.1 --hurt-start 0.2 --clinch-w 0.1 --fatigue-ceiling --sep-max 3.5 --num-envs 4608 --more-iters 600 --max-hours 0.75 --max-std 0.35 --done-when hits_per_s>=1.2,falls<=0.03,repeat_share<=0.6 --done-window 40 --save-every 100000 --no-onnx",
+    "num_envs": 4592,
+    "horizon": 24,
+    "net": [
+     512,
+     256,
+     128
+    ],
+    "config_hash": "bdba42",
+    "note": "warm starts from the shipped Assets/_Project/RL_Models/*/match.onnx; no hand-over bank (not in a fresh clone)"
+   },
+   "result": {
+    "step_time_ms": 120.276,
+    "sim_ms": 108.494,
+    "learn_ms": 11.781,
+    "env_steps_per_s": 38179,
+    "steps_measured": 96,
+    "measured_s": 11.55,
+    "startup_s": 91.0,
+    "step_p50_ms": 121.157,
+    "step_p95_ms": 122.552,
+    "sim_drift_pct": 3.8,
+    "blocks_measured": 4
+   },
+   "git_commit": "2b77d93",
+   "versions": {
+    "python": "3.12.16",
+    "torch": "2.14.1+cu130",
+    "mujoco": "3.15.0",
+    "mujoco_warp": "3.15.0",
+    "warp": "1.19.0"
+   },
+   "context": {
+    "power_plan": "Balanced",
+    "power_mode": null,
+    "gpu_scheduling": null
+   },
+   "verdict": [
+    "at power limit"
+   ],
+   "workload_changes": [
+    "config_hash: 'ef803b' -> 'bdba42'"
+   ]
   }
  ]
 }
