@@ -1,2 +1,13 @@
 Fabric030 (1K, JPG) from ambientCG (https://ambientcg.com/a/Fabric030), CC0 1.0. Downloaded 2026-10-01.
 Used here: the colour map (as the weave under the ring canvas's printed design) and the OpenGL normal map.
+
+Added 2026-11-25 (all ambientCG, CC0 1.0 Universal, https://docs.ambientcg.com/license/ ; 1K-JPG downloads):
+- Rope001    https://ambientcg.com/a/Rope001    -> T_Rope_Color.jpg (Color), T_Rope_Normal.jpg (NormalGL),
+             T_Rope_MetallicSmoothness.png (Roughness inverted into alpha, 512x256, RGB black).
+- Leather037 https://ambientcg.com/a/Leather037 -> T_Leather_Normal.jpg (NormalGL),
+             T_Leather_MetallicSmoothness.png (Roughness inverted into alpha, 512x512). Colour map not kept: the
+             turnbuckle materials tint it per corner.
+- Fabric030  https://ambientcg.com/a/Fabric030  -> T_CanvasFabric_Color.jpg (Color, levels lifted to a light canvas).
+             Its NormalGL is the Fabric030_Normal.jpg already here (byte-identical).
+Used by M_Rope_Braided, M_Turnbuckle_Red/Blue/White, M_Canvas_Fabric and M_Cloth_Towel (Environments/Materials).
+T_Decal_Blood.png (Textures/Generated) is drawn by script for this project, not downloaded.

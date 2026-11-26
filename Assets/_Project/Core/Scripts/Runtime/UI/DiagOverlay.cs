@@ -35,6 +35,8 @@ namespace PoBox.UI
         public string ReadoutText => Readout();
         float _fps = 60f, _nextRefresh;
         bool _touched;
+        MjBoxer[] _boxers;
+        float _nextBoxers;
         readonly StringBuilder _sb = new StringBuilder(256);
 
         void Awake()
@@ -187,11 +189,22 @@ namespace PoBox.UI
             _panel.style.display = Visible ? DisplayStyle.Flex : DisplayStyle.None;
             _caption.style.display = DemoMode.Active ? DisplayStyle.Flex : DisplayStyle.None;
 
+            // The readout is only built while the panel is up: a hidden overlay must not lay out or search the scene.
+            if (!Visible) return;
             if (Time.unscaledTime < _nextRefresh) return;
             _nextRefresh = Time.unscaledTime + 0.25f;
             Layout();
-            if (Visible) _body.text = Readout();
-            if (Visible && _benchmark != null && _benchResult != null) _benchResult.text = _benchmark.Summary();
+            _body.text = Readout();
+            if (_benchmark != null && _benchResult != null) _benchResult.text = _benchmark.Summary();
+        }
+
+        /// <summary>The live boxers, found once a second while the panel is up instead of on every refresh.</summary>
+        MjBoxer[] Boxers()
+        {
+            if (Time.unscaledTime < _nextBoxers) return _boxers;
+            _nextBoxers = Time.unscaledTime + 1f;
+            _boxers = FindObjectsByType<MjBoxer>(FindObjectsInactive.Exclude);
+            return _boxers;
         }
 
         string Readout()
@@ -200,7 +213,10 @@ namespace PoBox.UI
             _sb.Clear();
             _sb.Append("FPS  ").Append((perf != null && perf.Fps > 0f ? perf.Fps : _fps).ToString("0")).Append('\n');
             _sb.Append("Inference  ").Append(perf != null ? perf.InferMs.ToString("0.00") + " ms / frame (avg)" : "no brains running").Append('\n');
-            MjBoxer[] boxers = FindObjectsByType<MjBoxer>();
+            if (perf != null)
+                _sb.Append("Draws  ").Append(perf.DrawCalls).Append(" · set-pass ").Append(perf.SetPass)
+                   .Append(" · GC ").Append(perf.GcAverageKb.ToString("0.0")).Append(" KB/frame").Append('\n');
+            MjBoxer[] boxers = Boxers();
             int shown = 0;
             foreach (MjBoxer b in boxers)
             {

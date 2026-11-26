@@ -3,7 +3,8 @@
     python tools/build_roster.py                 every boxer, then every pair model
     python tools/build_roster.py --only nick     one boxer and the pairs it is in
 
-For each boxer: glb_to_rig.py reads the skeleton and fits the collision shapes inside the mesh (a picture of
+For each boxer: glb_to_rig.py reads the skeleton (a "bone_map" in its entry names the bones, see
+glb_to_rig.NAME_MAPS) and fits the collision shapes inside the mesh (a picture of
 the fit goes to logs/fit_<name>.png); its strength, speed and style are written into the rig file;
 rig_to_mjcf.py generates the bag and spar models; and tools/check_self_collision.py is run on the result.
 If a part touches another in the T-pose, the guard or a normal swing, the trunk is slimmed a little and
@@ -19,38 +20,36 @@ import argparse
 import itertools
 import json
 import os
-import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, "tools"))
+import glb_to_rig  # noqa: E402
 import rig_to_mjcf  # noqa: E402
 from check_self_collision import check  # noqa: E402
 
 REFERENCE_HEIGHT = 1.81  # the height the generator's joint strengths were written for (Matt)
 
 
-def build_boxer(name: str, spec: dict, models: str, rigs: str, plots: str, cubes: int) -> tuple:
+def build_boxer(name: str, spec: dict, models: str, rigs: str, plots: str, cubes: int, base: str = HERE) -> tuple:
+    """One boxer from its roster entry: the rig read off its mesh (glb_to_rig), its strength, speed and style, the
+    models (rig_to_mjcf) and the self-collision check, slimming the trunk until nothing touches. spec["glb"] is
+    relative to base (the roster's folder); spec["bone_map"], if any, is a glb_to_rig name map (a preset or a file,
+    relative to base). plots empty: no picture of the fit."""
     rig_path = os.path.join(rigs, f"{name}.json")
-    cmd = [
-        sys.executable,
-        os.path.join(HERE, "glb_to_rig.py"),
-        "--glb",
-        os.path.normpath(os.path.join(HERE, spec["glb"])),
-        "--out",
-        rig_path,
-        "--plot",
-        os.path.join(plots, f"fit_{name}.png"),
-    ]
-    if spec.get("height"):
-        cmd += ["--height", str(spec["height"])]
-    if spec.get("mass"):
-        cmd += ["--mass", str(spec["mass"])]
+    bone_map = spec.get("bone_map", "")
+    if bone_map and bone_map.lower() not in glb_to_rig.NAME_MAPS:
+        bone_map = os.path.normpath(os.path.join(base, bone_map))
     print(f"\n==== {name}: {spec['persona']}", flush=True)
-    subprocess.check_call(cmd, cwd=HERE)
-    with open(rig_path, "r", encoding="utf-8") as f:
-        rig = json.load(f)
+    rig = glb_to_rig.rig_from_glb(
+        os.path.normpath(os.path.join(base, spec["glb"])),
+        mass=float(spec.get("mass") or 0.0),
+        height=float(spec.get("height") or 0.0),
+        plot=os.path.join(plots, f"fit_{name}.png") if plots else "",
+        name_map=glb_to_rig.load_name_map(bone_map),
+    )
+    glb_to_rig.write_rig(rig, rig_path)
     # Muscle follows cross-section, so the square of height; age takes its share off that.
     rig["strength"] = round((rig["height_m"] / REFERENCE_HEIGHT) ** 2 * float(spec.get("age", 1.0)), 3)
     rig["speed"] = float(spec.get("speed", 1.0))
@@ -88,6 +87,48 @@ def veteran(name: str, models: str, rigs: str) -> tuple:
     return rig, float(cfg["stand_height"]), cfg
 
 
+def build(
+    roster_path: str, only: list, models: str, rigs: str, plots: str, cubes: int = 0, every: bool = False
+) -> dict:
+    """The roster's boxers (only those named, if any; the rest are read back) and every pair model they are in.
+    Returns {name: (rig, stand height, config)} of the boxers built or read."""
+    with open(roster_path, "r", encoding="utf-8") as f:
+        roster = json.load(f)
+    base = os.path.dirname(os.path.abspath(roster_path))
+    for folder in (models, rigs, plots):
+        if folder:
+            os.makedirs(folder, exist_ok=True)
+
+    veterans = roster.get("veterans", {})
+    specs = dict(roster["boxers"], **(veterans if every else {}))
+    built = {}
+    for name, spec in specs.items():
+        if only and name not in only:
+            # Already built on an earlier call: its files are read back, not made again.
+            built[name] = veteran(name, models, rigs)
+        else:
+            built[name] = build_boxer(name, spec, models, rigs, plots, cubes, base)
+    old = {name: veteran(name, models, rigs) for name in veterans if name not in built}
+
+    print("\n==== match models", flush=True)
+    new = list(specs)
+    pairs = list(itertools.combinations(new, 2)) + [(n, v) for n in new for v in old]
+    for a, b in pairs:
+        if only and a not in only and b not in only:
+            continue
+        ra, za, ca = built[a]
+        rb, zb, cb = built[b] if b in built else old[b]
+        rig_to_mjcf.build_versus(ra, a, za, ca, rb, b, zb, cb, models, cubes)
+
+    print("\n==== the roster")
+    for name, (rig, z, cfg) in built.items():
+        print(
+            f"  {rig.get('display', name):9s} {rig['height_m']:.2f} m  {cfg['total_mass_kg']:5.1f} kg  "
+            f"strength {cfg.get('strength', 1.0):.2f}  speed {cfg.get('speed', 1.0):.2f}  {rig.get('persona', '')}"
+        )
+    return built
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", action="append", default=[])
@@ -98,38 +139,7 @@ def main() -> None:
     ap.add_argument("--cubes", type=int, default=0, help="cubes in the pool of every model (rig_to_mjcf.cubes_xml)")
     ap.add_argument("--all", action="store_true", help="derive the veterans from their meshes too")
     args = ap.parse_args()
-    with open(args.roster, "r", encoding="utf-8") as f:
-        roster = json.load(f)
-    for folder in (args.models, args.rigs, args.plots):
-        os.makedirs(folder, exist_ok=True)
-
-    veterans = roster.get("veterans", {})
-    specs = dict(roster["boxers"], **(veterans if args.all else {}))
-    built = {}
-    for name, spec in specs.items():
-        if args.only and name not in args.only:
-            # Already built on an earlier call: its files are read back, not made again.
-            built[name] = veteran(name, args.models, args.rigs)
-        else:
-            built[name] = build_boxer(name, spec, args.models, args.rigs, args.plots, args.cubes)
-    old = {name: veteran(name, args.models, args.rigs) for name in veterans if name not in built}
-
-    print("\n==== match models", flush=True)
-    new = list(specs)
-    pairs = list(itertools.combinations(new, 2)) + [(n, v) for n in new for v in old]
-    for a, b in pairs:
-        if args.only and a not in args.only and b not in args.only:
-            continue
-        ra, za, ca = built[a]
-        rb, zb, cb = built[b] if b in built else old[b]
-        rig_to_mjcf.build_versus(ra, a, za, ca, rb, b, zb, cb, args.models, args.cubes)
-
-    print("\n==== the roster")
-    for name, (rig, z, cfg) in built.items():
-        print(
-            f"  {rig.get('display', name):9s} {rig['height_m']:.2f} m  {cfg['total_mass_kg']:5.1f} kg  "
-            f"strength {cfg.get('strength', 1.0):.2f}  speed {cfg.get('speed', 1.0):.2f}  {rig.get('persona', '')}"
-        )
+    build(args.roster, args.only, args.models, args.rigs, args.plots, args.cubes, args.all)
 
 
 if __name__ == "__main__":

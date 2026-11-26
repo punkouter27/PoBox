@@ -102,7 +102,8 @@ namespace PoBox.Audio
             _voiceFree[f] = Time.time + Mathf.Max(hold, must ? 0f : clip.length * 0.6f);
             float pitch = matrix.LastTier == VoiceMatrix.Tier.Archetype ? Mathf.Clamp(Mathf.Sqrt(80f / Mathf.Max(40f, f.totalMass)), 0.85f, 1.15f) : 1f;
             pitch *= (1f + 0.04f * ((f.displayName.GetHashCode() & 0xff) / 127.5f - 1f)) * Random.Range(0.96f, 1.04f);
-            PlayAt(clip, f.HeadPosition, volume, pitch);
+            // Through the boxer's own mouth if it has one (lip-sync), else from the pool at its head.
+            if (!SayThroughMouth(f, clip, volume, pitch)) PlayAt(clip, f.HeadPosition, volume, pitch);
         }
 
         void Later(float delay, Fighter f, Emotion e, float volume) => _later.Add((Time.time + delay, f, e, Emotion5.Angry, 0, volume));

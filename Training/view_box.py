@@ -51,7 +51,13 @@ class Player:
             from envs.match import GetUpMatchEnv, MatchEnv
 
             kind = GetUpMatchEnv if extra.get("mode", "") == "getup" else MatchEnv
-            kw = {} if kind is GetUpMatchEnv else dict(push_vel=0.0, **extra.get("env", {}))
+            saved = dict(extra.get("env", {}))
+            # The checkpoint records the brain's rules (train_box.brain_rules) for the game; the env takes them as
+            # default_rules (the trainer's default unless --legacy-rules), not as a keyword of their own.
+            rules = saved.pop("rules", None)
+            if rules is not None:
+                saved["default_rules"] = bool(rules)
+            kw = {} if kind is GetUpMatchEnv else dict(push_vel=0.0, **saved)
             self.env = kind(
                 self.xml,
                 1,

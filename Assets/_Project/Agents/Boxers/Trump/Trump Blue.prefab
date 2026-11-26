@@ -836,6 +836,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 43066425613602036, guid: 8f883cee7f730f64e86dff43f22724e3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6583861046180024536}
+    - targetCorrespondingSourceObject: {fileID: 43066425613602036, guid: 8f883cee7f730f64e86dff43f22724e3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6191238656961467580}
     - targetCorrespondingSourceObject: {fileID: 7527408654072301628, guid: 8f883cee7f730f64e86dff43f22724e3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7008153307311244615}
@@ -1198,6 +1201,9 @@ MonoBehaviour:
   boxer: {fileID: 1421207532887266730}
   ring: {fileID: 0}
   punchSpeed: 3.5
+  leaveAfter: 8
+  leaveSpeed: 0.35
+  goneBeyondRopes: 0.5
   squareFacing: 0.26
   squareSpeed: 0.3
   cornerSpeed: 0.8
@@ -1259,7 +1265,63 @@ MonoBehaviour:
   tiredDroop: 14
   rimIntensity: 0.55
   pressedRim: 1.4
+  wetPerRound: 0.25
+  wetFromFatigue: 0.5
+  wetAtStart: 0.08
   rippleImpulse: 12
+--- !u!114 &6191238656961467580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5628104689738336019}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d4c403885c8a454bafd912b91f15e8dd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PoBox.Runtime::PoBox.Audio.LipSync
+  fighter: {fileID: 0}
+  voice: {fileID: 0}
+  face: {fileID: 0}
+  openShapes:
+  - jawOpen
+  - Jaw_Open
+  - mouthOpen
+  - Mouth_Open
+  - V_Open
+  - viseme_aa
+  - Open
+  wideShapes:
+  - mouthStretch
+  - Mouth_Widen
+  - V_Wide
+  - viseme_E
+  - viseme_I
+  roundShapes:
+  - mouthPucker
+  - Mouth_Pucker
+  - V_Tight_O
+  - viseme_O
+  - viseme_U
+  shapeWeight: 100
+  jaw: {fileID: 0}
+  jawNames:
+  - CC_Base_JawRoot
+  - JawRoot
+  - jaw
+  - Jaw
+  - mixamorig:Jaw
+  jawAxis: {x: 0, y: 0, z: 1}
+  jawDegrees: 16
+  mouth: {fileID: 0}
+  openScale: {x: 1, y: 2.2, z: 1}
+  wideScale: 1.25
+  attackSeconds: 0.03
+  releaseSeconds: 0.07
+  lookAheadSeconds: 0.04
+  tapFullLevel: 0.12
+  syllablesPerSecond: 5.5
 --- !u!1 &5869006464301600600 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 2301600553794962623, guid: 8f883cee7f730f64e86dff43f22724e3, type: 3}

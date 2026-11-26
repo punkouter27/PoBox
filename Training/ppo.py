@@ -64,18 +64,57 @@ def mlp(inp: int, hidden: Tuple[int, ...], out: int) -> nn.Sequential:
     return nn.Sequential(*layers)
 
 
-class ActorCritic(nn.Module):
-    def __init__(self, obs_dim: int, act_dim: int, hidden=(512, 256, 128), init_std: float = 0.8):
+def mlp_body(inp: int, hidden: Tuple[int, ...]) -> Tuple[nn.Sequential, int]:
+    """The hidden layers alone (no output layer), and the width that comes out of them."""
+    layers = []
+    last = inp
+    for h in hidden:
+        layers += [nn.Linear(last, h), nn.ELU()]
+        last = h
+    return nn.Sequential(*layers), last
+
+
+class _Head(nn.Module):
+    """A shared trunk with one network's output layer on top, so .actor(name) still is a plain callable."""
+
+    def __init__(self, trunk: nn.Module, head: nn.Linear):
         super().__init__()
-        self.actor = mlp(obs_dim, hidden, act_dim)
-        self.critic = mlp(obs_dim, hidden, 1)
+        self.trunk = trunk
+        self.head = head
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.head(self.trunk(x))
+
+
+class ActorCritic(nn.Module):
+    def __init__(
+        self,
+        obs_dim: int,
+        act_dim: int,
+        hidden=(512, 256, 128),
+        init_std: float = 0.8,
+        shared: bool = False,
+    ):
+        super().__init__()
+        self.shared = bool(shared)
+        if self.shared:
+            # One encoder for the actor and the critic (--shared-encoder): half the parameters, one body state.
+            trunk, last = mlp_body(obs_dim, hidden[:-1])
+            self.trunk = trunk
+            self.actor = _Head(trunk, nn.Linear(last, act_dim))
+            self.critic = _Head(trunk, nn.Linear(last, 1))
+            actor_out, critic_out = self.actor.head, self.critic.head
+        else:
+            self.actor = mlp(obs_dim, hidden, act_dim)
+            self.critic = mlp(obs_dim, hidden, 1)
+            actor_out, critic_out = self.actor[-1], self.critic[-1]
         self.log_std = nn.Parameter(torch.full((act_dim,), float(np.log(init_std))))
         for m in self.modules():
             if isinstance(m, nn.Linear):
                 nn.init.orthogonal_(m.weight, gain=np.sqrt(2))
                 nn.init.zeros_(m.bias)
-        nn.init.orthogonal_(self.actor[-1].weight, gain=0.01)
-        nn.init.orthogonal_(self.critic[-1].weight, gain=1.0)
+        nn.init.orthogonal_(actor_out.weight, gain=0.01)
+        nn.init.orthogonal_(critic_out.weight, gain=1.0)
 
     def dist(self, obs: torch.Tensor) -> torch.distributions.Normal:
         mean = self.actor(obs)
@@ -140,6 +179,13 @@ class PPOConfig:
     # Bilateral mirror-symmetry regularisation weight: penalises ||pi(M(s)) - M(pi(s))||^2 in actor updates
     # so boxers learn balanced orthodox/southpaw guards and avoid single-hand spam. 0 = off (unchanged behaviour).
     sym_coef: float = 0.0
+    # Mirror data augmentation (2026-11-25): this share of every rollout is added to the batch mirrored (obs and action
+    # through the same permutations sym_coef uses, keeping the advantage), so one step teaches both sides of the body.
+    # 0 = off. Needs set_symmetry; 0.5 roughly doubles the batch.
+    mirror_aug: float = 0.0
+    # One encoder shared by the actor and the critic (2026-11-25, hierarchy.py --shared-encoder): half the parameters,
+    # and the trunk a later rung reuses (--reuse-trunk / --freeze-layers).
+    shared_encoder: bool = False
 
 
 class PPO:
@@ -147,7 +193,7 @@ class PPO:
         self.cfg = cfg
         self.device = device
         self.num_envs = num_envs
-        self.model = ActorCritic(obs_dim, act_dim, init_std=cfg.init_std).to(device)
+        self.model = ActorCritic(obs_dim, act_dim, init_std=cfg.init_std, shared=cfg.shared_encoder).to(device)
         self.obs_rms = RunningMeanStd(obs_dim, device)
         self.opt = torch.optim.Adam(self.model.parameters(), lr=cfg.lr)
         T, N = cfg.steps_per_env, num_envs
@@ -164,6 +210,7 @@ class PPO:
         }
         self.t = 0
         self._sym: Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor] | None = None
+        self.amp = None  # amp.AMP when attached (train_box.py --amp): its discriminator steps inside update()
 
     def set_symmetry(
         self,
@@ -179,6 +226,11 @@ class PPO:
             act_perm.to(self.device),
             act_sign.to(self.device),
         )
+
+    def set_amp(self, disc) -> None:
+        """Attach an adversarial-motion-prior discriminator (amp.AMP): it takes one step per PPO minibatch in update(),
+        on clip transitions and the replay buffer the trainer fills. None detaches it (the default: no change)."""
+        self.amp = disc
 
     # ---- rollout -------------------------------------------------------------------------------
     def act(self, raw_obs: torch.Tensor) -> torch.Tensor:
@@ -220,6 +272,34 @@ class PPO:
         ret = adv + b["val"]
         return adv, ret
 
+    def _mirror(self, obs, act, logp_old, mu_old, sigma_old, adv, ret):
+        """A share of the batch copied mirrored through the body's sagittal plane, each copy keeping its advantage.
+
+        The mirror is taken on the raw observation (un-normalise, permute, re-normalise) as the symmetry loss does, so
+        the running statistics stay meaningful; the action is permuted and sign-flipped. The old log-probability of each
+        copy is recomputed with the policy as it stands before this update, which is what PPO's ratio needs."""
+        o_perm, o_sign, a_perm, a_sign = self._sym
+        n = int(obs.shape[0] * min(1.0, max(0.0, self.cfg.mirror_aug)))
+        if n <= 0:
+            return obs, act, logp_old, mu_old, sigma_old, adv, ret, 0
+        pick = torch.randperm(obs.shape[0], device=self.device)[:n]
+        with torch.no_grad():
+            raw = obs[pick] * torch.sqrt(self.obs_rms.var + 1e-8) + self.obs_rms.mean
+            o2 = self.obs_rms.normalize(raw[:, o_perm] * o_sign, self.cfg.obs_clip)
+            a2 = act[pick][:, a_perm] * a_sign
+            logp2, _, _, mu2, sigma2 = self.model.evaluate(o2, a2)
+        cat = lambda x, y: torch.cat([x, y], 0)
+        return (
+            cat(obs, o2),
+            cat(act, a2),
+            cat(logp_old, logp2),
+            cat(mu_old, mu2),
+            cat(sigma_old, sigma2),
+            cat(adv, adv[pick]),
+            cat(ret, ret[pick]),
+            n,
+        )
+
     def update(self, last_raw_obs: torch.Tensor) -> Dict[str, float]:
         c, b = self.cfg, self.buf
         with torch.no_grad():
@@ -236,12 +316,21 @@ class PPO:
         stats = {"policy_loss": 0.0, "value_loss": 0.0, "entropy": 0.0, "kl": 0.0}
         if c.sym_coef > 0.0 and self._sym is not None:
             stats["sym_loss"] = 0.0
+        if c.mirror_aug > 0.0 and self._sym is not None:
+            obs, act, logp_old, mu_old, sigma_old, adv_f, ret_f, n_aug = self._mirror(
+                obs, act, logp_old, mu_old, sigma_old, adv_f, ret_f
+            )
+            stats["mirror_aug"] = float(n_aug)
+        total = obs.shape[0]
+        amp_sums: Dict[str, torch.Tensor] = {}
         n_updates = 0
-        mb = T * N // c.minibatches
+        mb = max(1, total // c.minibatches)
         for _ in range(c.epochs):
-            perm = torch.randperm(T * N, device=self.device)
+            perm = torch.randperm(total, device=self.device)
             for i in range(c.minibatches):
                 idx = perm[i * mb : (i + 1) * mb]
+                if idx.numel() == 0:
+                    continue
                 logp, ent, v, mu, sigma = self.model.evaluate(obs[idx], act[idx])
                 with torch.no_grad():
                     kl = torch.sum(
@@ -280,9 +369,14 @@ class PPO:
                 self.opt.zero_grad(set_to_none=True)
                 loss.backward()
                 # The actor and the critic share no weights: clipped together, a large value gradient shrinks
-                # the policy's step with it.
-                nn.utils.clip_grad_norm_(list(self.model.actor.parameters()) + [self.model.log_std], c.max_grad_norm)
-                nn.utils.clip_grad_norm_(self.model.critic.parameters(), c.max_grad_norm)
+                # the policy's step with it. A shared encoder is one set of weights, so it is clipped once.
+                if self.model.shared:
+                    nn.utils.clip_grad_norm_(list(self.model.parameters()), c.max_grad_norm)
+                else:
+                    nn.utils.clip_grad_norm_(
+                        list(self.model.actor.parameters()) + [self.model.log_std], c.max_grad_norm
+                    )
+                    nn.utils.clip_grad_norm_(self.model.critic.parameters(), c.max_grad_norm)
                 self.opt.step()
                 if c.max_std > 0.0:
                     with torch.no_grad():
@@ -291,8 +385,13 @@ class PPO:
                 stats["value_loss"] += v_loss.item()
                 stats["entropy"] += ent.mean().item()
                 stats["kl"] += kl.item()
+                if self.amp is not None:
+                    for k, v in self.amp.step().items():
+                        amp_sums[k] = amp_sums.get(k, 0.0) + v
                 n_updates += 1
         self.t = 0
+        for k, v in amp_sums.items():
+            stats[k] = float(v)
         for k in stats:
             stats[k] /= max(1, n_updates)
         stats["lr"] = self.cfg.lr
@@ -356,6 +455,10 @@ class ExportPolicy(nn.Module):
 
     def forward(self, obs: torch.Tensor):
         x = torch.clamp((obs - self.mean) / self.std, -self.clip, self.clip)
+        trunk = getattr(self.actor, "trunk", None)
+        if trunk is not None and getattr(self.critic, "trunk", None) is trunk:
+            h = trunk(x)  # a shared encoder is run once: the graph carries one copy of it
+            return self.actor.head(h), self.critic.head(h)
         return self.actor(x), self.critic(x)
 
 

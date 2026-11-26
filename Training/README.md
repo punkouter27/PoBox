@@ -23,6 +23,26 @@ separate MuJoCo is needed (the old `.mj350` folder and `PYTHONPATH=.mj350` in st
 Reward penalty weights (torque², joint speed², angular velocity², action rate, foot slip) are in
 `config/reward.json` (`envs/reward_config.py`); shipped brains predate the torque² and joint-speed² terms.
 
+Opt-in upgrades of 2026-11-25 (all off by default; table in `docs/README.md`): `--amp` (motion-prior
+discriminator, `amp.py`; get-up clips via `python amp.py prep-getup --fetch`), `--league` (`league.py`),
+`--domain-rand`, `--muscle hill`, `--energy-w`, `--hit-bank` (`envs/upgrades.py`), and `train_distill.py`.
+`train_gauntlet.py` and `train_getup.py` do not take them yet, and the C MuJoCo exams do not model the Hill
+muscle.
+
+The progressive batch of the same day, also off by default (`envs/limits.py`, `envs/curriculum.py`,
+`config/progression.json`; table in `docs/README.md`): the hard physical limits `--gravity-scale`,
+`--torque-cap`, `--act-lag`, `--soft-limit` / `--rom-w` (`envs/constraints.py`); the rung ladder
+`--curriculum {auto,balance,walk,sprint,navigate}` with `--sprint-share` and `--nav-share` / `--nav-obstacles`
+(`envs/nav.py`); terrain `--terrain`, `--terrain-bump` (`envs/terrain.py`); momentum-aware turning
+`--momentum-w`, `--lean-w`, `--turn-accel` (`envs/momentum.py`); and the encoder reuse `--shared-encoder`,
+`--freeze-layers N --freeze-until K`, `--reuse-trunk CKPT` (`hierarchy.py`), plus `--mirror-aug`
+(`PPOConfig.mirror_aug`). The footwork stage takes the rung knobs; the physical limits apply to every stage.
+The ladder is data: rungs, their thresholds and the terrain classes are in `config/progression.json`.
+A rung sets the knobs a run left alone and its scale is built when it arrives (a promotion to `navigate` makes the
+navigation goals then, not only at start-up); a knob given on the command line (`--nav-share 0.3`) stays as asked
+and the log's `kept from the command line` names it. `--terrain` alone is every class, `--terrain mild,steep` keeps
+some. A new boxer from a mesh in one command: `python tools/new_boxer.py NAME mesh.glb --bone-map mixamo`.
+
 ## From a rigged mesh to a trained policy
 
 1. **Read the rig out of the owner's mesh** (house rule: the skeleton comes from the skinned model).

@@ -2,8 +2,11 @@
 
 Two physics-driven boxers fight in a ring while the game films it like a broadcast: cameras that cut on the
 action, a scoreboard, three judges, a referee, a ladder, a crowd and a commentary line. The app starts on a
-screen where the two boxers are picked. Portrait, one screen, nothing scrolls. Unity 6000.6.0f1, URP 17.6,
-Cinemachine, UI Toolkit. The fight runs on the official MuJoCo Unity plugin 3.5.0, with no PhysX.
+screen where the two boxers are picked. Portrait, one screen, nothing scrolls. Unity 6000.6.9f1, URP 17.6,
+Cinemachine, UI Toolkit. The fight runs on the official MuJoCo Unity plugin 3.15.0, with no PhysX.
+
+The editor version and the plugin version above are the current ones (`ProjectSettings/ProjectVersion.txt`,
+`Packages/org.mujoco/package.json`); the dated entries below keep the version that was true when they were written.
 
 This file is the running history, newest first. The overview is the root [README.md](../README.md), the live
 plan is [tasks.md](tasks.md), the training log is [rl_optimization_log.md](rl_optimization_log.md), and
@@ -12,7 +15,8 @@ the house rules are [AGENTS.md](../AGENTS.md).
 ## Where it stands (2026-11-13)
 
 - **Eight boxers:** Matt, Zombie, Nick, Trump, Grandma, Grandpa, Kim, Sokol. Each has three brains (footwork,
-  boxing, get-up) in `Assets/_Project/Agents/Boxers/NAME`.
+  boxing, get-up) in `Assets/_Project/Agents/Boxers/NAME`. Ten bodies ship (Soldat and Timmy joined on
+  2026-11-16) and the roster has sixteen slots (`MenuView`, the cup's round of 16); a slot nobody fills is a BYE.
 - **Six are on the v3 body** (`Training/models/v3`: human force each way, per-joint action scale, de Leva
   masses): Sokol and Nick (2026-11-02), Zombie (2026-11-03), Matt, Trump and Kim (2026-11-04).
 - **Grandma and Grandpa are still on v2.** On v3 they got up 5 and 14 times of 60 (2026-11-03). The last log
@@ -24,6 +28,60 @@ the house rules are [AGENTS.md](../AGENTS.md).
 - **Last test counts on record (2026-11-04):** MjParity 3/3, MjGate 24/24, StateFlow 2/2, OneScreen 74/74.
 - The design documents in [20261004](20261004) describe the game as it was on 4 October (six boxers, v2 bodies).
 
+## Cleanup pass: one reference check, one naming rule, two split classes (2026-11-25 update)
+
+A pass over the repo's hygiene, done from a measurement rather than a grep. Two editor menu items now do the
+measuring, and three tests keep it true.
+
+**The audit (`Assets/_Project/Core/Scripts/Editor/RepoStandard.cs`).** `PoBox/Repo/Standard Report` writes
+`Temp/repo-standard.txt`: the naming violations, and the assets nothing reaches, walked with
+`AssetDatabase.GetDependencies` from the build scenes, all of `Assets/_Project/Scenes` (the tests open
+`Testbed.unity` by path), every `Resources` folder, and the render pipeline assets that hang off
+`ProjectSettings/QualitySettings.asset`. A text grep is not a substitute and was measured to be unsafe: the
+seven icons in `UI/Icons` are reached through `project://database/...` URLs in `Theme.uss` and the Arena
+lightmaps through the binary `LightingData.asset`, so a GUID scan calls 16 live assets dead.
+
+**What the report found, and what was removed or renamed.** 116 naming violations; 12 assets unreached.
+`PoBox/Repo/Apply Standard Fixes` then, all with `AssetDatabase.MoveAsset`/`RenameAsset` so every GUID — and
+so every scene and prefab reference — is kept: 11 prop prefabs took `PF_`, 23 materials and 4 strays moved into
+`Environments/Materials` as `M_`, 64 first-party clips took `A_` (the Kenney pack keeps its own names), and the
+ten `Entrant_NAME` profiles became `Entrant_<Name>` (MjRetrofit now finds a profile by its display name, not by
+a file name it used to build). Deleted: the 7 pre-rename materials (`Pad_Red` and friends, which
+`UpgradeWiring` had already superseded), Lil Matt's announcer take (he was retired 2026-10-16) and
+`Audio/Real/whoosh.wav` (the glove whoosh is synthesised), Unity's `Assets/_Recovery` crash scene, and four
+`InitTestScene*.unity` files an interrupted test run had left. `scripts/run_tests.ps1` sweeps those now.
+
+**Two classes split, no behaviour change.** `MjBoxer.Observation.cs` holds the observation pass
+(`Heading`, `StandIn`, `Observe`, `Bodies`) and `MjRing.Seats.cs` holds where a boxer is put (`Place`, `Hold`,
+`Release`, `SetDown`…). `MjBoxer.Observe` now narrows each number into the policy's `float[]` as it clamps it, so
+`Infer` converts nothing for a narrow brain; a wide one copies the 103 and narrows only the three body inputs.
+
+**Runtime hygiene.** The keyboard-only controls (`F1`–`F4`, space, `R`, the free camera's WASD) are
+`#if UNITY_EDITOR || DEBUG`, so a release player keeps only Escape and Tab. The diagnostics overlay no longer
+lays anything out or searches the scene while it is hidden, finds the boxers once a second while it is up, and
+shows draw calls, set-pass calls and garbage a frame. The app mode, the docked panels and the static switches
+share one place: `ScreenChrome.Show` for the docking (the three screens had drifted, one hiding all three
+panels and two hiding only the opposite one) and `RuntimeState` for the statics, which clears every published
+`Instance` at `SubsystemRegistration`.
+
+**What was tried and put back.** Removing packages by grep is not safe here: `com.unity.pipeline` is the
+bridge the Unity CLI talks to the editor over, and taking it out of `manifest.json` left the editor unable to
+answer a single command (a `TypeLoadException` in `PipelineServerStartup`), which is how this was found.
+`Packages/manifest.json` is unchanged.
+
+**The gates.** `RepoStandardTests` (EditMode) fails on a new unprefixed prop, material or first-party clip, on
+an `Entrant_` that is not PascalCase, and on a boxer with a brain and no ladder entry; `RuntimeStandardTests`
+pins the 103/106 observation layout, the static reset and the docking rule; `tests/test_repo_standard.py`
+(fast tier) checks that the docs name the Unity version in `ProjectVersion.txt`, the plugin version the trainer
+pins, and everyone on the roster, and that no staged training queue still puts a second MuJoCo on
+`PYTHONPATH`. That last one was real: 81 entries across 8 staged queues pointed at `Training/.mj350`
+(MuJoCo 3.5.0) while the game, the trainer and `pyproject.toml` are 3.15.0; the folder and the entries are
+gone (the folder to `../PoBox_quarantine_2026-11-25/`, with the abandoned checkpoints `r0_matt`, `r1_matt`,
+`_benchmark` and `_benchmark_warm`).
+
+`scripts/clean.ps1 -DryRun` lists the generated output (Build/, Builds/, Logs/, Temp/, the stray WebGL burst
+artifact at `Data/Plugins/`, `MUJOCO_LOG.TXT`) and deletes only what git does not track: 815 MB on this PC.
+
 ## Older history
 
 Everything from 30 September to 31 October 2026 is in
@@ -32,6 +90,121 @@ Everything from 30 September to 31 October 2026 is in
 and "Things that cost time, worth knowing". The plan as it stood, with every ticked task, is
 [archive/tasks_2026-10.md](archive/tasks_2026-10.md). The October training log is
 [archive/rl_optimization_log_2026-10.md](archive/rl_optimization_log_2026-10.md).
+
+## Progressive training: physical limits, a rung ladder, terrain, obstacles (2026-11-25, later)
+
+Twenty more trainer upgrades, the progressive set: what a body physically is, how a skill is grown from the one
+below it, and what the rung above a walk asks for. **All of them are off unless their flag is given**: with no new
+flag the envs are exactly as they were and every shipped brain stays valid. Unity ML-Agents and UE5
+LearningAgents are not in this repo (AGENTS.md: no ML-Agents); every item is in the repo's own PPO
+(`Training/ppo.py`) and its MuJoCo Warp envs.
+
+**Physical constraints on the agent** (`Training/envs/limits.py`, `envs/constraints.py`; on `train_box.py`, one
+group, applied as the last thing a drive target passes through):
+
+| What | Flag | Notes |
+|---|---|---|
+| Gravity scaling | `--gravity-scale 0.1` | each world feels g x (1 +- s); the observation's "down" is that g |
+| Motor torque caps | `--torque-cap 0.7`, `--torque-var` | the drive's force range, scaled a world, written into `mw.actuator_forcerange` and into the target |
+| Actuator latency | `--act-lag 8 --lag-var 0.2` | first-order motor lag, 8 Hz bandwidth (separate from `--domain-rand`'s integer delay) |
+| Compliant joint stops | `--soft-limit 0.08 --rom-w 0.01` | inside the last 0.08 rad of a joint's range the target gives way; the press is charged (rt_rom) |
+| Range-of-motion readout | (with `--soft-limit`) | `rom_use` in the run's stats |
+
+**Curriculum and hierarchical reuse** (`envs/curriculum.py`, `config/progression.json`, `hierarchy.py`):
+
+| What | Flag | Notes |
+|---|---|---|
+| The rung ladder: balance -> walk -> sprint -> navigate | `--curriculum auto` (or a rung's name) | promotes/demotes on the run's own stats, with a hold and an EMA; the rung's knobs are written into the live env |
+| Sprint rung | `--sprint-share 0.5` | walk episodes that ask for 1.4 m/s up to `cmd_fwd_max`, paid for a stride past 0.35 s |
+| Obstacle navigation rung | `--nav-share 0.3 --nav-obstacles 2` | a goal 2-4 m away, cubes parked across the line, the command steers to it (envs/nav.py) |
+| A shared encoder | `--shared-encoder` | one trunk behind actor and critic: half the parameters, one body state |
+| Freeze the low-level encoder | `--freeze-layers 2 --freeze-until 200` | the new rung learns its head on top of locomotion, then the encoder is let go |
+| Reuse a trunk across stages | `--reuse-trunk checkpoints/<run>/latest.pt` | copies the encoder (never the head), shared or separate |
+| Mirror data augmentation | `--mirror-aug 0.5` | half of each rollout is trained mirrored, so one step teaches both sides |
+
+**Behavioural expansion** (`envs/terrain.py`, `envs/momentum.py`, `envs/nav.py`, plus the get-up stage that
+already exists):
+
+| What | Flag | Notes |
+|---|---|---|
+| Terrain adaptation | `--terrain` (all classes), `--terrain mild,steep`, `--terrain-bump` | flat/mild/steep floors drawn every episode: slope (tilted gravity), friction, uneven-ground kicks |
+| Momentum-aware turning | `--momentum-w 0.1 --turn-accel 12` | the yaw command ramps at 12 rad/s^2; yaw jerk beyond it is charged (rt_mom) |
+| Leaning into a turn | `--lean-w 2` | the centripetal lean height x v x w / g is asked for and the miss charged (rt_tilt) |
+| Recovery behaviours | `--stage getup` (existing), `nav` goals | the get-up brain is the recovery rung; a navigation episode is a recovery from a shove off line |
+
+Not done in this pass, and deliberately: none of these are mirrored into the game (the game runs the nominal
+body, as with `--domain-rand`), the C MuJoCo exams do not model the terrain classes or the motor lag, and no
+run has used any of it yet (the GPU had another session's job on it). What was verified: `tests/test_rl_progression.py`
+(16 tests: the formulas and the ladder in the fast tier, a full footwork env with every flag on, the shared
+encoder with mirroring, freezing and a trunk copied between a shared and a separate policy).
+
+**First runs, the same afternoon (2026-11-25, verification only: 3 x 128, 30 x 512 and 20 x 512 worlds, minutes
+each, deleted after):** the trainer takes every flag in one run (curriculum, terrain, navigation, sprint, torque cap
+0.7, 8 Hz lag, soft stops, gravity +-5%, momentum and lean, mirroring, a shared encoder held for 2 layers) with no
+NaN and about 9,600 samples/s at 512 worlds on this PC's GPU; rt_rom, rt_tilt, rt_mom, rt_torque and the terrain
+shares are all non-zero in the run's CSV. Two things the runs showed and fixed: a rung promotion could not turn its
+own subsystem on (a run starting at `balance` that reached `navigate` got the `nav_share` knob but no goals, because
+the nav env was only built at start-up), and a rung's default silently overwrote a knob given on the command line
+(`--nav-share 0.3 --curriculum auto` spent the whole balance rung at 0). Now `curriculum.apply` calls the env's
+`after_rung`, which lists the rung's terms and builds what it needs, a curriculum run declares every rung's column at
+iteration 0 (so a promotion never widens the CSV), and an explicit flag wins over the rung (`kept from the command
+line` in the log). `--terrain` alone now means every class, as the table says. Tests: 19 in
+`tests/test_rl_progression.py`, 170 in the fast tier.
+
+## Twenty upgrades: motion priors, a league, muscles, spray, decals, lip-sync, chat votes (2026-11-25)
+
+Twenty upgrades went in on one day: eight in the trainer, twelve in the game. **Every trainer one is off unless
+its flag is given**, so the shipped brains and the parity tests are untouched. In the game, the new pieces are
+placed in the scenes and prefabs by one idempotent menu item, `PoBox/Setup/Wire 2026-11 Upgrades`
+(`Editor/UpgradeWiring.cs`).
+
+**Trainer** (`Training/`; flags on `train_box.py`, defaults off):
+
+| What | Flag | Files |
+|---|---|---|
+| Adversarial motion priors: a discriminator over (s, s') judges style instead of clip tracking | `--amp`, `--amp-w 0.5` | `amp.py`, `ppo.py` (`PPO.set_amp`) |
+| AMP for the get-up stage, on 6 CMU get-up takes (140_01-04, 08, 09) | `--stage getup --amp` | `amp.py prep-getup [--fetch]` -> `clips/getup.npz` |
+| Self-play league: frozen snapshots + shipped brains, PFSP sampling, an exploiter | `--league`, `--league-boxers ...` | `league.py` |
+| Domain randomisation: friction, mass, PD gains, actuator delay, dt jitter, sensor noise | `--domain-rand` | `envs/randomize.py`, `config/domain_rand.json` |
+| Hill muscle: activation lag, force-length, force-velocity (replaces the linear speed limit) | `--muscle hill` | `envs/muscle.py`; Unity `Mj/HillMuscle.cs`, `Mj/MuscleConfig.cs` |
+| Mechanical work penalty, sum of abs(torque x speed) | `--energy-w` (`mech_work` in `reward.json`, 0) | `envs/boxing_base.py` |
+| Real hits as training shoves, from the fight log | `--hit-bank PATH` | `tools/hits_to_bank.py`, `envs/hit_bank.py` |
+| Teacher-student distillation (privileged teacher, DAgger student on the 103 numbers) | `train_distill.py` | `train_distill.py` |
+
+The Hill muscle runs in Unity only for a boxer whose `config.json` has a `muscle` block (none does yet), so
+parity is unchanged; a brain trained with it writes the block and `speed_limit: false` into its policy config.
+The C MuJoCo exams do not model the muscle yet: port it there before promoting such a brain.
+
+**Game:**
+
+- **Impact spray** (`Fx/HitSpray.cs`): spit on head punches over 6 m/s, mist off clean body punches, a ring of
+  canvas dust at the first heavy landing after a knockdown. Built-in particles (VFX Graph needs compute shaders,
+  which WebGL lacks), `Emit` only, no allocations.
+- **Bruise swelling and sweat** (`FighterOverlay.shader`, `FighterSkin`): the 8 bruise marks now raise the head's
+  overlay a few millimetres; a wet sheen grows with rounds and fatigue.
+- **Blood and fall decals** (`CanvasMarks`): 8 blood and 6 scuff projectors that stay for the bout.
+- **Splines** (`com.unity.splines` 2.9.2, already pulled in by Cinemachine): the ropes can take a spline rest
+  shape and now have UVs; a **dolly camera** on an arc of rail films the intro before the first bell
+  (`Fx/BroadcastDolly.cs`, `Shot.Dolly`, `BroadcastDirector.dollyCam`).
+- **Towels** over the top rope at the red and blue posts (`Fx/VerletCloth.cs`, CPU Verlet, no PhysX).
+- **CC0 materials** from ambientCG (`Environments/Textures/AmbientCG`, credits beside them): braided rope,
+  leather pads, canvas fabric, towel.
+- **Lip-sync** (`Audio/LipSync.cs` on every corner prefab): the procedural voices write a mouth track; Timmy and
+  Zombie move their jaw bone, the others need a mouth transform assigned (no mesh has mouth blendshapes).
+- **Modal impact sound** (`ImpactModalSettings`): resonances by contact (head, body, glove, canvas), louder and
+  brighter with the measured impulse and glove speed.
+- **Reactive crowd** (`CrowdExcitement`): punch rate, big hits, daze and knockdowns drive the crowd's level, a
+  roar layer and how far the figures move (`_PoBoxCrowdExcite`).
+- **Colour commentary** from Claude (`server/corner_proxy.py` `POST /commentary`, `Commentary.cs`): a round
+  summary at each bell, a line after a knockdown at most every 45 s. Needs `ANTHROPIC_API_KEY` on the proxy;
+  off or slow (5 s), the canned lines carry on. /diag lists it as Off until the proxy is hosted.
+- **Chat votes** (`Online/ChatCorner.cs`, `ChatVote.cs`): between rounds Twitch chat votes `!pressure` /
+  `!defend` / ...; the winner changes how the boxer spends energy next round. The brains have no tactics input,
+  so the words cannot change which punches are thrown.
+- **New boxer in one command**: `python Training/tools/new_boxer.py NAME mesh.glb --bone-map mixamo`
+  (rig, MJCF, capsule fit, self-collision check, roster entry).
+
+Also: `pyproject.toml` and `uv.lock`, deleted by accident in `0fdbc09`, are back (CI's `uv sync` needs them).
 
 ## Walk-on moves: shadow boxing from motion capture, no training (2026-11-23)
 

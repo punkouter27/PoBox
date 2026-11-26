@@ -3,7 +3,7 @@ using UnityEngine;
 namespace PoBox.League
 {
     /// <summary>
-    /// One entry on the ladder (Assets/_Project/Data/League/Entrant_NAME.asset): a name and the exported ONNX checkpoint
+    /// One entry on the ladder (Assets/_Project/Data/League/Entrant_<Name>.asset): a name and the exported ONNX checkpoint
     /// with its training generation.
     /// </summary>
     [CreateAssetMenu(menuName = "PoBox/Policy Profile", fileName = "Profile_New")]

@@ -366,6 +366,62 @@ REQUIRED = [
     "hand_r",
 ]
 
+# Every key a rig's "map" can hold: REQUIRED, and the optional ones the generator uses when it has them.
+CANONICAL = REQUIRED + ["neck", "toe_l", "toe_r", "hand_tip_l", "hand_tip_r"]
+
+# Mixamo's skeleton (and the many rigs exported with its names), key by key. Matched after clean(), so the
+# "mixamorig:" / "mixamorig1:" / "mixamorig_" prefixes do not matter.
+MIXAMO = {
+    "pelvis": "Hips",
+    "spine": "Spine",
+    "torso": "Spine2",
+    "neck": "Neck",
+    "head": "Head",
+    **{
+        f"{key}_{s}": f"{side}{bone}"
+        for s, side in (("l", "Left"), ("r", "Right"))
+        for key, bone in (
+            ("thigh", "UpLeg"),
+            ("shin", "Leg"),
+            ("foot", "Foot"),
+            ("toe", "ToeBase"),
+            ("upper_arm", "Arm"),
+            ("forearm", "ForeArm"),
+            ("hand", "Hand"),
+            ("hand_tip", "HandMiddle3"),
+        )
+    },
+}
+NAME_MAPS = {"mixamo": MIXAMO}
+
+
+def load_name_map(spec: str) -> Dict[str, str]:
+    """A preset's name (NAME_MAPS) or a JSON file of {canonical key: bone name}; empty for none."""
+    if not spec:
+        return {}
+    if spec.lower() in NAME_MAPS:
+        return dict(NAME_MAPS[spec.lower()])
+    with open(spec, "r", encoding="utf-8") as f:
+        out = json.load(f)
+    unknown = sorted(k for k in out if k not in CANONICAL)
+    if unknown:
+        raise SystemExit(f"{spec}: not canonical keys: {', '.join(unknown)} (they are: {', '.join(CANONICAL)})")
+    return {str(k): str(v) for k, v in out.items()}
+
+
+def map_by_names(bones: List[dict], name_map: Dict[str, str]) -> Dict[str, str]:
+    """The bones a name map names, {canonical key: the file's bone name}; a name with no bone is left out."""
+    by_clean = {}
+    for b in bones:
+        by_clean.setdefault(clean(b["name"]), b["name"])
+    out = {}
+    for key, want in name_map.items():
+        hit = by_clean.get(clean(want))
+        if hit is not None:
+            out[key] = hit
+    return out
+
+
 # House rule: a fighter's collision shapes are fitted inside its own skinned mesh. The band each
 # radius is held to [m], so that a mesh in a coat or with a bad weight map cannot produce a body no
 # person has.
@@ -574,49 +630,28 @@ def repo_relative(path: str) -> str:
     return os.path.basename(full) if rel.startswith("..") else rel.replace("\\", "/")
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--glb", required=True)
-    ap.add_argument("--out", required=True)
-    ap.add_argument(
-        "--mass",
-        type=float,
-        default=0.0,
-        help="body mass in kg. 0 works it out from the height at a body-mass index of 24, "
-        "so a bigger fighter is a heavier one (house rule: mass according to size).",
-    )
-    ap.add_argument(
-        "--height",
-        type=float,
-        default=0.0,
-        help="force this height in metres. 0 keeps the file's own size if it is plausibly "
-        "a person in metres (1.2 to 2.3 m), and otherwise fixes the unit.",
-    )
-    ap.add_argument(
-        "--plot", default="", help="write a picture of the mesh with the fitted shapes over it, front and side"
-    )
-    ap.add_argument(
-        "--fit-report",
-        default="",
-        help="write each part's half-thickness the thin way (what its radius was fitted to) as JSON",
-    )
-    ap.add_argument(
-        "--skeleton-only",
-        action="store_true",
-        help="read the node transforms and nothing else, as this did before 2026-10-01: no bind pose, "
-        "no sizes from the mesh, no symmetry. For regenerating a rig exactly as it was",
-    )
-    args = ap.parse_args()
+def rig_from_glb(
+    glb: str,
+    mass: float = 0.0,
+    height: float = 0.0,
+    plot: str = "",
+    fit_report: str = "",
+    skeleton_only: bool = False,
+    name_map: Optional[Dict[str, str]] = None,
+) -> dict:
+    """The rig description of a skinned .glb: the bones the fighter uses, in the generator's frame, and the collision
+    radii fitted inside the mesh (fit_radii; each part's half-thickness is left in fit_radii.thickness). The arguments
+    are the command line's; name_map is {canonical key: bone name} (NAME_MAPS, load_name_map) and wins over the guess."""
 
-    gltf = read_glb(args.glb)
+    gltf = read_glb(glb)
     if not gltf.get("skins"):
-        raise SystemExit(f"{args.glb} has no skin: it is a mesh without a skeleton, and there is no rig to read.")
+        raise SystemExit(f"{glb} has no skin: it is a mesh without a skeleton, and there is no rig to read.")
     skin = max(gltf["skins"], key=lambda s: len(s["joints"]))
     joints = skin["joints"]
     nodes = gltf["nodes"]
     world = world_matrices(gltf)
     notes = []
-    blob = None if args.skeleton_only else read_glb_bin(args.glb)
+    blob = None if skeleton_only else read_glb_bin(glb)
     bind = bind_matrices(gltf, blob, skin)
     if bind is not None:
         span = max(1e-6, float(np.ptp([bind[j][1, 3] for j in joints])))
@@ -667,6 +702,13 @@ def main() -> None:
         )
 
     mapping = build_map(bones)
+    if name_map:
+        # A name map is the owner's word for which bone is which: it overrides the guess, key by key.
+        named = map_by_names(bones, name_map)
+        unmatched = sorted(k for k in name_map if k not in named)
+        mapping.update(named)
+        if unmatched:
+            notes.append("name map entries with no bone in the file: " + ", ".join(unmatched))
     missing = [k for k in REQUIRED if k not in mapping]
     by_shape = False
     if missing:
@@ -708,8 +750,8 @@ def main() -> None:
     skeleton_height = top - floor
     # The skeleton stops at the top of the head bone; a person is a few per cent taller than that.
     figure = skeleton_height * (1.0 if verts is not None else 1.02)
-    if args.height > 0.0:
-        scale = args.height / figure
+    if height > 0.0:
+        scale = height / figure
     elif 1.2 <= skeleton_height <= 2.3:
         scale = 1.0
     else:
@@ -745,11 +787,11 @@ def main() -> None:
             verts[:, 0] *= -1.0
         verts[:, 0] -= cx
         radii, crown = fit_radii(verts, mesh[1], bones, mapping)
-        if args.fit_report:
-            with open(args.fit_report, "w", encoding="utf-8") as f:
+        if fit_report:
+            with open(fit_report, "w", encoding="utf-8") as f:
                 json.dump({"half_thickness": fit_radii.thickness, "fitted": radii}, f, indent=1)
-        if args.plot:
-            plot_fit(args.plot, verts, by_name, mapping, radii, crown)
+        if plot:
+            plot_fit(plot, verts, by_name, mapping, radii, crown)
         litres = mesh_volume(verts, mesh[2]) * 1000.0
         mesh_info = {
             "vertices": int(len(verts)),
@@ -827,27 +869,27 @@ def main() -> None:
         for b in bones
         if b["name"] in keep
     ]
-    height = float(max(b["tail"][2] for b in out_bones))
-    height_m = mesh_info["height_m"] if mesh_info else height * 1.02
+    top_m = float(max(b["tail"][2] for b in out_bones))
+    height_m = mesh_info["height_m"] if mesh_info else top_m * 1.02
     # House rule: mass according to size. A closed mesh has a volume, and a body is about as dense as
     # water. Clothes, hair and surfaces inside the mesh all add to it, so the figure is held to what a
     # person can be: a body-mass index between 18.5 and 30. With no mesh it is the height at an index of 24.
-    mass = round(24.0 * height_m**2, 1)
+    derived = round(24.0 * height_m**2, 1)
     if mesh_info and mesh_info["volume_l"] > 0.0:
         bmi = 0.985 * mesh_info["volume_l"] / height_m**2
         mesh_info["bmi_from_volume"] = round(bmi, 1)
         used = float(np.clip(bmi, 18.5, 30.0))
-        mass = round(used * height_m**2, 1)
-        if args.mass <= 0.0:
+        derived = round(used * height_m**2, 1)
+        if mass <= 0.0:
             notes.append(
                 f"mass from the mesh's volume: {mesh_info['volume_l']:.0f} litres is a body-mass index of {bmi:.1f}"
                 + ("" if used == bmi else f", held to {used:g}")
             )
     rig = {
-        "source": repo_relative(args.glb),  # never an absolute local path in a committed file
+        "source": repo_relative(glb),  # never an absolute local path in a committed file
         "frame": "blender_z_up (x = character left, -y = forward, z = up)",
         "height_m": round(height_m, 3),
-        "mass_kg": args.mass if args.mass > 0.0 else mass,
+        "mass_kg": mass if mass > 0.0 else derived,
         "notes": notes,
         "bones": out_bones,
         "map": mapping,
@@ -856,11 +898,8 @@ def main() -> None:
     if radii:
         rig["radii"] = radii
         rig["mesh"] = mesh_info
-    os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
-    with open(args.out, "w", encoding="utf-8") as f:
-        json.dump(rig, f, indent=2)
 
-    print(f"read {len(bones)} bones from {os.path.basename(args.glb)}; kept the {len(out_bones)} the fighter uses")
+    print(f"read {len(bones)} bones from {os.path.basename(glb)}; kept the {len(out_bones)} the fighter uses")
     print(f"height {rig['height_m']:.2f} m, mass {rig['mass_kg']:g} kg")
     if radii:
         print("shapes fitted inside the mesh [m]: " + ", ".join(f"{k} {v:.3f}" for k, v in radii.items()))
@@ -869,6 +908,61 @@ def main() -> None:
     for key in REQUIRED + [k for k in mapping if k not in REQUIRED]:
         b = by_name[mapping[key]]
         print(f"  {key:14s} <- {mapping[key]:24s} head {np.round(b['head'], 3)}")
+    return rig
+
+
+def write_rig(rig: dict, out: str) -> None:
+    os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
+    with open(out, "w", encoding="utf-8") as f:
+        json.dump(rig, f, indent=2)
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--glb", required=True)
+    ap.add_argument("--out", required=True)
+    ap.add_argument(
+        "--mass",
+        type=float,
+        default=0.0,
+        help="body mass in kg. 0 works it out from the height at a body-mass index of 24, "
+        "so a bigger fighter is a heavier one (house rule: mass according to size).",
+    )
+    ap.add_argument(
+        "--height",
+        type=float,
+        default=0.0,
+        help="force this height in metres. 0 keeps the file's own size if it is plausibly "
+        "a person in metres (1.2 to 2.3 m), and otherwise fixes the unit.",
+    )
+    ap.add_argument(
+        "--plot", default="", help="write a picture of the mesh with the fitted shapes over it, front and side"
+    )
+    ap.add_argument(
+        "--fit-report",
+        default="",
+        help="write each part's half-thickness the thin way (what its radius was fitted to) as JSON",
+    )
+    ap.add_argument(
+        "--skeleton-only",
+        action="store_true",
+        help="read the node transforms and nothing else, as this did before 2026-10-01: no bind pose, "
+        "no sizes from the mesh, no symmetry. For regenerating a rig exactly as it was",
+    )
+    ap.add_argument(
+        "--bone-map",
+        default="",
+        help="which bone is which, when the names are not ones the guess knows: a preset ("
+        + ", ".join(sorted(NAME_MAPS))
+        + ") or a JSON file of {canonical key: bone name} (keys: "
+        + ", ".join(CANONICAL)
+        + ")",
+    )
+    args = ap.parse_args()
+    rig = rig_from_glb(
+        args.glb, args.mass, args.height, args.plot, args.fit_report, args.skeleton_only, load_name_map(args.bone_map)
+    )
+    write_rig(rig, args.out)
     print(f"wrote {args.out}")
 
 

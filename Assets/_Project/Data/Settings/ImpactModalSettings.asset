@@ -1,0 +1,141 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e13c883a990a4faa88bf4ce6763c26e1, type: 3}
+  m_Name: ImpactModalSettings
+  m_EditorClassIdentifier: PoBox.Runtime::PoBox.Audio.ImpactModalSettings
+  head:
+    modes:
+    - hz: 190
+      gain: 0.55
+      decay: 0.07
+    - hz: 410
+      gain: 0.45
+      decay: 0.05
+    - hz: 870
+      gain: 0.25
+      decay: 0.03
+    - hz: 1450
+      gain: 0.12
+      decay: 0.02
+    length: 0.28
+    sink: {x: 1.08, y: 0.88}
+    decayScale: {x: 0.8, y: 1.3}
+    brightnessTilt: 0.6
+    detune: 0.04
+    contactSeconds: {x: 0.006, y: 0.014}
+    slapHz: 2600
+    slapQ: 1.1
+    slapGain: 0.55
+    crackHz: 5200
+    crackSeconds: 0.006
+    rattles: 0
+    rattleHz: 420
+    forceRange: {x: 2, y: 22}
+    speedRange: {x: 2, y: 9}
+    bodyVolume: {x: 0.4, y: 1}
+    crackVolume: {x: 0.05, y: 0.45}
+    crackPitch: {x: 0.9, y: 1.25}
+    bodyPitch: {x: 0.97, y: 1.04}
+  torso:
+    modes:
+    - hz: 68
+      gain: 0.9
+      decay: 0.16
+    - hz: 112
+      gain: 0.6
+      decay: 0.12
+    - hz: 185
+      gain: 0.35
+      decay: 0.07
+    - hz: 320
+      gain: 0.15
+      decay: 0.04
+    length: 0.42
+    sink: {x: 1.08, y: 0.88}
+    decayScale: {x: 0.8, y: 1.3}
+    brightnessTilt: 0.4
+    detune: 0.04
+    contactSeconds: {x: 0.006, y: 0.014}
+    slapHz: 1700
+    slapQ: 1.1
+    slapGain: 0.55
+    crackHz: 4200
+    crackSeconds: 0.006
+    rattles: 0
+    rattleHz: 420
+    forceRange: {x: 2, y: 22}
+    speedRange: {x: 2, y: 9}
+    bodyVolume: {x: 0.4, y: 1}
+    crackVolume: {x: 0.05, y: 0.45}
+    crackPitch: {x: 0.9, y: 1.25}
+    bodyPitch: {x: 0.97, y: 1.04}
+  gloveOnGlove:
+    modes:
+    - hz: 240
+      gain: 0.6
+      decay: 0.05
+    - hz: 520
+      gain: 0.25
+      decay: 0.03
+    length: 0.22
+    sink: {x: 1.08, y: 0.88}
+    decayScale: {x: 0.8, y: 1.3}
+    brightnessTilt: 0.3
+    detune: 0.06
+    contactSeconds: {x: 0.008, y: 0.016}
+    slapHz: 650
+    slapQ: 0.9
+    slapGain: 0.7
+    crackHz: 3000
+    crackSeconds: 0.003
+    rattles: 0
+    rattleHz: 420
+    forceRange: {x: 1, y: 16}
+    speedRange: {x: 2, y: 9}
+    bodyVolume: {x: 0.35, y: 0.9}
+    crackVolume: {x: 0.03, y: 0.3}
+    crackPitch: {x: 1, y: 1.2}
+    bodyPitch: {x: 0.97, y: 1.03}
+  canvas:
+    modes:
+    - hz: 58
+      gain: 1
+      decay: 0.25
+    - hz: 93
+      gain: 0.7
+      decay: 0.17
+    - hz: 147
+      gain: 0.4
+      decay: 0.09
+    length: 0.9
+    sink: {x: 1.04, y: 0.94}
+    decayScale: {x: 0.75, y: 1.3}
+    brightnessTilt: 0.3
+    detune: 0.05
+    contactSeconds: {x: 0.01, y: 0.025}
+    slapHz: 900
+    slapQ: 0.8
+    slapGain: 0.45
+    crackHz: 1800
+    crackSeconds: 0.01
+    rattles: 8
+    rattleHz: 420
+    forceRange: {x: 5, y: 120}
+    speedRange: {x: 0.5, y: 5}
+    bodyVolume: {x: 0.12, y: 1}
+    crackVolume: {x: 0.03, y: 0.25}
+    crackPitch: {x: 0.9, y: 1.1}
+    bodyPitch: {x: 0.97, y: 1.03}
+  levels: 4
+  variants: 3
+  seed: 20261125
+  sampleRate: 22050

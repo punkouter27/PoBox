@@ -6,7 +6,7 @@ using PoBox.Sim;
 
 namespace PoBox.Broadcast
 {
-    public enum Shot { Wide, Orbit, HighCorner, LowRopes, ShoulderRed, ShoulderBlue, Impact, Overhead, WalkRed, WalkBlue, Winner }
+    public enum Shot { Wide, Orbit, HighCorner, LowRopes, ShoulderRed, ShoulderBlue, Impact, Overhead, WalkRed, WalkBlue, Winner, Dolly }
     public enum CameraMode { Broadcast, Follow, Orbit, Free }
 
     /// <summary>
@@ -54,6 +54,8 @@ namespace PoBox.Broadcast
         public CinemachineCamera walkRedCam, walkBlueCam;
         [Tooltip("Circles whoever won.")]
         public CinemachineCamera winnerCam;
+        [Tooltip("A camera on a rail round the ring (Fx/BroadcastDolly), for the intro before the first bell. Empty: the orbit.")]
+        public CinemachineCamera dollyCam;
         [Tooltip("The walk-on sequence. Empty: the two corner shots are simply cut between.")]
         public PlayableDirector walkOn;
         [Tooltip("Not on air: it draws into a texture the HUD shows as an inset. On only during a count, on the boxer left standing.")]
@@ -199,7 +201,7 @@ namespace PoBox.Broadcast
             _initiative = e.attacker;
             float strength = Mathf.Clamp01(e.impulse / 25f);
             // One shake at a time: a combo's punches would otherwise stack bumps into a rattle.
-            if (e.impulse > 3f && _impulse != null && Time.unscaledTime - _shakeAt >= ShakeSeconds * 0.6f)
+            if (e.impulse > 3f && _impulse != null && !PictureMotion.Reduced && Time.unscaledTime - _shakeAt >= ShakeSeconds * 0.6f)
             {
                 _shakeAt = Time.unscaledTime;
                 _impulse.GenerateImpulseAtPositionWithVelocity(e.point, -e.normal * (strength * shakeVelocity));
@@ -220,7 +222,7 @@ namespace PoBox.Broadcast
             if (Pinned != Shot.Impact) _impactVictim = f;
             Force(Shot.Impact, 1.3f);
             _shakeAt = Time.unscaledTime;
-            if (_impulse != null) _impulse.GenerateImpulseAtPositionWithVelocity(f.pelvis.transform.position, Vector3.down * shakeVelocity);
+            if (_impulse != null && !PictureMotion.Reduced) _impulse.GenerateImpulseAtPositionWithVelocity(f.pelvis.transform.position, Vector3.down * shakeVelocity);
         }
 
         Mj.MjRing _ring;
@@ -373,7 +375,7 @@ namespace PoBox.Broadcast
             else if (bout.Phase == BoutPhase.RoundBreak) want = bout.PhaseAge < bout.breakSeconds * 0.5f ? Shot.WalkRed : Shot.WalkBlue;
             else if (now < _forcedUntil) want = _forced;
             else if (bout.Phase == BoutPhase.Count && bout.Downed != null) { want = Shot.Overhead; _impactVictim = bout.Downed; }
-            else if (bout.Phase != BoutPhase.Fight) want = Shot.Orbit;
+            else if (bout.Phase != BoutPhase.Fight) want = bout.Phase == BoutPhase.Intro && dollyCam != null ? Shot.Dolly : Shot.Orbit;
             else if (now >= _nextCut || Current == Shot.Impact || Current == Shot.Overhead)
             {
                 want = PickAmbient(out float hold);
@@ -426,6 +428,8 @@ namespace PoBox.Broadcast
             Set(lowCam, Shot.LowRopes); Set(shoulderRedCam, Shot.ShoulderRed); Set(shoulderBlueCam, Shot.ShoulderBlue);
             Set(impactCam, Shot.Impact); Set(overheadCam, Shot.Overhead);
             Set(walkRedCam, Shot.WalkRed); Set(walkBlueCam, Shot.WalkBlue); Set(winnerCam, Shot.Winner);
+            Set(dollyCam, Shot.Dolly);
+            if (shot == Shot.Dolly && dollyCam != null && dollyCam.TryGetComponent(out Fx.BroadcastDolly rail)) rail.Restart();
         }
 
         void Set(CinemachineCamera cam, Shot shot)

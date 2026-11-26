@@ -4,10 +4,11 @@ Open items only. The plan as it stood on 2026-11-13, with every ticked task and 
 [archive/tasks_2026-10.md](archive/tasks_2026-10.md). Task ids (D6, F1, G13 ...) are kept because the
 logs and reports cite them. What was measured, run by run, is `rl_optimization_log.md`.
 
-## Status (2026-11-13)
+## Status (2026-11-13; versions corrected 2026-11-25)
 
-- The retrofit is done: the game runs on the MuJoCo plugin 3.5.0 with no PhysX in the fight (Phases 0, A, B, D1-D5).
+- The retrofit is done: the game runs on the MuJoCo plugin 3.15.0 with no PhysX in the fight (Phases 0, A, B, D1-D5).
 - Eight boxers: Matt, Zombie, Nick, Trump, Grandma, Grandpa, Kim, Sokol. Lil Matt was retired on 2026-10-16.
+  Soldat and Timmy were added on 2026-11-16 (ten bodies, sixteen roster slots).
 - Six are on the v3 body: Sokol, Nick (2026-11-02), Zombie (2026-11-03), Matt, Trump, Kim (2026-11-04).
   Grandma and Grandpa are on v2: their v3 get-up fails (5 and 14 of 60).
 - The referee and the ring-card walker are in the game on trained footwork.
@@ -68,6 +69,23 @@ Every rung also has to keep each joint's 99th-percentile speed under its human l
 
 These replace the October items they grew out of: C6, C7, C8, D7, D8, D9, G8, G13, K11, K12, H8, R11.
 Their notes are in the archive.
+
+## Progressive training (2026-11-25)
+
+The batch is in (`Training/envs/limits.py`, `curriculum.py`, `terrain.py`, `nav.py`, `momentum.py`, `Training/hierarchy.py`;
+flags in `Training/README.md`, tables in `docs/README.md`). Short verification runs only (2026-11-25: minutes each,
+every flag in one run, no NaN; two defects fixed, see the entry in `docs/README.md`); nothing has trained to a brain.
+
+- [ ] P1 Run the ladder once: `--stage footwork --curriculum auto --terrain --nav-share 0.3` on `models/v2/matt_solo.xml`
+      warm from Matt's footwork brain, 1 h, then `tools/footwork_c.py --exam`. What to look for: the rung log line
+      (`[curriculum] rung ...`, printed every 10 iterations) reaching `sprint`, `nav_rate` climbing above 0.5 (it
+      only can once a rung asks for walks and the navigate rung is in; `--nav-share` is kept, not overwritten),
+      and no rise in `stand_fall_rate` after a promotion.
+- [ ] P2 Do the hard limits cost the punch: a match run with `--torque-cap 0.7 --act-lag 8` against the same seed
+      without them, `hits/s` and `hit_speed` compared. A cap that costs punches is a cap the game should not adopt.
+- [ ] P3 Mirror augmentation and a shared encoder on a shipping run: `--mirror-aug 0.5 --shared-encoder --sym-coef 0.1`
+      for one match run; check `mirror_aug` in the CSV and that the exported ONNX still matches Unity
+      (`MjParityTests`), since the shared trunk is a new graph shape.
 
 ## Phase D: on a phone
 

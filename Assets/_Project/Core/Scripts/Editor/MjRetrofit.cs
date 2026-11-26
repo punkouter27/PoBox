@@ -112,7 +112,9 @@ namespace PoBox.EditorTools
             };
         }
 
+#pragma warning disable CS0649 // filled by JsonUtility
         [System.Serializable] class Sizes { public float height_m, total_mass_kg; }
+#pragma warning restore CS0649
 
         /// <summary>The owner's mesh for a boxer, Assets/_Project/Environments/Models/NAME.glb (or .fbx).</summary>
         static GameObject Mesh(string name)
@@ -172,11 +174,11 @@ namespace PoBox.EditorTools
         public static GameObject Import(string name)
         {
             // The plugin's own default is the built-in pipeline's shader, which this project does not have.
-            const string shapeMaterial = BoxersDir + "/MjShape.mat";
+            const string shapeMaterial = "Assets/_Project/Environments/Materials/M_MjShape.mat";
             var material = AssetDatabase.LoadAssetAtPath<Material>(shapeMaterial);
             if (material == null)
             {
-                Directory.CreateDirectory(BoxersDir);
+                Directory.CreateDirectory("Assets/_Project/Environments/Materials");
                 material = new Material(Shader.Find("Universal Render Pipeline/Lit")) { color = new Color(0.55f, 0.6f, 0.68f) };
                 AssetDatabase.CreateAsset(material, shapeMaterial);
             }
@@ -271,6 +273,18 @@ namespace PoBox.EditorTools
             return PartKind.Foot;
         }
 
+        /// <summary>The ladder entry for a boxer, found by the profile's display name so the file's name is free to follow the repo's standard.</summary>
+        static League.PolicyProfile LeagueProfile(string name)
+        {
+            string want = Title(name).ToUpperInvariant();
+            foreach (string guid in AssetDatabase.FindAssets("t:PolicyProfile", new[] { Paths.LeagueDir }))
+            {
+                var profile = AssetDatabase.LoadAssetAtPath<League.PolicyProfile>(AssetDatabase.GUIDToAssetPath(guid));
+                if (profile != null && profile.displayName == want) return profile;
+            }
+            return null;
+        }
+
         /// <summary>
         /// The boxer dressed for each corner: Assets/_Project/Agents/Boxers/NAME/NAME Red.prefab and NAME Blue.prefab, variants of
         /// its prefab with the game's parts on it (Fighter, MjBrain, FighterSkin, a BodyPart on every body with
@@ -282,9 +296,9 @@ namespace PoBox.EditorTools
             string title = Title(name), dir = $"{BoxersDir}/{title}";
             var basePrefab = AssetDatabase.LoadAssetAtPath<GameObject>($"{dir}/{title}.prefab");
             var cfg = JsonUtility.FromJson<BoxerConfig>(File.ReadAllText($"{dir}/config.json"));
-            var overlay = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Environments/Materials/Fighter_Overlay.mat");
-            var trail = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Environments/Materials/Fx_Trail.mat");
-            var profile = AssetDatabase.LoadAssetAtPath<League.PolicyProfile>($"{Paths.LeagueDir}/Entrant_{name.ToUpperInvariant()}.asset");
+            var overlay = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Environments/Materials/M_Fighter_Overlay.mat");
+            var trail = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Environments/Materials/M_Fx_Trail.mat");
+            var profile = LeagueProfile(name);
             var sb = new StringBuilder(title);
             for (int corner = 0; corner < 2; corner++)
             {
@@ -303,6 +317,7 @@ namespace PoBox.EditorTools
                 var fighter = go.AddComponent<Fighter>();
                 var brain = go.AddComponent<MjBrain>();
                 var skin = go.AddComponent<FighterSkin>();
+                go.AddComponent<PoBox.Audio.LipSync>();   // 2026-11-25: the voice moves the jaw or mouth
 
                 var byName = new Dictionary<string, BodyPart>();
                 foreach (string body in BodyOrder)

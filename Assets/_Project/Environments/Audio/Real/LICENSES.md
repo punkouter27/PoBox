@@ -8,6 +8,9 @@ Format: WAV, 48 kHz, 16-bit PCM (TPDF-dithered). One-shots mono (sting, swell, g
 
 Licence texts: Freesound CC0 → https://creativecommons.org/publicdomain/zero/1.0/ · BigSoundBank → https://bigsoundbank.com/droit.html ("CC0 1.0 Universal … Use, including for commercial purposes. Without any restrictions"; crediting Joseph Sardin is optional) · Kenney → License.txt inside each zip ("Creative Commons Zero, CC0 … free to use in personal, educational and commercial projects").
 
+Since 2026-11-25 every first-party clip in `Audio/Real` carries the repo's `A_` prefix on disk (`A_breath.wav`,
+`A_crowdBed.wav`); the slot names in the table below are the names the game asks for.
+
 
 ## Summary
 

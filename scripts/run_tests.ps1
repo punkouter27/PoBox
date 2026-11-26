@@ -26,6 +26,10 @@ Push-Location $root
 try {
     $fixtures = Get-ChildItem (Join-Path $root 'Assets/_Project/Core/Scripts/Tests') -Filter '*Tests.cs' |
         ForEach-Object { 'PoBox.Tests.' + $_.BaseName } | Sort-Object
+    # An interrupted run leaves its temporary scene behind; Unity imports it on the next reload and re-serialises it
+    # every recompile. It is gitignored, so sweeping it here keeps the folder out of the way without asking anyone.
+    Get-ChildItem (Join-Path $root 'Assets') -Filter 'InitTestScene*.unity*' -File -ErrorAction SilentlyContinue |
+        Remove-Item -Force -ErrorAction SilentlyContinue
     if ($Only.Count -gt 0) {
         $wanted = @($Only | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
         $fixtures = $fixtures | Where-Object { $wanted -contains ($_ -replace '^PoBox\.Tests\.', '') -or $wanted -contains $_ }

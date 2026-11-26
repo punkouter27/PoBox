@@ -28,58 +28,66 @@ namespace PoBox.Audio
             for (int t = 0; t < takes; t++)
             {
                 var rng = new System.Random((name ?? "").GetHashCode() * 31 + (int)e * 7919 + t * 104729);
-                float[] data = Render(v, e, rng);
+                float[] data = Render(v, e, rng, out VisemeTrack mouth);
                 AudioClip clip = AudioClip.Create($"Voice {name} {e} {t + 1}", data.Length, 1, Rate, false);
                 clip.SetData(data, 0);
+                VisemeLibrary.Register(clip, mouth);
                 clips[t] = clip;
             }
             return clips;
         }
 
         /// <summary>One take, normalised to a peak of 0.8.</summary>
-        public static float[] Render(VoiceProfile v, Emotion e, System.Random rng)
+        public static float[] Render(VoiceProfile v, Emotion e, System.Random rng) => Render(v, e, rng, out _);
+
+        /// <summary>One take, normalised to a peak of 0.8, and the mouth that says it (lip-sync, 2026-11-25).</summary>
+        public static float[] Render(VoiceProfile v, Emotion e, System.Random rng, out VisemeTrack mouth)
         {
             float R() => (float)rng.NextDouble();
             float vary = 0.9f + 0.2f * R();                     // this take's length
             float lift = 0.94f + 0.12f * R();                   // and pitch
             var parts = new List<float[]>();
+            var shapes = new List<MouthShape>();
+            // Each piece with the mouth it is said with: a syllable's vowel glide, a gap's shut lips.
+            void Say(float[] p, Vector3 from, Vector3 to, float voiced) { parts.Add(p); shapes.Add(MouthShape.Vowel(p.Length, from, to, voiced)); }
+            void Gap(float seconds) { float[] p = Silence(seconds); parts.Add(p); shapes.Add(MouthShape.Closed(p.Length)); }
             switch (e)
             {
                 case Emotion.Exhale:
-                    parts.Add(Syllable(v, rng, 0.16f * vary, 0f, 0f, 0f, Hh, Hh, 0f, 1f, 0.004f, 3f));
+                    Say(Syllable(v, rng, 0.16f * vary, 0f, 0f, 0f, Hh, Hh, 0f, 1f, 0.004f, 3f), Hh, Hh, 0f);
                     break;
                 case Emotion.Effort:
-                    parts.Add(Syllable(v, rng, 0.28f * vary, 1.12f * lift, 0.88f * lift, 0.7f, Uh, Uh, 0.15f, 0.25f, 0.008f, 4f));
+                    Say(Syllable(v, rng, 0.28f * vary, 1.12f * lift, 0.88f * lift, 0.7f, Uh, Uh, 0.15f, 0.25f, 0.008f, 4f), Uh, Uh, 0.7f);
                     break;
                 case Emotion.Pain:
-                    parts.Add(Syllable(v, rng, 0.42f * vary, 1.45f * lift, 0.8f * lift, 0.85f, Ah, Uh, 0.2f, 0.25f, 0.006f, 2.2f));
+                    Say(Syllable(v, rng, 0.42f * vary, 1.45f * lift, 0.8f * lift, 0.85f, Ah, Uh, 0.2f, 0.25f, 0.006f, 2.2f), Ah, Uh, 0.85f);
                     break;
                 case Emotion.Groan:
-                    parts.Add(Syllable(v, rng, 1.0f * vary, 0.95f * lift, 0.72f * lift, 0.75f, Oh, Uh, 0.35f, 0.4f, 0.06f, 1.2f, vibrato: 0.03f));
+                    Say(Syllable(v, rng, 1.0f * vary, 0.95f * lift, 0.72f * lift, 0.75f, Oh, Uh, 0.35f, 0.4f, 0.06f, 1.2f, vibrato: 0.03f), Oh, Uh, 0.75f);
                     break;
                 case Emotion.Pant:
-                    parts.Add(Syllable(v, rng, 0.2f * vary, 0f, 0f, 0f, Hh, Hh, 0f, 0.8f, 0.03f, 2f));
-                    parts.Add(Silence(0.12f * vary));
-                    parts.Add(Syllable(v, rng, 0.24f * vary, 0f, 0f, 0f, Hh, Hh, 0f, 1f, 0.01f, 2.5f));
+                    Say(Syllable(v, rng, 0.2f * vary, 0f, 0f, 0f, Hh, Hh, 0f, 0.8f, 0.03f, 2f), Hh, Hh, 0f);
+                    Gap(0.12f * vary);
+                    Say(Syllable(v, rng, 0.24f * vary, 0f, 0f, 0f, Hh, Hh, 0f, 1f, 0.01f, 2.5f), Hh, Hh, 0f);
                     break;
                 case Emotion.Dazed:
-                    parts.Add(Syllable(v, rng, 0.95f * vary, 1.0f * lift, 0.82f * lift, 0.6f, Uh, Oh, 0.4f, 0.55f, 0.08f, 1.0f, vibrato: 0.09f));
+                    Say(Syllable(v, rng, 0.95f * vary, 1.0f * lift, 0.82f * lift, 0.6f, Uh, Oh, 0.4f, 0.55f, 0.08f, 1.0f, vibrato: 0.09f), Uh, Oh, 0.6f);
                     break;
                 case Emotion.Taunt:
                     int laughs = 2 + rng.Next(2);
                     for (int i = 0; i < laughs; i++)
                     {
                         float p = (1.25f + 0.08f * i) * lift;
-                        parts.Add(Syllable(v, rng, 0.11f * vary, p, p * 0.92f, 0.9f, Ah, Ah, 0.05f, 0.35f, 0.004f, 5f));
-                        parts.Add(Silence(0.07f * vary));
+                        Say(Syllable(v, rng, 0.11f * vary, p, p * 0.92f, 0.9f, Ah, Ah, 0.05f, 0.35f, 0.004f, 5f), Ah, Ah, 0.9f);
+                        Gap(0.07f * vary);
                     }
                     break;
                 case Emotion.Triumph:
-                    parts.Add(Syllable(v, rng, 1.1f * vary, 1.05f * lift, 1.55f * lift, 1f, Eh, Ah, 0.12f, 0.2f, 0.05f, 1.3f, rise: true));
+                    Say(Syllable(v, rng, 1.1f * vary, 1.05f * lift, 1.55f * lift, 1f, Eh, Ah, 0.12f, 0.2f, 0.05f, 1.3f, rise: true), Eh, Ah, 1f);
                     break;
                 case Emotion.Defeat:
-                    parts.Add(Syllable(v, rng, 0.9f * vary, 1.0f * lift, 0.62f * lift, 0.55f, Oh, Uh, 0.3f, 0.5f, 0.1f, 1.0f));
-                    parts.Add(Syllable(v, rng, 0.4f * vary, 0f, 0f, 0f, Hh, Hh, 0f, 0.5f, 0.05f, 2f));
+                    Say(Syllable(v, rng, 0.9f * vary, 1.0f * lift, 0.62f * lift, 0.55f, Oh, Uh, 0.3f, 0.5f, 0.1f, 1.0f), Oh, Uh, 0.55f);
+                    Say(Syllable(v, rng, 0.4f * vary, 0f, 0f, 0f, Hh, Hh, 0f, 0.5f, 0.05f, 2f), Hh, Hh, 0f);
                     break;
             }
             int n = 0;
@@ -91,6 +99,7 @@ namespace PoBox.Audio
             for (int i = 0; i < n; i++) peak = Mathf.Max(peak, Mathf.Abs(data[i]));
             float g = 0.8f / peak;
             for (int i = 0; i < n; i++) data[i] *= g;
+            mouth = VisemeTrack.Build(data, shapes);
             return data;
         }
 

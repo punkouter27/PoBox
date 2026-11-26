@@ -69,13 +69,7 @@ namespace PoBox.UI
         /// <summary>One at a time: opening the menu puts the readings away, and the other way round.</summary>
         void Open(VisualElement which, bool open)
         {
-            if (which == null) return;
-            if (open)
-            {
-                VisualElement other = which == _sheet ? _debugPanel : _sheet;
-                if (other != null) other.AddToClassList("hidden");
-            }
-            which.EnableInClassList("hidden", !open);
+            ScreenChrome.Show(which, open, _sheet, _debugPanel);
             if (_menuGlyph != null) _menuGlyph.kind = Showing(_sheet) ? GlyphKind.Close : GlyphKind.Menu;
         }
 

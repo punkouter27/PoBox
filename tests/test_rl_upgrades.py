@@ -7,7 +7,8 @@ import os
 import sys
 
 import pytest
-import torch
+
+torch = pytest.importorskip("torch")  # the train tier; CI installs no torch
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRAINING = os.path.join(ROOT, "Training")

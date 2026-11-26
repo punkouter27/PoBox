@@ -346,9 +346,6 @@
  {
   "run": "exam_m12_zombie",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--only",
@@ -366,9 +363,6 @@
  {
   "run": "exam_m12_nick",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--only",
@@ -386,9 +380,6 @@
  {
   "run": "exam_m12_trump",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--only",
@@ -406,9 +397,6 @@
  {
   "run": "exam_m12_kim",
   "viewer": false,
-  "env": {
-   "PYTHONPATH": ".mj350"
-  },
   "cmd": [
    "tools/exam_v2.py",
    "--only",

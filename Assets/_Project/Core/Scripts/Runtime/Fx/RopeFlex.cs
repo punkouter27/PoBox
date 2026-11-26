@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Splines;
 using PoBox.Mj;
 using PoBox.Sim;
 
@@ -22,6 +23,12 @@ namespace PoBox.Fx
     /// All sixteen ropes are one mesh and one draw call. A rope nobody is near and that has stopped moving
     /// costs nothing. <see cref="Strain"/> and <see cref="StrainAt"/> are how far out the most bowed rope is
     /// and where: the creak in <see cref="Audio.AudioDirector"/> follows them.
+    ///
+    /// Where a rope rests is its line between the posts with a little sag (<see cref="sag"/>, metres at the
+    /// middle), or, given <see cref="restShape"/>, the spline of the same index in that container (Unity
+    /// Splines: knots placed in the scene, so the droop and any kink at a post are authored there). The tube
+    /// has UVs (round the rope, and along it in rope widths) and tangents, so a braided rope material with a
+    /// normal map (M_Rope_Braided) lies on it.
     /// </summary>
     [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
     public class RopeFlex : MonoBehaviour
@@ -47,10 +54,18 @@ namespace PoBox.Fx
         public float minLoad = 25f;
         [Tooltip("How far along a rope, and above or below it, a body pressing on the ropes reaches, metres.")]
         public float reach = 0.3f, band = 0.32f;
+        [Header("Rest shape")]
+        [Tooltip("How far the middle of a rope hangs below its line between the posts, metres. Not used for a rope that has a spline.")]
+        [SerializeField] float sag = 0.015f;
+        [Tooltip("Optional: one spline per rope, same order as Ropes, giving where each rope rests (world space). Ropes past its count sag.")]
+        [SerializeField] SplineContainer restShape;
+        [Tooltip("How many times the braid repeats per half-circumference of rope length. 1 keeps the texels square.")]
+        [SerializeField] float uvAlong = 1f;
 
         const int Sides = 12;        // round in a close-up (6 read as hexagons, 2026-10-31)
+        const int Ring = Sides + 1;  // one more vertex a ring: the seam, where the texture wraps
         Mesh _mesh;
-        Vector3[] _vertices, _normals;
+        Vector3[] _vertices, _normals, _rest;
         float[] _x, _v, _push;         // per point: how far out it is, how fast, how far out a body holds it
         bool[] _awake;
         bool _dirty = true;
@@ -66,6 +81,8 @@ namespace PoBox.Fx
             int n = ropes.Length * points;
             _x = new float[n]; _v = new float[n]; _push = new float[n];
             _awake = new bool[ropes.Length];
+            _rest = new Vector3[n];
+            Rest();
             Build();
         }
 
@@ -91,27 +108,62 @@ namespace PoBox.Fx
             }
         }
 
+        /// <summary>Where every point of every rope rests: its spline, or its line with the sag.</summary>
+        void Rest()
+        {
+            int splines = restShape != null ? restShape.Splines.Count : 0;
+            for (int r = 0; r < ropes.Length; r++)
+                for (int i = 0; i < points; i++)
+                {
+                    float u = i / (float)(points - 1);
+                    Vector3 at;
+                    if (r < splines) at = transform.InverseTransformPoint(restShape.EvaluatePosition(r, u));
+                    else at = Vector3.Lerp(ropes[r].a, ropes[r].b, u) + Vector3.down * (sag * 4f * u * (1f - u));
+                    _rest[r * points + i] = at;
+                }
+        }
+
         void Build()
         {
             int rings = ropes.Length * points;
-            _vertices = new Vector3[rings * Sides];
-            _normals = new Vector3[rings * Sides];
+            _vertices = new Vector3[rings * Ring];
+            _normals = new Vector3[rings * Ring];
+            var uvs = new Vector2[rings * Ring];
+            var tangents = new Vector4[rings * Ring];
             var triangles = new int[ropes.Length * (points - 1) * Sides * 6];
             int t = 0;
             for (int r = 0; r < ropes.Length; r++)
                 for (int i = 0; i < points - 1; i++)
                     for (int s = 0; s < Sides; s++)
                     {
-                        int a = (r * points + i) * Sides + s, b = (r * points + i) * Sides + (s + 1) % Sides;
-                        int c = a + Sides, d = b + Sides;
+                        int a = (r * points + i) * Ring + s, b = a + 1;
+                        int c = a + Ring, d = b + Ring;
                         triangles[t++] = a; triangles[t++] = c; triangles[t++] = b;
                         triangles[t++] = b; triangles[t++] = c; triangles[t++] = d;
                     }
+            // UVs and tangents are set once: u round the rope, v along it in half-circumferences (the braid
+            // texture is twice as wide as it is tall), the tangent along the line between the posts.
+            float half = Mathf.PI * Mathf.Max(1e-4f, radius);
+            for (int r = 0; r < ropes.Length; r++)
+            {
+                Vector3 line = ropes[r].b - ropes[r].a;
+                Vector3 along = line.normalized;
+                float length = line.magnitude;
+                for (int i = 0; i < points; i++)
+                    for (int s = 0; s < Ring; s++)
+                    {
+                        int k = (r * points + i) * Ring + s;
+                        uvs[k] = new Vector2(s / (float)Sides, length * i / (points - 1) / half * uvAlong);
+                        tangents[k] = new Vector4(along.x, along.y, along.z, 1f);
+                    }
+            }
             _mesh = new Mesh { name = "Ropes" };
             _mesh.MarkDynamic();
             Shape();
             _mesh.vertices = _vertices;
             _mesh.normals = _normals;
+            _mesh.uv = uvs;
+            _mesh.tangents = tangents;
             _mesh.triangles = triangles;
             // Big enough for any bow a rope can take: the bounds are never recomputed.
             var bounds = new Bounds(ropes.Length > 0 ? ropes[0].a : Vector3.zero, Vector3.zero);
@@ -127,18 +179,17 @@ namespace PoBox.Fx
             for (int r = 0; r < ropes.Length; r++)
             {
                 Rope rope = ropes[r];
-                Vector3 along = (rope.b - rope.a).normalized;
                 Vector3 up = Vector3.up, side = rope.outward;
                 for (int i = 0; i < points; i++)
                 {
                     int p = r * points + i;
-                    Vector3 centre = Vector3.Lerp(rope.a, rope.b, i / (float)(points - 1)) + rope.outward * _x[p];
-                    for (int s = 0; s < Sides; s++)
+                    Vector3 centre = _rest[p] + rope.outward * _x[p];
+                    for (int s = 0; s < Ring; s++)
                     {
                         float a = s * Mathf.PI * 2f / Sides;
                         Vector3 n = side * Mathf.Cos(a) + up * Mathf.Sin(a);
-                        _vertices[p * Sides + s] = centre + n * radius;
-                        _normals[p * Sides + s] = n;
+                        _vertices[p * Ring + s] = centre + n * radius;
+                        _normals[p * Ring + s] = n;
                     }
                 }
             }
@@ -218,7 +269,7 @@ namespace PoBox.Fx
                         if (sub == 1 && Mathf.Abs(_x[p]) > strain)
                         {
                             strain = Mathf.Abs(_x[p]);
-                            StrainAt = Vector3.Lerp(rope.a, rope.b, i / (float)(points - 1)) + rope.outward * _x[p];
+                            StrainAt = _rest[p] + rope.outward * _x[p];
                         }
                     }
                 _awake[r] = touched || energy > 0.002f;

@@ -13,6 +13,10 @@
 //   _RimColor      the corner colour, as a fresnel edge so the two fighters separate from the crowd
 //   _Ripple        a punch just landed: xyz where, w seconds since; a ring of light runs out over the skin from it
 //   _RippleStrength how hard it was, 0..1.5
+//   _Wet           the round's wet sheen, 0..1 (FighterSkin: rises with the round number and with fatigue): a
+//                  broad, soft highlight over the whole skin, unlike _Sweat's tight beads
+//   _BruiseMarks also swell: a bad mark on the head pushes this pass out a few millimetres and bends its
+//                  normal round the lump, so the highlights and the rim run over it like over a real swelling
 //   _Load          up to twelve joints: xyz where, w how hard its motors work (0..1, Fighter's stress); the
 //                  working ones glow amber through the skin, the hardest-worked hottest
 //
@@ -31,6 +35,10 @@ Shader "PoBox/FighterOverlay"
         _BruiseGain ("Bruise gain", Range(0, 2)) = 1
         _BruiseRadius ("Bruise radius (m)", Range(0.02, 0.3)) = 0.09
         _LoadGain ("Load glow gain", Range(0, 2)) = 1
+        _WetGain ("Wet sheen gain", Range(0, 2)) = 1
+        _SwellRadius ("Swelling radius (m)", Range(0.02, 0.15)) = 0.055
+        _SwellHeight ("Swelling height (m)", Range(0, 0.02)) = 0.006
+        _SwellGain ("Swelling normal bend", Range(0, 2)) = 0.9
     }
     SubShader
     {
@@ -72,6 +80,10 @@ Shader "PoBox/FighterOverlay"
                 half _BruiseGain;
                 half _BruiseRadius;
                 half _LoadGain;
+                half _WetGain;
+                half _SwellRadius;
+                half _SwellHeight;
+                half _SwellGain;
             CBUFFER_END
 
             // Per renderer, from FighterSkin. Outside the material's buffer: an array in it would stop the
@@ -83,6 +95,7 @@ Shader "PoBox/FighterOverlay"
             float _RippleStrength;
             float4 _Load[12];
             float _LoadCount;
+            float _Wet;
 
             struct Attributes
             {
@@ -98,12 +111,35 @@ Shader "PoBox/FighterOverlay"
                 float3 positionWS : TEXCOORD2;
             };
 
+            // How swollen the skin is here: the bad marks on the head (w over 1.3), a soft dome round each.
+            // xyz is the way the dome's surface leans (away from its middle), w its height 0..1.
+            float4 Swelling(float3 pw)
+            {
+                float4 s = 0;
+                int count = (int)min(_BruiseCount, 8);
+                for (int k = 0; k < count; k++)
+                {
+                    float onHead = step(1.0, _BruiseMarks[k].w);
+                    float bad = saturate((_BruiseMarks[k].w - onHead - 0.3) / 0.7) * onHead;
+                    float3 off = pw - _BruiseMarks[k].xyz;
+                    float d = length(off);
+                    float dome = saturate(1.0 - d / _SwellRadius);
+                    dome = dome * dome * (3.0 - 2.0 * dome) * bad;
+                    s.xyz += off / max(d, 1e-4) * dome * (1.0 - dome);
+                    s.w = max(s.w, dome);
+                }
+                return s;
+            }
+
             Varyings vert(Attributes v)
             {
                 Varyings o;
                 float3 pw = TransformObjectToWorld(v.positionOS.xyz);
+                float3 nw = TransformObjectToWorldNormal(v.normalOS);
+                // Swelling: the lump stands out of the face by a few millimetres.
+                pw += nw * Swelling(pw).w * _SwellHeight;
                 o.positionCS = TransformWorldToHClip(pw);
-                o.normalWS = TransformObjectToWorldNormal(v.normalOS);
+                o.normalWS = nw;
                 o.viewWS = GetWorldSpaceNormalizeViewDir(pw);
                 o.positionWS = pw;
                 return o;
@@ -141,6 +177,9 @@ Shader "PoBox/FighterOverlay"
             {
                 half3 n = normalize(i.normalWS);
                 half3 v = normalize(i.viewWS);
+                // The swelling bends the surface round the lump, so the light and the sweat run over it.
+                float4 swell = Swelling(i.positionWS);
+                n = normalize(n + (half3)swell.xyz * _SwellGain * 2.0);
                 half facing = saturate(dot(n, v));
                 half fresnel = pow(1 - facing, _RimPower);
 
@@ -153,6 +192,11 @@ Shader "PoBox/FighterOverlay"
                 half bead = 0.55 + 0.9 * step(0.72, hash3(floor(i.positionWS * 260.0)));
                 half spec = pow(saturate(dot(n, h)), 90) * sweat * 1.6 * _SweatGain * bead;
                 half3 wet = _MainLightColor.rgb * (spec + fresnel * sweat * 0.10 * _SweatGain);
+                // The round's sheen: skin wet all over, a broad soft lobe and a brighter edge, no beading.
+                half wetAll = saturate(_Wet) * _WetGain;
+                wet += _MainLightColor.rgb * wetAll * (pow(saturate(dot(n, h)), 22) * 0.35 + fresnel * 0.12);
+                // A swollen lump is shiny and tight: a little more of the key light on its crown.
+                wet += _MainLightColor.rgb * pow(saturate(dot(n, h)), 40) * swell.w * 0.25;
 
                 // Bruises: the whole part's, and the marks where punches landed.
                 half bruise = saturate(_Bruise);

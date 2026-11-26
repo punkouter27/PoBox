@@ -11,7 +11,9 @@
         "Unity.RenderPipelines.Universal.Editor",
         "Unity.Timeline",
         "PoBox.Mj",
-        "Mujoco.Runtime"
+        "Mujoco.Runtime",
+        "Unity.Splines",
+        "Unity.Mathematics"
     ],
     "includePlatforms": [
         "Editor"

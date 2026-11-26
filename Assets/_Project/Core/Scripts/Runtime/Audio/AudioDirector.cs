@@ -119,7 +119,7 @@ namespace PoBox.Audio
         [Range(0f, 1f)] public float heartbeatVolume = 0.7f;
 
         [Header("Perspective")]
-        [Tooltip("A breathing loop, heard on the close shots (Assets/_Project/Environments/Audio/Real/breath.wav).")]
+        [Tooltip("A breathing loop, heard on the close shots (Assets/_Project/Environments/Audio/Real/A_breath.wav).")]
         public AudioClip breath;
         [Range(0f, 1f)] public float breathVolume = 0.25f;
         [Tooltip("On a close shot the hits come up and the crowd goes back by these, dB; on a wide shot the reverse, by half.")]
@@ -129,7 +129,7 @@ namespace PoBox.Audio
         [Tooltip("How far the crowd is pulled down while the bell rings, dB.")]
         public float bellDuckDb = 8f;
 
-        /// <summary>One register of the boxers' voices: takes of each sound (Assets/_Project/Environments/Audio/Synth/voice_*.wav).</summary>
+        /// <summary>One register of the boxers' voices: takes of each sound (Assets/_Project/Environments/Audio/Synth/A_voice_*.wav).</summary>
         [System.Serializable]
         public class VoiceSet
         {
@@ -160,6 +160,14 @@ namespace PoBox.Audio
         public float duckDb = 7f;
         public int voices = 14;
 
+        [Header("Hall (2026-11-25)")]
+        [Tooltip("Early reflections: four short taps of the hit itself off the four sides of the hall, from where it landed. Off: the hit is heard dry.")]
+        public bool reflections = true;
+        [Tooltip("How loud the reflections are against the hit itself.")]
+        [Range(0f, 1f)] public float reflectGain = 0.22f;
+        [Tooltip("How far off the far wall the last tap comes from, metres.")]
+        public float reflectReach = 26f;
+
         public static bool Muted;
         /// <summary>Set by <see cref="SpeechCommentary"/> while the phone's voice is talking.</summary>
         public static bool Speaking;
@@ -170,6 +178,7 @@ namespace PoBox.Audio
         public float DuckNow { get; private set; }
 
         AudioSource[] _pool;
+        AudioSource[] _tap;      // the early reflections: four sources with a low-pass each
         AudioSource _bed, _crowdSource, _ringSource, _heart, _breath;
         readonly AudioSource[] _sections = new AudioSource[8];
         readonly Vector2[] _sectionDir = new Vector2[8];
@@ -200,7 +209,8 @@ namespace PoBox.Audio
 
         void Awake()
         {
-            if (synth) ImpactSynth.Build();
+            // With modal sets the fixed punch, block and floor banks are not needed (and not made).
+            if (synth) ImpactSynth.Build(contactBanks: impactModes == null);
             AudioMixerGroup hits = Group("Hits"), crowd = Group("Crowd"), ring = Group("Ring");
             _mixed = mixer != null && hits != null && crowd != null && ring != null;
 
@@ -218,6 +228,25 @@ namespace PoBox.Audio
                 s.dopplerLevel = 0f;
                 s.outputAudioMixerGroup = hits;
                 _pool[i] = s;
+            }
+
+            // Four taps off the four walls of the hall, each with a low-pass (a reflection arrives darker than the hit).
+            _tap = new AudioSource[4];
+            for (int i = 0; i < _tap.Length; i++)
+            {
+                var go = new GameObject("Reflection " + i);
+                go.transform.SetParent(transform, false);
+                AudioSource s = go.AddComponent<AudioSource>();
+                s.playOnAwake = false;
+                s.spatialBlend = 1f;
+                s.rolloffMode = AudioRolloffMode.Linear;
+                s.minDistance = 3f;
+                s.maxDistance = 30f;
+                s.dopplerLevel = 0f;
+                s.priority = 128;
+                s.outputAudioMixerGroup = hits;
+                go.AddComponent<AudioLowPassFilter>();
+                _tap[i] = s;
             }
 
             AudioClip scrape = ProceduralClips.ScrapeLoop();
@@ -265,6 +294,7 @@ namespace PoBox.Audio
             _bed.volume = 0f;
             _crowdSource = Source2D(crowd);
             _ringSource = Source2D(ring);
+            SetUpReactive(hits, crowd);
 
             var ringNow = FindAnyObjectByType<MjRing>();
             Vector2 c = ringNow != null ? ringNow.centre : Vector2.zero;
@@ -318,6 +348,7 @@ namespace PoBox.Audio
             // Whoever the scene switched on: the two of a bout, or everybody in a free-for-all.
             _all = FindObjectsByType<Fighter>(FindObjectsInactive.Exclude);
             WarmVoices();
+            WarmMouths();
         }
 
         void OnEnable()
@@ -364,7 +395,9 @@ namespace PoBox.Audio
             // Glove on glove: the dull leather of the guard, and over it a pop that comes up with the speed.
             float k = Mathf.InverseLerp(2f, 9f, speed);
             float clips = synth ? clipLayer : 1f;
-            if (synth) PlayAt(ImpactSynth.Pick(ImpactSynth.Block, k), at, Mathf.Lerp(0.35f, 0.9f, k), Random.Range(0.97f, 1.03f));
+            // Modal: glove on glove, its crack from the speed (a block carries no impulse).
+            if (!PlayModal(ContactKind.GloveOnGlove, -1f, speed, at) && synth)
+                PlayAt(ImpactSynth.Pick(ImpactSynth.Block, k), at, Mathf.Lerp(0.35f, 0.9f, k), Random.Range(0.97f, 1.03f));
             PlayAt(Pick(punchBlocked), at, clips * Mathf.Lerp(0.3f, 0.85f, k), Mathf.Lerp(1.02f, 1.2f, k) * Random.Range(0.96f, 1.04f));
             PlayAt(Pick(punchLight), at, clips * Mathf.Lerp(0.08f, 0.35f, k * k), Mathf.Lerp(1.3f, 1.55f, k) * Random.Range(0.96f, 1.04f));
         }
@@ -377,7 +410,7 @@ namespace PoBox.Audio
             BroadcastDirector director = BroadcastDirector.Instance;
             if (e.clean && e.impulse >= (director != null ? director.bigHit : 13f)) _victim = e.victim;
 
-            float k = Mathf.Clamp01(e.impulse / 22f);
+            float k = ContactStrength.Of(e.impulse);
             // Pitch from how fast the glove arrived: a quick one cracks, a slow heavy one thumps.
             float snap = Mathf.Lerp(0.92f, 1.14f, Mathf.Clamp01(e.gloveSpeed / 9f)) * Random.Range(0.96f, 1.04f);
             // The head rings a little higher than the body.
@@ -386,15 +419,22 @@ namespace PoBox.Audio
             float clips = synth ? clipLayer : 1f;
             if (!e.clean)
             {
-                if (synth) PlayAt(ImpactSynth.Pick(ImpactSynth.Block, k), e.point, Mathf.Lerp(0.35f, 0.85f, k), snap);
+                if (!PlayModal(ContactKind.GloveOnGlove, e.impulse, e.gloveSpeed, e.point) && synth)
+                    PlayAt(ImpactSynth.Pick(ImpactSynth.Block, k), e.point, Mathf.Lerp(0.35f, 0.85f, k), snap);
                 PlayAt(Pick(punchBlocked), e.point, clips * Mathf.Lerp(0.3f, 0.8f, k), snap * 0.95f);
                 return;
             }
 
             bool heavy = e.impulse >= heavyImpulse;
             // The synthesised body of the hit: what it landed on, as hard as it landed; the clip is the slap on top.
-            if (synth) PlayAt(ImpactSynth.Pick(e.zone == PartKind.Head ? ImpactSynth.Head : ImpactSynth.Body, k), e.point, Mathf.Lerp(0.4f, 1f, k), Mathf.Lerp(0.97f, 1.04f, Mathf.Clamp01(e.gloveSpeed / 9f)));
-            PlayAt(Pick(heavy ? punchHeavy : punchLight), e.point, clips * Mathf.Lerp(0.35f, 0.95f, k), snap * where);
+            // Modal (2026-11-25): the head's modes or the trunk's, the body scaled by the impulse, the crack by the glove's speed.
+            if (!PlayModal(e.zone == PartKind.Head ? ContactKind.Head : ContactKind.Torso, e.impulse, e.gloveSpeed, e.point) && synth)
+                PlayAt(ImpactSynth.Pick(e.zone == PartKind.Head ? ImpactSynth.Head : ImpactSynth.Body, k), e.point, Mathf.Lerp(0.4f, 1f, k), Mathf.Lerp(0.97f, 1.04f, Mathf.Clamp01(e.gloveSpeed / 9f)));
+            AudioClip slap = Pick(heavy ? punchHeavy : punchLight);
+            float slapVolume = clips * Mathf.Lerp(0.35f, 0.95f, k), slapPitch = snap * where;
+            PlayAt(slap, e.point, slapVolume, slapPitch);
+            // The same leather off the walls of the hall, a beat later, darker the further it went.
+            Reflect(slap, e.point, slapVolume, slapPitch);
             // The air knocked out of whoever took it, a beat after the glove.
             // Hurt, at a level for how hard it landed (1-3 a pain cry; a level 4-5 shot knocks a groan out).
             if (e.victim != null) Play(e.victim, Emotion5.Hurt, VoiceMatrix.Level(k), Mathf.Lerp(0.35f, painVolume, k), 0.25f, true);
@@ -441,8 +481,11 @@ namespace PoBox.Audio
         {
             // A glove or a knee put down is a pat; a body landing is the whole thud, and lower.
             float k = Mathf.Clamp01(impulse / 120f);
-            if (synth) PlayAt(ImpactSynth.Pick(ImpactSynth.Floor, k), point, Mathf.Lerp(0.12f, 1f, k), Random.Range(0.96f, 1.04f));
-            PlayAt(bodyFall, point, (synth ? clipLayer : 1f) * Mathf.Lerp(0.08f, 1f, k), Mathf.Lerp(1.25f, 0.9f, k) * Random.Range(0.95f, 1.05f));
+            if (!PlayModal(ContactKind.Canvas, impulse, -1f, point) && synth)
+                PlayAt(ImpactSynth.Pick(ImpactSynth.Floor, k), point, Mathf.Lerp(0.12f, 1f, k), Random.Range(0.96f, 1.04f));
+            float fallVolume = (synth ? clipLayer : 1f) * Mathf.Lerp(0.08f, 1f, k), fallPitch = Mathf.Lerp(1.25f, 0.9f, k) * Random.Range(0.95f, 1.05f);
+            PlayAt(bodyFall, point, fallVolume, fallPitch);
+            Reflect(bodyFall, point, fallVolume, fallPitch);
         }
 
         void OnFootStep(Vector3 point, float speed)
@@ -482,7 +525,8 @@ namespace PoBox.Audio
 
             // The bed follows the excitement squared: a quiet hall most of the time, a roar when it earns one.
             float e = Excitement.Value;
-            float target = Mathf.Lerp(crowdQuiet, crowdLoud, Mathf.Clamp01(e * e + ArenaMood.Burst * 0.5f));
+            // With a reactive crowd, the hall's own reading too (whichever is louder).
+            float target = Mathf.Lerp(crowdQuiet, crowdLoud, BedShare(Mathf.Clamp01(e * e + ArenaMood.Burst * 0.5f)));
             _bedLevel = Mathf.MoveTowards(_bedLevel, target, dt * 0.6f);
 
             // The duck: down at once, back over half a second.
@@ -506,6 +550,7 @@ namespace PoBox.Audio
                 mixer.SetFloat("RingVolume", Db(ringGain));
                 _bed.volume = _bedLevel * 0.5f;
                 Sections(_bedLevel);
+                RoarLayer(1f, dt);
             }
             else
             {
@@ -514,6 +559,7 @@ namespace PoBox.Audio
                 Sections(_bedLevel * crowdGain * crowdLinear);
                 _crowdSource.volume = crowdGain * crowdLinear;
                 _ringSource.volume = ringGain;
+                RoarLayer(crowdGain * crowdLinear, dt);
             }
 
             Scrape(dt);
@@ -561,6 +607,34 @@ namespace PoBox.Audio
             s.volume = volume * _hitsK;
             s.pitch = pitch;
             s.Play();
+        }
+
+        /// <summary>
+        /// The hit heard again off the hall (2026-11-25). Four taps of the same clip, one per side of the hall, each
+        /// scheduled at the speed of sound from how far the hit was from that side, and darker and quieter the further it
+        /// came: four pooled sources with a low-pass each, no convolution, which a browser cannot afford.
+        /// </summary>
+        void Reflect(AudioClip clip, Vector3 point, float volume, float pitch)
+        {
+            if (!reflections || _tap == null || clip == null || volume < 0.02f) return;
+            Vector2 c = _ring != null ? _ring.centre : Vector2.zero;
+            float half = _ring != null ? _ring.ringHalf : 3.05f;
+            float dx = point.x - c.x, dz = point.z - c.y;
+            double now = AudioSettings.dspTime + 0.02;
+            for (int i = 0; i < _tap.Length; i++)
+            {
+                float toWall = i == 0 ? half + dx : i == 1 ? half - dx : i == 2 ? half + dz : half - dz;
+                float dist = Mathf.Clamp((toWall + half) * 2f, 4f, reflectReach);
+                float far = Mathf.InverseLerp(4f, Mathf.Max(5f, reflectReach), dist);
+                AudioSource s = _tap[i];
+                s.transform.position = point;
+                s.clip = clip;
+                s.pitch = pitch * 0.97f;
+                s.volume = volume * reflectGain * Mathf.Lerp(1f, 0.25f, far) * _hitsK;
+                AudioLowPassFilter lp = s.GetComponent<AudioLowPassFilter>();
+                if (lp != null) lp.cutoffFrequency = Mathf.Lerp(4200f, 800f, far);
+                s.PlayScheduled(now + dist / 343f);     // the speed of sound, m/s
+            }
         }
 
         void PlayCrowd(AudioClip clip, float volume)

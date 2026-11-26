@@ -36,7 +36,9 @@ namespace PoBox.Tests
             Assert.Less(string.CompareOrdinal(Key(b), Key(a)), 0);
         }
 
+#pragma warning disable CS0649 // filled by JsonUtility
         [Serializable] class Shape { public string PartitionKey, RowKey, Red, Blue; public bool Knockout; }
+#pragma warning restore CS0649
 
         static string Key(string json) => JsonUtility.FromJson<Shape>(json).RowKey;
 

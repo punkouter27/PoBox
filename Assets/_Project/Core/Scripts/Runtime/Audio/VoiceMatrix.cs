@@ -11,7 +11,7 @@ namespace PoBox.Audio
     ///   1. Recorded: the boxer's own clips, anywhere under a Resources/Voices folder, named
     ///      A_Voice_&lt;Boxer&gt;_&lt;Emotion&gt;_&lt;n&gt; (A_Voice_Matt_Pain_01.wav). Drop clips in and they are used,
     ///      cell by cell; nothing else changes.
-    ///   2. The archetype: the shared low (a man's) or high (a woman's) takes (Assets/_Project/Environments/Audio/Synth/voice_*.wav)
+    ///   2. The archetype: the shared low (a man's) or high (a woman's) takes (Assets/_Project/Environments/Audio/Synth/A_voice_*.wav)
     ///      for the five emotions they have (exhale, effort, pain, groan, pant), mixed with tier 3 by
     ///      <see cref="proceduralShare"/>, so each boxer still sounds like itself.
     ///   3. Procedural: <see cref="VoiceSynth"/> in the boxer's own <see cref="VoiceProfile"/>, made the first

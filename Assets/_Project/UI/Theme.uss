@@ -176,6 +176,9 @@ Label { margin: 0; padding: 0; }
 
 .btn:hover { background-color: var(--accent-tint); }
 .btn:active { scale: 0.97 0.97; background-color: var(--accent-press); }
+/* Keyboard and gamepad focus (2026-11-25): a browser player or a phone with a keyboard can see which button is on.
+   The border comes out of the padding, so nothing moves when it appears. */
+.btn:focus { border-width: 2px; border-color: var(--accent); }
 
 .btn--primary { background-color: var(--accent); color: var(--on-accent); }
 .btn--primary:hover { background-color: var(--accent-hover); }
@@ -487,6 +490,8 @@ Label { margin: 0; padding: 0; }
     border-radius: var(--radius-sm);
 }
 .chat--melee { top: var(--ffa-under-board); left: var(--gap-4); right: var(--gap-4); }
+/* Chat's corner (Online/ChatCorner.cs): the vote's tally between rounds, one line under the chat line. */
+.chat--vote { margin-top: 44px; color: var(--accent); }
 
 /* Between rounds: the cards and the round's numbers, over the middle of the picture. */
 .break {

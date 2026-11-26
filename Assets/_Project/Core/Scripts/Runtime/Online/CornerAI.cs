@@ -24,10 +24,19 @@ namespace PoBox.Online
         public static string Url => PlayerPrefs.GetString(PrefKey, "").Trim();
 
         [System.Serializable]
-        class Reply { public string text; }
+        class Reply { public string text = null; } // filled by JsonUtility
+
+        /// <summary>The proxy's colour-commentary endpoint (server/corner_proxy.py /commentary), beside /corner.</summary>
+        public const string CommentaryEndpoint = "commentary";
 
         /// <summary>Sends the numbers; null when there is no proxy to ask. Poll <see cref="Answer"/> until it is not pending.</summary>
-        public static UnityWebRequest Ask(string json)
+        public static UnityWebRequest Ask(string json) => Ask(json, null, 10);
+
+        /// <summary>
+        /// The same, to another endpoint of the same proxy: the CORNER address's last path segment ("corner") replaced by
+        /// <paramref name="path"/> (null keeps it), given up after <paramref name="timeoutSeconds"/>.
+        /// </summary>
+        public static UnityWebRequest Ask(string json, string path, int timeoutSeconds)
         {
             string configuredUrl = Url;
             if (string.IsNullOrEmpty(configuredUrl)) return null;
@@ -48,11 +57,17 @@ namespace PoBox.Online
             string token = ExtractToken(endpoint.Query) ?? ExtractToken(endpoint.Fragment);
             endpoint.Query = "";
             endpoint.Fragment = "";
+            if (!string.IsNullOrEmpty(path))
+            {
+                string at = endpoint.Path.TrimEnd('/');
+                int slash = at.LastIndexOf('/');
+                endpoint.Path = (slash < 0 ? "" : at.Substring(0, slash)) + "/" + path;
+            }
             var r = new UnityWebRequest(endpoint.Uri.AbsoluteUri, "POST")
             {
                 uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(json)),
                 downloadHandler = new DownloadHandlerBuffer(),
-                timeout = 10,
+                timeout = Math.Max(1, timeoutSeconds),
             };
             r.SetRequestHeader("content-type", "application/json");
             if (!string.IsNullOrEmpty(token)) r.SetRequestHeader("x-pobox-token", token);

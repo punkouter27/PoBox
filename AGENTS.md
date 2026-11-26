@@ -98,7 +98,7 @@ every publish. Tests never write into tracked files.
 | Unity build and tests run locally only; CI runs the Python checks and deploys the locally built release | Unity cannot be licensed in CI (owner design) | `7045f65` 2026-11-22 | — |
 | PlayMode tests run with `-force-d3d11` | D3D12 lost the GPU device mid-run on this PC (DXGI 887a0006) | 2026-11-22 | drop the flag |
 | Tab corner button is 34 px, not 44 px | fits above the menu cards on a phone | `dd8f197` 2026-11-22 | resize in `DiagOverlay.cs` |
-| /diag: leaderboard table (no storage account; `stpobox2` does not exist) and cornerman proxy show a neutral **Off** | switched off on purpose; not counted in the banner | `7045f65` 2026-11-22 | provision the table, set its check back to a live probe in `scripts/webgl.json` |
+| /diag: leaderboard table (no storage account; `stpobox2` does not exist), cornerman proxy and colour commentary (the same proxy's `/commentary`, 2026-11-25) show a neutral **Off** | switched off on purpose; not counted in the banner | `7045f65` 2026-11-22 | provision the table / host the proxy, set its check back to a live probe in `scripts/webgl.json` |
 | /diag on phones (<= 600px): the version stamp follows the content | a fixed stamp covered the rows | `401dc99` 2026-11-22 | `git revert 401dc99` |
 | Shipped brains predate the torque² / joint-speed² penalty terms | retraining is a multi-hour GPU run, not started | 2026-11-20 | retrain |
 
@@ -186,8 +186,9 @@ No ML-Agents.
   its `MjBoxer` (drive strength, get-up brain swap, punch naming). `Fighter` publishes on `SimBus` (Hit,
   Knockdown, GotUp); `Bout` + judges run rounds and counts and place boxers; HUD, cameras (`Broadcast`),
   commentary, sound and effects (`Fx`) only listen to `SimBus`.
-- **Three brains per boxer** in `Assets/_Project/Agents/Boxers/NAME/`: `policy.onnx` (footwork), `match.onnx`, `getup.onnx`,
-  plus `config.json` and C MuJoCo reference recordings used by the gate tests. `MjRetrofit.Promote(name, run)`
+- **Three brains per boxer** in `Assets/_Project/RL_Models/NAME/`: `policy.onnx` (footwork), `match.onnx`, `getup.onnx`;
+  the body's own files are `config.json` and the C MuJoCo reference recordings beside it in
+  `Assets/_Project/Agents/Boxers/NAME/`, used by the gate tests. `MjRetrofit.Promote(name, run)`
   copies a training run's policy and recordings there.
 - **One body file on both sides**: Unity's boxer prefabs compile to exactly the trainer's MJCF
   (`Training/models/v2`, rigs in `Training/rigs/v2`). Parity is the core invariant: if a boxer stands in C MuJoCo
@@ -197,7 +198,8 @@ No ML-Agents.
   `Arena.unity` (every boxer as switched-off `NAME Red`/`NAME Blue` prefabs; `MatchSetup` enables the picked pair
   before MuJoCo compiles), `Melee.unity` (free-for-all, menu ALL: `FreeForAll` replaces `Bout` + `MatchSetup`,
   gives the eight boxers prefixes `a_`..`h_` before compile; `MjRing` handles more than two), `Testbed.unity`
-  (one boxer, shoves, a pool of 8 cubes). Eight boxers: Matt, Zombie, Nick, Trump, Grandma, Grandpa, Kim, Sokol.
+  (one boxer, shoves, a pool of 8 cubes). Ten bodies: Matt, Zombie, Nick, Trump, Grandma, Grandpa, Kim, Sokol,
+  Soldat and Timmy (2026-11-16); the roster has sixteen slots, and a slot nobody fills is a BYE.
 - **Naming new assets** (from 2026-10-30; existing names stay, a rename breaks scene and trainer references): PascalCase
   with a type prefix: `PF_` prefab, `M_` material, `SM_` static mesh, `SK_` skinned mesh, `T_` texture, `A_` audio clip,
   `VP_` volume profile. Scripts are plain PascalCase, one class a file. Folders follow the layout in section 1 (moved

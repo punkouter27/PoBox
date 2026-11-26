@@ -713,3 +713,84 @@ in torch), ~18 us of CPU each. The warp physics was already a graph; the torch a
   what they replace.
 - Unity did not open: the licensing client reports "Access token is unavailable" and 0 entitlements (as on 11-23). The
   in-game run, screenshots, GIFs, gizmo checks and MjParityTests/MjGateTests wait for the licence (Unity Hub sign-in).
+
+## 2026-11-25 11:10, symmetry + xCoM + anti-stall benchmark (`bench_sym_xcom_matt`, `v3_sym_xcom_kim`)
+- Added bilateral mirror-symmetry regularisation (`Training/envs/symmetry.py`, `PPOConfig.sym_coef`), extrapolated CoM support-segment penalty (`--xcom-w`), and anti-stall pressure shaping (`--stall-w` / `--stall-s`) in `8c4a0e9`.
+- `bench_sym_xcom_matt` (50 iters, 4.9M steps, 2.3 min on RTX 2060 at 36.7k sps, `models/v3/matt_spar.xml`): verified zero throughput overhead; `hits/s` 0.00 -> 0.41/s, `rt_stall` -0.080 -> -0.047, `rt_jvel` dropped 3.3x (-0.0134 -> -0.0041).
+- `v3_sym_xcom_kim` (574 iters, 56.4M steps, 25.1 min at 36.5k sps, `models/v3/kim_spar.xml`, `--sym-coef 0.1 --xcom-w 0.8 --stall-w 0.08 --repeat-decay 0.4 --combo-w 0.3 --max-std 0.45`): peaked around iter 380-400 (`ret 381.9`, `1.46 hits/s`, `36% head`, `fall 0.01`, `sym_loss 0.057`, `rt_qvel 0.000`), then drifted as `action_std` climbed to `0.44`.
+- **C MuJoCo exam (`exam_v2.py --models models/v3 --only kim --rounds 1 --trials 20`):**
+  - Baseline (`checkpoints/onnx/match_kim.pt`): 3/7 pass — footing FAIL `1.33/min`, attack FAIL `0.45/s` (3.7 m/s, 21% head), under pressure FAIL `0.04/s` vs zombie, guard pass `65%`, chin pass `0.00/min`, get-up pass `18/20`, carrying on FAIL `15/18`.
+  - `v3_sym_xcom_kim/model_000400.pt`: 3/7 pass (**REJECTED**, `REJECTED.txt` written) — footing FAIL `22.67/min` (worst vs trump), attack FAIL `0.32/s` (2.7 m/s, 39% head), under pressure FAIL `0.00/s` vs matt, guard pass `31%`, chin pass `0.00/min`, get-up pass `18/20`, carrying on FAIL `9/18`.
+- **Decision:** Keep Kim's shipped brain. Self-play (`train_box.py`) overfits to mirror-opponent spacing and lacks the handover bank; next step is wiring `--sym-coef`, `--xcom-w`, and `--stall-w` into multi-opponent `train_gauntlet.py` with `--max-std 0.35`.
+
+## 2026-11-25 12:40, first AMP + league run (`v3_amp_league_matt`, 1 h)
+- Same settings as `bench_sym_xcom_matt` (`models/v3/matt_spar.xml`, warm from `checkpoints/onnx/match_Matt.pt`,
+  `--sym-coef 0.1 --xcom-w 0.8 --stall-w 0.08`) plus the upgrades of `d4a2036`: `--amp --amp-w 0.3` (walk_turn
+  clips, legs features) and `--league --league-boxers Zombie Nick Sokol Kim` (shipped match brains driving the
+  sparring partner's body, Matt's snapshots every 50 iterations, an exploiter on 1/8 of the rings);
+  `--max-std 0.35` as the entry above recommends. `--max-hours 1.0`. Unity closed.
+- Why: the entry above found self-play against a mirror overfits its spacing; a league of other brains is the
+  cheapest test of that before porting the flags to `train_gauntlet.py`.
+- Early: 35k sps without the viewer (29k with); iteration 60 at 3 min: `hits/s 0.52`, `fall 0.24`, `kd/min 0.61`;
+  the league score fell from 0.50 to 0.16-0.32 once the pool's other brains came in.
+- Fixed on the way: `view_box.py` failed on every v2 checkpoint (`rules` in the saved env settings); it now maps
+  them to `default_rules`.
+- Stopped by the owner at iteration 110 (about 6 min; "train later"): `hits/s 0.62`, `fall 0.21`, `kd/min 0.49`,
+  league score 0.13. Checkpoints `model_000025..100.pt` kept in `checkpoints/v3_amp_league_matt` (not examined).
+- Next, when training resumes: `exam_v2.py --only matt` on a full-length run against the shipped brain.
+
+## 2026-11-25 14:40, the progressive batch: hard limits, a rung ladder, terrain, obstacles, momentum, encoder reuse (no run)
+- Twenty trainer upgrades, all off by default (the tables are in `docs/README.md`, "Progressive training"). Physical
+  limits (`envs/limits.py`, `envs/constraints.py`): `--gravity-scale` (g x 1 +- s a world, the observation's down with
+  it), `--torque-cap` / `--torque-var` (the drive's force range, written into `mw.actuator_forcerange` and into the
+  target), `--act-lag` / `--lag-var` (first-order motor lag, separate from `--domain-rand`'s integer delay),
+  `--soft-limit` / `--rom-w` (the last radians of a joint's range give way; the press is rt_rom, `rom_use` in the stats).
+- Curriculum and reuse (`envs/curriculum.py`, `config/progression.json`, `hierarchy.py`): the ladder balance -> walk ->
+  sprint -> navigate (`--curriculum auto`, promote/demote on the run's own stats with a hold and an EMA, the rung's knobs
+  written into the live env so no optimiser state is lost), `--sprint-share`, `--nav-share` / `--nav-obstacles`
+  (`envs/nav.py`: a goal 2-4 m out, cubes parked across the line, the steering command on the observation's own three
+  command numbers, arrival ends the episode as a cut so the value carries over), `--shared-encoder`,
+  `--freeze-layers N --freeze-until K`, `--reuse-trunk CKPT` (the encoder only, never the head), `--mirror-aug`.
+- Behaviour (`envs/terrain.py`, `envs/momentum.py`): `--terrain` (flat/mild/steep floors drawn every episode: slope as
+  tilted gravity, contact friction, uneven-ground kicks), `--momentum-w` (yaw jerk beyond a 12 rad/s^2 command ramp) and
+  `--lean-w` (the centripetal lean height x v x w / g).
+- Not run: the GPU had another session's job on it (`nvidia-smi` 50%, 2.4 GB), and no shipped brain needs these. The
+  design intent is the owner's ask: a physically constrained agent that climbs balance -> walk -> sprint -> navigate
+  without retraining the encoder, with recovery (get-up) and momentum-aware turning as the behaviours beside it.
+- Verified: `tests/test_rl_progression.py`, 16 passed. Fast tier: the limit formulas (a cap is never exceeded, a stop
+  gives way at the limit, the lag alpha), terrain weights and unit tilts, steering, the yaw ramp and the lean, the ladder
+  (promotion/demotion hysteresis, a NaN never promotes, only knobs the env has are written). Train tier: a 2-world
+  `matt_solo` footwork env with every flag on, stepped 40 times (rt_goal, rt_sprint, rt_mom, rt_tilt, rt_rom all
+  charged; `terrain_*` and `rom_use` in the stats); a shared encoder trained with mirror augmentation then held (the
+  trunk does not move, the head does); a trunk copied from a shared checkpoint into a separate policy. The wiring was also
+  run once outside the trainer: a run started at `balance` promoted to `walk` at the fifth good update and wrote
+  `walk_share 0.5`, `cmd_fwd_max 1.0` into the live env, and the held encoder was released at its iteration.
+- Next, when the GPU is free: a 1 h `--stage footwork --curriculum auto --terrain` run on `models/v2/matt_solo.xml` warm
+  from Matt's footwork brain, then `tools/footwork_c.py --exam` on it; and a `--torque-cap 0.7 --act-lag 8` run of the
+  match stage to see whether the cap costs punches.
+
+## 2026-11-25 15:40, the progressive batch on the GPU for the first time: three short runs, two defects fixed
+- Three minutes-long runs with every new flag on, so the wiring is proved on a real trainer, not only in the tests:
+  3 x 128 worlds (all flags at once: curriculum auto, terrain flat,mild,steep, nav 0.3, sprint 0.2, torque cap 0.7,
+  act-lag 8 Hz, soft stops, gravity +-5%, momentum and lean, mirror 0.5, shared encoder, 2 layers held until 1),
+  30 x 512 (the same, the encoder let go at 10) and 20 x 512 at `--curriculum navigate`.
+- Results: no NaN in any of them; 7,700-10,200 sps at 512 worlds; `rt_rom`, `rt_tilt`, `rt_mom`, `rt_torque`,
+  `rom_use` and `terrain_flat/mild/steep` (0.58 / 0.42 / 0.25) all move in `logs/smoke_*.csv`; the shared encoder
+  printed `5,675 of 190,251 parameters (3%)` while held and released at its iteration. The runs were deleted
+  (`checkpoints/smoke_*`, `logs/smoke_*`), nothing trained to a brain.
+- Defect 1, the ladder could not turn a rung on: `nav_env` (and the turning charges) were built only in the env's
+  constructor, so a run starting at `balance` that promoted to `navigate` got `nav_share` 0.35 and no goals, cubes or
+  `rt_goal` — `nav_rate` could never leave 0, which is exactly the check P1 asks for. Fixed: `FootworkEnv.after_rung`
+  lists the rung's terms and builds its goals/charges, `curriculum.apply` calls it, and a curriculum run declares every
+  rung's terms at iteration 0 so a promotion never widens the CSV. A declared term whose rung is not reached reads 0.
+- Defect 2, a rung overwrote the command line: `--nav-share 0.3 --curriculum auto` logged `starting at balance` with
+  `nav_share` written back to 0 and spent every balance iteration without navigation episodes. Fixed: the knobs named on
+  the command line are re-applied after each rung (`kept from the command line: nav_share` in the log); a knob nobody
+  named still follows the rung (`walk_share 0.0` at balance).
+- Also: `--terrain` alone used to be an argparse error although `docs/README.md` promised "all classes"; it now means
+  every class, and a comma list still keeps some.
+- Verified after the fix: `tests/test_rl_progression.py` 19 passed (three new: `apply` tells the env a rung moved, a
+  rung leaves the command line's knobs alone, a promotion to `navigate` builds the goals and pays rt_goal), the fast tier
+  170 passed, `ruff check` and `ruff format --check` clean, and the same 20-iteration run now logs
+  `kept from the command line: nav_share`. `--terrain` alone, on the trainer, drew 0.42 / 0.36 / 0.22 of
+  flat / mild / steep.

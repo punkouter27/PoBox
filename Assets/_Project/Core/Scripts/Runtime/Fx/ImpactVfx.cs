@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using PoBox.Audio;
 using PoBox.Broadcast;
 using PoBox.Sim;
 
@@ -84,6 +85,7 @@ namespace PoBox.Fx
         Vector3 _ringAt, _ringNormal;
         Material _ring;
         Mesh _quad;
+        SurfaceMaterial _chalk;
 
         void Awake()
         {
@@ -91,6 +93,8 @@ namespace PoBox.Fx
             Shader ring = Shader.Find("PoBox/Shockwave");
             if (ring != null) _ring = new Material(ring);
             _quad = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
+            // Optional: a surface asset tints the chalk and sweat it describes (none in the project: as authored).
+            _chalk = SurfaceMaterial.Of(ContactKind.GloveOnGlove);
         }
 
         void OnDestroy()
@@ -195,7 +199,9 @@ namespace PoBox.Fx
 
         void OnHit(HitEvent e)
         {
-            float k = Mathf.Clamp01(e.impulse / fullImpulse);
+            // The same 0..1 the sound and the phone use (ContactStrength), read through the surface that was struck.
+            ContactKind on = e.zone == PartKind.Head ? ContactKind.Head : ContactKind.Torso;
+            float k = Mathf.Clamp01(ContactStrength.Of(e.impulse, fullImpulse) * SurfaceMaterial.Hardness(on));
             Excitement ex = Excitement.Instance;
             float usual = ex != null ? ex.UsualImpulse : 12f;
             if (e.clean) _pulse = Mathf.Max(_pulse, Mathf.Clamp01((e.impulse - usual * 1.1f) / Mathf.Max(1f, usual * 0.5f)));
@@ -278,6 +284,7 @@ namespace PoBox.Fx
                         startSize = Random.Range(0.06f, 0.14f) * Mathf.Lerp(0.7f, 1.2f, k),
                         startLifetime = Random.Range(0.3f, 0.55f),
                     };
+                    if (_chalk != null) puff.startColor = _chalk.dustColour;   // the surface's own chalk, when one is described
                     dust.Emit(puff, 1);
                 }
             if (sweat != null)

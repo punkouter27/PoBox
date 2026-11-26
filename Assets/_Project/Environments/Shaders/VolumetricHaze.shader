@@ -96,15 +96,40 @@ Shader "PoBox/VolumetricHaze"
         Pass
         {
             Name "Composite"
-            // out = scattered + destination x transmittance
+            // out = scattered + destination x transmittance, from the half (quarter) resolution march.
             Blend One SrcAlpha
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment Frag
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
+
+            float4 _PoBoxHazeTexel;   // xy: one texel of the marched texture, in screen uv
+
+            // A depth-guided upsample (2026-11-25): four taps at the corners of a marched texel, each weighted by how
+            // close its depth is to this pixel's own. Plain bilinear smears a boxer's silhouette into the fog behind it
+            // and the seam crawls as the march's jitter moves; this keeps the edge and leaves open fog to the bilinear
+            // average it had.
             half4 Frag(Varyings input) : SV_Target
             {
                 UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-                return SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, input.texcoord);
+                float2 uv = input.texcoord;
+                float2 o = _PoBoxHazeTexel.xy * 0.5;
+                float centre = SampleSceneDepth(uv);
+
+                half4 sum = 0;
+                float sumW = 0;
+                [unroll] for (int i = 0; i < 4; i++)
+                {
+                    float2 at = float2((i & 1) == 0 ? -1.0 : 1.0, (i & 2) == 0 ? -1.0 : 1.0);
+                    float2 t = uv + at * o;
+                    float d = SampleSceneDepth(t);
+                    // abs(), so the reverse-Z orientation cannot flip the weighting; far pixels differ little and fall
+                    // back to the bilinear average, which is what open fog wants anyway.
+                    float w = 1.0 / (1e-5 + abs(d - centre) * 3000.0);
+                    sum += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_PointClamp, t) * w;
+                    sumW += w;
+                }
+                return sum / max(sumW, 1e-5);
             }
             ENDHLSL
         }

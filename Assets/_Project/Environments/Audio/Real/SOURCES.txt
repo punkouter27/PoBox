@@ -1,5 +1,6 @@
 Recordings imported by PoDecath/Audio/Import Sound Pack from a temporary download folder
 Licences and sources: see LICENSES.md beside this file.
+Since 2026-11-25 the files on disk carry the repo's A_ prefix (crowdBed.wav is A_crowdBed.wav, and so on).
 
 crowdBed.wav  <-  Stadium Crowd Ambience Loop.wav
 footfalls_1.wav  <-  Footstep Run Asphalt 01.wav
