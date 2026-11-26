@@ -1837,6 +1837,130 @@
    "workload_changes": [
     "config_hash: 'ef803b' -> 'bdba42'"
    ]
+  },
+  {
+   "when": "2026-11-26T11:59:23-05:00",
+   "ok": true,
+   "error": null,
+   "machine": {
+    "hostname": "C4T4V44",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-13850HX (28 threads)",
+    "gpu": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+    "vram_gb": 8.0,
+    "ram_gb": 63.8,
+    "gpu_driver": "581.95",
+    "os": "Windows 11 (10.0.26100)"
+   },
+   "load_before": {
+    "cpu_pct": 10,
+    "cpu_max_core_pct": 50,
+    "trainer_cpu_cores": 0.0,
+    "trainer_thread_pct": 0,
+    "ram_used_gb": 26.1,
+    "gpu_pct": 1.0,
+    "gpu_mem_pct": 2.0,
+    "vram_used_gb": 2.7,
+    "gpu_temp_c": 57.0,
+    "sm_clock_mhz": 555.0,
+    "sm_clock_max_mhz": 3105.0,
+    "power_w": 8.38,
+    "power_limit_w": 56.92,
+    "pstate": "P5",
+    "clock_reasons": [],
+    "display_active": true,
+    "pcie": "gen 2 x8",
+    "on_battery": false,
+    "gpu_processes": [
+     "Code.exe",
+     "Creative Cloud UI Helper.exe",
+     "CrossDeviceResume.exe",
+     "Docker Desktop.exe",
+     "PhoneExperienceHost.exe",
+     "SearchHost.exe",
+     "ShellExperienceHost.exe",
+     "ShellHost.exe",
+     "StartMenuExperienceHost.exe",
+     "TeamViewer.exe",
+     "TextInputHost.exe",
+     "ZSATray.exe",
+     "[Insufficient Permissions]",
+     "explorer.exe",
+     "ms-teams.exe",
+     "msedge.exe",
+     "msedgewebview2.exe"
+    ]
+   },
+   "load_during": {
+    "cpu_pct": 14.9,
+    "cpu_max_core_pct": 298828203.0,
+    "trainer_cpu_cores": 0.4,
+    "trainer_thread_pct": 28.9,
+    "ram_used_gb": 26.9,
+    "gpu_pct": 93.6,
+    "gpu_mem_pct": 29.5,
+    "vram_used_gb": 3.5,
+    "gpu_temp_c": 74.0,
+    "sm_clock_mhz": 2465.6,
+    "sm_clock_max_mhz": 3105.0,
+    "clock_pct_of_max": 79,
+    "power_w": 64.4,
+    "power_limit_w": 65.5,
+    "pstate": "P1",
+    "clock_reasons": {
+     "power cap": 1.0
+    },
+    "display_active": true,
+    "pcie": "gen 4 x8",
+    "on_battery": false,
+    "samples": 8
+   },
+   "busy": false,
+   "workload_id": "afe114",
+   "workload": {
+    "repo": "PoBox",
+    "trainer": "PoBox ppo.py + mujoco_warp 3.15.0",
+    "script": "training/train_gauntlet.py",
+    "args": "--run-name _benchmark --name matt --resume checkpoints/_benchmark_warm/match_matt.pt --against sokol=checkpoints/_benchmark_warm/match_sokol.pt kim=checkpoints/_benchmark_warm/match_kim.pt zombie=checkpoints/_benchmark_warm/match_zombie.pt nick=checkpoints/_benchmark_warm/match_nick.pt trump=checkpoints/_benchmark_warm/match_trump.pt grandpa=checkpoints/_benchmark_warm/match_grandpa.pt grandma=checkpoints/_benchmark_warm/match_grandma.pt --stage match --models models/v3 --daze --obs-state --hit-push 0.6 --stagger-v 5 --hurt-full 400 --body-drain 0.0025 --hit-w 1.5 --taken-w 1.0 --block-w 0.5 --fall-penalty 12 --selfcontact-w 0.02 --repeat-decay 0.7 --combo-w 0.1 --hurt-start 0.2 --clinch-w 0.1 --fatigue-ceiling --sep-max 3.5 --num-envs 4608 --more-iters 600 --max-hours 0.75 --max-std 0.35 --done-when hits_per_s>=1.2,falls<=0.03,repeat_share<=0.6 --done-window 40 --save-every 100000 --no-onnx",
+    "num_envs": 4592,
+    "horizon": 24,
+    "net": [
+     512,
+     256,
+     128
+    ],
+    "config_hash": "bdba42",
+    "note": "warm starts from the shipped Assets/_Project/RL_Models/*/match.onnx; no hand-over bank (not in a fresh clone)"
+   },
+   "result": {
+    "step_time_ms": 120.191,
+    "sim_ms": 108.45,
+    "learn_ms": 11.742,
+    "env_steps_per_s": 38206,
+    "steps_measured": 96,
+    "measured_s": 11.54,
+    "startup_s": 23.4,
+    "step_p50_ms": 120.476,
+    "step_p95_ms": 120.712,
+    "sim_drift_pct": -0.1,
+    "blocks_measured": 4
+   },
+   "git_commit": "0080309",
+   "versions": {
+    "python": "3.12.16",
+    "torch": "2.14.1+cu130",
+    "mujoco": "3.15.0",
+    "mujoco_warp": "3.15.0",
+    "warp": "1.19.0"
+   },
+   "context": {
+    "power_plan": "Balanced",
+    "power_mode": null,
+    "gpu_scheduling": null
+   },
+   "verdict": [
+    "at power limit"
+   ],
+   "workload_changes": []
   }
  ]
 }
