@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "repo": "PoBox",
+  "updated_utc": "2026-11-27T13:30:00Z",
+  "items": [
+    {
+      "id": "box_queue",
+      "label": "PoBox queue runner (short-reach boxers under pressure & punching)",
+      "behavior_id": "box_short_reach",
+      "status": "pending",
+      "priority": 85,
+      "device": "gpu",
+      "default_hours": 6.0,
+      "cwd": "PoBox/training",
+      "command": "uv run python tools/queue_runner.py",
+      "eval_command": "",
+      "self_limiting": false,
+      "stop_file": "PoBox/training/logs/queue.hold",
+      "requires": [
+        "PoBox/.venv",
+        "PoBox/training/tools/queue_runner.py",
+        "PoBox/training/logs/queue.json"
+      ],
+      "notes": "Works through training/logs/queue.json; supports graceful stop via queue.hold."
+    }
+  ]
+}
